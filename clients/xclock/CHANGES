@@ -1,5 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  Atoms.h has been replaced by StringDefs.h
-     o  fixed nits in resource names
-     o	several bugs fixed by virtue of fixes to the Clock widget (c.f.)

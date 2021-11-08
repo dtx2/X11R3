@@ -1,5 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  colormap and backing store information is now printed out.
-     o  several memory handling nits have been cleaned up.
-

@@ -1,8 +1,0 @@
-       INCLUDES = -I$(TOP) -I$(TOP)/X11
-LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
-           SRCS = xload.c
-           OBJS = xload.o
-
-   INSTALLFLAGS = $(INSTKMEMFLAGS)
-
-ComplexProgramTarget(xload)

@@ -18,12 +18,10 @@
 #include <sys/utsname.h>
 #endif
 
-#ifdef UNIXCONN
 #include <sys/un.h>
 #ifndef X_UNIX_PATH
 #define X_UNIX_PATH "/tmp/.X11-unix/X"
 #endif /* X_UNIX_PATH */
-#endif /* UNIXCONN */
 void bcopy();
 /* 
  * Attempts to connect to server, given display name. Returns file descriptor
@@ -45,9 +43,7 @@ int _XConnectDisplay (display_name, expanded_name, prop_name, screen_num)
 	int display_num;		/* Display number */
 	struct sockaddr_in inaddr;	/* INET socket address. */
 	unsigned long hostinetaddr;	/* result of inet_addr of arpa addr */
-#ifdef UNIXCONN
 	struct sockaddr_un unaddr;	/* UNIX socket address. */
-#endif
 	struct sockaddr *addr;		/* address to connect to */
         struct hostent *host_ptr;
 	int addrlen;			/* length of address */
@@ -56,11 +52,6 @@ int _XConnectDisplay (display_name, expanded_name, prop_name, screen_num)
         int fd;				/* Network socket */
 	char numberbuf[16];
 	char *dot_ptr = NULL;		/* Pointer to . before screen num */
-#ifdef DNETCONN
-	int dnet = 0;
-	char objname[20];
-	extern int dnet_conn();
-#endif
 
 	/* 
 	 * Find the ':' seperator and extract the hostname and the
@@ -132,46 +123,9 @@ int _XConnectDisplay (display_name, expanded_name, prop_name, screen_num)
 	/*
 	 * If the display name is missing, use current host.
 	 */
-	if (displaybuf[0] == '\0')
-#ifdef DNETCONN
-	    if (dnet) 
-		(void) strcpy (displaybuf, "0");
-            else
-#endif
-#ifdef UNIXCONN
-		;	/* Do nothing if UNIX DOMAIN. Will be handled below. */
-#else
-#ifdef hpux
-	    /*
-	     * same host name crock as in server and xinit.
-	     */
-	    {
-		struct utsname name;
+	if (displaybuf[0] == '\0') {} /* Do nothing if UNIX DOMAIN. Will be handled below. */
 
-		uname(&name);
-		strcpy(displaybuf, name.nodename);
-	    }
-#else
-		(void) gethostname (displaybuf, sizeof(displaybuf));
-#endif /* hpux */
-#endif /* UNIXCONN else TCPCONN (assumed) */
-
-#ifdef DNETCONN
-	if (dnet) {
-	    /*
-	     * build the target object name.
-	     */
-	    sprintf(objname, "X$X%d", display_num);
-	    /*
-	     * Attempt to open the DECnet connection, return -1 if fails.
-	     */
-	    if ((fd = dnet_conn(displaybuf, 
-		   objname, SOCK_STREAM, 0, 0, 0, 0)) < 0)
-		return(-1);	    /* errno set by dnet_conn. */
-	} else
-#endif
 	{
-#ifdef UNIXCONN
 	    if ((displaybuf[0] == '\0') || 
 		(strcmp("unix", displaybuf) == 0)) {
 		/* Connect locally using Unix domain. */
@@ -186,7 +140,6 @@ int _XConnectDisplay (display_name, expanded_name, prop_name, screen_num)
 	        if ((fd = socket((int) addr->sa_family, SOCK_STREAM, 0)) < 0)
 		    return(-1);	    /* errno set by system call. */
 	    } else
-#endif
 	    {
 		/* Get the statistics on the specified host. */
 		hostinetaddr = inet_addr (displaybuf);

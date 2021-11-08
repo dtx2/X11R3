@@ -1,5 +1,0 @@
-LOCAL_LIBRARIES = $(XLIB)
-  SYS_LIBRARIES = -lm
-
-SimpleProgramTarget(ico)
-

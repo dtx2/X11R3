@@ -1,6 +1,7 @@
 /***********************************************************
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
 and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+Copyright Edward Halferty 2021
 
                         All Rights Reserved
 
@@ -43,24 +44,19 @@ extern long defaultScreenSaverTime;
 extern long defaultScreenSaverInterval;
 extern int defaultScreenSaverBlanking;
 extern int defaultScreenSaverAllowExposures;
-
 extern char *display;
 char *ConnectionInfo;
 xConnSetupPrefix connSetupPrefix;
-
 extern WindowRec WindowTable[];
 extern FontPtr defaultFont;
-
 extern void SetInputCheck();
 extern void InitProcVectors();
 extern void InitEvents();
 extern void InitExtensions();
 extern void DefineInitialRootWindow();
 extern void QueryMinMaxKeyCodes();
-
 PaddingInfo PixmapWidthPaddingInfo[33];
 int connBlockScreenStart;
-
 static int restart = 0;
 
 void
@@ -120,10 +116,7 @@ static int indexForScanlinePad[ 33 ] = {
 	2		/* 32 bits per scanline pad unit */
 };
 
-main(argc, argv)
-    int		argc;
-    char	*argv[];
-{
+void main(int argc, char	*argv[]) {
     int		i, j, k, looping;
     long	alwaysCheckForInput[2];
 
@@ -150,20 +143,18 @@ main(argc, argv)
 	ScreenSaverInterval = defaultScreenSaverInterval;
 	ScreenSaverBlanking = defaultScreenSaverBlanking;
 	ScreenSaverAllowExposures = defaultScreenSaverAllowExposures;
-
-	/* Perform any operating system dependent initializations you'd like */
-	OsInit();		
-	if(!looping)
-	{
-	    CreateWellKnownSockets();
+	// Perform any operating system dependent initializations you'd like
+	OsInit();
+	if(!looping) {
+	    CreateWellKnownSocket();
 	    InitProcVectors();
 	    serverClient = (ClientPtr)xalloc(sizeof(ClientRec));
-            serverClient->sequence = 0;
-            serverClient->closeDownMode = RetainPermanent;
-            serverClient->clientGone = FALSE;
-            serverClient->lastDrawable = (DrawablePtr)NULL;
+		serverClient->sequence = 0;
+		serverClient->closeDownMode = RetainPermanent;
+		serverClient->clientGone = FALSE;
+		serverClient->lastDrawable = (DrawablePtr)NULL;
 	    serverClient->lastDrawableID = INVALID;
-            serverClient->lastGC = (GCPtr)NULL;
+        serverClient->lastGC = (GCPtr)NULL;
 	    serverClient->lastGCID = INVALID;
 	    serverClient->numSaved = 0;
 	    serverClient->saveSet = (pointer *)NULL;
@@ -384,9 +375,6 @@ AddScreen(pfnInit, argc, argv)
 
     int i = screenInfo.numScreens;
     int scanlinepad, format, depth, bitsPerPixel, j, k;
-#ifdef DEBUG
-    void	(**jNI) ();
-#endif /* DEBUG */
 
     if (screenInfo.numScreens == screenInfo.arraySize)
     {
@@ -395,13 +383,6 @@ AddScreen(pfnInit, argc, argv)
 	    screenInfo.screen, 
 	    screenInfo.arraySize * sizeof(ScreenRec));
     }
-
-#ifdef DEBUG
-	    for (jNI = &screenInfo.screen[i].QueryBestSize; 
-		 jNI < (void (**) ()) &screenInfo.screen[i].RegionExtents; 
-		 jNI++)
-		*jNI = NotImplemented;
-#endif /* DEBUG */
 
 
     /*

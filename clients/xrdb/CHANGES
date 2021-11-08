@@ -1,6 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  spelling mistakes have been corrected.
-     o  new interface to the display resource manager string is now used.
-     o  the bits per rgb bug has been fixed.
-

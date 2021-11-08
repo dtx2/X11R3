@@ -1,4 +1,0 @@
-LOCAL_LIBRARIES = $(XMULIB) $(XLIB)
-DEFINES = ConnectionFlags
-
-SimpleProgramTarget(xhost)

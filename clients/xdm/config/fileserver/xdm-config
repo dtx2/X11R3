@@ -1,6 +1,0 @@
-DisplayManager.servers:      /usr/lib/X11/xdm/Xdm-fileServers/Xservers
-DisplayManager.errorLogFile: /usr/lib/X11/xdm/Xdm-fileServers/xdm-errors
-DisplayManager*resources:    /usr/lib/X11/xdm/Xdm-fileServers/Xresources
-DisplayManager*startup:      /usr/lib/X11/xdm/Xdm-fileServers/Xstartup
-DisplayManager*reset:        /usr/lib/X11/xdm/Xdm-fileServers/Xreset
-DisplayManager*session:      /usr/lib/X11/xdm/Xdm-fileServers/Xsession

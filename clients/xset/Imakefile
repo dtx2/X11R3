@@ -1,3 +1,0 @@
-LOCAL_LIBRARIES = $(XMULIB) $(XLIB)
-
-SimpleProgramTarget(xset)

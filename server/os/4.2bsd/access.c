@@ -40,13 +40,6 @@ SOFTWARE.
 #endif /* hpux */
 
 #include <netdb.h>
-#ifdef TCPCONN
-#include <netinet/in.h>
-#endif /* TCPCONN */
-#ifdef DNETCONN
-#include <netdnet/dn.h>
-#include <netdnet/dnetdb.h>
-#endif
 #undef NULL
 #include <stdio.h>
 #include "dixstruct.h"
@@ -203,17 +196,7 @@ ResetHosts (display)
     char		*ptr;
     union {
         struct sockaddr	sa;
-#ifdef TCPCONN
-        struct sockaddr_in in;
-#endif /* TCPCONN */
-#ifdef DNETCONN
-        struct sockaddr_dn dn;
-#endif
     } 			saddr;
-#ifdef DNETCONN
-    struct nodeent 	*np;
-    struct dn_naddr 	dnaddr, *dnaddrp, *dnet_addr();
-#endif
     int			family;
     int			len;
     pointer		addr;
@@ -241,53 +224,6 @@ ResetHosts (display)
 	{
     	if (ptr = index (hostname, '\n'))
     	    *ptr = 0;
-#ifdef DNETCONN
-    	if ((ptr = index (hostname, ':')) && (*(ptr + 1) == ':'))
-	{
-    	    /* node name (DECnet names end in "::") */
-    	    *ptr = 0;
-    	    if (dnaddrp = dnet_addr(hostname))
-	    {
-    		    /* allow nodes to be specified by address */
-    		    NewHost ((short) AF_DECnet, (pointer) dnaddrp);
-    	    }
-	    else
-	    {
-    		if (np = getnodebyname (hostname))
-		{
-    		    /* node was specified by name */
-    		    saddr.sa.sa_family = np->n_addrtype;
-    		    if ((family = ConvertAddr (&saddr.sa, &len, &addr)) ==
-		      AF_DECnet)
-		    {
-    			bzero ((pointer) &dnaddr, sizeof (dnaddr));
-    			dnaddr.a_len = np->n_length;
-    			acopy (np->n_addr, dnaddr.a_addr, np->n_length);
-    			NewHost (family, (pointer) &dnaddr);
-    		    }
-    		}
-    	    }
-    	}
-	else
-	{
-#endif /* DNETCONN */
-#ifdef TCPCONN
-    	    /* host name */
-    	    if (hp = gethostbyname (hostname))
-	    {
-    		saddr.sa.sa_family = hp->h_addrtype;
-    		if ((family = ConvertAddr (&saddr.sa, &len, &addr)) > 0)
-#ifdef NEW_HEADER_WITH_OLD_LIBRARY
-    		    NewHost (family, (pointer)hp->h_addr_list);
-#else
-    		    NewHost (family, (pointer)hp->h_addr);
-#endif
-
-    	    }
-#endif /* TCPCONN */
-#ifdef DNETCONN
-    	}	
-#endif /* DNETCONN */
         }
         fclose (fd);
     }
@@ -483,16 +419,6 @@ CheckFamily (connection, family)
 
     switch (family)
     {
-#ifdef TCPCONN
-      case AF_INET:
-        len = sizeof (struct in_addr);
-        break;
-#endif 
-#ifdef DNETCONN
-      case AF_DECnet:
-        len = sizeof (struct dn_naddr);
-        break;
-#endif
       default:
         return (-BadValue);
     }
@@ -551,18 +477,10 @@ ConvertAddr (saddr, len, addr)
     switch (saddr->sa_family)
     {
       case AF_UNSPEC:
-#ifndef hpux
       case AF_UNIX:
-#endif
         return (0);
       case AF_INET:
-#ifdef TCPCONN
-        *len = sizeof (struct in_addr);
-        *addr = (pointer) &(((struct sockaddr_in *) saddr)->sin_addr);
-        return (AF_INET);
-#else
 	break;
-#endif
 
 #ifdef DNETCONN
       case AF_DECnet:

@@ -511,191 +511,109 @@ HandleExposures(pWin)
 	pSib = pSib->nextSib;
     }
 }
+static void InitProcedures(WindowPtr  pWin) {}
+int	defaultBackingStore = NotUseful; // hack for forcing backing store on all windows
+Bool disableBackingStore = FALSE; // hack to force no backing store
+Bool disableSaveUnders = FALSE; // hack to force no save unders
 
-#ifdef DEBUG
-extern void NotImplemented();
-#endif
-
-/*ARGSUSED*/
-static void
-InitProcedures(pWin)
-    WindowPtr pWin;
-{
-#ifdef DEBUG
-    void (**j) ();
-    for (j = &pWin->PaintWindowBackground;
-         j < &pWin->ClearToBackground; j++ )
-        *j = NotImplemented;
-#endif /* DEBUG */
-
-}
-
-
-/* hack for forcing backing store on all windows */
-int	defaultBackingStore = NotUseful;
-/* hack to force no backing store */
-Bool	disableBackingStore = FALSE;
-/* hack to force no save unders */
-Bool	disableSaveUnders = FALSE;
-
-static void
-SetWindowToDefaults(pWin, pScreen)
-    WindowPtr pWin;
-    ScreenPtr pScreen;
-{
+static void SetWindowToDefaults(WindowPtr pWin, ScreenPtr pScreen) {
     pWin->prevSib = NullWindow;
     pWin->firstChild = NullWindow;
     pWin->lastChild = NullWindow;
-
     pWin->userProps = (PropertyPtr)NULL;
-
     pWin->backingStore = NotUseful;
     pWin->backStorage = (BackingStorePtr) NULL;
     pWin->devBackingStore = (pointer) NULL;
-
     pWin->mapped = FALSE;           /* off */
     pWin->realized = FALSE;     /* off */
     pWin->viewable = FALSE;
     pWin->visibility = VisibilityNotViewable;
     pWin->overrideRedirect = FALSE;
     pWin->saveUnder = FALSE;
-
     pWin->bitGravity = ForgetGravity; 
     pWin->winGravity = NorthWestGravity;
     pWin->backingBitPlanes = ~0L;
     pWin->backingPixel = 0;
-
     pWin->eventMask = 0;
     pWin->dontPropagateMask = 0;
     pWin->allEventMasks = 0;
     pWin->deliverableEvents = 0;
-
     pWin->otherClients = (pointer)NULL;
     pWin->passiveGrabs = (pointer)NULL;
-
     pWin->exposed = (* pScreen->RegionCreate)(NULL, 1);
     pWin->borderExposed = (* pScreen->RegionCreate)(NULL, 1);
-
 }
 
-static void
-MakeRootCursor(pWin)
-    WindowPtr pWin;
-{
+static void MakeRootCursor(WindowPtr pWin) {
     unsigned char *srcbits, *mskbits;
     int i;
-    if (rootCursor)
-    {
-	pWin->cursor = rootCursor;
-	rootCursor->refcnt++;
-    }
-    else
-    {
-	CursorMetricRec cm;
-	cm.width=32;
-	cm.height=16;
-	cm.xhot=8;
-	cm.yhot=8;
-
+    if (rootCursor) {
+        pWin->cursor = rootCursor;
+        rootCursor->refcnt++;
+    } else {
+        CursorMetricRec cm;
+        cm.width=32;
+        cm.height=16;
+        cm.xhot=8;
+        cm.yhot=8;
         srcbits = (unsigned char *)xalloc( PixmapBytePad(32, 1)*16); 
         mskbits = (unsigned char *)xalloc( PixmapBytePad(32, 1)*16); 
-        for (i=0; i<PixmapBytePad(32, 1)*16; i++)
-	{
-	    srcbits[i] = mskbits[i] = 0xff;
-	}
-	pWin->cursor = AllocCursor( srcbits, mskbits,	&cm,
-				    0xFFFF, 0xFFFF, 0xFFFF, 0, 0, 0);
+        for (i=0; i<PixmapBytePad(32, 1)*16; i++) { srcbits[i] = mskbits[i] = 0xff; }
+        pWin->cursor = AllocCursor( srcbits, mskbits,	&cm, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0, 0);
     }
 }
-
-static void
-MakeRootTile(pWin)
-    WindowPtr pWin;
-{
+static void MakeRootTile(WindowPtr pWin) {
     ScreenPtr pScreen = pWin->drawable.pScreen;
     GCPtr pGC;
     unsigned char back[128];
     int len = PixmapBytePad(4, 1);
     register unsigned char *from, *to;
     register int i, j;
-
-    pWin->backgroundTile = (*pScreen->CreatePixmap)(pScreen, 4, 4,
-						    pScreen->rootDepth);
-
+    pWin->backgroundTile = (*pScreen->CreatePixmap)(pScreen, 4, 4, pScreen->rootDepth);
     pGC = GetScratchGC(pScreen->rootDepth, pScreen);
-
     {
-	CARD32 attributes[2];
-
-	attributes[0] = pScreen->whitePixel;
-	attributes[1] = pScreen->blackPixel;
-
-	ChangeGC(pGC, GCForeground | GCBackground, attributes);
+        CARD32 attributes[2];
+        attributes[0] = pScreen->whitePixel;
+        attributes[1] = pScreen->blackPixel;
+        ChangeGC(pGC, GCForeground | GCBackground, attributes);
     }
-
-   ValidateGC((DrawablePtr)pWin->backgroundTile, pGC);
-
-   from = (screenInfo.bitmapBitOrder == LSBFirst) ? _back_lsb : _back_msb;
-   to = back;
-
-   for (i = 4; i > 0; i--, from++)
-	for (j = len; j > 0; j--)
-	    *to++ = *from;
-
-   (*pGC->PutImage)(pWin->backgroundTile, pGC, 1,
-	            0, 0, 4, 4, 0, XYBitmap, back);
-
-   FreeScratchGC(pGC);
-
+    ValidateGC((DrawablePtr)pWin->backgroundTile, pGC);
+    from = (screenInfo.bitmapBitOrder == LSBFirst) ? _back_lsb : _back_msb;
+    to = back;
+    for (i = 4; i > 0; i--, from++)
+    for (j = len; j > 0; j--)
+    *to++ = *from;
+    (*pGC->PutImage)(pWin->backgroundTile, pGC, 1, 0, 0, 4, 4, 0, XYBitmap, back);
+    FreeScratchGC(pGC);
 }
-
-/*****
- * CreateRootWindow
- *    Makes a window at initialization time for specified screen
- *****/
-
-int
-CreateRootWindow(screen)
-    int		screen;
-{
+// Makes a window at initialization time for specified screen
+int CreateRootWindow(int screen) {
     WindowPtr	pWin;
     BoxRec	box;
     ScreenPtr	pScreen;
-
     savedScreenInfo[screen].pWindow = NULL;
     savedScreenInfo[screen].wid = FakeClientID(0);
     savedScreenInfo[screen].cid = FakeClientID(0);
     screenIsSaved = SCREEN_SAVER_OFF;
-    
     pWin = &WindowTable[screen];
     pScreen = &screenInfo.screen[screen];
     InitProcedures(pWin);
-
     pWin->drawable.pScreen = pScreen;
     pWin->drawable.type = DRAWABLE_WINDOW;
-
     pWin->drawable.depth = pScreen->rootDepth;
-
     pWin->drawable.serialNumber = NEXT_SERIAL_NUMBER;
-
     pWin->parent = NullWindow;
     SetWindowToDefaults(pWin, pScreen);
-
     pWin->colormap = pScreen->defColormap;    
-
     pWin->nextSib = NullWindow;
-
     MakeRootCursor(pWin);
-
     pWin->client = serverClient;        /* since belongs to server */
     pWin->wid = FakeClientID(0);
-
     pWin->clientWinSize.x = pWin->clientWinSize.y = 0;
     pWin->clientWinSize.height = pScreen->height;
     pWin->clientWinSize.width = pScreen->width;
     pWin->absCorner.x = pWin->absCorner.y = 0;
     pWin->oldAbsCorner.x = pWin->oldAbsCorner.y = 0;
-
     box.x1 = 0;
     box.y1 = 0;
     box.x2 = pScreen->width;
@@ -704,40 +622,28 @@ CreateRootWindow(screen)
     pWin->winSize = (* pScreen->RegionCreate)(&box, 1);
     pWin->borderSize = (* pScreen->RegionCreate)(&box, 1);
     pWin->borderClip = (* pScreen->RegionCreate)(&box, 1); 
-
     pWin->class = InputOutput;
     pWin->visual = pScreen->rootVisual;
-
     pWin->backgroundTile = (PixmapPtr)USE_BACKGROUND_PIXEL;
     pWin->backgroundPixel = pScreen->whitePixel;
-
     pWin->borderTile = (PixmapPtr)USE_BORDER_PIXEL;
     pWin->borderPixel = pScreen->blackPixel;
     pWin->borderWidth = 0;
-
     AddResource(pWin->wid, RT_WINDOW, (pointer)pWin, DeleteWindow, RC_CORE);
-
-    /* re-validate GC for use with root Window */
-
+    // re-validate GC for use with root Window
     (*pScreen->CreateWindow)(pWin);
     (*pScreen->PositionWindow)(pWin, 0, 0);
-
     MakeRootTile(pWin);
-    /* We SHOULD check for an error value here XXX */
+    // We SHOULD check for an error value here XXX
     (*pScreen->ChangeWindowAttributes)(pWin, CWBackPixmap | CWBorderPixel);
     (void)EventSelectForWindow(pWin, serverClient, (Mask)0); /* can't fail */
-
-    MapWindow(pWin, DONT_HANDLE_EXPOSURES, BITS_DISCARDED, 
-	      DONT_SEND_NOTIFICATION, serverClient);
+    MapWindow(pWin, DONT_HANDLE_EXPOSURES, BITS_DISCARDED, DONT_SEND_NOTIFICATION, serverClient);
     (*pWin->PaintWindowBackground)(pWin, pWin->clipList, PW_BACKGROUND);
-
     pWin->backingStore = defaultBackingStore;
-    /* We SHOULD check for an error value here XXX */
+    // We SHOULD check for an error value here XXX
     (*pScreen->ChangeWindowAttributes)(pWin, CWBackingStore);
-
     if (disableBackingStore)
 	pScreen->backingStoreSupport = NotUseful;
-
 #ifdef DO_SAVE_UNDERS
     if ((pScreen->backingStoreSupport != NotUseful) &&
 	(pScreen->saveUnderSupport == NotUseful))

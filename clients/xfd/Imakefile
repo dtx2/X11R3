@@ -1,5 +1,0 @@
-LOCAL_LIBRARIES = $(XLIB)
-           SRCS = xfd.c wsimple.c
-           OBJS = xfd.o wsimple.o
-
-ComplexProgramTarget(xfd)

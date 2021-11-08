@@ -1,9 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  reverse video bugs have been fixed.
-     o  added -fg and -bg.
-     o  unfortunately, hp mode is still very broken.
-
-
-This application should be split into widgets for each of the different 
-styles of calculator.  It is currently almost unmaintainable.

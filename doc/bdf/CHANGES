@@ -1,6 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  sources for the BDF specification now exist
-     o  errors in the font name property have been fixed.
-     o  BDF format is now a Consortium standard for interchange.
-

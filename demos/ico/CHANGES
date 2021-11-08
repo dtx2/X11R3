@@ -1,6 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  changed tetra to octa.
-     o  added plane and pyr.
-     o  wait for expose event before drawing.
-

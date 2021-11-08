@@ -1,9 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o	many bugs have been fixed.
-     o	a default initial geometry is now set in app-defaults/Xmh so
-	first-time users are treated a little nicer.
-     o	a new option, ReplyInsertFilter, has been added to allow easy
-	incorporation of the text of the message being replied to.
-     o	the application cursor is now a resource.
-     o	wordWrap mode is now used in all message windows.

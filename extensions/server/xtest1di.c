@@ -126,7 +126,6 @@ static void	XTestResetProc();
 
 static void	SReplyXTestDispatch();
 static void	SEventXTestDispatch();
-void	NotImplemented();
 
 void	abort_play_back();
 void	return_input_array_size();

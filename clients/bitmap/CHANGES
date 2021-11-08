@@ -1,7 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  many nits have been fixed.
-     o  ^C or q anywhere in the window is the same as pressing Quit.
-     o  color problems have been fixed.
-     o  the new Xmu miscellaneous utilities library is used to read the 
-	bitmap file.

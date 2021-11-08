@@ -1,6 +1,7 @@
 /***********************************************************
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
 and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+Copyright 2021 Edward Halferty
 
                         All Rights Reserved
 
@@ -25,7 +26,7 @@ SOFTWARE.
 /*****************************************************************
  *  Stuff to create connections --- OS dependent
  *
- *      EstablishNewConnections, CreateWellKnownSockets, ResetWellKnownSockets,
+ *      EstablishNewConnections, CreateWellKnownSocket, ResetWellKnownSockets,
  *      CloseDownConnection, CheckConnections, AddEnabledDevice,
  *	RemoveEnabledDevice, OnlyListToOneClient,
  *      ListenToAllClients,
@@ -52,37 +53,16 @@ SOFTWARE.
 #include <fcntl.h>
 #include <setjmp.h>
 
-#ifdef hpux
-#include <sys/ioctl.h>
-#endif
-
-#ifdef TCPCONN
-#include <netinet/in.h>
-#ifndef hpux
-#include <netinet/tcp.h>
-#endif
-#endif
-
-#ifdef UNIXCONN
-/*
- * sites should be careful to have separate /tmp directories for diskless nodes
- */
+// sites should be careful to have separate /tmp directories for diskless nodes
 #include <sys/un.h>
 #include <sys/stat.h>
 static int unixDomainConnection = -1;
-#endif
-
 #include <stdio.h>
 #include <sys/uio.h>
 #include "osstruct.h"
 #include "osdep.h"
 #include "opaque.h"
 #include "dixstruct.h"
-
-#ifdef DNETCONN
-#include <netdnet/dn.h>
-#endif /* DNETCONN */
-
 typedef long CCID;      /* mask of indices into client socket table */
 
 #ifndef X_UNIX_PATH
@@ -107,191 +87,60 @@ long NConnBitArrays = mskcnt;
 long FirstClient;
 Bool NewOutputPending;		/* not yet attempted to write some new output */
 Bool AnyClientsWriteBlocked;	/* true if some client blocked on write */
-
 static Bool debug_conns = FALSE;
-
 static char whichByteIsFirst;
-
 static int SavedAllClients[mskcnt];
 static int SavedAllSockets[mskcnt];
 static int SavedClientsWithInput[mskcnt];
 static Bool GrabDone = FALSE;
-
 ClientPtr ConnectionTranslation[MAXSOCKS];
 extern ClientPtr NextAvailableClient();
-
 extern ConnectionInput inputBuffers[];
-
 int swappedClients[MAXSOCKS];
-
 extern int AutoResetServer();
 extern int GiveUp();
-
-#ifdef UNIXCONN
-
 static struct sockaddr_un unsock;
-
-static int open_unix_socket ()
-{
+static int open_unix_socket () {
     int oldUmask;
     int request;
-
     unsock.sun_family = AF_UNIX;
     oldUmask = umask (0);
-#ifdef X_UNIX_DIR
     mkdir (X_UNIX_DIR, 0777);
-#endif
     strcpy (unsock.sun_path, X_UNIX_PATH);
     strcat (unsock.sun_path, display);
     unlink (unsock.sun_path);
-    if ((request = socket (AF_UNIX, SOCK_STREAM, 0)) < 0) 
-    {
-	Notice ("Creating Unix socket");
-    } 
-    else 
-    {
-	if(bind(request,(struct sockaddr *)&unsock, strlen(unsock.sun_path)+2))
-	    Error ("Binding Unix socket");
-	if (listen (request, 5)) Error ("Unix Listening");
+    if ((request = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) { Notice("Creating Unix socket"); }
+    else {
+        if(bind(request,(struct sockaddr *)&unsock, strlen(unsock.sun_path)+2)) { Error ("Binding Unix socket"); }
+        if (listen (request, 5)) { Error("Unix Listening"); }
     }
     (void)umask(oldUmask);
     return request;
 }
-#endif /*UNIXCONN */
-
-/*****************
- * CreateWellKnownSockets
- *    At initialization, create the sockets to listen on for new clients.
- *    There are potentially 4: DECnet, UNIX Domain, TCP-IP with MSB first, 
- *    with TCP-IP with LSB first.
- *****************/
-
-void
-CreateWellKnownSockets()
-{
+// At initialization, create the socket to listen on for new clients.
+void CreateWellKnownSocket() {
     int		request, i;
-    int		whichbyte;	    /* used to figure out whether this is
-   					 LSB or MSB */
-#ifdef TCPCONN
-    struct sockaddr_in insock;
-    int		tcpportReg;	    /* port with same byte order as server */
-
-#ifdef SO_LINGER
-    static int linger[2] = { 0, 0 };
-#endif /* SO_LINGER */
-
-#endif /* TCPCONN */
-
-#ifdef DNETCONN
-    struct sockaddr_dn dnsock;
-#endif /* DNETCONN */
+    int		whichbyte;	    /* used to figure out whether this is LSB or MSB */
     int retry;
-
     CLEARBITS(AllSockets);
     CLEARBITS(AllClients);
     CLEARBITS(LastSelectMask);
     CLEARBITS(ClientsWithInput);
-
-    for (i=0; i<MAXSOCKS; i++) ConnectionTranslation[i] = (ClientPtr)NULL;
-    
-#ifdef	hpux
-	lastfdesc = _NFILE - 1;
-#else
+    for (i=0; i<MAXSOCKS; i++) { ConnectionTranslation[i] = (ClientPtr)NULL; }
 	lastfdesc = getdtablesize() - 1;
-#endif	/* hpux */
-
-    if (lastfdesc > MAXSOCKS)
-    {
-	lastfdesc = MAXSOCKS;
-	if (debug_conns)
-	    ErrorF( "GOT TO END OF SOCKETS %d\n", MAXSOCKS);
+    if (lastfdesc > MAXSOCKS) {
+        lastfdesc = MAXSOCKS;
+        if (debug_conns) { ErrorF( "GOT TO END OF SOCKETS %d\n", MAXSOCKS); }
     }
-
     WellKnownConnections = 0;
     whichbyte = 1;
-    
-    if (*(char *) &whichbyte)
-        whichByteIsFirst = 'l';
-    else
-        whichByteIsFirst = 'B';
-
-
-#ifdef TCPCONN
-
-    tcpportReg = atoi (display); 
-    tcpportReg += X_TCP_PORT;
-
-    if ((request = socket (AF_INET, SOCK_STREAM, 0)) < 0) 
-    {
-	Notice ("Creating TCP socket");
-    } 
-    else 
-    {
-	bzero ((char *)&insock, sizeof (insock));
-	insock.sin_family = AF_INET;
-	insock.sin_port = htons (tcpportReg);
-	insock.sin_addr.s_addr = htonl(INADDR_ANY);
-	retry = 20;
-	while (i = bind(request, (struct sockaddr *) &insock, sizeof (insock))) 
-	{
-#ifdef hpux
-	    /* Necesary to restart the server without a reboot */
-	    if (errno == EADDRINUSE)
-		set_socket_option (request, SO_REUSEADDR);
-	    if (--retry == 0)
-		Error ("Binding TCP socket");
-	    sleep (1);
-#else
-	    if (--retry == 0)
-		Error ("Binding MSB TCP socket");
-	    sleep (10);
-#endif /* hpux */
-	}
-#ifdef hpux
-	/* return the socket option to the original */
-	if (errno)
-	    unset_socket_option (request, SO_REUSEADDR);
-#endif /* hpux */
-#ifdef SO_LINGER
-	if(setsockopt (request, SOL_SOCKET, SO_LINGER,
-		       (char *)linger, sizeof(linger)))
-	    Notice ("Setting TCP SO_LINGER\n");
-#endif /* SO_LINGER */
-	if (listen (request, 5))
-	    Error ("Reg TCP Listening");
-	WellKnownConnections |= (1 << request);
-	DefineSelf (request);
-    }
-
-#endif /* TCPCONN */
-
-#ifdef UNIXCONN
+    if (*(char *) &whichbyte) { whichByteIsFirst = 'l'; }
+    else { whichByteIsFirst = 'B'; }
     if ((request = open_unix_socket ()) != -1) {
-	WellKnownConnections |= (1L << request);
-	unixDomainConnection = request;
+        WellKnownConnections |= (1L << request);
+        unixDomainConnection = request;
     }
-#endif /*UNIXCONN */
-
-#ifdef DNETCONN
-    if ((request = socket (AF_DECnet, SOCK_STREAM, 0)) < 0) 
-    {
-	Notice ("Creating DECnet socket");
-    } 
-    else 
-    {
-	bzero ((char *)&dnsock, sizeof (dnsock));
-	dnsock.sdn_family = AF_DECnet;
-	sprintf(dnsock.sdn_objname, "X$X%d", atoi (display));
-	dnsock.sdn_objnamel = strlen(dnsock.sdn_objname);
-	if (bind (request, (struct sockaddr *) &dnsock, sizeof (dnsock)))
-		Error ("Binding DECnet socket");
-	if (listen (request, 5)) Error ("DECnet Listening");
-	WellKnownConnections |= (1 << request);
-	DefineSelf (request);
-    }
-#endif /* DNETCONN */
-    if (WellKnownConnections == 0)
-        Error ("No Listeners, nothing to do");
+    if (WellKnownConnections == 0) { Error ("No Listeners, nothing to do"); }
     signal (SIGPIPE, SIG_IGN);
     signal (SIGHUP, AutoResetServer);
     signal (SIGINT, GiveUp);
@@ -299,42 +148,28 @@ CreateWellKnownSockets()
     FirstClient = request + 1;
     AllSockets[0] = WellKnownConnections;
     ResetHosts(display);
-
-    for (i=0; i<MaxClients; i++)
-    {
-	inputBuffers[i].buffer = (char *) NULL;
-	inputBuffers[i].bufptr = (char *) NULL;
-	inputBuffers[i].bufcnt = 0;
-	inputBuffers[i].lenLastReq = 0;
-	inputBuffers[i].size = 0;
+    for (i=0; i<MaxClients; i++) {
+        inputBuffers[i].buffer = (char *) NULL;
+        inputBuffers[i].bufptr = (char *) NULL;
+        inputBuffers[i].bufcnt = 0;
+        inputBuffers[i].lenLastReq = 0;
+        inputBuffers[i].size = 0;
     }
 }
-
-void
-ResetWellKnownSockets ()
-{
-#ifdef UNIXCONN
-    if (unixDomainConnection != -1)
-    {
-	/*
-	 * see if the unix domain socket has disappeared
-	 */
-	struct stat	statb;
-
-	if (stat (unsock.sun_path, &statb) == -1 ||
-	    (statb.st_mode & S_IFMT) != S_IFSOCK)
-	{
-	    ErrorF ("Unix domain socket %s trashed, recreating\n",
-	    	unsock.sun_path);
-	    (void) unlink (unsock.sun_path);
-	    (void) close (unixDomainConnection);
-	    WellKnownConnections &= ~(1L << unixDomainConnection);
-	    unixDomainConnection = open_unix_socket ();
-	    if (unixDomainConnection != -1)
-		WellKnownConnections |= (1L << unixDomainConnection);
-	}
+void ResetWellKnownSockets() {
+    if (unixDomainConnection != -1) {
+        // see if the unix domain socket has disappeared
+        struct stat	statb;
+        if (stat (unsock.sun_path, &statb) == -1 || (statb.st_mode & S_IFMT) != S_IFSOCK) {
+            ErrorF("Unix domain socket %s trashed, recreating\n", unsock.sun_path);
+            (void) unlink (unsock.sun_path);
+            (void) close (unixDomainConnection);
+            WellKnownConnections &= ~(1L << unixDomainConnection);
+            unixDomainConnection = open_unix_socket ();
+            if (unixDomainConnection != -1)
+            WellKnownConnections |= (1L << unixDomainConnection);
+        }
     }
-#endif /* UNIXCONN */
 }
 
 
@@ -431,15 +266,7 @@ ClientAuthorized(conn, pswapped, reason)
     short slen;
     union {
 	struct sockaddr sa;
-#ifdef UNIXCONN
 	struct sockaddr_un un;
-#endif /* UNIXCONN */
-#ifdef TCPCONN
-	struct sockaddr_in in;
-#endif /* TCPCONN */
-#ifdef DNETCONN
-	struct sockaddr_dn dn;
-#endif /* DNETCONN */
     } from;
     int	fromlen;
     xConnClientPrefix xccp;
@@ -537,22 +364,6 @@ EstablishNewConnections(newclients, nnew)
     char *reason;
     struct iovec iov[2];
     char p[3];
-
-#ifdef TCP_NODELAY
-    union {
-	struct sockaddr sa;
-#ifdef UNIXCONN
-	struct sockaddr_un un;
-#endif /* UNIXCONN */
-#ifdef TCPCONN
-	struct sockaddr_in in;
-#endif /* TCPCONN */
-#ifdef DNETCONN
-	struct sockaddr_dn dn;
-#endif /* DNETCONN */
-    } from;
-    int	fromlen;
-#endif TCP_NODELAY
 
     *nnew = 0;
     if (readyconnections = (LastSelectMask[0] & WellKnownConnections)) 

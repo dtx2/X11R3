@@ -1,13 +1,8 @@
-/*
- * Xlib include file for 4.2BSD based systems.
- */
-
+// Xlib include file for 4.2BSD based systems.
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
-
 #include <sys/uio.h>	/* needed for XlibInt.c */
-
 #include <sys/param.h> /* needed for XConnDis.c */
 
 #define MSKCNT ((NOFILE + 31) / 32)	/* size of bit array */
@@ -96,48 +91,14 @@ void free();
 #define UnlockDisplay(dis)
 #define Xfree(ptr) free((ptr))
 #define Xalloca(size) alloca((size))
-
-#if (defined ibm032)&&(defined __HIGHC__)
-pragma on(alloca);
-#endif
-
-/*
- * Note that some machines do not return a valid pointer for malloc(0), in
- * which case we provide an alternate under the control of the
- * define MALLOC_0_RETURNS_NULL.  This is necessary because some
- * Xlib code expects malloc(0) to return a valid pointer to storage.
- */
-#ifdef MALLOC_0_RETURNS_NULL
-
-# define Xmalloc(size) malloc(((size) > 0 ? (size) : 1))
-# define Xrealloc(ptr, size) realloc((ptr), ((size) > 0 ? (size) : 1))
-# define Xcalloc(nelem, elsize) calloc(((nelem) > 0 ? (nelem) : 1), (elsize))
-
-#else
-
-# define Xmalloc(size) malloc((size))
-# define Xrealloc(ptr, size) realloc((ptr), (size))
-# define Xcalloc(nelem, elsize) calloc((nelem), (elsize))
-
-#endif
-
+#define Xmalloc(size) malloc(((size) > 0 ? (size) : 1))
+#define Xrealloc(ptr, size) realloc((ptr), ((size) > 0 ? (size) : 1))
+#define Xcalloc(nelem, elsize) calloc(((nelem) > 0 ? (nelem) : 1), (elsize))
 #define BytesReadable(fd, ptr) ioctl ((fd), FIONREAD, (ptr))
-#if !defined (mips) || !defined (SYSTYPE_SYSV)
-#define ReadFromServer(dpy, data, size) read((dpy), (data), (size))
-#define WriteToServer(dpy, bufind, size) write((dpy), (bufind), (size))
-#endif /* !mips || !SYSTYPE_SYSV */
 #define ReadvFromServer(dpy, iov, iovcnt) readv((dpy), (iov), (iovcnt))
 #define WritevToServer(dpy, iov, iovcnt) writev((dpy), (iov), (iovcnt))
-/*
- *	ReadvFromServer and WritevToSever use struct iovec, normally found
- *	in Berkeley systems in <sys/uio.h>.  See the readv(2) and writev(2)
- *	manual pages for details.
- *
- *	struct iovec {
- *		caddr_t iov_base;
- *		int iov_len;
- *	};
- */
-
+/* ReadvFromServer and WritevToSever use struct iovec, normally found
+ *	in Berkeley systems in <sys/uio.h>.  See the readv(2) and writev(2) manual pages for details.
+ *	struct iovec { caddr_t iov_base; int iov_len; }; */
 extern char *index();
 #define SearchString(string, char) index((string), (char))
