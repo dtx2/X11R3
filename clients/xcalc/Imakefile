@@ -1,0 +1,9 @@
+LOCAL_LIBRARIES = $(XLIB)
+  SYS_LIBRARIES = -lm
+#ifdef MacIIArchitecture
+        DEFINES = -DIEEE
+#endif /* MacIIArchitecture */
+           SRCS = xcalc.c sr.c
+           OBJS = xcalc.o sr.o
+
+ComplexProgramTarget(xcalc)

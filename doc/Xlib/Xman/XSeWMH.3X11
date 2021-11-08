@@ -1,0 +1,184 @@
+.ds tk X Toolkit
+.ds xT X Toolkit Intrinsics \- C Language Interface
+.ds xI Intrinsics
+.ds xW Athena X Widgets \- C Language X Toolkit Interface
+.ds xL Xlib \- C Language X Interface
+.ds xC Inter-Client Communication Conventions Manual
+.ds Rn 3
+.ds Vn 2.2
+.hw XtMake-Geometry-Request XtQuery-Geometry wid-get
+.na
+.de Ds
+.nf
+.\\$1D \\$2 \\$1
+.ft 1
+.ps \\n(PS
+.\".if \\n(VS>=40 .vs \\n(VSu
+.\".if \\n(VS<=39 .vs \\n(VSp
+..
+.de De
+.ce 0
+.if \\n(BD .DF
+.nr BD 0
+.in \\n(OIu
+.if \\n(TM .ls 2
+.sp \\n(DDu
+.fi
+..
+.de FD
+.LP
+.KS
+.TA .5i 3i
+.ta .5i 3i
+.nf
+..
+.de FN
+.fi
+.KE
+.LP
+..
+.de IN		\" send an index entry to the stderr
+.tm \\n%:\\$1:\\$2:\\$3
+..
+.de C{
+.KS
+.nf
+.D
+.\"
+.\"	choose appropriate monospace font
+.\"	the imagen conditional, 480,
+.\"	may be changed to L if LB is too
+.\"	heavy for your eyes...
+.\"
+.ie "\\*(.T"480" .ft L
+.el .ie "\\*(.T"300" .ft L
+.el .ie "\\*(.T"202" .ft PO
+.el .ie "\\*(.T"aps" .ft CW
+.el .ft R
+.ps \\n(PS
+.ie \\n(VS>40 .vs \\n(VSu
+.el .vs \\n(VSp
+..
+.de C}
+.DE
+.R
+..
+.de Pn
+.ie t \\$1\fB\^\\$2\^\fR\\$3
+.el \\$1\fI\^\\$2\^\fP\\$3
+..
+.de PN
+.ie t \fB\^\\$1\^\fR\\$2
+.el \fI\^\\$1\^\fP\\$2
+..
+.de NT
+.ne 7
+.ds NO Note
+.if \\n(.$>$1 .if !'\\$2'C' .ds NO \\$2
+.if \\n(.$ .if !'\\$1'C' .ds NO \\$1
+.ie n .sp
+.el .sp 10p
+.TB
+.ce
+\\*(NO
+.ie n .sp
+.el .sp 5p
+.if '\\$1'C' .ce 99
+.if '\\$2'C' .ce 99
+.in +5n
+.ll -5n
+.R
+..
+.		\" Note End -- doug kraft 3/85
+.de NE
+.ce 0
+.in -5n
+.ll +5n
+.ie n .sp
+.el .sp 10p
+..
+.ny0
+.TH XSetWMHints 3X11 "1 September 1988" "X Version 11" 
+.SH NAME
+XSetWMHints, XGetWMHints \- set or get window manager hints
+.SH SYNTAX
+XSetWMHints\^(\^\fIdisplay\fP, \fIw\fP, \fIwmhints\fP\^)
+.br
+      Display *\fIdisplay\fP\^;
+.br
+      Window \fIw\fP\^;
+.br
+      XWMHints *\fIwmhints\fP\^;
+
+.LP
+XWMHints *XGetWMHints\^(\^\fIdisplay\fP, \fIw\fP\^)
+.br
+      Display *\fIdisplay\fP\^;
+.br
+      Window \fIw\fP\^;
+.SH ARGUMENTS
+.\" $Header: display.a,v 1.1 88/02/26 10:26:29 mento Exp $
+.IP \fIdisplay\fP 1i
+Specifies the connection to the X server.
+.\" $Header: w.a,v 1.2 88/05/07 11:35:31 mento Exp $
+.IP \fIw\fP 1i
+Specifies the window.
+.IP \fIwmhints\fP 1i
+Specifies a pointer to the window manager hints.
+.SH DESCRIPTION
+.\" $Header: XSetWMHnts.d,v 1.1 88/02/26 10:51:06 mento Exp $
+The
+.PN XSetWMHints
+function sets the window manager hints that include icon information and location,
+the initial state of the window, and whether the application relies on the
+window manager to get keyboard input.
+.LP
+.ds fd .PN XSetWMHints
+\*(fd
+can generate
+.PN BadAlloc
+and
+.PN BadWindow 
+errors.
+.LP
+.\" $Header: XGetWMHnts.d,v 1.5 88/06/11 07:51:30 mento Exp $
+The
+.PN XGetWMHints
+function reads the window manager hints and 
+returns NULL if no WM_HINTS property was set on the window 
+or a pointer to a 
+.PN XWMHints 
+structure if it succeeds.
+When finished with the data,
+free the space used for it by calling
+.PN XFree .
+.LP
+.ds fd .PN XGetWMHints
+\*(fd 
+can generate a
+.PN BadWindow 
+error.
+.SH PROPERTY
+WM_HINTS
+.SH DIAGNOSTICS
+.\" $Header: badalloc.e,v 1.3 87/09/11 11:17:14 mento Exp $
+.TP 1i
+.PN BadAlloc
+The server failed to allocate the requested resource or server memory.
+.\" $Header: badwindow.e,v 1.1 87/09/04 08:23:20 mento Exp $
+.TP 1i
+.PN BadWindow
+A value for a Window argument does not name a defined Window.
+.SH "SEE ALSO"
+XSetClassHint(3X11),
+XSetCommand(3X11),
+XSetIconName(3X11),
+XSetIconSizeHints(3X11),
+XSetNormalHints(3X11),
+XSetSizeHints(3X11),
+XSetStandardProperties(3X11),
+XSetTransientForHint(3X11),
+XSetZoomHints(3X11),
+XStoreName(3X11)
+.br
+\fI\*(xL\fP

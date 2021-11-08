@@ -1,0 +1,419 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 26 Apr 88 20:12:04 EDT
+Date: Tue, 26 Apr 88 20:12 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: tiling, and default colormap reinstallation
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <880426201217.3.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   422
+### area:         server
+### severity:     low
+### comments:     fixed on HP, colormap updating OK on QDSS but garbage tile
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	Sun 3/280 running SunOS 3.4
+
+DISPLAY:
+	QDSS and HP Topcat
+
+AREA:
+	server
+
+SYNOPSIS:
+	Tiling bugs, colormap bugs.
+
+DESCRIPTION:
+	The program below, when pointed at an HP Topcat, causes
+	output to areas other than the destination window.  When
+	pointed at an 8-plane VS32000, the window contents are
+	garbage (tiling bug?), and the colormap updating doesn't
+	seem to work.  When the program is killed off, the default
+	colormap is reinstalled, but its actual colors aren't.
+	If another colormap is installed, and then the default
+	colormap is reinstalled, the colors of the default colormap	
+	are correctly restored.
+
+REPEAT-BY:
+	run the program given below
+
+
+Date: Fri, 22 Apr 88 13:24:11 PDT
+From: Bob Schumaker <rts@adea-att.arpa>
+Message-Id: <8804222024.AA12271@wahpenayo>
+
+Here is a hack that I threw together to play with X and colors (actually, it's
+a version of my standard "let's see how this works" program for X).  It displays
+a bunch of colors (I took them from the rgb.txt file that came with R2) by creating
+instances of them in a brand-new colormap.  The colormap is installed and deinstalled
+by watching the mouse.
+
+Hitting the space bar will tile the window with the next color.
+Hitting 'q' or 'Q' will quit the program.
+
+It's not extraordinarily well commented, but I hope that it will be some help.
+
+=========================================================================================
+#include <stdio.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+#include <X11/cursorfont.h>
+
+/*
+ *  hack  --  playing with windows and mouse buttons (and now, color)
+ *                       rts
+ */
+
+#define	BORDER_WIDTH	3
+#ifndef TRUE
+#define	TRUE	1
+#define	FALSE	0
+#endif
+
+#define xlogo32_width 32
+#define xlogo32_height 32
+static char xlogo32_bits[] = {
+   0xff, 0x00, 0x00, 0xc0, 0xfe, 0x01, 0x00, 0xc0, 0xfc, 0x03, 0x00, 0x60,
+   0xf8, 0x07, 0x00, 0x30, 0xf8, 0x07, 0x00, 0x18, 0xf0, 0x0f, 0x00, 0x0c,
+   0xe0, 0x1f, 0x00, 0x06, 0xc0, 0x3f, 0x00, 0x06, 0xc0, 0x3f, 0x00, 0x03,
+   0x80, 0x7f, 0x80, 0x01, 0x00, 0xff, 0xc0, 0x00, 0x00, 0xfe, 0x61, 0x00,
+   0x00, 0xfe, 0x31, 0x00, 0x00, 0xfc, 0x33, 0x00, 0x00, 0xf8, 0x1b, 0x00,
+   0x00, 0xf0, 0x0d, 0x00, 0x00, 0xf0, 0x0e, 0x00, 0x00, 0x60, 0x1f, 0x00,
+   0x00, 0xb0, 0x3f, 0x00, 0x00, 0x98, 0x7f, 0x00, 0x00, 0x98, 0x7f, 0x00,
+   0x00, 0x0c, 0xff, 0x00, 0x00, 0x06, 0xfe, 0x01, 0x00, 0x03, 0xfc, 0x03,
+   0x80, 0x01, 0xfc, 0x03, 0xc0, 0x00, 0xf8, 0x07, 0xc0, 0x00, 0xf0, 0x0f,
+   0x60, 0x00, 0xe0, 0x1f, 0x30, 0x00, 0xe0, 0x1f, 0x18, 0x00, 0xc0, 0x3f,
+   0x0c, 0x00, 0x80, 0x7f, 0x06, 0x00, 0x00, 0xff};
+
+char *color_names[] = {
+    "White",
+    "Black",
+    "Aquamarine",
+    "MediumAquamarine",
+    "Blue",
+    "CadetBlue",
+    "CornflowerBlue",
+    "DarkSlateBlue",
+    "LightBlue",
+    "LightSteelBlue",
+    "MediumBlue",
+    "MediumSlateBlue",
+    "MidnightBlue",
+    "NavyBlue",
+    "Navy",
+    "SkyBlue",
+    "SlateBlue",
+    "SteelBlue",
+    "Coral",
+    "Cyan",
+    "Firebrick",
+    "Brown",
+    "Gold",
+    "Goldenrod",
+    "MediumGoldenrod",
+    "Green",
+    "DarkGreen",
+    "DarkOliveGreen",
+    "ForestGreen",
+    "LimeGreen",
+    "MediumForestGreen",
+    "MediumSeaGreen",
+    "MediumSpringGreen",
+    "PaleGreen",
+    "SeaGreen",
+    "SpringGreen",
+    "YellowGreen",
+    "DarkSlateGrey",
+    "DimGrey",
+    "LightGrey",
+    "Grey",
+    "Khaki",
+    "Magenta",
+    "Maroon",
+    "Orange",
+    "Orchid",
+    "DarkOrchid",
+    "MediumOrchid",
+    "Pink",
+    "Plum",
+    "Red",
+    "IndianRed",
+    "MediumVioletRed",
+    "OrangeRed",
+    "VioletRed",
+    "Salmon",
+    "Sienna",
+    "Tan",
+    "Thistle",
+    "Turquoise",
+    "DarkTurquoise",
+    "MediumTurquoise",
+    "Violet",
+    "BlueViolet",
+    "Wheat",
+    "Yellow",
+    "GreenYellow",
+    NULL
+};
+/* some stuff to save colors in */
+GContext gc, copygc;
+XColor *colors;
+int ncolors, rootncolors;
+
+int screen, depth;
+Display	*display = NULL;		/* descriptors for the displays */
+Window  window;			/* descriptors for the windows */
+int debug = FALSE;
+XSizeHints sizehints;
+char *program;
+Cursor curCursor;
+Colormap cmap = NULL;
+Pixmap pic;			/* just to simplify things */
+Pixmap tile;
+Pixmap xlogo;
+int width, height;
+
+init (argc, argv)
+     int argc;
+     char **argv;
+{
+    int i;
+    int geomStat;
+    XGCValues xgcv;
+    XSetWindowAttributes xswa;
+    Window root;
+    Visual visual;
+    char *geom = NULL;
+    char *displayName = NULL;
+    XColor temp;
+    
+    for (i=1;i<argc;++i) {
+	if (argv[i][0] == '=') geom = argv[i];
+	else if (index(argv[i], ':')) displayName = argv[i];
+	else if (!strcmp (argv[i], "-debug")) debug = TRUE;
+    }
+    
+    if (debug)
+      printf("About to XOpenDisplay(%s).\n", displayName);
+    display = XOpenDisplay(displayName);
+    if (debug)
+      printf("XopenDisplay(%s) returned %x.\n", displayName, display);
+    if (display == NULL)
+      {
+	  fprintf(stderr, "%s: unable to open display \"%s\".\n",
+		  program, XDisplayName (display));
+	  exit(-1);
+      }
+    
+    screen = XDefaultScreen (display);
+    depth = XDefaultDepth (display, screen);
+    
+    if (debug)
+      fprintf (stderr, "Using screen %d.\n", screen);
+    
+    for (ncolors=0;color_names[ncolors] != NULL;++ncolors);
+    /* ok, so this is a kludge, but it'll work, I promise */
+    for (i=2;i*i < ncolors;++i);
+    rootncolors = i;
+    sizehints.x = sizehints.y = 0;
+    sizehints.width = width = i*xlogo32_width;
+    sizehints.height = height = i*xlogo32_height;
+    sizehints.flags = 0;
+    if (geom) {
+	geomStat = XParseGeometry (geom, &(sizehints.x), &(sizehints.y),
+				   &(sizehints.width), &(sizehints.height));
+	if (geomStat & (XValue | YValue))
+	  sizehints.flags |= USPosition;
+	if (geomStat & (WidthValue | HeightValue))
+	  sizehints.flags |= USSize;
+    }
+    
+    root = XRootWindow (display, screen);
+    if (debug)
+      fprintf (stderr, "Using root window %d\n", root);
+    
+    xswa.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |
+      EnterWindowMask | LeaveWindowMask;
+
+    xswa.backing_store = Always;
+    xswa.border_pixel = BlackPixel (display, screen);
+    xswa.background_pixel = WhitePixel (display, screen);
+    xswa.cursor = XCreateFontCursor (display, XC_arrow);
+    xswa.override_redirect = TRUE;
+    
+    if (debug)
+      fprintf (stderr, "About to XCreateWindow\n");
+    window = XCreateWindow (display, root, sizehints.x, sizehints.y,
+			    sizehints.width, sizehints.height,
+			    BORDER_WIDTH,
+			    CopyFromParent, InputOutput, CopyFromParent,
+			    CWEventMask | /* CWBackingStore | */ CWBorderPixel |
+			    CWBackPixel | CWCursor,
+			    &xswa);
+    if (debug)
+      fprintf (stderr, "XCreateWindow returned %d.\n", window);
+    
+    if (debug)
+      fprintf (stderr, "Calling XSetStandardProperties.\n");
+    XSetStandardProperties (display, window, "Call me Ishmael...", "   XHACK   ",
+			    None, argv, argc, &sizehints);
+
+    if (debug)
+      fprintf (stderr, "Making graphics context.\n");
+
+    colors = (XColor *) calloc (ncolors, sizeof (XColor));
+    cmap = XCreateColormap (display, window, XDefaultVisual (display, screen), AllocNone);
+
+    for (i=0;i<ncolors;++i) {
+	/* temp is thrown away -- it's the exact representation -- which we
+	   can't use.  We store the color that the hardware can represent */
+	XAllocNamedColor (display, cmap, color_names[i], &colors[i], &temp);
+	/* we haven't done any error checking */
+    }
+    XSetWindowColormap (display, window, cmap);
+
+    xgcv.line_width = 5;
+    xgcv.fill_style = FillTiled;
+    xgcv.foreground = colors[1].pixel;
+    xgcv.background = colors[0].pixel;
+    gc = (GContext) XCreateGC (display, window,
+			       GCForeground | GCBackground | GCFillStyle, &xgcv);
+    copygc = (GContext) XCreateGC (display, window, GCForeground | GCBackground, &xgcv);
+
+    if (debug)
+      fprintf (stderr, "Flushing display.\n");
+    XFlush(display);
+    if (debug)
+      fprintf (stderr, "Done with init.\n");
+}
+
+void setupGC (col, bits, width, height)
+     int col;
+     char *bits;
+     int width, height;
+{
+    int fg, bg;
+
+    if (col == 0) {
+	fg = colors[0].pixel;
+	bg = colors[1].pixel;
+    }
+    else {
+	fg = colors[col].pixel;
+	bg = colors[0].pixel;
+    }
+    XSetForeground (display, gc, fg);
+    XSetBackground (display, gc, bg);
+    if (tile)
+      XFreePixmap (display, tile);
+    tile = XCreatePixmapFromBitmapData (display, window,
+					bits, width, height,
+					fg, bg, depth);
+    XSetTile (display, gc, tile);
+}
+
+void initpic ()
+{
+    int x, y;
+    register int i;
+    long fg, bg;
+
+    if (debug)
+      fprintf (stderr, "Creating picture\n");
+
+    if (debug)
+      fprintf (stderr, "Creating picture (%d colors)\n", ncolors);
+    tile = NULL;
+    pic = XCreatePixmap (display, window, width, height, depth);
+    for (i=0,x=0,y=0;i<ncolors;) {
+	setupGC (i, xlogo32_bits, xlogo32_width, xlogo32_height);
+	XFillRectangle (display, pic, gc, x, y, xlogo32_width, xlogo32_height);
+	if (((++i) % rootncolors) == 0) {
+	    x = 0;
+	    y += xlogo32_height;
+	}
+	else
+	  x += xlogo32_width;
+    }
+}
+
+void processEvents ()
+{
+    register int i;
+    XEvent ev;
+    char buffer[128];
+    int next = -1;
+    
+    if (debug)
+      fprintf (stderr, "About to map window.\n");
+    XMapWindow(display, window);
+
+    XCopyArea (display, pic, window, copygc, 0, 0, width, height, 0, 0);
+
+    if (debug)
+      fprintf (stderr, "About to enter loop (%x).\n", display);
+    while (1) {
+	XNextEvent(display, &ev);
+	switch (ev.type) {
+	  case KeyPress:
+	    if (XLookupString (&ev, buffer, 128, NULL, NULL) == 1)
+	      switch (buffer[0]) {
+		case 'q':
+		case 'Q':
+		  return;
+		case ' ':
+		  next = (++next) % ncolors;
+		  setupGC (next, xlogo32_bits, xlogo32_width, xlogo32_height);
+		  XFillRectangle (display, window, gc, 0, 0, width, height);
+		  break;
+		default:
+		  XCopyArea (display, pic, window, copygc,
+			     0, 0, width, height, 0, 0);
+		  break;
+	      }
+	    continue;
+	  case EnterNotify:
+	    if (cmap != NULL)
+	      XInstallColormap (display, cmap);
+	    break;
+	  case LeaveNotify:
+	    if (cmap != NULL)
+	      XUninstallColormap (display, cmap);
+	    break;
+	  case MotionNotify:
+	    break;
+	  case ButtonPress:
+	    printf ("ButtonPressed\n");
+	    break;
+	  case NoExpose:
+	    break;
+	  case Expose:
+	    XCopyArea (display, pic, window, copygc,
+		       ev.xexpose.x, ev.xexpose.y,
+		       ev.xexpose.width, ev.xexpose.height,
+		       ev.xexpose.x, ev.xexpose.y);
+	    break;
+	  default:
+	    printf("unknown event %d.\n", ev.type);
+	    break;
+	}
+    }
+}
+
+main(argc, argv)
+     int argc;
+     char **argv;
+{
+    
+    program = argv[0];
+    init (argc, argv);
+    initpic ();
+    processEvents ();
+    exit (0);
+}
+
+

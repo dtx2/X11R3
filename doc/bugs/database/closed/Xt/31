@@ -1,0 +1,45 @@
+Return-Path: fred%hpcvxft@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 26 Apr 88 12:28:21 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA03459; Tue, 26 Apr 88 11:26:54 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 26 Apr 88 08:26:27 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA20596; Tue, 26 Apr 88 09:25:55 PDT
+Received: from hpcvxft by hpcvxft.HP.COM; Tue, 26 Apr 88 09:26:36 pdt
+Message-Id: <8804261626.AA18989@hpcvxft.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Cc: haynes@decwrl.dec.com
+Subject: Bug in CoreDestroy()
+X-Mailer: mh6.5
+Date: Tue, 26 Apr 88 09:26:30 PDT
+From: fred%hpcvxft@hplabs.hp.com
+
+### bug number:   420
+### area:         Xt
+### severity:     medium
+### comments:     workaround: don't reuse these resources
+### status:       closed
+
+
+VERSION:
+	Xtk release 2
+
+SYNOPSIS:
+	CoreDestroy() frees up resources owned by the application
+
+DESCRIPTION:
+	When a widget is destroyed, the CoreDestroy() routine frees up
+        the background pixmap and the border pixmap, if they are defined.
+        Unfortunately, these resource were owned by the application; the
+        intrinsics had not ever made their own private copy.  The next
+        time the application tries to use that pixmap, an X Error occurs.
+
+REPEAT-BY:
+	Create a widget and assign a background pixmap.
+        Destroy the widget.
+        Create a second widget using the same background pixmap.
+        An X Error occurs.
+
+FIX:
+	Remove the freeing of the border and background pixmaps from
+        CoreDestroy().
+

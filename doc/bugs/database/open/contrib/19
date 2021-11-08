@@ -1,0 +1,83 @@
+Return-Path: James.Healy@lisp-rt2.slisp.cs.cmu.edu
+Received: by expo.lcs.mit.edu; Tue, 30 Aug 88 13:18:10 EDT
+Received: from LISP-RT2.SLISP.CS.CMU.EDU by LISP-RT2.SLISP.CS.CMU.EDU; 30 Aug 88 13:16:57 EDT
+To: xbugs@expo.lcs.mit.edu
+Reply-To: healy@spice.cs.cmu.edu
+Subject: Bug in twm/awm?
+Date: Tue, 30 Aug 88 13:16:33 EDT
+Message-Id: <4185.588964593@LISP-RT2.SLISP.CS.CMU.EDU>
+From: James.Healy@spice.cs.cmu.edu
+
+### bug number:   922
+### area:         contrib
+### severity:     low
+### comments:     
+
+
+VERSION:       			X11 release 2.
+CLIENT MACHINE: 		IBM PC/RT
+CLIENT OPERATING SYSTEM: 	Mach
+DISPLAY: 			Moniterm (apa16)
+SYNOPSIS:
+
+Neither twm and awm don't service mouse clicks when the window_name standard
+property is not set.
+
+DESCRIPTION:
+
+Twm and awm refuse to pop up menus when the window_name standard property is not
+set.  We noticed this while running an application which uses calls to the CLX
+function "set-standard-properties".  When the name property is not set, all
+mouse events get passed on the application running in the window, some of which
+should have gone to the window manager.  Setting the name property fixed the
+problem.
+
+REPEAT-BY:
+
+The CLX code we're using is this:
+
+(defun maybe-prompt-user-for-window (parent x y width height modelinep icon-name)
+  (let* ((extra-y (+ hunk-top-border hunk-bottom-border))
+	 (font-height (font-family-height *default-font-family*))
+	 (font-width (font-family-width *default-font-family*))
+	 (extra-y-w/-modeline (+ extra-y hunk-modeline-top hunk-modeline-bottom))
+	 (pix-width (if width (+ (* width font-width) hunk-left-border)))
+	 (pix-height (if height
+			 (if modelinep
+			     (+ (* (1+ height) font-height) extra-y-w/-modeline)
+			     (+ (* height font-height) extra-y))))
+	 (win (xlib:create-window
+	       :parent parent :x (or x 0) :y (or y 0)
+	       :width (or pix-width 0) :height (or pix-height 0)
+	       :background *default-background-pixel*
+	       :border-width xwindow-border-width
+	       :border *default-border-pixmap*
+	       :class :input-output)))
+    (xlib:set-standard-properties
+     win
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Adding this name keyword fixes the problem
+     :name (new-hemlock-window-name)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+     :icon-name icon-name
+     :resource-name "Hemlock"
+     :x x :y y
+     :min-width (+ (* minimum-window-columns font-width) hunk-left-border)
+     :min-height (if modelinep
+		     (+ (* (1+ minimum-window-lines) font-height)
+			extra-y-w/-modeline)
+		     (+ (* minimum-window-lines font-height) extra-y))
+     :width pix-width :height pix-height
+     :width-inc font-width :height-inc font-height)
+    win))
+
+NOTE:
+
+I don't really have time to try and verify this properly so this report may be
+erroneous.  (i.e. What I think is a bug might be the result of my ignorance.)
+If this can't be verified, either ignore it or send me mail asking me for more
+details.
+
+--Jim Healy.
+
+

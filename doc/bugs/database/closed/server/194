@@ -1,0 +1,43 @@
+Return-Path: tom%hpcvxth%sde.hp.com@relay.cs.net
+Received: by expo.lcs.mit.edu; Fri, 2 Sep 88 18:45:51 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA15623; Fri, 2 Sep 88 18:45:56 EDT
+Received: from [15.255.152.2] by RELAY.CS.NET id aa21996; 2 Sep 88 17:51 EDT
+Received: from hp-pcd.HP.COM by hp-sde ; Fri, 2 Sep 88 14:49:19 pdt
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA21274; Fri, 2 Sep 88 13:26:22 PDT
+Received: from hpcvxth.HP.COM by hpcvlx.HP.COM; Fri, 2 Sep 88 13:24:06 pdt
+Received: by hpcvxth.HP.COM; Fri, 2 Sep 88 13:22:59 mdt
+Date: Fri, 2 Sep 88 13:22:59 mdt
+From: tom%hpcvxth%sde.hp.com@relay.cs.net
+Message-Id: <8809021922.AA06906@hpcvxth.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: server bug in mi
+
+### bug number:   931
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+     X11 release 2
+SYNOPSIS:
+     miss typing causes problems for 32 bit pixels
+DESCRIPTION:
+     There are idioms used in the server which don't work for
+     32 bit pixel displays.  e.g., in miPutImage(), the line
+
+         for (i = 1 << (depth-1); i > 0; i >>= 1)
+
+     in the XYPixmap case doesn't work since i is declared 
+     int rather than unsigned int.  Another case I logged earlier
+     was in the function Ones() (in Xlib).
+REPEAT-BY:
+     You need a 32 bit display.  Try XPutImage().
+FIX:
+     Check and change all such type declarations. 
+
+
+tom houser
+tom@hpcvxth
+

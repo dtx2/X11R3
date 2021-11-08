@@ -1,0 +1,31 @@
+Return-Path: lori%hpcvxlc@sde.hp.com
+Received: by expo.lcs.mit.edu; Mon, 24 Oct 88 19:21:37 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23569; Mon, 24 Oct 88 19:22:24 EDT
+Received: from hp-pcd.HP.COM by hp-sde ; Mon, 24 Oct 88 16:23:32 pdt
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA23934; Mon, 24 Oct 88 16:21:55 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Mon, 24 Oct 88 16:23:59 pdt
+Message-Id: <8810242323.AA21167@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm icon problem
+X-Mailer: mh6.5
+Date: Mon, 24 Oct 88 16:23:55 PDT
+From: Lori Cook <lori%hpcvxlc@sde.hp.com>
+
+### bug number:   1097
+### area:         uwm
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 3
+SYNOPSIS:
+	When an iconified window recieves a Map Event, it goes ahead and does it
+	but uwm doesn't see the event and unmap the icon.
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	Have client do a XMapWindow after you have iconified its window.
+	The window will pop up, but the icon remains.
+
+

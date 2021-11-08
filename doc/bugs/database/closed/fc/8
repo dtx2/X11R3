@@ -1,0 +1,57 @@
+Return-Path: Richard.Draves@ius3.ius.cs.cmu.edu
+Received: by expo.lcs.mit.edu; Sun, 19 Jun 88 21:03:22 EDT
+Message-Id: <8806200103.AA06065@EXPO.LCS.MIT.EDU>
+Date: Sun, 19 Jun 88 21:02:53 EDT
+From: Richard.Draves@ius3.ius.cs.cmu.edu
+To: xbugs@expo.lcs.mit.edu
+Subject: fc bug
+
+### bug number:   617
+### area:         fc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	APA-16
+
+SYNOPSIS:
+	fc tries to print a null string when reporting a fatal error
+
+DESCRIPTION:
+	The variable currentfont gets printed out as part of a fatal error
+	message.  However, it is never set.  So fc tries to print a null
+	pointer as string, which makes it core-dump.
+
+REPEAT-BY:
+	Feed fc some garbage input.
+
+FIX:
+*** fonts/compiler/fc.c.~1~	Sun Jun 19 18:59:16 1988
+--- fonts/compiler/fc.c	Sun Jun 19 18:59:42 1988
+***************
+*** 27,33 ****
+  extern char *gets(), *index();
+  
+  static char *myname;	/* initialized from argv[0] */
+! static char *currentfont;
+  
+  int linenum = 0;	/* for error messages */
+  int or_glyphPad = 0;	/* override glyphPading?? */
+--- 27,33 ----
+  extern char *gets(), *index();
+  
+  static char *myname;	/* initialized from argv[0] */
+! static char *currentfont = "(no name)";
+  
+  int linenum = 0;	/* for error messages */
+  int or_glyphPad = 0;	/* override glyphPading?? */
+

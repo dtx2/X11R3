@@ -1,0 +1,168 @@
+Return-Path: bilbo.geoff@seas.ucla.edu
+Received: by expo.lcs.mit.edu; Tue, 17 May 88 20:51:54 EDT
+Message-Id: <8805180051.AA02486@EXPO.LCS.MIT.EDU>
+Date:           Tue, 17 May 88 17:30:13 PDT
+From: Geoff Kuenning <bilbo.geoff@seas.ucla.edu>
+Received:       from BILBO (193.255.1.3) by FRODO
+                id smtp.15737; Tue, 17 May 88 17:29:19 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject:        XLookupColor can't handle hexadecimally-specified colors.
+
+### bug number:   509
+### area:         Xlib
+### severity:     enhancement
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Bell Technologies 386/AT
+
+CLIENT OPERATING SYSTEM:
+	SVR3
+
+DISPLAY:
+	Video 7 VEGA (IBM EGA clone)
+
+SYNOPSIS:
+	XLookupColor can't handle hexadecimally-specified colors.
+
+DESCRIPTION:
+	The code in oscolor.c which supports XLookupColor doesn't handle
+	colors that begin with pound signs.  At first blush, this doesn't
+	seem to be a problem, because hexadecimal colors are handled
+	in other places in Xlib itself;  specifically, in XParseColor.
+
+	However, there is currently no way for an application to discover
+	the *screen* definition of a chosen color regardless of how
+	it is specified, except by allocating it.  This may be undesireable;
+	I have an application that would like to resolve colors without
+	allocating them.
+
+	Furthermore, it strikes me as unfriendly that the application must
+	check a color for a leading pound sign before using XLookupColor
+	on it.
+
+	XParseColor will return the screen definition if the color is
+	gotten from the color database, but for hexadecimal colors it
+	performs the parse internally to save a round trip, so that the
+	exact definition is given in that case.
+
+	The following patch will change the server's XLookupColor support
+	so that hexadecimal colors are parsed and resolved.  This can be
+	used to support writing an XResolveColor routine as follows:
+
+	    sprintf (string, "#%4.4x%4.4x%4.4x", red, green, blue);
+	    XLookupColor (dpy, cmap, string, ...);
+
+	XParseColor should probably be changed to make use of the server
+	in all cases, so that it can consistently return the screen
+	definition of the color (but see a subsequent bug report on
+	the documentation of XParseColor's return values).
+
+REPEAT-BY:
+	Eyeball the code for XParseColor and oscolor.c.
+
+FIX:
+	The following patch enhances oscolor.c to handle hexadecimal colors;
+	this is all that is needed for XLookupColor to work with such
+	strings.
+
+	Note:  this patch was actually developed with our System V version
+	of oscolor.c.  I believe it should apply without changes to the
+	BSD version, but you never know...
+
+Index: server/os/4.2bsd/oscolor.c
+
+*** oscolor.c.old	Tue May 17 16:37:30 1988
+--- oscolor.c	Tue May 17 16:37:37 1988
+***************
+*** 41,46
+   * one database open at a time.
+   */
+  extern int havergb;
+  int
+  OsLookupColor(screen, name, len, pred, pgreen, pblue)
+      int		screen;
+
+--- 41,49 -----
+   * one database open at a time.
+   */
+  extern int havergb;
++ 
++ static int hexconv();
++ 
+  int
+  OsLookupColor(screen, name, len, pred, pgreen, pblue)
+      int		screen;
+***************
+*** 59,64
+      dbent.dsize = len;
+      dbent = fetch (dbent);
+  
+      if(dbent.dptr)
+      {
+  	prgb = (RGB *) dbent.dptr;
+
+--- 62,85 -----
+      dbent.dsize = len;
+      dbent = fetch (dbent);
+  
++     if (name[0] == '#')
++     {
++ 	name++;
++ 	len--;
++ 	if (len != 3  &&  len != 6  &&  len != 9  &&  len != 12)
++ 	    return 0;
++ 	len /= 3;
++ 	
++ 	if (hexconv (name, len, pred))
++ 	    return 0;
++ 	name += len;
++ 	if (hexconv (name, len, pgreen))
++ 	    return 0;
++ 	name += len;
++ 	if (hexconv (name, len, pblue))
++ 	    return 0;
++ 	return 1;
++     }
+      if(dbent.dptr)
+      {
+  	prgb = (RGB *) dbent.dptr;
+***************
+*** 70,72
+      return(0);
+  }
+  
+
+--- 91,116 -----
+      return(0);
+  }
+  
++ static int hexconv(name, len, presult)
++     register char *name;
++     int len;
++     unsigned short *presult;
++ {
++     register int i;
++     register unsigned short temp;
++ 
++     for (i = 0, temp = 0;  i < len;  name++, i++)
++     {
++ 	temp <<= 4;
++ 	if (*name >= '0'  &&  *name <= '9')
++ 	    temp += *name - '0';
++ 	else if (*name >= 'A'  &&  *name <= 'F')
++ 	    temp += *name - 'A' + 0xA;
++ 	else if (*name >= 'a'  &&  *name <= 'f')
++ 	    temp += *name - 'a' + 0xA;
++ 	else
++ 	    return 1;
++     }
++     *presult = temp << ((4 - len) * 4);
++     return 0;
++ }
+
+	Geoff Kuenning	geoff@lcc.ucla.edu	geoff@ITcorp.com
+

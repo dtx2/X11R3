@@ -1,0 +1,72 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:36:22 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26033; Tue, 5 Jul 88 14:34:42 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 10:34:50 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA29473; Tue, 5 Jul 88 11:34:44 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 5 Jul 88 11:36:30 pdt
+Message-Id: <8807051836.AA17829@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xload on hp9000s800
+X-Mailer: mh6.5
+Date: Tue, 05 Jul 88 11:36:26 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   687
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	HP 9000 series 800 looks for 'avenrun' not '_avenrun'
+DESCRIPTION:
+	To get the load point for the load widget, on the hp9000s800
+	you must look for 'avenrun' not '_avenrun'.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** lib/Xaw/Load.c.old	Thu Jun 30 12:53:53 1988
+--- lib/Xaw/Load.c	Thu Jun 30 12:54:10 1988
+***************
+*** 381,386
+  
+  static struct nlist namelist[] = {	    /* namelist for vmunix grubbing */
+  #define LOADAV 0
+      {"_avenrun"},
+      {0}
+  };
+
+--- 381,390 -----
+  
+  static struct nlist namelist[] = {	    /* namelist for vmunix grubbing */
+  #define LOADAV 0
++ #ifdef hpux
++ #ifdef hp9000s800
++     {"avenrun"},
++ #else
+      {"_avenrun"},
+  #endif
+  #else
+***************
+*** 382,387
+  static struct nlist namelist[] = {	    /* namelist for vmunix grubbing */
+  #define LOADAV 0
+      {"_avenrun"},
+      {0}
+  };
+  
+
+--- 386,395 -----
+      {"avenrun"},
+  #else
+      {"_avenrun"},
++ #endif
++ #else
++     {"_avenrun"},
++ #endif
+      {0}
+  };
+  
+

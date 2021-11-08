@@ -1,0 +1,55 @@
+Return-Path: @MC.LCS.MIT.EDU:jim@vx.lcs.mit.edu
+Received: from MC.LCS.MIT.EDU by expo.lcs.mit.edu; Fri, 8 Apr 88 15:09:51 EDT
+Message-Id: <8804081909.AA21265@EXPO.LCS.MIT.EDU>
+Received: from VX.LCS.MIT.EDU by MC.LCS.MIT.EDU via Chaosnet; 8 APR 88  15:11:52 EDT
+Received: by VX.LCS.MIT.EDU with sendmail-4.12/4.8 id <AA00302@VX.LCS.MIT.EDU>; Fri, 8 Apr 88 15:08:53 est
+Date: Fri, 8 Apr 88 15:08:53 est
+From: Jim Fulton <jim@vx.lcs.mit.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: mizerlines.c dy > dx
+
+### bug number:   342
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+Path: mit-vax!bloom-beacon!gatech!mcnc!decvax!savax!elrond!kearns
+From: kearns@elrond.CalComp.COM (Arlene S. Kearns)
+Newsgroups: comp.windows.x
+Subject: mizerlines.c dy > dx
+Keywords: mizerlines.c dy > dx
+Message-ID: <2099@elrond.CalComp.COM>
+Date: 7 Apr 88 14:17:46 GMT
+Organization: Calcomp, A Lockheed Company, Hudson, NH, USA
+Lines: 26
+
+
+Has anyone noticed a problem with mizerline.c
+
+If dy is greater than dx the first scan line is not stored in pspans, and 
+if therefore not draw.
+
+This is probably a bug that has already been corrected but I guess we missed
+the correction. Where should this be posted?
+
+I have X11R2, the same code existed in X11R1.
+
+I added to my server the line:
+	*pspan = pt1; 
+immediately after the line:
+	/* Y_AXIS */
+I also changed the lines (about 12 lines down) from:
+	y += signdy;
+	pspan->x = x;
+	pspan++->y = y;
+	*pwidth++ = 1;
+to:
+	y += signdy;
+	pspan++;
+	pspan->x = x;
+	pspan->y = y;
+	*pwidth++ = 1;
+
+

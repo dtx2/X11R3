@@ -1,0 +1,150 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:44:34 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26236; Tue, 5 Jul 88 14:42:57 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 10:43:09 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA29657; Tue, 5 Jul 88 11:43:11 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 5 Jul 88 11:44:57 pdt
+Message-Id: <8807051844.AA17952@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xmodmap problems/enhancements
+X-Mailer: mh6.5
+Date: Tue, 05 Jul 88 11:44:53 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   694
+### area:         xmodmap
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Checks for values > 256.
+	Processes keysym lists only if at least one valid combination is
+		found.
+	Print the keysym in error messages.
+	Checks that a given keysym is valid rather than letting an X 
+		error occur.
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/xmodmap/handle.c.old	Mon Jun 27 11:40:04 1988
+--- clients/xmodmap/handle.c	Mon Jun 27 11:39:32 1988
+***************
+*** 301,307
+      if (*line == 'x' || *line == 'X') line++, len--, fmt = "%x";
+  
+      dummy = 0;
+!     if (sscanf (line, fmt, &dummy) != 1 || dummy == 0) {
+  	badmsg ("keycode value", NULL);
+  	return (-1);
+      }
+
+--- 301,308 -----
+      if (*line == 'x' || *line == 'X') line++, len--, fmt = "%x";
+  
+      dummy = 0;
+!     if (sscanf (line, fmt, &dummy) != 1 || dummy == 0 ||
+! 			dummy != (KeyCode) dummy) {
+  	badmsg ("keycode value", NULL);
+  	return (-1);
+      }
+***************
+*** 386,392
+      n = skip_space (line, len);
+      line += n, len -= n;
+  
+!     if (get_keysym_list (line, len, &n, &kslist) < 0) {
+  	badmsg ("keycode keysym list", NULL);
+  	return (-1);
+      }
+
+--- 387,393 -----
+      n = skip_space (line, len);
+      line += n, len -= n;
+  
+!     if (get_keysym_list (line, len, &n, &kslist) < 0 || n <= 0) {
+  	badmsg ("keycode keysym list", NULL);
+  	return (-1);
+      }
+***************
+*** 496,502
+      n += skip_space (line+n, len-n);
+      line += n, len -= n;
+  
+!     if (get_keysym_list (line, len, &n, &kslist) < 0) {
+  	badmsg ("add modifier keysym list", NULL);
+  	return (-1);
+      }
+
+--- 497,503 -----
+      n += skip_space (line+n, len-n);
+      line += n, len -= n;
+  
+!     if (get_keysym_list (line, len, &n, &kslist) < 0 || n <= 0) {
+  	badmsg ("add modifier keysym list", NULL);
+  	return (-1);
+      }
+***************
+*** 600,606
+      n += skip_space (line+n, len-n);
+      line += n, len -= n;
+  
+!     if (get_keysym_list (line, len, &n, &kslist) < 0) {
+  	badmsg ("remove modifier keysym list", NULL);
+  	return (-1);
+      }
+
+--- 601,607 -----
+      n += skip_space (line+n, len-n);
+      line += n, len -= n;
+  
+!     if (get_keysym_list (line, len, &n, &kslist) < 0 || n <= 0) {
+  	badmsg ("remove modifier keysym list", NULL);
+  	return (-1);
+      }
+***************
+*** 773,778
+  
+      while (len > 0) {
+  	KeySym keysym;
+  	int n;
+  
+  	n = skip_space (line, len);
+
+--- 774,780 -----
+  
+      while (len > 0) {
+  	KeySym keysym;
++ 	KeyCode kc;
+  	int n;
+  
+  	n = skip_space (line, len);
+***************
+*** 787,793
+  	keysym = parse_keysym (line, n);
+  	line += n, len -= n;
+  	if (keysym == NoSymbol) {
+! 	    badmsgn ("keysym name '%s' in keysym list", line, n);
+  	    /* do NOT return here, look for others */
+  	    continue;
+  	}
+
+--- 789,801 -----
+  	keysym = parse_keysym (line, n);
+  	line += n, len -= n;
+  	if (keysym == NoSymbol) {
+! 	    badmsgn ("keysym name '%s' in keysym list", line-n, n);
+! 	    /* do NOT return here, look for others */
+! 	    continue;
+! 	}
+! 
+! 	if ((kc = XKeysymToKeycode(dpy, keysym)) == 0) {
+! 	    badmsgn ("keysym name; '%s' not in keyboard map", line-n, n);
+  	    /* do NOT return here, look for others */
+  	    continue;
+  	}
+

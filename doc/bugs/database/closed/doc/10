@@ -1,0 +1,46 @@
+Return-Path: ekberg@home.csc.ti.com
+Received: by expo.lcs.mit.edu; Fri, 9 Sep 88 12:19:06 EDT
+Received: by ti.com id AA29111; Fri, 9 Sep 88 11:19:01 CDT
+Received: from home by tilde id AA13166; Fri, 9 Sep 88 11:12:45 CDT
+Received: by home id AA10601; Fri, 9 Sep 88 11:12:36 CDT
+Date: Fri, 9 Sep 88 11:12:36 CDT
+From: Tom Ekberg <ekberg@home.csc.ti.com>
+Message-Id: <8809091612.AA10601@home>
+To: xbugs@expo.lcs.mit.edu
+Subject: Protocol doc missing AllocColorCells Access error return
+
+### bug number:   956
+### area:         doc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Doesn't matter
+
+CLIENT OPERATING SYSTEM:
+	Doesn't matter
+
+DISPLAY:
+	Doesn't matter
+
+SYNOPSIS:
+	AllocColorCells needs to specify an error of Access.
+
+DESCRIPTION:
+	The protocol specification on page 63 at the top contains documentation
+	for AllocColorCells which allocated writable color cells.  It lists the
+	errors as Colormap, Value and Alloc.  The error of Access is not
+	present.  This error could be generated if a server doesn't support
+	writable colormaps and a client attempts this request.
+		
+REPEAT-BY:
+	Doesn't matter
+
+FIX:
+	Add the error Access to the list of other errors.
+
+  -- tom (aisle C-4L), ekberg@csc.ti.com
+

@@ -1,0 +1,254 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Fri, 20 May 88 16:23:15 EDT
+Date: Fri, 20 May 88 16:22 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: too much mouse motion causes Sun server to wedge
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880520202202.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   526
+### area:         server
+### severity:     medium
+### comments:     work-around: hit a key
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	Sun
+
+AREA:
+	server
+
+SYNOPSIS:
+	too many events can cause the server to hang
+
+DESCRIPTION:
+	If you move the mouse on a Sun a lot during a long graphics
+	operation, the kernel queue will fill up, and on the first
+	ProcessInputEvents call the isItTimeToYield variable will be
+	reset to zero, but in calling down to sunMouseGetEvents only
+	some of the events will be read.  Subsequently, select()
+	will continue to return indicating the file descriptor is
+	ready, but it won't get processed (unless you move the mouse
+	around a lot more, and the kernel decides to finally send
+	another SIGIO for some reason).
+
+REPEAT-BY:
+	Move the mouse during a long graphics operation.
+
+FILES:
+	server/ddx/sun/sunIo.c,sunKbd.c,sunMouse.c
+
+FIX:
+
+*** /tmp/,RCSt1a00739	Fri May 20 16:07:50 1988
+--- server/ddx/sun/sunMouse.c	Fri May 20 16:07:41 1988
+***************
+*** 235,240 ****
+--- 235,241 ----
+   * Results:
+   *	A pointer to an array of Firm_events or (Firm_event *)0 if no events
+   *	The number of events contained in the array.
++  *	A boolean as to whether more events might be available.
+   *
+   * Side Effects:
+   *	None.
+***************
+*** 241,249 ****
+   *-----------------------------------------------------------------------
+   */
+  static Firm_event *
+! sunMouseGetEvents (pMouse, pNumEvents)
+      DevicePtr	  pMouse;	    /* Mouse to read */
+      int	    	  *pNumEvents;	    /* Place to return number of events */
+  {
+      int	    	  nBytes;	    /* number of bytes of events available. */
+      register PtrPrivPtr	  pPriv;
+--- 242,251 ----
+   *-----------------------------------------------------------------------
+   */
+  static Firm_event *
+! sunMouseGetEvents (pMouse, pNumEvents, pAgain)
+      DevicePtr	  pMouse;	    /* Mouse to read */
+      int	    	  *pNumEvents;	    /* Place to return number of events */
++     Bool	  *pAgain;	    /* whether more might be available */
+  {
+      int	    	  nBytes;	    /* number of bytes of events available. */
+      register PtrPrivPtr	  pPriv;
+***************
+*** 256,261 ****
+--- 258,264 ----
+      if (nBytes < 0) {
+  	if (errno == EWOULDBLOCK) {
+  	    *pNumEvents = 0;
++ 	    *pAgain = FALSE;
+  	} else {
+  	    Error ("Reading mouse");
+  	    FatalError ("Could not read from mouse");
+***************
+*** 262,267 ****
+--- 265,271 ----
+  	}
+      } else {
+  	*pNumEvents = nBytes / sizeof (Firm_event);
++ 	*pAgain = (nBytes == sizeof (evBuf));
+      }
+      return (evBuf);
+  }
+
+
+*** /tmp/,RCSt1a00744	Fri May 20 16:08:10 1988
+--- server/ddx/sun/sunKbd.c	Fri May 20 16:07:36 1988
+***************
+*** 394,399 ****
+--- 394,400 ----
+   * Results:
+   *	A pointer to an array of Firm_events or (Firm_event *)0 if no events
+   *	The number of events contained in the array.
++  *	A boolean as to whether more events might be available.
+   *	If there are no keyboard events ready and autoRepeatKeyDown > 0,
+   *	then *pNumEvents is set to 1 and Firm_event id is set to
+   *	AUTOREPEAT_EVENTID.  In sunKbdProcessEvent, if autoRepeatKeyDown > 0
+***************
+*** 405,413 ****
+   *-----------------------------------------------------------------------
+   */
+  static Firm_event *
+! sunKbdGetEvents (pKeyboard, pNumEvents)
+      DevicePtr	  pKeyboard;	    /* Keyboard to read */
+      int	    	  *pNumEvents;	    /* Place to return number of events */
+  {
+      int	    	  nBytes;	    /* number of bytes of events available. */
+      KbPrivPtr	  pPriv;
+--- 406,415 ----
+   *-----------------------------------------------------------------------
+   */
+  static Firm_event *
+! sunKbdGetEvents (pKeyboard, pNumEvents, pAgain)
+      DevicePtr	  pKeyboard;	    /* Keyboard to read */
+      int	    	  *pNumEvents;	    /* Place to return number of events */
++     Bool	  *pAgain;	    /* whether more might be available */
+  {
+      int	    	  nBytes;	    /* number of bytes of events available. */
+      KbPrivPtr	  pPriv;
+***************
+*** 419,424 ****
+--- 421,427 ----
+      if (nBytes < 0) {
+  	if (errno == EWOULDBLOCK) {
+  	    *pNumEvents = 0;
++ 	    *pAgain = FALSE;
+  	} else {
+  	    Error ("Reading keyboard");
+  	    FatalError ("Could not read the keyboard");
+***************
+*** 425,430 ****
+--- 428,434 ----
+  	}
+      } else {
+  	*pNumEvents = nBytes / sizeof (Firm_event);
++ 	*pAgain = (nBytes == sizeof (evBuf));
+      }
+  
+      if (autoRepeatKeyDown && autoRepeatReady &&
+
+
+*** /tmp/,RCSt1a00749	Fri May 20 16:08:22 1988
+--- server/ddx/sun/sunIo.c	Fri May 20 16:07:30 1988
+***************
+*** 116,121 ****
+--- 116,123 ----
+  						 * events */
+  			    nKE;    	    	/* Original number of
+  						 * keyboard events */
++     Bool		    PtrAgain,		/* need to (re)read */
++ 			    KbdAgain;		/* need to (re)read */
+      DevicePtr		    pPointer;
+      DevicePtr		    pKeyboard;
+      register PtrPrivPtr     ptrPriv;
+***************
+*** 218,233 ****
+  	ptrPriv = (PtrPrivPtr)pPointer->devicePrivate;
+  	kbdPriv = (KbPrivPtr)pKeyboard->devicePrivate;
+  	
+! 	/*
+! 	 * Get events from both the pointer and the keyboard, storing the number
+! 	 * of events gotten in nPE and nKE and keeping the start of both arrays
+! 	 * in pE and kE
+! 	 */
+! 	ptrEvents = (* ptrPriv->GetEvents) (pPointer, &nPE);
+! 	kbdEvents = (* kbdPriv->GetEvents) (pKeyboard, &nKE);
+! 	
+! 	numPtrEvents = nPE;
+! 	numKbdEvents = nKE;
+  	lastEvent = (Firm_event *)0;
+  
+  	/*
+--- 220,229 ----
+  	ptrPriv = (PtrPrivPtr)pPointer->devicePrivate;
+  	kbdPriv = (KbPrivPtr)pKeyboard->devicePrivate;
+  	
+! 	numPtrEvents = 0;
+! 	PtrAgain = TRUE;
+! 	numKbdEvents = 0;
+! 	KbdAgain = TRUE;
+  	lastEvent = (Firm_event *)0;
+  
+  	/*
+***************
+*** 236,242 ****
+  	 * for processing. The DDXEvent will be sent to ProcessInput by the
+  	 * function called.
+  	 */
+! 	while (numPtrEvents || numKbdEvents) {
+  	    if (numPtrEvents && numKbdEvents) {
+  		if (timercmp (&kbdEvents->time, &ptrEvents->time, <)) {
+  		    if (lastType == Ptr) {
+--- 232,253 ----
+  	 * for processing. The DDXEvent will be sent to ProcessInput by the
+  	 * function called.
+  	 */
+! 	while (1) {
+! 	    /*
+! 	     * Get events from both the pointer and the keyboard, storing the number
+! 	     * of events gotten in nPE and nKE and keeping the start of both arrays
+! 	     * in pE and kE
+! 	     */
+! 	    if ((numPtrEvents == 0) && PtrAgain) {
+! 		ptrEvents = (* ptrPriv->GetEvents) (pPointer, &nPE, &PtrAgain);
+! 		numPtrEvents = nPE;
+! 	    }
+! 	    if ((numKbdEvents == 0) && KbdAgain) {
+! 		kbdEvents = (* kbdPriv->GetEvents) (pKeyboard, &nKE, &KbdAgain);
+! 		numKbdEvents = nKE;
+! 	    }
+! 	    if ((numPtrEvents == 0) && (numKbdEvents == 0))
+! 		break;
+  	    if (numPtrEvents && numKbdEvents) {
+  		if (timercmp (&kbdEvents->time, &ptrEvents->time, <)) {
+  		    if (lastType == Ptr) {
+***************
+*** 281,288 ****
+  	    }
+  	}
+  	
+! 	(* kbdPriv->DoneEvents) (pKeyboard);
+! 	(* ptrPriv->DoneEvents) (pPointer);
+  
+      }
+  
+--- 292,299 ----
+  	    }
+  	}
+  	
+! 	(* kbdPriv->DoneEvents) (pKeyboard, TRUE);
+! 	(* ptrPriv->DoneEvents) (pPointer, TRUE);
+  
+      }
+  
+
+

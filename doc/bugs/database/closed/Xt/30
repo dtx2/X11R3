@@ -1,0 +1,78 @@
+Return-Path: ll-xn!ames!ubvax!vix@eddie.mit.edu
+Received: by expo.lcs.mit.edu; Mon, 25 Apr 88 16:08:17 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA29954@EDDIE.MIT.EDU>; Mon, 25 Apr 88 16:05:13 EDT
+Received:  from ames.arc.nasa.gov by XN.LL.MIT.EDU; Mon, 25 Apr 88 16:02:17 EDT
+Posted-Date: Mon, 25 Apr 88 12:27:59 PDT
+Received: Mon, 25 Apr 88 13:05:56 PDT by ames.arc.nasa.gov (5.58/1.2)
+Received: from localhost by ubvax.UB.Com; id AA09926; Mon, 25 Apr 88 12:28:06 PDT
+Message-Id: <8804251928.AA09926@ubvax.UB.Com>
+To: xbugs@expo.lcs.mit.edu
+Subject: Toolkit documentation error
+Date: Mon, 25 Apr 88 12:27:59 PDT
+From: Paul Vixie <vix@ubvax.ub.com>
+
+### bug number:   416
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+        X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/60.  I don't think it matters.
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4.  I don't think this matters either.
+
+DISPLAY:
+	CG4.  This should also not matter.
+
+SYNOPSIS:
+	This is a documentation error in the Toolkit.
+
+DESCRIPTION:
+	In section 10.1.1 of "X Toolkit Intrinsics - C Language X Interface",
+	Input callbacks are declared as follows:
+
+		void InputCallbackProc(client_data, source, id)
+		caddr_t client_data;
+		int source;
+		XtInputId id;
+
+		client data	Specifies the client data that was registered
+				for this procedure in XtAddInput.
+
+		source		Specifies the source file descriptor generating
+				the event.
+
+		id		Specifies the ID returned from the correspond-
+				ing XtAddInput call.
+
+	However, in lib/Xt/NextEvent.c, 1.40 88/02/26 12:43:29 swick, line 274,
+	IeCallProc reads as follows:
+
+		static void
+		IeCallProc(ptr)
+		struct InputEvent *ptr;
+		{
+		  (* (ptr->ie_proc))( ptr->ie_closure, &ptr->ie_source, &ptr);
+		}
+
+	Note that the second of the three arguments are passed by _reference_
+	rather than by _value_.  Experimentation shows, in fact, that if one
+	wishes to see the source file descriptor or the XtInputId, one must
+	declare one's input callback routines such that they expect their
+	second two arguments to be passed by reference.
+
+REPEAT-BY:
+	Examine the manual and the code.
+
+FIX:
+	I would prefer that the manual change (rather than the IeCallBack()
+	source), since my client now has code in production that depends on
+	the present definition of the Input Callback functions.  Also, I feel
+	that passing these arguments by reference would allow the 'source' to
+	be something other than a file descriptor, which could be valuable in
+	the future.
+

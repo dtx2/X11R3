@@ -1,0 +1,43 @@
+Return-Path: joel@wsl.dec.com
+Received: by EXPO.LCS.MIT.EDU; Wed, 4 May 88 21:35:33 EDT
+Received: from gilroy.dec.com by decwrl.dec.com (5.54.4/4.7.34)
+	id AA15368; Wed, 4 May 88 18:34:29 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA16482; Wed, 4 May 88 18:34:23 PDT
+Message-Id: <8805050134.AA16482@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: joel@wsl.dec.com
+Subject: Inconsistent use of cursor
+Date: Wed, 04 May 88 18:34:22 -0700
+From: joel@wsl.dec.com
+
+### bug number:   469
+### area:         Xt
+### severity:     very low
+### comments:     
+### status:       closed
+
+
+I don't like "cursor-flash".  So I recently attempted to configure xmh to
+always use a single cursor, regardless of which subwindow it is in.
+
+The simple entry
+
+*Cursor:	left_ptr
+
+doesn't do it.
+
+So I went looking, and discovered two problems:
+
+1.  Scrollbar is full of cursors which have a Class that is a direct
+derivative of their name.  So I have to know every stupid cursor that
+scrollbar wants to use in order to make things right.  I find the world would
+be much simpler if all cursor resources have a class of Cursor.
+
+2.  The "#define" names for the cursors are not the same as the strings they
+define.  The #define names are abbreviated versions.  This only leads to more
+confusion...the #define names should always be directly derived from the
+strings they represent.  No abbreviations, etc.
+
+- Joel McCormack
+

@@ -1,0 +1,95 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 19:55:02 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA06396; Wed, 16 Mar 88 19:54:09 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 13:27:47 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA11602; Wed, 16 Mar 88 13:31:38 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 13:32:13 pst
+Message-Id: <8803162132.AA24719@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: bitmap bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 13:32:09 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   141
+### area:         bitmap
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	'bitmap' does not catch an existing file that has a negative height
+	or width. Also does not catch extra parameters.
+DESCRIPTION:
+	If an existing file has a negative height or width declared, 'bitmap'
+	does not report an error. The resulting window for 'bitmap' is 
+	a wierd size because the client attempt's to use the negative value
+	as a dimension.
+	If there are extra parameters, they keep being assigned to the
+	dimension string. I.E. 'bitmap junk 10x12 4x5'. You will get a bitmap
+	4x5.
+REPEAT-BY:
+	specied a file with the height or width negative.
+	'bitmap junk 10x12 4x5'
+FIX:
+*** bitmap.c.old	Tue Mar 15 16:22:27 1988
+--- bitmap.c	Tue Mar 15 16:26:19 1988
+***************
+*** 272,278
+      if (strcmp("bits[]", t))
+        continue;
+      
+!     if (!image.width || !image.height) {
+        cleanup(image.data, stream);
+        return(BitmapFileInvalid);
+      }
+
+--- 272,278 -----
+      if (strcmp("bits[]", t))
+        continue;
+      
+!     if (image.width <= 0 || image.height <= 0) {
+        cleanup(image.data, stream);
+        return(BitmapFileInvalid);
+      }
+***************
+*** 437,443
+  	geometry = arg;
+      else if (filename == NULL)
+      	filename = argv[i];
+!     else 
+      	dimensions = argv[i];
+    }
+  
+
+--- 437,443 -----
+  	geometry = arg;
+      else if (filename == NULL)
+      	filename = argv[i];
+!     else if (dimensions == NULL)
+      	dimensions = argv[i];
+      else
+  	usage();
+***************
+*** 439,444
+      	filename = argv[i];
+      else 
+      	dimensions = argv[i];
+    }
+  
+    if (filename == NULL) {
+
+--- 439,446 -----
+      	filename = argv[i];
+      else if (dimensions == NULL)
+      	dimensions = argv[i];
++     else
++ 	usage();
+    }
+  
+    if (filename == NULL) {
+

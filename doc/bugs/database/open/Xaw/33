@@ -1,0 +1,51 @@
+Return-Path: sequent!michael@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 20 Sep 88 18:37:55 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA11544; Tue, 20 Sep 88 18:37:49 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA05401; Tue, 20 Sep 88 15:37:37 PDT
+Message-Id: <8809202237.AA05401@decwrl.dec.com>
+To: xbugs@athena.mit.edu
+Subject: R3B - some Xaw widgets don't honor "reverseVideo" (enhancement??)
+Cc: michael@decwrl.dec.com, len@decwrl.dec.com
+Date: Tue, 20 Sep 88 14:53:20 PDT
+From: Michael Squires <sequent!michael@decwrl.dec.com>
+
+### bug number:   988
+### area:         Xaw
+### severity:     low
+### comments:     anybody care to supply code...
+
+VERSION:
+	X11 release 3 (pre-release)
+SYNOPSIS:
+	Some Xaw widgets don't honor the "reverseVideo" option. Note that
+	although their documentation doesn't claim that they do (thus the
+	code and documentation agree - no bug), it is desirable to make
+	all widgets honor the option symmetrically.
+DESCRIPTION:
+	Configuration:
+		server:	Sun 3/50, SunOS3.2
+		client: Symmetry S81, Dynix 3.0.12
+
+	The following widgets DO NOT honor the "reverseVideo" option:
+	    AsciiSink.c
+	    Command.c
+	    GrayPixmap.c
+	    Label.c
+	    List.c
+	    Text.c
+	    VPaned.c
+
+REPEAT-BY:
+	Look at the code; fire up "examples/Xaw/xwidgets -reverse".
+FIX:
+
+
+			Michael Squires
+			Sequent Computer Systems, Inc.
+			15450 SW Koll Parkway
+			Beaverton, OR  97006
+			(503) 626-5700 x9891
+			sequent!michael@decwrl.dec.com
+			michael%sequent.uucp@tektronix.tek.com@relay.cs.net
+

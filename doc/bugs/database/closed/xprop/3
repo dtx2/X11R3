@@ -1,0 +1,38 @@
+Return-Path: ekrell%kiwi%ulysses@research.att.com
+Received: by EXPO.LCS.MIT.EDU; Fri, 22 Jul 88 10:04:39 EDT
+From: kiwi!ekrell@ulysses.att.com
+Date: Fri, 22 Jul 88 10:03:17 EDT
+Message-Id: <8807221403.AA00236@kiwi.zoo.nj.att.com>
+Received: by kiwi.zoo.nj.att.com id AA00236; Fri, 22 Jul 88 10:03:17 EDT
+To: xbugs@expo.lcs.mit.edu
+Subject: missing semicolon in clients/xprop/xprop.c
+
+### bug number:   749
+### area:         xprop
+### severity:     low
+### comments:     
+
+The following was discovered when compiling with gcc 1.24 on a Sun 3
+running SunOS 3.4. Sun's cc doesn't complain, but the missing semicolon
+it looks like a syntax error to me.
+
+*** clients/xprop/xprop.c.old	Fri Feb 26 00:08:49 1988
+--- clients/xprop/xprop.c	Fri Jul 22 09:58:11 1988
+***************
+*** 194,200 ****
+   * 
+   */
+  
+! typedef struct { Atom atom; char *format; char *dformat } _default_mapping;
+  _default_mapping _default_mappings[] = {
+  
+  	/*
+--- 194,200 ----
+   * 
+   */
+  
+! typedef struct { Atom atom; char *format; char *dformat; } _default_mapping;
+  _default_mapping _default_mappings[] = {
+  
+  	/*
+

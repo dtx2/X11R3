@@ -1,0 +1,205 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 26 May 88 10:25:41 EDT
+Date: Thu, 26 May 88 10:25 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: color overallocation can be hazardous to your server
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880526142508.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   540
+### area:         server
+### severity:     very high
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any with dynamic colormap
+
+AREA:
+	server
+
+SYNOPSIS:
+	color allocation can succeed/fail when it shouldn't
+
+DESCRIPTION:
+	AllocCP has some misplaced parens, causing bad arithmetic.
+	It also has a hex constant that should have been a binary
+	constant.  Also, there is a BadAlloc return that should
+	be a FALSE return (the BadAlloc makes it appear successful,
+	which is wrong).
+
+REPEAT-BY:
+	Should do random things on many servers, but noticed by
+	running
+		ico -faces -colors red green blue yellow magenta
+	on a 4-plane Vaxstar, which wedged the server, and
+	sometimes crashed the machine.
+
+FILES:
+	server/dix/colormap.c
+
+FIX:
+
+	Note: this also contains fixes that close bugs 4 and 15.
+
+*** /tmp/,RCSt1a01271	Thu May 26 08:02:14 1988
+--- server/dix/colormap.c	Thu May 26 08:01:24 1988
+***************
+*** 22,28 ****
+  
+  ******************************************************************/
+  
+! /* $Header: colormap.c,v 1.66 88/02/25 18:28:33 rws Exp $ */
+  
+  #include "X.h"
+  #define NEED_EVENTS
+--- 22,28 ----
+  
+  ******************************************************************/
+  
+! /* $Header: colormap.c,v 1.69 88/05/26 08:00:30 rws Exp $ */
+  
+  #include "X.h"
+  #define NEED_EVENTS
+***************
+*** 37,45 ****
+  
+  extern XID clientErrorValue;
+  
+! Pixel	FindBestPixel();
+! void	CopyFree(), FreeCell(), AllocShared();
+! int	AllComp(), RedComp(), GreenComp(), BlueComp(), FreeClientPixels();
+  
+  /* GetNextBitsOrBreak(bits, mask, base)  -- 
+   * (Suggestion: First read the macro, then read this explanation.
+--- 37,45 ----
+  
+  extern XID clientErrorValue;
+  
+! static Pixel FindBestPixel();
+! static void  CopyFree(), FreeCell(), AllocShared();
+! static int   AllComp(), RedComp(), GreenComp(), BlueComp(), FreeClientPixels();
+  
+  /* GetNextBitsOrBreak(bits, mask, base)  -- 
+   * (Suggestion: First read the macro, then read this explanation.
+***************
+*** 102,109 ****
+      ColormapPtr	pmap;
+      register	EntryPtr	pent;
+      int		i;
+!     Pixel	*ppix;
+  
+      class = pVisual->class;
+      if(!(class & DynamicClass) && (alloc != AllocNone) && (client != SERVER_ID))
+  	return (BadMatch);
+--- 102,110 ----
+      ColormapPtr	pmap;
+      register	EntryPtr	pent;
+      int		i;
+!     register	Pixel	*ppix, **pptr;
+  
++ 
+      class = pVisual->class;
+      if(!(class & DynamicClass) && (alloc != AllocNone) && (client != SERVER_ID))
+  	return (BadMatch);
+***************
+*** 128,134 ****
+      pmap->clientPixelsRed = (Pixel **) xalloc(MAXCLIENTS * sizeof(Pixel *));
+      pmap->numPixelsRed = (int *) xalloc(MAXCLIENTS * sizeof(int));
+      bzero((char *) pmap->numPixelsRed, MAXCLIENTS * sizeof(int));
+!     bzero((char *) pmap->clientPixelsRed, MAXCLIENTS * sizeof(Pixel *));
+      if (alloc == AllocAll)
+      {
+  	pmap->flags |= AllAllocated;
+--- 129,136 ----
+      pmap->clientPixelsRed = (Pixel **) xalloc(MAXCLIENTS * sizeof(Pixel *));
+      pmap->numPixelsRed = (int *) xalloc(MAXCLIENTS * sizeof(int));
+      bzero((char *) pmap->numPixelsRed, MAXCLIENTS * sizeof(int));
+!     for (pptr = &pmap->clientPixelsRed[MAXCLIENTS]; --pptr >= pmap->clientPixelsRed; )
+! 	*pptr = (Pixel *)NULL;
+      if (alloc == AllocAll)
+      {
+  	pmap->flags |= AllAllocated;
+***************
+*** 159,166 ****
+  	pmap->numPixelsGreen = (int *) xalloc(MAXCLIENTS * sizeof(int));
+  	pmap->numPixelsBlue = (int *) xalloc(MAXCLIENTS * sizeof(int));
+  
+! 	bzero((char *) pmap->clientPixelsGreen, MAXCLIENTS * sizeof(Pixel *));
+! 	bzero((char *) pmap->clientPixelsBlue, MAXCLIENTS * sizeof(Pixel *));
+  	bzero((char *) pmap->numPixelsGreen, MAXCLIENTS * sizeof(int));
+  	bzero((char *) pmap->numPixelsBlue, MAXCLIENTS * sizeof(int));
+  
+--- 161,172 ----
+  	pmap->numPixelsGreen = (int *) xalloc(MAXCLIENTS * sizeof(int));
+  	pmap->numPixelsBlue = (int *) xalloc(MAXCLIENTS * sizeof(int));
+  
+! 	bcopy((char *) pmap->clientPixelsRed,
+! 	      (char *) pmap->clientPixelsGreen,
+! 	      MAXCLIENTS * sizeof(Pixel *));
+! 	bcopy((char *) pmap->clientPixelsRed,
+! 	      (char *) pmap->clientPixelsBlue,
+! 	      MAXCLIENTS * sizeof(Pixel *));
+  	bzero((char *) pmap->numPixelsGreen, MAXCLIENTS * sizeof(int));
+  	bzero((char *) pmap->numPixelsBlue, MAXCLIENTS * sizeof(int));
+  
+***************
+*** 1457,1463 ****
+         (Non-contiguous masks need one more bit than contiguous masks). Then
+         the smallest such mask consists of the rightmost planes-1 bits set, then
+         a zero, then a one in position planes + 1. The formula is
+!          (0x11 << (planes-1)) -1
+         The largest such masks consists of the leftmost planes-1 bits set, then
+         a zero, then a one bit in position dplanes-planes-1. If dplanes is
+         smaller than 32 (the number of bits in a word) then the formula is:
+--- 1463,1469 ----
+         (Non-contiguous masks need one more bit than contiguous masks). Then
+         the smallest such mask consists of the rightmost planes-1 bits set, then
+         a zero, then a one in position planes + 1. The formula is
+!          (3 << (planes-1)) -1
+         The largest such masks consists of the leftmost planes-1 bits set, then
+         a zero, then a one bit in position dplanes-planes-1. If dplanes is
+         smaller than 32 (the number of bits in a word) then the formula is:
+***************
+*** 1471,1478 ****
+      */
+  
+      finalmask =
+!         (1<<((planes-1) - 1) << (dplanes-planes+1)) + (1<<(dplanes-planes-1));
+!     for (mask = (0x11 << (planes -1) - 1); mask <= finalmask; mask++)
+      {
+          /* next 3 magic statements count number of ones (HAKMEM #169) */
+          pixel = (mask >> 1) & 033333333333;
+--- 1477,1484 ----
+      */
+  
+      finalmask =
+!         (((1<<(planes-1)) - 1) << (dplanes-planes+1)) + (1<<(dplanes-planes-1));
+!     for (mask = (3 << (planes -1)) - 1; mask <= finalmask; mask++)
+      {
+          /* next 3 magic statements count number of ones (HAKMEM #169) */
+          pixel = (mask >> 1) & 033333333333;
+***************
+*** 1518,1525 ****
+  	    return (TRUE);
+  	}
+      }
+!     pixels = pMask = (Pixel *)NULL;
+!     return (BadAlloc);
+  }
+  
+  static void
+--- 1524,1530 ----
+  	    return (TRUE);
+  	}
+      }
+!     return (FALSE);
+  }
+  
+  static void
+

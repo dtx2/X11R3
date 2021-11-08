@@ -1,0 +1,92 @@
+/**/#
+/**/# This library contains miscellaneous utility routines and is not part
+/**/# of the Xlib standard.
+/**/#
+
+    STD_DEFINES = LibraryDefines
+    CDEBUGFLAGS = LibraryCDebugFlags
+       INCLUDES = -I. -I$(TOP) -I$(TOP)/X11
+   INSTALLFLAGS = $(INSTINCFLAGS)
+       LINTLIBS = $(LINTXLIB) 
+
+#ifdef OsNameDefines
+OS_NAME_DEFINES = OsNameDefines
+#endif
+
+HEADERS = \
+	Xmu.h
+
+SRCS = \
+	Atoms.c \
+	CrPixFBit.c \
+	CvtStdSel.c \
+	DefErrMsg.c \
+	DrRndRect.c \
+	FToCback.c \
+	Lookup.c \
+	Lower.c \
+	RdBitF.c \
+	StrToBS.c \
+	StrToBmap.c \
+	StrToCurs.c \
+	StrToJust.c \
+	StrToOrnt.c \
+	StrToWidg.c
+
+OBJS = \
+	Atoms.o \
+	CrPixFBit.o \
+	CvtStdSel.o \
+	DefErrMsg.o \
+	DrRndRect.o \
+	FToCback.o \
+	Lookup.o \
+	Lower.o \
+	RdBitF.o \
+	StrToBS.o \
+	StrToBmap.o \
+	StrToCurs.o \
+	StrToJust.o \
+	StrToOrnt.o \
+	StrToWidg.o
+
+all::
+
+#if DebugLibXmu && ProfileLibXmu
+DebuggedAndProfiledLibraryObjectRule()
+SpecialDebuggedAndProfiledObjectRule(CvtStdSel.o,$(ICONFIGFILES),$(OS_NAME_DEFINES))
+#else
+# if DebugLibXmu 
+DebuggedLibraryObjectRule()
+SpecialDebuggedObjectRule(CvtStdSel.o,$(ICONFIGFILES),$(OS_NAME_DEFINES))
+# else
+#  if ProfileLibXmu
+ProfiledLibraryObjectRule()
+SpecialProfiledObjectRule(CvtStdSel.o,$(ICONFIGFILES),$(OS_NAME_DEFINES))
+#  else
+NormalLibraryObjectRule()
+SpecialObjectRule(CvtStdSel.o,$(ICONFIGFILES),$(OS_NAME_DEFINES))
+#  endif
+# endif
+#endif
+
+NormalLibraryTarget(Xmu,$(OBJS))
+LintLibraryTarget(Xmu,$(SRCS))
+InstallLibrary(Xmu,$(USRLIBDIR))
+InstallLintLibrary(Xmu,$(LINTLIBDIR))
+
+#if ProfileLibXmu 
+ProfiledLibraryTarget(Xmu,$(OBJS))
+InstallLibrary(Xmu_p,$(USRLIBDIR))
+#endif
+
+#if DebugLibXmu
+DebuggedLibraryTarget(Xmu,$(OBJS))
+#endif
+
+InstallMultiple($(HEADERS),$(INCDIR))
+
+DependTarget()
+
+NormalLintTarget($(SRCS))
+

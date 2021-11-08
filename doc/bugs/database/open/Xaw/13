@@ -1,0 +1,123 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 18:29:48 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA04558; Wed, 29 Jun 88 17:27:57 CDT
+Date: Wed, 29 Jun 88 17:27:57 CDT
+From: wtg@uc.msc.umn.edu
+Message-Id: <8806292227.AA04558@uc.msc.umn.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   668
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2   Xaw
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	 C Preprocessor error " Token Too Long"
+
+DESCRIPTION:
+	The defaultTextTranslations[] string in Text.c fails to
+compile.  The preprocessor gives the error message "Token Too
+Long" at about line 2510.  This string may exceed ANSI C specs.
+
+REPEAT-BY:
+	Compile Text.c
+
+FIX:
+	This is not a fix, but a workaround.  Split the string
+in two and cat them together at run time.
+
+** Xaw/Text.c  Thu Jun  2 13:35:04 1988
+--- sunXaw/Text.c       Thu May 12 09:37:07 1988
+***************
+*** 71,83 ****
+        XtselectNull
+  };
+
+  static caddr_t defaultSelectTypesPtr = (caddr_t)defaultSelectTypes;
+  extern char defaultTextTranslations[];        /* fwd ref */
+- #ifdef CRAY
+- extern char defaultTextTranslations2[];       /* fwd ref */
+- #endif
+  static int defWidth = 100;
+  static int defHeight = DEFAULT_TEXT_HEIGHT;
+  static int defZero = 0;
+  static int defMargin = 10;
+  static int defLeftMargin = 2;
+--- 71,80 ----
+***************
+*** 158,190 ****
+  };
+
+
+  static void ClassInitialize()
+  {
+- #ifdef CRAY
+-     strcat(defaultTextTranslations, defaultTextTranslations2);
+-
+- #endif
+      XtQTextRead   = XrmStringToQuark(XtEtextRead);
+      XtQTextAppend = XrmStringToQuark(XtEtextAppend);
+      XtQTextEdit   = XrmStringToQuark(XtEtextEdit);
+
+      XtAddConverter(XtRString, XtREditMode, CvtStringToEditMode, NULL, 0);
+--- 155,164 ----
+***************
+*** 2582,2592 ****
+    {NULL,NULL}
+  };
+
+  Cardinal textActionsTableCount = XtNumber(textActionsTable); /* for subclasses
+ */
+
+! char defaultTextTranslations[2000] =
+      "Ctrl<Key>F:              forward-character() \n\
+       <Key>0xff53:             forward-character() \n\
+       Ctrl<Key>B:              backward-character() \n\
+       <Key>0xff51:             backward-character() \n\
+       Meta<Key>F:              forward-word() \n\
+--- 2556,2566 ----
+    {NULL,NULL}
+  };
+
+  Cardinal textActionsTableCount = XtNumber(textActionsTable); /* for subclasses
+ */
+
+! char defaultTextTranslations[] =
+      "Ctrl<Key>F:              forward-character() \n\
+       <Key>0xff53:             forward-character() \n\
+       Ctrl<Key>B:              backward-character() \n\
+       <Key>0xff51:             backward-character() \n\
+       Meta<Key>F:              forward-word() \n\
+***************
+*** 2610,2624 ****
+       <Key>0xff7f:             delete-previous-character() \n\
+       <Key>0xffff:             delete-previous-character() \n\
+       <Key>0xff08:             delete-previous-character() \n\
+       Meta<Key>D:              delete-next-word() \n\
+       Meta<Key>H:              delete-previous-word() \n\
+- ";
+- #ifdef CRAY
+- char defaultTextTranslations2[]  =
+- #endif
+- "\
+       Shift Meta<Key>D:                kill-word() \n\
+       Shift Meta<Key>H:                backward-kill-word() \n\
+       Ctrl<Key>W:              kill-selection() \n\
+       Ctrl<Key>K:              kill-to-end-of-line() \n\
+       Meta<Key>K:              kill-to-end-of-paragraph() \n\
+--- 2584,2593 ----
+
+

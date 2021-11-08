@@ -1,0 +1,273 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Wed, 13 Apr 88 17:23:37 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08528; Wed, 13 Apr 88 16:22:19 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 13 Apr 88 13:21:44 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA20403; Wed, 13 Apr 88 13:21:58 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 13 Apr 88 14:24:18 pdt
+Message-Id: <8804132124.AA01345@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xfd nits
+X-Mailer: mh6.5
+Date: Wed, 13 Apr 88 14:24:12 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   376
+### area:         xfd
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     fixes provided
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	1) middle button, '<', and '>' should work only during verbose option.
+	2) when -gray option used, the boxes are not clear.
+	3) messages are getting clipped.
+DESCRIPTION:
+	1) The middle button, '<', and '>' give extra messages. This is suppose
+	   to work only when the -verbose option is used. Simply add the extra
+	   test to ensure the messages are printed when verbose flag is set.
+	2) When the -gray option is used, there is not very much padding around
+	   the characters. It is difficult to really see the character as
+	   XDrawImageString will draw them. By adding a padding around the
+	   character when the -gray option is in use, the character becomes
+	   much sharper.
+	3) The default 16x16 box may or may not be large enough in width to
+	   show the messages. It depends on the font chosen, and the length
+	   of the message. Therefore, the user has not already specified a
+	   size, if the width for the 16x16 grid is too small for the message
+	   font to display its messages, calculate the optimum size depending
+	   on message font size.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/xfd/xfd.c.old	Fri Mar 25 11:13:15 1988
+--- clients/xfd/xfd.c	Tue Apr  5 14:45:20 1988
+***************
+*** 14,19
+  
+  #define BUFFERSIZE 10
+  #define VERBOSE_LINES 4         /* Number of lines in verbose display */
+  
+  
+      /* Global variables */
+
+--- 14,20 -----
+  
+  #define BUFFERSIZE 10
+  #define VERBOSE_LINES 4         /* Number of lines in verbose display */
++ #define	GRAY_PAD	2	/* padding for gray mode		*/
+  
+  
+      /* Global variables */
+***************
+*** 32,37
+  int right = 0;
+  int first_char = 0;             /* Character # of first character displayed on
+  				   the grid */
+  GC body_gc, real_gc;            /* Graphics contexts */
+  XFontStruct *real_font;         /* The font we are to display */
+  
+
+--- 33,39 -----
+  int right = 0;
+  int first_char = 0;             /* Character # of first character displayed on
+  				   the grid */
++ int gray = 0;                   /* use gray background ? */
+  GC body_gc, real_gc;            /* Graphics contexts */
+  XFontStruct *real_font;         /* The font we are to display */
+  
+***************
+*** 73,79
+  	XGCValues gc_init;
+  	XEvent event;
+  	char *fontname = BODY_FONT_DEFAULT;     /* Display default body font */
+- 	int gray = 0;                           /* use gray background ? */
+  	char buffer[BUFFERSIZE];                /* buffer for XLookupString */
+  
+  	INIT_NAME;
+
+--- 75,80 -----
+  	XGCValues gc_init;
+  	XEvent event;
+  	char *fontname = BODY_FONT_DEFAULT;     /* Display default body font */
+  	char buffer[BUFFERSIZE];                /* buffer for XLookupString */
+  
+  	INIT_NAME;
+***************
+*** 157,163
+  			if (i==1 && (buffer[0]=='q' || buffer[0]=='Q' ||
+  				     buffer[0]==' ' || buffer[0]=='\03'))
+  			  exit(0);
+! 			if (i==1 && buffer[0]=='<') {
+  				minimum_bounds();
+  				continue;
+  			}
+
+--- 158,164 -----
+  			if (i==1 && (buffer[0]=='q' || buffer[0]=='Q' ||
+  				     buffer[0]==' ' || buffer[0]=='\03'))
+  			  exit(0);
+! 			if (i==1 && buffer[0]=='<' && verbose) {
+  				minimum_bounds();
+  				continue;
+  			}
+***************
+*** 161,167
+  				minimum_bounds();
+  				continue;
+  			}
+! 			if (i==1 && buffer[0]=='>') {
+  				maximum_bounds();
+  				continue;
+  			}
+
+--- 162,168 -----
+  				minimum_bounds();
+  				continue;
+  			}
+! 			if (i==1 && buffer[0]=='>' && verbose) {
+  				maximum_bounds();
+  				continue;
+  			}
+***************
+*** 176,181
+  	}
+  }
+  
+  /*
+   * Calc_Default_Size: This routine calculates the size of a box in the grid
+   * and where to write a character from so that every character will fit
+
+--- 177,190 -----
+  	}
+  }
+  
++ char short_format[] = "%d (0x%x)";
++ char line1_alt[] = "%s bounds:";
++ char line1_format[] = "character # = %d (0x%x):";
++ char line2_format[] = "left bearing = %d, right bearing = %d";
++ char line3_format[] = "ascent = %d, descent = %d";
++ char line4_format[] = "width = %d";
++ char buf[80*2];
++ 
+  /*
+   * Calc_Default_Size: This routine calculates the size of a box in the grid
+   * and where to write a character from so that every character will fit
+***************
+*** 217,223
+  
+  	/* Leave room for grid lines & a little space */
+  	x_offset += 2; y_offset += 2;
+! 	box_x += 3;  box_y += 3;
+  
+  /*	if (!geometry) {        /* if user didn't override, use ideal size */
+  	if (!(size_hints.flags & USSize)) {
+
+--- 226,233 -----
+  
+  	/* Leave room for grid lines & a little space */
+  	x_offset += 2; y_offset += 2;
+! 	box_x += 3 + gray * GRAY_PAD * 2;
+! 	box_y += 3 + gray * GRAY_PAD * 2;
+  
+  /*	if (!geometry) {        /* if user didn't override, use ideal size */
+  	if (!(size_hints.flags & USSize)) {
+***************
+*** 221,226
+  
+  /*	if (!geometry) {        /* if user didn't override, use ideal size */
+  	if (!(size_hints.flags & USSize)) {
+  		size_hints.width = box_x*16+1;
+  		size_hints.height = box_y*16 + space_per_line *number_of_lines;
+  	}
+
+--- 231,249 -----
+  
+  /*	if (!geometry) {        /* if user didn't override, use ideal size */
+  	if (!(size_hints.flags & USSize)) {
++ 		int tmp;
++ 		int max_line_length = 12;
++ 		int body_width = (body_font->max_bounds.rbearing
++ 				- body_font->min_bounds.lbearing);
++ 		if (verbose) {
++ 		/* calculate the largest line that can/will be shown */
++ 			sprintf(buf, line2_format,
++ 				body_font->max_bounds.lbearing,
++ 				body_font->max_bounds.rbearing);
++ 			max_line_length = strlen(buf);
++ 		}
++ 		tmp = body_width * max_line_length;
++ 
+  		size_hints.width = box_x*16+1;
+  		if (tmp > size_hints.width)
+  		/* make the size an even multiple of our box width */
+***************
+*** 222,227
+  /*	if (!geometry) {        /* if user didn't override, use ideal size */
+  	if (!(size_hints.flags & USSize)) {
+  		size_hints.width = box_x*16+1;
+  		size_hints.height = box_y*16 + space_per_line *number_of_lines;
+  	}
+  
+
+--- 245,254 -----
+  		tmp = body_width * max_line_length;
+  
+  		size_hints.width = box_x*16+1;
++ 		if (tmp > size_hints.width)
++ 		/* make the size an even multiple of our box width */
++ 			size_hints.width = (tmp/box_x + (tmp % box_x ? 1 : 0))
++ 						* box_x + 1;
+  		size_hints.height = box_y*16 + space_per_line *number_of_lines;
+  	}
+  
+***************
+*** 269,276
+  		for (x=0; x<x_boxes; x++) {
+  			s[0] = (first_char + x + y*x_boxes) / 256;
+  			s[1] = (first_char + x + y*x_boxes) % 256;
+! 			XDrawImageString16(dpy, wind, real_gc, x*box_x+x_offset,
+! 				     y*box_y+y_offset, (XChar2b *) s, 1);
+  		}
+  	}
+  }
+
+--- 296,305 -----
+  		for (x=0; x<x_boxes; x++) {
+  			s[0] = (first_char + x + y*x_boxes) / 256;
+  			s[1] = (first_char + x + y*x_boxes) % 256;
+! 			XDrawImageString16(dpy, wind, real_gc,
+! 					x*box_x+x_offset + gray * GRAY_PAD,
+! 					y*box_y+y_offset + gray * GRAY_PAD,
+! 					(XChar2b *) s, 1);
+  		}
+  	}
+  }
+***************
+*** 274,287
+  		}
+  	}
+  }
+- 
+- char short_format[] = " %d. 0x%x";
+- char line1_alt[] = " %s bounds:";
+- char line1_format[] = " character # = %d. (0x%x):";
+- char line2_format[] = " left bearing = %d, right bearing = %d";
+- char line3_format[] = " ascent = %d, descent = %d";
+- char line4_format[] = " width = %d";
+- char buf[80*2];
+  
+  /*
+   * Identify_character: Routine to print the number of the character that was
+
+--- 303,308 -----
+  		}
+  	}
+  }
+  
+  /*
+   * Identify_character: Routine to print the number of the character that was
+

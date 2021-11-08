@@ -1,0 +1,74 @@
+Return-Path: bilbo.geoff@seas.ucla.edu
+Received: by expo.lcs.mit.edu; Tue, 17 May 88 20:52:23 EDT
+Message-Id: <8805180052.AA02491@EXPO.LCS.MIT.EDU>
+Date:           Tue, 17 May 88 17:31:26 PDT
+From: Geoff Kuenning <bilbo.geoff@seas.ucla.edu>
+Received:       from BILBO (193.255.1.3) by FRODO
+                id smtp.15757; Tue, 17 May 88 17:29:52 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject:        mfbValidateGC checks font boundaries incorrectly
+
+### bug number:   510
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Bell Technologies 386/AT
+
+CLIENT OPERATING SYSTEM:
+	SVR3
+
+DISPLAY:
+	Video 7 VEGA (IBM EGA clone)
+
+SYNOPSIS:
+	mfbValidateGC checks font boundaries incorrectly
+
+DESCRIPTION:
+	mfbValidateGC decides whether to use fast font routines based on
+	the width of the font.  Unfortunately, it calculates the width
+	incorrectly, so that fonts with a nonzero leftSideBearing may
+	be displayed improperly.
+
+REPEAT-BY:
+	Use xfd to display a variable-width font with nonzero (and varying)
+	leftSideBearings and average width slightly greater than 32.  Note
+	that some characters are displayed incorrectly.
+
+FIX:
+	Apply the following patch.
+
+	Note:  this patch was actually developed for our ega implementation,
+	which is based on the mfb version.  The line numbers will definitely
+	be off, and the patch may be different enough that you will have
+	to apply it by hand.
+
+Index:  server/ddx/mfb/mfbgc.c
+
+*** mfbgc.c.old	Tue May 17 16:58:58 1988
+--- mfbgc.c	Tue May 17 16:59:06 1988
+***************
+*** 582,588
+      {
+  	if ((pGC->font) &&
+  	    (pGC->font->pFI->maxbounds.metrics.rightSideBearing -
+! 	     pGC->font->pFI->maxbounds.metrics.leftSideBearing) > 32)
+  	{
+  	    pGC->PolyGlyphBlt = miPolyGlyphBlt;
+  	    pGC->ImageGlyphBlt = miImageGlyphBlt;
+
+--- 582,588 -----
+      {
+  	if ((pGC->font) &&
+  	    (pGC->font->pFI->maxbounds.metrics.rightSideBearing -
+! 	     pGC->font->pFI->minbounds.metrics.leftSideBearing) > 32)
+  	{
+  	    pGC->PolyGlyphBlt = miPolyGlyphBlt;
+  	    pGC->ImageGlyphBlt = miImageGlyphBlt;
+
+	Geoff Kuenning	geoff@lcc.ucla.edu	geoff@ITcorp.com
+

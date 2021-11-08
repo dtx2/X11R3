@@ -1,0 +1,20 @@
+Return-Path: susan@wsl.dec.com
+Received: by expo.lcs.mit.edu; Mon, 10 Oct 88 18:48:19 EDT
+Received: from gnome7.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA11977; Mon, 10 Oct 88 15:47:51 PDT
+Received: by gnome7.pa.dec.com (5.57/4.7.34)
+	id AA02207; Mon, 10 Oct 88 15:48:31 PDT
+Message-Id: <8810102248.AA02207@gnome7.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: UseGCFillPoly in extension/server/zoid.c
+Date: Mon, 10 Oct 88 15:48:28 PDT
+From: Susan Angebranndt <susan@wsl.dec.com>
+
+### bug number:   1066
+### area:         server
+### severity:     low
+### comments:     
+
+
+This procedure should be declared as a static.
+

@@ -1,0 +1,107 @@
+Return-Path: dba+@andrew.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 26 Sep 88 16:47:48 EDT
+Received: by andrew.cmu.edu (5.54/3.15) id <AA01676> for xbugs@expo.lcs.mit.edu; Mon, 26 Sep 88 16:46:54 EDT
+Received: via switchmail; Mon, 26 Sep 88 16:46:43 -0400 (EDT)
+Received: from po5.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/service/mailqs/q000/QF.po5.andrew.cmu.edu.233eac81.69fbe>;
+          Mon, 26 Sep 88 16:45:58 -0400 (EDT)
+Received: from kane.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/usr3/dba/.Outgoing/QF.kane.andrew.cmu.edu.233e5acc.fdf1500>;
+          Mon, 26 Sep 88 10:57:17 -0400 (EDT)
+Received: from Version.6.23.N.CUILIB.3.44.SNAP.NOT.LINKED.kane.andrew.cmu.edu.rt.r3
+          via MS.5.5.kane.andrew.cmu.edu.rt_r3;
+          Mon, 26 Sep 88 10:57:16 -0400 (EDT)
+Message-Id: <AXDZfAy00UkRQJ01pz@andrew.cmu.edu>
+Date: Mon, 26 Sep 88 10:57:16 -0400 (EDT)
+From: David Anderson <dba+@andrew.cmu.edu>
+X-Andrew-Message-Size: 1840+0
+To: xbugs@expo.lcs.mit.edu
+Subject: variable width text has no spaces (RT apa16 server)
+Cc: ibmuupa!erik.UUCP@harvard.harvard.edu
+
+### bug number:   1011
+### area:         server
+### severity:     high
+### comments:     ibm ddx-specific
+
+VERSION:
+
+    R3beta
+
+CLIENT MACHINE and OPERATING SYSTEM:
+
+    RT APC running ACIS 4.3
+
+DISPLAY:
+
+    IBM apa16
+
+WINDOW MANAGER:
+
+    uwm (any)
+
+AREA:
+
+    apa16 ddx
+
+SYNOPSIS:
+
+    Variable width text appears on the screen without any spaces.
+
+DESCRIPTION:
+
+    Spaces don't. The computation of the metrics and the
+    updating of the x position need to occur even for characters
+    that don't paint any bits onto the screen, especially spaces.
+
+REPEAT BY:
+
+    Draw variable-width text on the screen.
+
+SAMPLE FIX:
+
+*** apa16text.h.lnk     Fri Sep  2 14:58:48 1988
+--- apa16text.h Tue Sep 13 13:30:41 1988
+***************
+*** 75,92 ****
+        afMap(aFont,count,chars,tmpCinfo,                               \
+                                aFont->afFont->pGlyphs);                \
+        }                                                               \
+!       if (afChMapped(aFont,*chars)) {                                 \
+            metrics=    &tmpCinfo[0]->metrics;                          \
+            width=      metrics->rightSideBearing-                      \
+                        metrics->leftSideBearing;                       \
+                                                                        \
+            COPY_RECT(bltCmd,                                           \
+                x+metrics->leftSideBearing+width,                       \
+                y+metrics->descent,                                     \
+                afXoff(aFont,*chars), afYoff(aFont,*chars),             \
+                width,metrics->ascent+metrics->descent);                \
+-           x+= metrics->characterWidth;                                \
+        }                                                               \
+        count--;                                                        \
+        chars++;                                                        \
+        tmpCinfo++;                                                     \
+--- 75,93 ----
+        afMap(aFont,count,chars,tmpCinfo,                               \
+                                aFont->afFont->pGlyphs);                \
+        }                                                           \
+! \
+            metrics=    &tmpCinfo[0]->metrics;                          \
+            width=      metrics->rightSideBearing-                      \
+                        metrics->leftSideBearing;                       \
+                                                                        \
++       if (afChMapped(aFont,*chars)) {                                 \
+            COPY_RECT(bltCmd,                                           \
+                x+metrics->leftSideBearing+width,                       \
+                y+metrics->descent,                                     \
+                afXoff(aFont,*chars), afYoff(aFont,*chars),             \
+                width,metrics->ascent+metrics->descent);                \
+        }                                                               \
++       x+= metrics->characterWidth;                                    \
+        count--;                                                        \
+        chars++;                                                        \
+        tmpCinfo++;                                                     \
+
+
+

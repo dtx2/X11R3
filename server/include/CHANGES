@@ -1,0 +1,10 @@
+The following changes have been made to this directory since R2:
+
+     o  Delayed writes for clients - added several os routines
+     o  DIX font structure now has ink metrics
+     o  font nameing stuff impacted some font structures.
+     o  DIX/DDX gc interface changes
+     o  backing store changes in window structures/gc's
+     o  regions 'size' and 'numRects' fields are now longs instead of ints.
+     o  added ifdef for INCLUDE_ALLOCA_H for systems that need it 
+	(e.g. SunOS 4.0).

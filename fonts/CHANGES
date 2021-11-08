@@ -1,0 +1,14 @@
+The following changes have been made to this directory since R2:
+
+     o  the BDF format has been adopted as a non-exclusive, required
+	part of the X standard; server vendors should provide a way of
+	converting BDF files into whatever format their server requires.
+     o  the font compiler and its directory have been renamed bdftosnf since
+	there are other formats that will need compilers.
+     o  a new utility, mkfontdir, has been added for creating the appropriate
+	font name databases for a given directory; some of the routines in
+	this directory are also used in the sample server.
+     o  the separate snf directory has been removed in favor of compiling
+	directly into the bdf directories.
+
+

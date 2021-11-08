@@ -1,0 +1,49 @@
+Return-Path: shep@allspice.lcs.mit.edu
+Received: from PTT.LCS.MIT.EDU (ALLSPICE.LCS.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 13:34:11 EST
+Received: from shep.sage by PTT.LCS.MIT.EDU via PCMAIL with DMSP
+	id AA13241; Mon, 28 Mar 88 13:33:41 EST
+Date: Mon, 28 Mar 88 13:33:41 EST
+Message-Id: <8803281833.AA13241@PTT.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: uwm doesn't redisplay the dimensions box
+Sender: shep@ALLSPICE.LCS.MIT.EDU
+From: shep@ALLSPICE.LCS.MIT.EDU
+Repository: PTT
+Originating-Client: sage
+
+### bug number:   242
+### area:         uwm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     fixed
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	QDSS
+
+SYNOPSIS: 
+	uwm doesn't redisplay the dimensions box when it is waiting for
+you to drag out a window.
+
+DESCRIPTION:
+	
+
+REPEAT-BY:
+	type "xterm &" at your shell, with no "xterm*geometry"
+resource in the database.  When uwm displays the "xterm 0x0" in the
+upper left corner of the screen, type "xrefresh".  Notice that where
+"xterm 0x0" should be is now blank.
+
+FIX:
+
+

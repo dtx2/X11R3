@@ -1,0 +1,185 @@
+Return-Path: toddb
+Received: by expo.lcs.mit.edu; Fri, 29 Jul 88 15:58:02 EDT
+Message-Id: <8807291958.AA13580@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: delayed write can cause server to loop forever
+Date: Fri, 29 Jul 88 15:58:00 EDT
+From: Todd Brunhoff <toddb@EXPO.LCS.MIT.EDU>
+
+### bug number:   786
+### area:         server
+### severity:     high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	All
+
+CLIENT OPERATING SYSTEM:
+	All
+
+DISPLAY:
+	All
+
+SYNOPSIS:
+	The previous implementation of delayed write in the server could
+	cause an infinite loop.
+connection.c
+DESCRIPTION:
+	If FlushClient() was trying to buffer output to a client that was
+	write-blocked, and the allocation of the buffer failed (out of
+	memory or whatever), then the server would either die with a
+	segmentation fault or would loop forever calling CheckConnections()
+	because a bit did not get cleared in ClientsWriteBlocked[].
+
+REPEAT-BY:
+	Run the server under dbx and artificially set the return value to null
+	where the output buffer is stretched.  Around:
+        if (notWritten > oc->bufsize)
+        {
+            /* allocate at least enough to contain it plus one
+               OutputBufferSize */
+            oc->bufsize = notWritten + OutputBufferSize;
+            oc->buf = (unsigned char *)Xrealloc(oc->buf, oc->bufsize);
+            if (oc->buf == NULL)
+            {
+		...
+
+FIX:
+*** /tmp/,RCSt1a13525	Fri Jul 29 15:54:45 1988
+--- server/os/hpux/connection.c	Fri Jul 29 15:54:32 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: connection.c,v 1.8 88/07/21 11:43:21 toddb Exp $ */
+  /*****************************************************************
+   *  Stuff to create connections --- OS dependent
+   *
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: connection.c,v 1.9 88/07/29 15:54:29 toddb Exp $ */
+  /*****************************************************************
+   *  Stuff to create connections --- OS dependent
+   *
+***************
+*** 691,697 ****
+      BITCLEAR(AllSockets, connection);
+      BITCLEAR(AllClients, connection);
+      BITCLEAR(ClientsWithInput, connection);
+! 
+  }
+  
+  /*****************
+--- 691,699 ----
+      BITCLEAR(AllSockets, connection);
+      BITCLEAR(AllClients, connection);
+      BITCLEAR(ClientsWithInput, connection);
+!     BITCLEAR(ClientsWriteBlocked, connection);
+!     if (!ANYSET(ClientsWriteBlocked))
+!     	AnyClientsWriteBlocked = FALSE;
+  }
+  
+  /*****************
+*** /tmp/,RCSt1a13525	Fri Jul 29 15:54:48 1988
+--- server/os/hpux/io.c	Fri Jul 29 15:54:28 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: io.c,v 1.6 88/07/25 10:49:03 toddb Exp $ */
+  /*****************************************************************
+   * i/o functions
+   *
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: io.c,v 1.7 88/07/29 15:54:07 toddb Exp $ */
+  /*****************************************************************
+   * i/o functions
+   *
+***************
+*** 424,429 ****
+--- 424,430 ----
+  		close(connection);
+  		MarkClientException(who);
+  		oc->count = 0;
++ 		oc->bufsize = 0;
+  		return(-1);
+  	    }
+  	}
+*** /tmp/,RCSt1a13550	Fri Jul 29 15:56:27 1988
+--- server/os/4.2bsd/connection.c	Fri Jul 29 15:51:01 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: connection.c,v 1.76 88/07/22 20:17:39 jim Exp $ */
+  /*****************************************************************
+   *  Stuff to create connections --- OS dependent
+   *
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: connection.c,v 1.77 88/07/29 15:50:31 toddb Exp $ */
+  /*****************************************************************
+   *  Stuff to create connections --- OS dependent
+   *
+***************
+*** 635,641 ****
+      BITCLEAR(AllSockets, connection);
+      BITCLEAR(AllClients, connection);
+      BITCLEAR(ClientsWithInput, connection);
+! 
+  }
+  
+  /*****************
+--- 635,643 ----
+      BITCLEAR(AllSockets, connection);
+      BITCLEAR(AllClients, connection);
+      BITCLEAR(ClientsWithInput, connection);
+!     BITCLEAR(ClientsWriteBlocked, connection);
+!     if (!ANYSET(ClientsWriteBlocked))
+!     	AnyClientsWriteBlocked = FALSE;
+  }
+  
+  /*****************
+*** /tmp/,RCSt1a13550	Fri Jul 29 15:56:33 1988
+--- server/os/4.2bsd/io.c	Fri Jul 29 15:51:11 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: io.c,v 1.43 88/07/25 10:49:24 toddb Exp $ */
+  /*****************************************************************
+   * i/o functions
+   *
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: io.c,v 1.44 88/07/29 15:51:02 toddb Exp $ */
+  /*****************************************************************
+   * i/o functions
+   *
+***************
+*** 415,420 ****
+--- 415,421 ----
+  		close(connection);
+  		MarkClientException(who);
+  		oc->count = 0;
++ 		oc->bufsize = 0;
+  		return(-1);
+  	    }
+  	}
+

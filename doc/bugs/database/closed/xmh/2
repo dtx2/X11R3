@@ -1,0 +1,70 @@
+Return-Path: spaf@purdue.edu
+Received: from arthur.cs.purdue.edu ([128.10.2.1]) by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 17:33:53 EST
+Received: from uther.cs.purdue.edu by arthur.cs.purdue.edu; (5.54/3.16)
+	id AA01807; Thu, 10 Mar 88 17:32:25 EST
+Received: by uther.cs.purdue.edu (3.2/SMI-3.0DEV3)
+	id AA07602; Thu, 10 Mar 88 17:09:16 EST
+Date: Thu, 10 Mar 88 17:09:16 EST
+Message-Id: <8803102209.AA07602@uther.cs.purdue.edu>
+Subject: Bug in xmh
+To: xbugs@expo.lcs.mit.edu
+From: Gene Spafford <spaf@purdue.edu>
+
+### bug number:   85
+### area:         xmh
+### severity:     
+### assigned to:  ralph
+### status:       closed
+### see also:     60, 97, 
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	Sun B/W
+
+SYNOPSIS:
+	 xmh puts its window on the screen, but never puts any text in the 
+	 panels and does not respond to any input or mouse clicks.
+
+DESCRIPTION:
+	 Following is id of our version of the mh package:
+
+version: MH 6.4 #14[UCI] (arthur.cs.purdue.edu) of Fri Apr 10 16:15:26 EST 1987
+options: [BSD42] [BSD43] [TTYD] [MHE] [MHRC] [NETWORK] [BIND] [RPATHS]
+         [ATZ] [PURDUE_CS] [SBACKUP='"#"'] [SENDMTS] [SMTP]
+
+	 Following is a dbx "where" on a core of the running xmh.  Core was obtained
+	 with the "gcore" command:
+		Reading symbolic information...
+		Read 2240 symbols
+		(dbx) select(0x73c7c) at 0x3da34
+		_XRead(0x73c7c, 0xeffec84, 0x20) at 0x2f02f
+		_XReadEvents(0x73c7c) at 0x2efb7
+		XWindowEvent(0x73c7c, 0xd0007c, 0x8000, 0xefff4b8) at 0x2ebf1
+		TUScanFileForToc(0x8332c) at 0xb741
+		TUEnsureScanIsValidAndOpen(0x8332c) at 0xc515
+		TocSetScrn(0x8332c, 0x837fc) at 0x93d9
+		InitializeWorld(0x1, 0xefff9d8) at 0x474d
+		main(0x1, 0xefff9d8, 0xefff9e0) at 0x49b1
+		(dbx) 
+
+	The xmh process just hangs there.  All of the standalone mh commands work
+	fine in an xterm window....
+
+	Install was done unchanged from the source code as shipped, with new
+	Makefiles.
+
+REPEAT-BY:
+	Just run xmh
+
+FIX:
+	Dunno.  I'm open to suggestions.
+

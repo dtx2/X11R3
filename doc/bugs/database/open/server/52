@@ -1,0 +1,63 @@
+Return-Path: biggers@edsel.siemens.com
+Received: from edsel.siemens.com ([129.73.2.34]) by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 11:49:49 EST
+Received: by edsel.siemens.com (5.54/1.15) 
+	id AA28588; Fri, 25 Mar 88 11:48:30 EST
+Date: Fri, 25 Mar 88 11:48:30 EST
+From: biggers@edsel.siemens.com (Mark Biggers)
+Message-Id: <8803251648.AA28588@edsel.siemens.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: XGrabKey / XGrabButton activation conflict
+
+### bug number:   219
+### area:         server
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     sent request for verification and sample code 7/7/88
+
+
+VERSION:
+	X11 release 2, fixes 1-11 installed
+
+CLIENT MACHINE:
+	Sun 3/140
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4.2
+
+DISPLAY:
+	/dev/bwtwo0 (monochrome, single bitplane)
+
+SYNOPSIS:
+	If a GrabKey has been activated as a result of pressing
+	(and holding down) modifier key(s) in some window, then a
+	ButtonPress event following the KeyPress event(s) will not
+	have the modifier key(s) properly indicated in the
+	xbutton.state field.  This is true for at least the case of
+	GrabKey and GrabButton passive grabs set for the parent of a
+	window.
+
+DESCRIPTION:
+
+	This is how we set the Passive Grabs for the parent of an
+	X-application window.  The parent also has gadget (Input-Only)
+	subwindows.
+
+    XGrabButton(dpy, (unsigned int) AnyButton, AnyModifier,
+		w,
+		False,
+		(unsigned int) (ButtonPressMask | ButtonReleaseMask),
+		GrabModeSync, GrabModeSync,
+		None,
+		None);
+
+    XGrabKey(dpy, (int) AnyKey, (unsigned) AnyModifier,
+	     w,
+	     False,
+	     GrabModeSync, GrabModeSync);
+
+
+FIX:
+	?
+
+

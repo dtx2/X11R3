@@ -1,0 +1,472 @@
+.\".U7
+.\".UT "Version 10 Compatibilty Functions" D
+\&
+.sp 1
+.ce 3
+\s+1\fBAppendix D\fP\s-1
+
+\s+1\fBVersion 10 Compatibility Functions\fP\s-1
+.sp 2
+.na
+.LP
+.XS
+Appendix D: Version 10 Compatibility Functions
+.XE
+.SH
+Drawing and Filling Polygons and Curves
+.LP
+Xlib provides functions that you can use to draw or fill
+arbitrary polygons or curves.  
+These functions are provided mainly for compatibility with X10 
+and have no server support.  
+That is, they call other Xlib functions, not the server directly.  
+Thus, if you just have straight lines to draw, using 
+.PN XDrawLines 
+.IN "XDrawLines"
+or
+.PN XDrawSegments 
+.IN "XDrawSegments" 
+is much faster.
+.LP
+The functions discussed here provide all the functionality of the X10
+functions 
+.PN XDraw , 
+.IN "X10 compatibility" "XDraw" 
+.PN XDrawFilled , 
+.IN "X10 compatibility" "XDrawFilled"
+.PN XDrawPatterned , 
+.IN "X10 compatibility" "XDrawPatterned" 
+.PN XDrawDashed , 
+.IN "X10 compatibility" "XDrawDashed"
+and
+.PN XDrawTiled .  
+.IN "X10 compatibility" "XDrawTiled"
+They are as compatible as possible given X11's new line drawing functions.  
+One thing to note, however, is that
+.PN VertexDrawLastPoint 
+is no longer supported. 
+Also, the error status returned is the opposite of what it was under X10 
+(this is the X11 standard error status).  
+.PN XAppendVertex 
+and 
+.PN XClearVertexFlag 
+from
+X10 also are not supported.
+.LP
+Just how the graphics context you use is set up actually
+determines whether you get dashes or not, and so on.  
+Lines are properly joined if they connect and include
+the closing of a closed figure  (see 
+.PN XDrawLines ).
+The functions discussed here fail (return zero) only if they run out of memory
+or are passed a 
+.PN Vertex 
+list that has a 
+.PN Vertex 
+with 
+.PN VertexStartClosed
+set that is not followed by a 
+.PN Vertex 
+with 
+.PN VertexEndClosed 
+set.
+.LP
+.sp
+To achieve the effects of the X10
+.PN XDraw , 
+.IN "X10 compatibility" "XDraw" 
+.PN XDrawDashed , 
+.IN "X10 compatibility" "XDrawDashed"
+and 
+.PN XDrawPatterned , 
+.IN "X10 compatibility" "XDrawPatterned" 
+use
+.PN XDraw .  
+.IN "XDraw" "" "@DEF@" 
+.FD 0
+#include <X11/X10.h>
+
+Status XDraw(\^\fIdisplay\fP, \fId\fP, \fIgc\fP, \fIvlist\fP, \fIvcount\fP\^)
+.br
+	Display *\fIdisplay\fP\^;
+.br
+	Drawable \fId\fP\^;
+.br
+	GC \fIgc\fP\^;
+.br
+	Vertex *\fIvlist\fP\^;
+.br
+	int \fIvcount\fP\^;
+.FN
+.IP \fIdisplay\fP 1i
+Specifies the connection to the X server.
+.IP \fId\fP 1i
+Specifies the drawable. 
+.IP \fIgc\fP 1i
+Specifies the GC.
+.IP \fIvlist\fP 1i
+Specifies a pointer to the list of vertices that indicate what to draw.
+.IP \fIvcount\fP 1i
+Specifies how many vertices are in vlist.
+.LP
+.PN XDraw 
+draws an arbitrary polygon or curve.  
+The figure drawn is defined by the specified list of vertices (vlist).
+The points are connected by lines as specified in the flags in the
+vertex structure.
+.LP
+Each Vertex, as defined in
+.Pn < X11/X10.h >,
+is a structure with the following members:
+.LP
+.IN "Vertex" "" "@DEF@"
+.Ds 0
+.TA .5i 1.5i
+.ta .5i 1.5i
+typedef struct _Vertex {
+	short x,y;
+	unsigned short flags;
+} Vertex;
+.De
+The x and y members are the coordinates of the vertex 
+that are relative to either the upper-left inside corner of the drawable 
+(if 
+.PN VertexRelative 
+is zero) or the previous vertex (if 
+.PN VertexRelative 
+is one).
+.LP
+The flags, as defined in 
+.Pn < X11/X10.h >, 
+are as follows:
+.IN "VertexRelative" "" "@DEF@"
+.IN "VertexDontDraw" "" "@DEF@"
+.IN "VertexCurved" "" "@DEF@"
+.IN "VertexStartClosed" "" "@DEF@"
+.IN "VertexEndClosed" "" "@DEF@"
+.TS
+l l l.
+T{
+.PN VertexRelative
+T}	T{
+0x0001
+T}	T{
+/* else absolute */
+T}
+T{
+.PN VertexDontDraw
+T}	T{
+0x0002
+T}	T{
+/* else draw */
+T}
+T{
+.PN VertexCurved
+T}	T{
+0x0004
+T}	T{
+/* else straight */
+T}
+T{
+.PN VertexStartClosed
+T}	T{
+0x0008
+T}	T{
+/* else not */
+T}
+T{
+.PN VertexEndClosed
+T}	T{
+0x0010
+T}	T{
+/* else not */
+T}
+.TE
+.IP \(bu 5
+If 
+.PN VertexRelative 
+is not set,  
+the coordinates are absolute (that is, relative to the drawable's origin).  
+The first vertex must be an absolute vertex.
+.IP \(bu 5
+If
+.PN VertexDontDraw 
+is one, 
+no line or curve is drawn from the previous vertex to this one.  
+This is analogous to picking up the pen and moving to another place 
+before drawing another line.
+.IP \(bu 5
+If 
+.PN VertexCurved 
+is one, 
+a spline algorithm is used to draw a smooth curve from the previous vertex
+through this one to the next vertex.  
+Otherwise, a straight line is drawn from the previous vertex to this one.  
+It makes sense to set 
+.PN VertexCurved 
+to one only if a previous and next vertex are both defined
+(either explicitly in the array or through the definition of a closed 
+curve).
+.IP \(bu 5
+It is permissible for 
+.PN VertexDontDraw 
+bits and 
+.PN VertexCurved
+bits both to be one. 
+This is useful if you want to define the previous point for the smooth curve
+but do not want an actual curve drawing to start until this point.
+.IP \(bu 5
+If 
+.PN VertexStartClosed 
+is one, 
+then this point marks the beginning of a closed curve.  
+This vertex must be followed later in the array by another vertex 
+whose effective coordinates are identical
+and that has a
+.PN VertexEndClosed 
+bit of one.
+The points in between form a cycle to determine predecessor 
+and successor vertices for the spline algorithm.
+.LP
+This function uses these GC components:
+function, plane-mask, line-width, line-style, cap-style, join-style,
+fill-style, subwindow-mode, clip-x-origin, clip-y-origin, and
+clip-mask.
+It also uses these GC mode-dependent components: 
+foreground, background, tile, stipple,
+tile-stipple-x-origin, tile-stipple-y-origin, dash-offset, and dash-list.
+.LP
+.sp
+To achieve the effects of the X10
+.PN XDrawTiled 
+.IN "X10 compatibility" "XDrawTiled"
+and 
+.PN XDrawFilled , 
+.IN "X10 compatibility" "XDrawFilled"
+use
+.PN XDrawFilled .
+.IN "XDrawFilled" "" "@DEF@"
+.FD 0
+#include <X11/X10.h>
+
+Status XDrawFilled(\^\fIdisplay\fP, \fId\fP, \fIgc\fP, \fIvlist\fP, \fIvcount\fP\^)
+.br
+	Display *\fIdisplay\fP\^;
+.br
+	Drawable \fId\fP\^;
+.br
+	GC \fIgc\fP\^;
+.br
+	Vertex *\fIvlist\fP\^;
+.br
+	int \fIvcount\fP\^;
+.FN
+.IP \fIdisplay\fP 1i
+Specifies the connection to the X server.
+.IP \fId\fP 1i
+Specifies the drawable. 
+.IP \fIgc\fP 1i
+Specifies the GC.
+.IP \fIvlist\fP 1i
+Specifies a pointer to the list of vertices that indicate what to draw.
+.IP \fIvcount\fP 1i
+Specifies how many vertices are in vlist.
+.LP
+.PN XDrawFilled 
+draws arbitrary polygons or curves and then fills them.
+.LP
+This function uses these GC components:
+function, plane-mask, line-width, line-style, cap-style, join-style,
+fill-style, subwindow-mode, clip-x-origin, clip-y-origin, and
+clip-mask.
+It also uses these GC mode-dependent components: 
+foreground, background, tile, stipple,
+tile-stipple-x-origin, tile-stipple-y-origin, 
+dash-offset, dash-list, fill-style, and fill-rule.
+.SH
+Associating User Data with a Value
+.LP
+These functions have been superseded by the context management functions
+(see section 10.12). 
+It is often necessary to associate arbitrary information with resource IDs.
+Xlib provides the 
+.PN XAssocTable 
+functions that you can use to make such an association.
+.IN "Hash Lookup"
+.IN "Window" "IDs"
+.IN "Resource IDs"
+Application programs often need to be able to easily refer to
+their own data structures when an event arrives.
+The 
+.PN XAssocTable
+system provides users of the X library with a method
+for associating their own data structures with X resources
+.Pn ( Pixmaps , 
+.PN Fonts , 
+.PN Windows , 
+and so on).
+.LP
+An 
+.PN XAssocTable
+can be used to type X resources.  
+For example, the user
+may want to have three or four types of windows,
+each with different properties. 
+This can be accomplished by associating each X window ID
+with a pointer to a window property data structure  defined  by  the
+user.
+A generic type has been defined in the X library for resource IDs.
+It is called an XID.
+.LP
+There are a few  guidelines  that  should be observed when using an
+.PN XAssocTable :
+.IP \(bu 5
+All  XIDs  are  relative  to  the  specified display.
+.IP \(bu 5
+Because  of  the  hashing  scheme  used  by  the  association mechanism,
+the following rules for determining the size of a
+.PN XAssocTable
+should be followed.  
+Associations will be  made  and  looked  up  more
+efficiently  if  the  table  size  (number  of  buckets in the hashing
+system) is a power of two and if there are not more than 8 XIDs  per
+bucket.
+.LP
+.sp
+To return a pointer to a new
+.PN XAssocTable , 
+use 
+.PN XCreateAssocTable .
+.IN "XCreateAssocTable" "" "@DEF@"
+.FD 0
+XAssocTable *XCreateAssocTable\^(\^\fIsize\fP\^)
+.br
+      int \fIsize\fP\^;	
+.FN
+.IP \fIsize\fP 1i
+Specifies the number of buckets in the hash system of
+.PN XAssocTable .
+.LP
+The size argument specifies the number of buckets in the 
+hash system of
+.PN XAssocTable .
+For  reasons  of  efficiency  the number of buckets
+should be a power of two.
+Some size  suggestions  might  be:  use  32 buckets  per  100  objects,
+and a reasonable maximum number of objects per buckets is 8.
+If  an  error  allocating  memory  for  the
+.PN XAssocTable 
+occurs, 
+a NULL pointer is returned. 
+.LP
+.sp
+To create an entry in a given 
+.PN XAssocTable ,
+use 
+.PN XMakeAssoc .
+.IN "XMakeAssoc" "" "@DEF@"
+.FD 0
+XMakeAssoc\^(\^\fIdisplay\fP, \fItable\fP\^, \fIx_id\fP\^, \fIdata\fP\^)
+.br
+      Display *\fIdisplay\fP\^;
+.br
+      XAssocTable *\fItable\fP\^;	
+.br
+      XID \fIx_id\fP\^;
+.br
+      char *\fIdata\fP\^;
+.FN
+.IP \fIdisplay\fP 1i
+Specifies the connection to the X server.
+.IP \fItable\fP 1i
+Specifies the assoc table. 
+.IP \fIx_id\fP 1i
+Specifies the X resource ID.
+.IP \fIdata\fP 1i
+Specifies the data to be associated with the X resource ID.
+.LP
+.PN XMakeAssoc
+inserts data into an 
+.PN XAssocTable
+keyed  on  an  XID.
+Data  is inserted  into the table only once.
+Redundant inserts are ignored.
+The queue in each association bucket is sorted from the lowest XID to 
+the highest XID.
+.LP
+.sp
+To obtain data from a given 
+.PN XAssocTable ,
+use 
+.PN XLookUpAssoc .
+.IN "XLookUpAssoc" "" "@DEF@"
+.FD 0
+char *XLookUpAssoc\^(\^\fIdisplay\fP, \fItable\fP\^, \fIx_id\fP\^)
+.br
+      Display *\fIdisplay\fP\^;
+.br
+      XAssocTable *\fItable\fP\^;
+.br
+      XID \fIx_id\fP\^;
+.FN
+.IP \fIdisplay\fP 1i
+Specifies the connection to the X server.
+.IP \fItable\fP 1i
+Specifies the assoc table. 
+.IP \fIx_id\fP 1i
+Specifies the X resource ID.
+.LP
+.PN XLookUpAssoc
+retrieves the data stored in an 
+.PN XAssocTable
+by its XID.  
+If  an appropriately  matching XID can be found in the table,
+.PN XLookUpAssoc
+returns the data associated with it.
+If the x_id cannot be found in the table,
+it returns NULL.
+.LP
+.sp
+To delete an entry from a given 
+.PN XAssocTable ,
+use 
+.PN XDeleteAssoc .
+.IN "XDeleteAssoc" "" "@DEF@"
+.FD 0
+XDeleteAssoc\^(\^\fIdisplay\fP, \fItable\fP\^, \fIx_id\fP\^)
+.br
+      Display *\fIdisplay\fP\^;
+.br
+      XAssocTable *\fItable\fP\^;
+.br
+      XID \fIx_id\fP\^;
+.FN
+.IP \fIdisplay\fP 1i
+Specifies the connection to the X server.
+.IP \fItable\fP 1i
+Specifies the assoc table. 
+.IP \fIx_id\fP 1i
+Specifies the X resource ID.
+.LP
+.PN XDeleteAssoc
+deletes an association in an 
+.PN XAssocTable
+keyed on its XID.
+Redundant deletes (and deletes of nonexistent XIDs) are ignored.
+Deleting associations in no way impairs the performance of an 
+.PN XAssocTable .
+.LP
+.sp
+To free the memory associated with a given 
+.PN XAssocTable ,
+use 
+.PN XDestroyAssocTable .
+.IN "XDestroyAssocTable" "" "@DEF@"
+.FD 0
+XDestroyAssocTable\^(\^\fItable\fP\^)
+.br
+      XAssocTable *\fItable\fP\^;
+.FN
+.IP \fItable\fP 1i
+Specifies the assoc table. 
+.bp

@@ -1,0 +1,88 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:42:23 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26182; Tue, 5 Jul 88 14:40:45 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 10:40:55 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA29614; Tue, 5 Jul 88 11:40:56 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 5 Jul 88 11:42:42 pdt
+Message-Id: <8807051842.AA17913@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xfd maxcharacter
+X-Mailer: mh6.5
+Date: Tue, 05 Jul 88 11:42:39 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   692
+### area:         xfd
+### severity:     low
+### comments:     already fixed
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Have problems with cycling forever.
+DESCRIPTION:
+	To prevent the user from cycling forever in the
+	positive direction, a method was needed to determine
+	the max character in the font. The fix suggested
+	takes into account both 8-bit and 16-bit fonts.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/xfd/xfd.c.old	Fri Jun 24 10:12:49 1988
+--- clients/xfd/xfd.c	Fri Jun 24 09:56:04 1988
+***************
+*** 33,38
+  int right = 0;
+  int first_char = 0;             /* Character # of first character displayed on
+  				   the grid */
+  int gray = 0;                   /* use gray background ? */
+  GC body_gc, real_gc;            /* Graphics contexts */
+  XFontStruct *real_font;         /* The font we are to display */
+
+--- 33,39 -----
+  int right = 0;
+  int first_char = 0;             /* Character # of first character displayed on
+  				   the grid */
++ int max_char;			/* Used to determine if there is more chars */
+  int gray = 0;                   /* use gray background ? */
+  GC body_gc, real_gc;            /* Graphics contexts */
+  XFontStruct *real_font;         /* The font we are to display */
+***************
+*** 105,110
+  
+  	/* Load in the font to display */
+  	real_font = Open_Font(fontname);
+  
+  	/* Resolve the X options */
+  	Resolve_X_Options();
+
+--- 106,114 -----
+  
+  	/* Load in the font to display */
+  	real_font = Open_Font(fontname);
++ 	max_char = real_font->max_char_or_byte2;
++ 	if (real_font->min_byte1 || real_font->max_byte1)
++ 		max_char = real_font->max_byte1 * max_char;
+  
+  	/* Resolve the X options */
+  	Resolve_X_Options();
+***************
+*** 450,456
+   */
+  Go_Forward()
+  {
+! if (first_char + x_boxes*y_boxes <= real_font->max_char_or_byte2) {
+  	first_char += x_boxes*y_boxes;
+  
+  	Display_Contents();
+
+--- 454,460 -----
+   */
+  Go_Forward()
+  {
+! if (first_char + x_boxes*y_boxes <= max_char) {
+  	first_char += x_boxes*y_boxes;
+  
+  	Display_Contents();
+

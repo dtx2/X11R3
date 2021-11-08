@@ -1,0 +1,62 @@
+/*
+ * $XConsortium: MailboxP.h,v 1.11 88/09/30 08:44:55 swick Exp $
+ *
+ * Copyright 1988 Massachusetts Institute of Technology
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted, provided
+ * that the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation, and that the name of M.I.T. not be used in advertising or
+ * publicity pertaining to distribution of the software without specific,
+ * written prior permission.  M.I.T. makes no representations about the
+ * suitability of this software for any purpose.  It is provided "as is"
+ * without express or implied warranty.
+ *
+ * Author:  Jim Fulton, MIT X Consortium
+ */
+
+#ifndef _XtMailboxP_h
+#define _XtMailboxP_h
+
+#include <X11/Mailbox.h>
+#include <X11/CoreP.h>
+
+#define MAILBOX_DIRECTORY "/usr/spool/mail"
+
+typedef struct {			/* new fields for mailbox widget */
+    /* resources */
+    int update;				/* seconds between updates */
+    Pixel foreground_pixel;		/* color index of normal state fg */
+    String filename;			/* filename to watch */
+    String check_command;		/* command to exec for mail check */
+    Boolean reverseVideo;		/* do reverse video? */
+    int volume;				/* bell volume */
+    Boolean once_only;			/* ring bell only once on new mail */
+    /* local state */
+    GC gc;				/* normal GC to use */
+    long last_size;			/* size in bytes of mailboxname */
+    XtIntervalId interval_id;		/* time between checks */
+    Boolean flag_up;			/* is the flag up? */
+    Pixmap flagup_pixmap;		/* for when there is mail */
+    Pixmap flagdown_pixmap;		/* for when there isn't mail */
+} MailboxPart;
+
+typedef struct _MailboxRec {		/* full instance record */
+    CorePart core;
+    MailboxPart mailbox;
+} MailboxRec;
+
+
+typedef struct {			/* new fields for mailbox class */
+    int dummy;				/* stupid C compiler */
+} MailboxClassPart;
+
+typedef struct _MailboxClassRec {	/* full class record declaration */
+    CoreClassPart core_class;
+    MailboxClassPart mailbox_class;
+} MailboxClassRec;
+
+extern MailboxClassRec mailboxClassRec;	 /* class pointer */
+
+#endif _XtMailboxP_h

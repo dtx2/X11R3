@@ -1,0 +1,37 @@
+   1  03/15 ksr!benson@harvar  UWM perhaps a bug  <<### bug number: 118 ### area: uwm ### severity:
+   2  03/16 lori%hpcvxlc@hpla  uwm bug  <<### bug number: 142 ### area: uwm ### severity: ### assig
+   3  03/16 lori%hpcvxlc@hpla  uwm bug  <<### bug number: 152 ### area: uwm ### severity: ### assig
+   4  03/16 lori%hpcvxlc@hpla  uwm bug  <<### bug number: 169 ### area: uwm ### severity: ### assig
+   5  03/20 richard.draves@rp  bug in uwm  <<### bug number: 183 ### area: uwm ### severity: ### as
+   6  03/16 lori%hpcvxlc@hpla  uwm bug  <<### bug number: 148 ### area: uwm ### severity: ### assig
+   7  03/16 lori%hpcvxlc@hpla  uwm bug  <<### bug number: 153 ### area: uwm ### severity: ### assig
+   8  03/18 lori%hpcvxlc@hpla  uwm bug  <<### bug number: 176 ### area: uwm ### severity: ### assig
+   9  03/04 jim@expo.lcs.mit.  setting the input focus...  <<### bug number: 11 ### area: uwm ### s
+  10  03/04 jim@expo.lcs.mit.  setting the input focus... (see previous bug report)  <<### bug numb
+  11  03/10 rws@zermatt.lcs.m  uwm resize interface  <<### bug number: 86 ### area: uwm ### severit
+  12  04/08 ibmuupa!erik@ucbv  uwm mildly anti-social  <<### bug number: 344 ### area: uwm ### seve
+  13  04/11 ibmuupa!erik@ucbv  uwm menus a tad slow on color...  <<### bug number: 362 ### area: uw
+  14  04/27 lori%hpcvxlc@hpla  uwm hints bug  <<### bug number: 429 ### area: uwm ### severity: low
+  15  05/05 ken@cs.rochester.  uwm window size display faulty in Rubberband/Resize  <<### bug numbe
+  16  03/28 shep@allspice.lcs  uwm doesn't redisplay the dimensions box  <<### bug number: 242 ### 
+  17  05/13 kddlab!uunet.uu.n  uwm Resize & RubberBand bug.  <<### bug number: 488 ### area: uwm ##
+  18  05/19 ll-xn!ames!amiga!  local may be used before set in uwm.c  <<### bug number: 524 ### are
+  19  05/31 bst@research.att.   <<### bug number: 550 ### area: uwm ### severity: high ### comments
+  20  06/09 lori%hpcvxlc@hpla  uwm free's unmalloc'ed memory  <<### bug number: 587 ### area: uwm #
+  21  06/13 lori%hpcvxlc@hpla  icon padding  <<### bug number: 598 ### area: uwm ### severity: enha
+  22  06/13 lori%hpcvxlc@hpla  uwm menu padding  <<### bug number: 599 ### area: uwm ### severity: 
+  23  06/23 lori%hpcvxlc@hpla  uwm: using backspace for editing in icons  <<### bug number: 631 ###
+  24  06/23 lori%hpcvxlc@hpla  uwm cursor jumps  <<### bug number: 632 ### area: uwm ### severity: 
+  25  06/23 lori%hpcvxlc@hpla  uwm secondary menus  <<### bug number: 635 ### area: uwm ### severit
+  26  06/23 lori%hpcvxlc@hpla  uwm push big  <<### bug number: 634 ### area: uwm ### severity: low 
+  27  07/08 jim@expo.lcs.mit.  invoking uwm function through menu requires button silliness  <<### 
+  28  06/08 gregh@bilbo.locus  Uwm bug  <<### bug number: 589 ### area: uwm ### severity: low ### c
+  29  07/27 mar@athena.mit.ed  problem with window creation user interface  <<### bug number: 790 #
+  30  08/02 eichin@athena.mit  XCreateWindow vs. XSetNormalHints  <<### bug number: 809 ### area: u
+  31  08/03 lori%hpcvxlc@hpla  uwm invalid screen  <<### bug number: 815 ### area: uwm ### severity
+  32  08/12 spaf@purdue.edu    fix for gcc read-only strings in uwm & xterm  <<### bug number: 858 
+  33  09/01 jtkohl@athena.mit  uwm doesn't use resources  <<### bug number: 928 ### area: uwm ### s
+  34  09/07 jim@expo.lcs.mit.  uwm gets confused when application goes away  <<### bug number: 935 
+  35  09/26 cjr@everest.byu.e  uwm environment variable DISPLAY bug  <<### bug number: 1007 ### are
+  36  09/21 henry@garp.mit.ed  [John T Kohl: (VS2) Version 6.0R: uwm]  <<### bug number: 992 ### ar
+  37  10/15 henry@garp.mit.ed  (ALL) Version 6.0C: uwm icon-typing mouse-warp  <<### bug number: 10

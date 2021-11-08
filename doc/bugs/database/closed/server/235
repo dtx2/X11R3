@@ -1,0 +1,24 @@
+Return-Path: kubitron@athena.mit.edu
+Received: by expo.lcs.mit.edu; Mon, 26 Sep 88 16:19:52 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA03477; Mon, 26 Sep 88 16:19:56 EDT
+Received: by ALEFNULL.MIT.EDU (5.45/4.7) id AA02585; Mon, 26 Sep 88 16:19:46 EDT
+Message-Id: <8809262019.AA02585@ALEFNULL.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: usage message on the server
+Date: Mon, 26 Sep 88 16:19:43 EDT
+From: John D. Kubiatowicz <kubitron@athena.mit.edu>
+
+### bug number:   1008
+### area:         server
+### severity:     low
+### comments:     fixed
+
+This is a minor point, but the usage message for the server details the
+following:
+
+	-fp string	default text font path
+
+Should this not say merely "default font path" ?
+
+--KUBI--
+

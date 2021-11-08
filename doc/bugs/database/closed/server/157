@@ -1,0 +1,95 @@
+Return-Path: jupiter!bob@cad.berkeley.edu
+Received: by expo.lcs.mit.edu; Mon, 6 Jun 88 18:02:47 EDT
+Received: by cad.Berkeley.EDU (5.58/1.28)
+	id AA17513; Mon, 6 Jun 88 15:00:30 PST
+Received: by jupiter.IS (4.12/6.0.GT)
+	id AA18598; Mon, 6 Jun 88 15:00:12 pdt
+Date: Mon, 6 Jun 88 15:00:12 pdt
+From: Bob Schulman <jupiter!bob%jupiter@cad.berkeley.edu>
+Posted-Date: Mon, 6 Jun 88 15:00:12 pdt
+Message-Id: <8806062200.AA18598@jupiter.IS>
+To: xbugs@expo.lcs.mit.edu
+Subject: SendConnectionSetupInfo() walk the various available visuals incorrectly.
+Cc: bob@cad.berkeley.edu
+
+### bug number:   565
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Jupiter's Sun Satellite
+
+SYNOPSIS:
+	 SendConnectionSetupInfo() walk the various available visuals
+	 incorrectly.
+
+DESCRIPTION:
+	 Calling SendConnectionSetupInfo() can result in random data
+	 in the server being being sent to clients are setup time.
+	 The loop in this routine which walks through all the visuals of all
+	 the depths of all the screens walks wrong; it doesn't account
+	 correctly for the size of structures involved. The code I give
+	 later does it correctly. Not only does this result in
+	 weird stuff being sent to the client, but also the currentInputMask
+	 of the root is set up wrong.
+
+REPEAT-BY:
+	Very data dependent. Not easy to repeat and be able to make sparks fly.
+
+FIX:
+*** dispatch.c.distributed	Mon Jun  6 14:41:22 1988
+--- dispatch.c.fixed	Fri Jun  3 22:07:49 1988
+***************
+*** 3300,3311 ****
+  
+      ((xConnSetup *)ConnectionInfo)->ridBase = client->clientAsMask;
+      ((xConnSetup *)ConnectionInfo)->ridMask = 0xfffff;
+          /* fill in the "currentInputMask" */
+      root = (xWindowRoot *)(ConnectionInfo + connBlockScreenStart);
+!     for (i=0; i<screenInfo.numScreens; root += sizeof(xWindowRoot), i++) 
+          root->currentInputMask = WindowTable[i].allEventMasks;
+  
+      if (client->swapped) {
+  	WriteSConnSetupPrefix(client, &connSetupPrefix);
+          WriteSConnectionInfo(client, connSetupPrefix.length << 2, ConnectionInfo);
+  	}
+--- 3300,3327 ----
+  
+      ((xConnSetup *)ConnectionInfo)->ridBase = client->clientAsMask;
+      ((xConnSetup *)ConnectionInfo)->ridMask = 0xfffff;
+          /* fill in the "currentInputMask" */
+      root = (xWindowRoot *)(ConnectionInfo + connBlockScreenStart);
+!     for (i=0; i<screenInfo.numScreens; i++) 
+!     {
+! 	int j;
+! 	xDepth *pDepth;
+! 	xVisualType *pVisual;
+! 	int off = sizeof(xWindowRoot);
+! 
+          root->currentInputMask = WindowTable[i].allEventMasks;
++ 	pDepth = (xDepth *)(root + 1);
++ 	off += root->nDepths * sizeof(xDepth);
++ 	for (j = 0; j < root->nDepths; j++)
++ 	{
++ 		pVisual = (xVisualType *)(pDepth + 1);
++ 		off += pDepth->nVisuals * sizeof(xVisualType);
++ 		pDepth++;
++ 	}
++ 	root = (xWindowRoot *)((int)root + off);
++     }
+  
+      if (client->swapped) {
+  	WriteSConnSetupPrefix(client, &connSetupPrefix);
+          WriteSConnectionInfo(client, connSetupPrefix.length << 2, ConnectionInfo);
+  	}
+

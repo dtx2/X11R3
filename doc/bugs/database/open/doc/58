@@ -1,0 +1,53 @@
+Return-Path: unido!sinix!athen!hoch@uunet.uu.net
+Received: by expo.lcs.mit.edu; Wed, 28 Sep 88 12:34:53 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA12492; Wed, 28 Sep 88 12:34:47 EDT
+Received: from unido.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA07147; Wed, 28 Sep 88 12:19:42 EDT
+Received: by unido.uucp with uucp; 
+	  Wed, 28 Sep 88 13:17:03 +0100
+Received: by athen.sp4.siemens.de
+	  at Wed, 28 Sep 88 13:11:18  +0100 (5.52/SIE-0.1)
+Message-Id: <8809281211.AA12712@athen.sp4.siemens.de>
+Date: Wed, 28 Sep 88 13:11:18  +0100
+From: "Peter Hoch" <unido!athen!hoch@uunet.uu.net>
+To: xbugs@expo.lcs.mit.edu, xbugs@athena.mit.edu
+
+### bug number:   1018
+### area:         doc
+### severity:     medium
+### comments:     
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	don't care.
+
+CLIENT OPERATING SYSTEM:
+	don't care.
+
+DISPLAY:
+	don't care.
+
+SYNOPSIS:
+	Modifier-Services.
+
+DESCRIPTION:
+	Sample Server, protocol, Xlib c-Library Manual
+	disaggree about the handling of nonunique KeyCodes
+	with SetModifier.
+	Xlib and Manual disaggreee about the spelling of
+	XNewModifiermap vs. XNewModifierMap.
+	Xlib and Manual disaggree about the spelling of
+	XFreeModifierMapping vs.XFreeModifiermap.
+
+REPEAT-BY:
+	(What you did to get the error; include test program if appropriate)
+
+FIX:
+	(Preferred, but not necessary)
+
+

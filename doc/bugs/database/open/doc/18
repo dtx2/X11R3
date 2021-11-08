@@ -1,0 +1,29 @@
+Return-Path: karlton@decwrl.dec.com
+Received: from sonora.dec.com by expo.lcs.mit.edu; Wed, 6 Apr 88 21:42:34 EDT
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA28660; Wed, 6 Apr 88 18:41:20 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA05744; Wed, 6 Apr 88 18:41:16 PDT
+Message-Id: <8804070141.AA05744@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: susan@decwrl.dec.com
+Subject: .../doc/bdf.PS has an extra LF in it
+Date: Wed, 06 Apr 88 18:41:15 -0700
+From: Phil Karlton <karlton@decwrl.dec.com>
+
+### bug number:   325
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     
+
+The last line of the file is supposed to be a comment with the list of
+all the used fonts. Unfortunately somebody seems to have "fixed" it by
+breaking this "long" line into two pieces. The right thing to do is to
+change the LF after "Times-BolItalic" in the next to last line to a space.
+
+The file is not currently legal PostScript(R).
+
+PK
+

@@ -1,0 +1,33 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by expo.lcs.mit.edu; Thu, 7 Apr 88 09:20:10 EDT
+Received: by harvard.harvard.edu; Thu, 7 Apr 88 08:21:47 EST
+Received: from jeeves.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA27628; Thu, 7 Apr 88 08:53:51 EDT
+Received: by jeeves.ksr.com (3.2/SMI-3.2)
+	id AA03358; Thu, 7 Apr 88 08:53:49 EDT
+Message-Id: <8804071253.AA03358@jeeves.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: suggestion for Xset
+Reply-To: ksr!benson@harvard.harvard.edu
+Date: Thu, 07 Apr 88 08:53:47 EDT
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   333
+### area:         xset
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     user can use xset q | egrep '^Font Path:' | 
+###		  	       sed 's/^Font Path:[ 	]*//'
+
+
+in X11R2, command xset:
+
+I suggest that it be valid to write:
+
+xset fp /foo/bar/myfonts,default
+
+to create a path that includes the default path without knowing what
+it is. At very least, a command which prints the default path on
+stdout would enable this
+

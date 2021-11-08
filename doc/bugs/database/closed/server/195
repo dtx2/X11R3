@@ -1,0 +1,94 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:scotthe%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Wed, 31 Aug 88 16:08:40 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Wed 31 Aug 88 16:03:06-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id af13847; 31 Aug 88 15:23 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa22206; 31 Aug 88 15:08 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA15475; Wed, 31 Aug 88 11:06:04 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA15085; Wed, 31 Aug 88 11:06:15 PDT
+From: Scott Hennes <scotthe@shark.gwd.tek.com>
+Message-Id: <8808311806.AA15085@shark.GWD.TEK.COM>
+Date: Wed, 31 Aug 88 11:06:12 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject: X11 R2 bug: awm SaveUnders crashes server
+
+### bug number:   926
+### area:         server
+### severity:     very high
+### comments:     
+
+
+Scott Hennes
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2144
+tektronix!shark!scotthe
+
+--------------------
+VERSION:
+	X11 release 2 with fixes 1-216 plus 260 applied
+
+CLIENT MACHINE:
+	Tektronix 4316
+
+CLIENT OPERATING SYSTEM:
+	UTEK 2.3 (== 4.2bsd kernel with some 4.3 utilities)
+
+DISPLAY:
+	Tektronix 4316
+
+SYNOPSIS:
+	SaveUnders with awm can crash server
+
+DESCRIPTION:
+	Area: server
+	Files: (full pathname of files)
+
+	Resizing a window with awm when saveUnder has been loaded as a
+	resource can cause a server crash.  The problem is that a
+	bad area is passed to the device-dependent routine, xxxSaveAreas.
+	The runtime stack shows pathway: SlideAndSizeWindow -> DoObscures
+	(bitGravity == NorthWestGravity) -> miSaveAreas -> xxxSaveAreas.
+	Routine miSaveAreas says it expects certain things of
+	backStorage->obscured and backStorage->oldAbsCorner.  Perhaps these
+	have not been met.
+
+	For example:
+	our ddx level is being asked to copy from a window starting at
+	position 756.  The copy height is 353.  Unfortunately, our
+	frame buffer is only 1024 high :-).
+
+REPEAT-BY:
+    Using the following 'default' file:
+
+    ----------------------------------default-------------------------------
+    awm*saveUnder:	on
+    ------------------------------------------------------------------------
+
+    1) xrdb -load default
+    2) awm &
+    3) xterm -geometry =80x60 &
+    4) 'reframe' the window to 80x24
+    5) 'move' the window
+    6) 'reframe' the window to 80x60
+
+
+    This should cause the server to crash.
+
+    (These numbers may be specific for the font and our frame buffer size.
+    The 80X60 window is entirely on-screen.
+    You may have to play around some to get this to happen on another machine).
+
+        FIX:
+	(Preferred, but not necessary)
+
+
+
+
+------- End of Forwarded Message
+

@@ -1,0 +1,297 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Mon, 15 Aug 88 13:59:29 EDT
+Date: Mon, 15 Aug 88 14:00 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: XShrinkRegion
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880815180013.7.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   873
+### area:         Xlib
+### severity:     low
+### comments:     
+
+AREA:
+	Xlib
+
+SYNOPSIS:
+	XShrinkRegion is broken.
+
+DESCRIPTION:
+	XShrinkRegion doesn't work the way the Mac does.
+	It isn't clear it does anything useful as implemented.
+
+	[Many thanks to Mark Manasse at Digital for the following
+	 test program, for figuring out how XShrinkRegion should
+	 be specified, and for providing the following implementation.]
+
+REPEAT BY:
+
+	#include "X11/Xlib.h"
+	#include "X11/X.h"
+	#include "X11/Xutil.h"
+	#include <stdio.h>
+	
+	Display *dpy;
+	int scr;
+	Region r, s;
+	GC gc;
+	
+	main(argc, argv) int argc; char *argv[];
+	{
+	Window w, root;
+	XGCValues gcv;
+	    r = XCreateRegion();
+	    s = XCreateRegion();
+	    BuildRegion();
+	    if (argc == 1) {
+		Repaint(None);
+		exit(0);
+	    }
+	    StartConnectionToServer(argc, argv);
+	    scr = DefaultScreen(dpy);
+	    root = RootWindow(dpy, scr);
+	    w = XCreateSimpleWindow(dpy, root, 50, 50, 100, 100, 1,
+		BlackPixel(dpy, scr), WhitePixel(dpy, scr));
+	    XSelectInput(dpy, w, ExposureMask);
+	    gcv.foreground = BlackPixel(dpy, scr);
+	    gc = XCreateGC(dpy, w, GCForeground, &gcv);
+	    XMapWindow(dpy, w);
+	    while(1) {
+		XEvent ev;
+		XNextEvent(dpy, &ev);
+		Repaint(w);
+	    }
+	}
+	
+	StartConnectionToServer(argc, argv)
+		int     argc;
+		char    **argv;
+	{
+	char *display = NULL;
+	
+	    while (--argc)
+		if (index(*++argv, ':'))
+		    display = *argv;
+	    if (!(dpy = XOpenDisplay(display))) {
+		printf("Cannot open display\n");
+		exit(1);
+	    }
+	}
+	
+	BuildRegion()
+	{
+	XRectangle t;
+	    t.x = 0;
+	    t.height = t.width = t.y = 1;
+	    XUnionRectWithRegion(&t, r, r);
+	    t.x = 2;
+	    XUnionRectWithRegion(&t, r, r);
+	    t.x = 1;
+	    t.y = 0;
+	    XUnionRectWithRegion(&t, r, r);
+	    t.y = 2;
+	    XUnionRectWithRegion(&t, r, r);
+	}
+	
+	typedef struct {
+	    short x1, x2, y1, y2;
+	} BOX;
+	
+	typedef struct {
+	    short size, nboxes;
+	    BOX *boxes;
+	    BOX extents;
+	} REGION;
+	
+	DumpRegion(r) REGION *r;
+	{
+	int i;
+	    printf("%d rectangles; extents = ", r->nboxes);
+	    DumpBox(&(r->extents));
+	    for (i = 0; i < r->nboxes; i++) {
+		printf("Box %d extents = ", i);
+		DumpBox(&(r->boxes[i]));
+	    }
+	}
+	
+	DumpBox(b) BOX *b;
+	{
+	    printf("[%d,%d) x [%d,%d)\n", b->x1, b->x2, b->y1, b->y2);
+	}
+	
+	Repaint(w) Window w;
+	{
+	int i,j;
+	    for (i=1; i>-4; i--)
+		for (j=1; j>-4; j--)
+		    DrawInset(w, i, j);
+	}
+	
+	DrawInset(w, i, j) Window w; int i,j;
+	{
+	    XUnionRegion(r, r, s);
+	    XOffsetRegion(s, 30 - i * 20, 30 - j * 20);
+	    XShrinkRegion(s, i, j);
+	    if (w) {
+		XSetRegion(dpy, gc, s);
+		XFillRectangle(dpy, w, gc, 0, 0, 1000, 1000);
+	    } else {
+		printf("(i,j) = (%d, %d)\n", i, j);
+		DumpRegion(s);
+	    }
+	}
+
+FIX:
+
+*** /tmp/,RCSt1a03066	Mon Aug 15 13:56:35 1988
+--- lib/X/XRegion.c	Thu Jul  7 11:03:58 1988
+***************
+*** 1,6 ****
+! /* $Header: XRegion.c,v 11.20 88/07/05 16:46:56 rws Exp $ */
+  /************************************************************************
+! Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+  
+                          All Rights Reserved
+--- 1,6 ----
+! /* $Header: XRegion.c,v 11.21 88/07/07 11:03:58 rws Exp $ */
+  /************************************************************************
+! Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+  
+                          All Rights Reserved
+***************
+*** 233,286 ****
+      pRegion->extents.y2 += y;
+  }
+  
+! XShrinkRegion( r, dx, dy )
+!     Region r;
+!     int dx, dy;
+! {
+!     int i,h,w;
+!     float sx,sy;
+!     int cx,cy,newcx,newcy;
+!     BoxPtr rect;
+  
+!     /* figure out ratios */
+!     h = r->extents.y2 - r->extents.y1;
+!     w = r->extents.x2 - r->extents.x1;
+!     sx = ((float)(w+dx))/w;
+!     sy = ((float)(h+dy))/h;
+!     rect = &(r->rects[0]);
+!     for(i=0; i<r->numRects; i++)
+!     {
+!     	cx = (rect->x1 + rect->x2)/2;
+!     	cy = (rect->y1 + rect->y2)/2;
+  
+! 	/* shrink or expand box */
+!     	rect->x1 = rect->x1 * sx;
+!     	rect->x2 = rect->x2 * sx;
+!     	rect->y1 = rect->y1 * sy;
+!     	rect->y2 = rect->y2 * sy;
+  
+! 	/* recenter box around old center */
+!     	newcx = (rect->x1 + rect->x2)/2;
+!     	newcy = (rect->y1 + rect->y2)/2;
+! 	rect->x1 = rect->x1 - (newcx - cx);
+! 	rect->x2 = rect->x2 - (newcx - cx);
+! 	rect->y1 = rect->y1 - (newcy - cy);
+! 	rect->y2 = rect->y2 - (newcy - cy);
+  
+!     	/* adjust for shrinkage problems */
+!     	if ( dx < 0 )
+!     	{
+!     		if ( rect->x1 > cx ) rect->x1 = cx;
+!     		if ( rect->x2 < cx ) rect->x2 = cx;
+!     	}
+!     	if ( dy < 0 )
+!     	{
+!     		if ( rect->y1 > cy ) rect->y1 = cy;
+!     		if ( rect->y2 < cy ) rect->y2 = cy;
+!     	}
+!     	EXTENTS(rect,r);
+!     	(rect)++;
+      }
+  }
+  
+  #ifdef notdef
+--- 233,308 ----
+      pRegion->extents.y2 += y;
+  }
+  
+! /* 
+!    Utility procedure Compress:
+!    Replace r by the region r', where 
+!      p in r' iff (Quantifer m <= dx) (p + m in r), and
+!      Quantifier is Exists if grow is TRUE, For all if grow is FALSE, and
+!      (x,y) + m = (x+m,y) if xdir is TRUE; (x,y+m) if xdir is FALSE.
+  
+!    Thus, if xdir is TRUE and grow is FALSE, r is replaced by the region
+!    of all points p such that p and the next dx points on the same
+!    horizontal scan line are all in r.  We do this using by noting
+!    that p is the head of a run of length 2^i + k iff p is the head
+!    of a run of length 2^i and p+2^i is the head of a run of length
+!    k. Thus, the loop invariant: s contains the region corresponding
+!    to the runs of length shift.  r contains the region corresponding
+!    to the runs of length 1 + dxo & (shift-1), where dxo is the original
+!    value of dx.  dx = dxo & ~(shift-1).  As parameters, s and t are
+!    scratch regions, so that we don't have to allocate them on every
+!    call.
+! */
+  
+! #define ZOpRegion(a,b,c) if (grow) XUnionRegion(a,b,c); \
+! 			 else XIntersectRegion(a,b,c)
+! #define ZShiftRegion(a,b) if (xdir) XOffsetRegion(a,b,0); \
+! 			  else XOffsetRegion(a,0,b)
+! #define ZCopyRegion(a,b) XUnionRegion(a,a,b)
+  
+! static void
+! Compress(r, s, t, dx, xdir, grow)
+!     Region r, s, t;
+!     register unsigned dx;
+!     register int xdir, grow;
+! {
+!     register unsigned shift = 1;
+  
+!     ZCopyRegion(r, s);
+!     while (dx) {
+!         if (dx & shift) {
+!             ZShiftRegion(r, -shift);
+!             ZOpRegion(r, s, r);
+!             dx -= shift;
+!             if (!dx) break;
+!         }
+!         ZCopyRegion(s, t);
+!         ZShiftRegion(s, -shift);
+!         ZOpRegion(s, t, s);
+!         shift <<= 1;
+      }
++ }
++ 
++ #undef ZOpRegion
++ #undef ZShiftRegion
++ #undef ZCopyRegion
++ 
++ XShrinkRegion(r, dx, dy)
++     Region r;
++     int dx, dy;
++ {
++     Region s, t;
++     int grow;
++ 
++     if (!dx && !dy) return;
++     s = XCreateRegion();
++     t = XCreateRegion();
++     if (grow = (dx < 0)) dx = -dx;
++     if (dx) Compress(r, s, t, 2*dx, TRUE, grow);
++     if (grow = (dy < 0)) dy = -dy;
++     if (dy) Compress(r, s, t, 2*dy, FALSE, grow);
++     XOffsetRegion(r, dx, dy);
++     XDestroyRegion(s);
++     XDestroyRegion(t);
+  }
+  
+  #ifdef notdef
+

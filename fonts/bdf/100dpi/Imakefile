@@ -1,0 +1,48 @@
+SRCS = \
+	charB08.bdf charB10.bdf charB12.bdf charB14.bdf charB18.bdf \
+	charB24.bdf charBI08.bdf charBI10.bdf charBI12.bdf charBI14.bdf \
+	charBI18.bdf charBI24.bdf charI08.bdf charI10.bdf charI12.bdf \
+	charI14.bdf charI18.bdf charI24.bdf charR08.bdf charR10.bdf \
+	charR12.bdf charR14.bdf charR18.bdf charR24.bdf
+
+
+OBJS = \
+	charB08.snf charB10.snf charB12.snf charB14.snf charB18.snf \
+	charB24.snf charBI08.snf charBI10.snf charBI12.snf charBI14.snf \
+	charBI18.snf charBI24.snf charI08.snf charI10.snf charI12.snf \
+	charI14.snf charI18.snf charI24.snf charR08.snf charR10.snf \
+	charR12.snf charR14.snf charR18.snf charR24.snf
+
+FONTINSTDIR = $(FONTDIR)/100dpi
+
+MakeFonts()
+
+FontTarget(charB08)
+FontTarget(charB10)
+FontTarget(charB12)
+FontTarget(charB14)
+FontTarget(charB18)
+FontTarget(charB24)
+FontTarget(charBI08)
+FontTarget(charBI10)
+FontTarget(charBI12)
+FontTarget(charBI14)
+FontTarget(charBI18)
+FontTarget(charBI24)
+FontTarget(charI08)
+FontTarget(charI10)
+FontTarget(charI12)
+FontTarget(charI14)
+FontTarget(charI18)
+FontTarget(charI24)
+FontTarget(charR08)
+FontTarget(charR10)
+FontTarget(charR12)
+FontTarget(charR14)
+FontTarget(charR18)
+FontTarget(charR24)
+
+
+InstallFonts($(FONTINSTDIR))
+
+depend::

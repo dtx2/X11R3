@@ -1,0 +1,200 @@
+Return-Path: mit-erl!apollo!terek@EDDIE.MIT.EDU
+Received: by expo.lcs.mit.edu; Tue, 3 May 88 23:03:50 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA03422@EDDIE.MIT.EDU>; Tue, 3 May 88 23:00:38 EDT
+From: mit-erl!apollo!terek@EDDIE.MIT.EDU
+Received: from apollo by erl id AA19028g; Tue, 3 May 88 22:56:04 EDT
+Received: by apollo.UUCP id AA14194; Tue, 3 May 88 18:13:15 edt
+Message-Id: <8805032213.AA14194@apollo.UUCP>
+Date: Tue, 3 May 88 16:06:10 EDT 
+Subject:  miwidedash bug
+To: xbugs@EXPO.LCS.MIT.EDU
+
+### bug number:   448
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+        ANY
+
+CLIENT OPERATING SYSTEM:
+	ANY
+
+DISPLAY:
+	ANY
+
+SYNOPSIS:
+        Wide Dashed lines are drawn incorrect.  Doglegs.
+
+DESCRIPTION:
+        When a line is of such a length that it will end with the odd
+        dash, the last odd dash fragment is drawn incorrectly.  Miwidedash
+        calls midashline to get a list of dash segments.  Midashline
+        states in the header that only the x and y fields of the last
+        element are valid and all other fields are undefined.  When 
+        drawing odd dashes, the miwidedash line code uses these fields,
+        causing the last segment to be incorrect.
+
+REPEAT-BY:
+/*  X include files  */
+#include <X11/Xlib.h>  
+#include <X11/Xutil.h> 
+#include <stdio.h>
+/*  declarations  */
+/*#define FIGSIZE 7*/
+/*XPoint figure [FIGSIZE] = { 140,0, 60,0,0,60.0,120,140,120,80,60};*/
+#define FIGSIZE 3
+XPoint figure [FIGSIZE] = {80,0, 0, 80,100, 60 } ;
+XPoint figout [FIGSIZE];
+XSegment figsegout [FIGSIZE<<1];
+int stipple_width = 8;
+int stipple_height = 8;
+static char stipple_bits[] = { 0x55, 0xff,0xaa, 0xff,0x55, 0xff,0xaa, 0xff };
+
+drawpix ( dpy, ev )
+Display * dpy;
+XEvent  * ev;
+{
+   int i,j,k,l,m,n;
+   GC gc1;
+   char dash_list[4];
+   XColor scolor, ecolor;
+   int screen;      
+         
+   gc1 = XCreateGC ( dpy, ev->xexpose.window, 0,0);
+                    
+   XAllocNamedColor( dpy, DefaultColormap(dpy, DefaultScreen(dpy)),
+                     "white", &scolor, &ecolor);
+   XSetBackground( dpy, gc1, ecolor.pixel); 
+   XAllocNamedColor( dpy, DefaultColormap(dpy, DefaultScreen(dpy)),
+                     "red", &scolor, &ecolor);
+   XSetForeground( dpy, gc1, ecolor.pixel); 
+
+   dash_list[0] = 0x2c;
+   dash_list[1] = 0x12;
+   n = 2;
+   XSetDashes( dpy, gc1, 0, dash_list, n);
+
+   for (i=LineSolid; i <= LineDoubleDash; i++) 
+   {
+     XSetLineAttributes ( dpy, gc1, 0, i, CapButt, JoinMiter);
+
+     k = 60 + i * 150;
+     l = 20;
+
+     for (m = 0; m < FIGSIZE ; m++)
+     {
+       figout[m].x = figure[m].x + k;
+       figout[m].y = figure[m].y + l;
+     }
+   XDrawLines (dpy,  ev->xexpose.window, gc1,figout, 3, CoordModeOrigin);
+   }
+
+   for (i=LineSolid; i <= LineDoubleDash; i++) 
+   {
+     XSetLineAttributes ( dpy, gc1, 1, i, CapButt, JoinMiter);
+
+     k = 60 + i * 150;
+     l = 120;
+
+     for (m = 0; m < FIGSIZE ; m++)
+     {
+       figout[m].x = figure[m].x + k;
+       figout[m].y = figure[m].y + l;
+     }
+   XDrawLines (dpy,  ev->xexpose.window, gc1,figout, 3, CoordModeOrigin);
+   }
+}
+main()
+{
+  Display *mydisplay;
+  Window  mywindow;
+  GC mygc;
+  XEvent myevent;
+  KeySym mykey;
+  unsigned long black, white;
+  Pixmap bkg;
+  int i;
+  char text[10];
+  int done;
+  char                *display_name = NULL;
+  /*  initialization  */
+  mydisplay = XOpenDisplay(display_name);
+  black =  BlackPixel (mydisplay, DefaultScreen (mydisplay));
+  white =  WhitePixel (mydisplay, DefaultScreen (mydisplay));
+  mywindow = XCreateSimpleWindow (mydisplay,
+              RootWindow( mydisplay, DefaultScreen (mydisplay)),
+              200, 300, 576, 700, 5, black, white);
+
+  mygc = XCreateGC (mydisplay, mywindow, 0, 0);
+  /*  input event selection  */
+  XSelectInput(mydisplay, mywindow,
+      ButtonPressMask | KeyPressMask | ExposureMask );
+  /*  window mapping  */
+  XMapWindow(mydisplay, mywindow);
+  /*  main event-reading loop  */
+  done = 0;
+  while ( done == 0 ) {
+    XNextEvent( mydisplay, &myevent );
+    switch (myevent.type)   {
+    /*  repaint window on expose events  */
+    case Expose:
+      if (myevent.xexpose.count == 0)
+          drawpix (mydisplay, &myevent);
+      break;
+    /*  process keyboard mapping changes  */
+    case MappingNotify:
+         XRefreshKeyboardMapping ( &myevent );
+         break;
+    /*  process keyboard input  */
+    case KeyPress:
+         i = XLookupString ( &myevent, text, 10, &mykey, 0 );
+         if (i == 1 && text[0] == 'q') done = 1;
+         break;
+    }  /* switch  (myevent.type) */
+  }  /* while  (done == 0) */
+  /*  Termination  */
+  XUnmapWindow (mydisplay, mywindow);
+  XFreeGC (mydisplay, mygc);
+  XDestroyWindow (mydisplay, mywindow);
+  XCloseDisplay (mydisplay);
+  exit (1);
+}
+
+FIX:
+*** miwidedash.c.old	Tue May  3 15:07:58 1988
+--- miwidedash.c	Tue May  3 15:08:22 1988
+***************
+*** 266,275 ****
+  		pPtIn++;
+  	    }
+  	    /* Add this point to our list */
+! 	    ppt->x = (double) dashes[i].pt.x +
+! 	    		(fXmajor ? 0.0 : dashes[i].e*m);
+! 	    ppt->y = (double) dashes[i].pt.y +
+! 	    		(fXmajor ? dashes[i].e*m : 0.0);
+  	    ppt++;
+  	    which = dashes[i].which;
+  	    if((which != whichPrev) || (i == nseg))
+--- 266,274 ----
+  		pPtIn++;
+  	    }
+  	    /* Add this point to our list */
+!             ppt->x = (double) dashes[i].pt.x;
+!             ppt->y = (double) dashes[i].pt.y;
+! 
+  	    ppt++;
+  	    which = dashes[i].which;
+  	    if((which != whichPrev) || (i == nseg))
+
+
+
+
+Bob Terek
+Apollo Computer
+
+

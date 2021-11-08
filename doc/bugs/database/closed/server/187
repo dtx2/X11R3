@@ -1,0 +1,31 @@
+Return-Path: karlton@wsl.dec.com
+Received: by EXPO.LCS.MIT.EDU; Thu, 21 Jul 88 17:38:46 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.4/4.7.34)
+	id AA07082; Thu, 21 Jul 88 14:38:46 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA09079; Thu, 21 Jul 88 14:38:34 PDT
+Message-Id: <8807212138.AA09079@gilroy.pa.dec.com>
+To: joel@wsl.dec.com, xbugs@expo.lcs.mit.edu
+Subject: extra allocation in server/ddx/snf/fonts.c: ReadNFont
+Date: Thu, 21 Jul 88 14:38:32 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+
+### bug number:   706
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+DISPLAY:
+	any
+
+AREA:
+	server
+
+DESCRIPTION:
+	The first assignment to bytestoalloc has an extraneous
+		BYTESOFFONTINFO(&fi)
+	which is already included in bytesdata.
+

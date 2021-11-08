@@ -1,0 +1,48 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 10:07:12 EST
+Date: Thu, 10 Mar 88 10:07:12 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101507.AA00437@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: CLX pixarray-depth bug.
+
+### bug number:   70
+### area:         CLX
+### severity:     
+### assigned to:  
+### status:       closed
+
+(Message inbox:44)
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 08:42:33 EST
+Return-Path: <@RELAY.CS.NET,@RELAY.CS.NET:Oren@home.csc.ti.com>
+Received: from RELAY.CS.NET (RELAY.CS.NET) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 128620; 1 Mar 88 16:32:56 EST
+Received: from relay2.cs.net by RELAY.CS.NET id cp00168; 1 Mar 88 15:40 EST
+Received: from csc.ti.com by RELAY.CS.NET id as10027; 1 Mar 88 15:11 EST
+Received: from SI by tilde id AA08097; Tue, 1 Mar 88 10:31:26 CST
+Message-Id: <2782225989-3134226@SI>
+Sender: OREN%si.csc.ti.com@relay.cs.net
+Date: Tue, 1 Mar 88  10:33:09 CST
+From: LaMott Oren <Oren%home.csc.ti.com@relay.cs.net>
+To: bug-clx@zermatt.lcs.mit.edu
+Subject: CLX pixarray-depth bug.
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 10 Mar 88 08:42 EST
+Resent-Message-Id: <880310084231.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+The CLX pixarray-depth function isn't general enough, this should fix it
+up.
+
+;; in the IMAGE file:
+(defun pixarray-depth (pixarray)
+  (OR (second (assoc (array-element-type pixarray)
+		     '((bit 1)
+		       ((mod 4) 2)
+		       ((mod 16) 4)
+		       ((mod 256) 8)
+		       ((mod #x10000) 16)
+		       ((mod #x100000000) 32))
+		     :test #'subtypep))
+      (x-type-error pixarray 'pixarray)))
+

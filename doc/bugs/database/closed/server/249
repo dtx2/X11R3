@@ -1,0 +1,104 @@
+Return-Path: stan!garya!garya@boulder.colorado.edu
+Received: by expo.lcs.mit.edu; Thu, 6 Oct 88 18:54:27 EDT
+Return-Path: <stan!garya!garya@boulder.Colorado.EDU>
+Received: by boulder.Colorado.EDU (cu.grandpoobah.052088)
+Received: from garya.stan.com by stan.com (3.2/SMI-3.2)
+	id AA08967; Thu, 6 Oct 88 14:37:48 MDT
+Received: by garya.stan.com (3.2/SMI-3.2)
+	id AA23326; Thu, 6 Oct 88 14:37:45 MDT
+Date: Thu, 6 Oct 88 14:37:45 MDT
+From: stan!garya!garya@boulder.colorado.edu (Gary Aitken)
+Message-Id: <8810062037.AA23326@garya.stan.com>
+To: boulder!bugs@expo.lcs.mit.edu
+Subject: XV11R3 XGrabPointer/XMoveWindow bug
+
+### bug number:   1060
+### area:         server
+### severity:     medium
+### comments:     
+
+
+The following program illustrates a bug which exists in both R2
+and the prerelease version of R3:
+
+===========================================================================
+# include <X11/Xlib.h>
+# include <X11/Xutil.h>
+
+ main ()
+ {
+			Display	*dspp ;
+			Window	w1,w2,w3,w4 ;
+			Window	root ;
+			int	y ;
+			int	n ;
+			XEvent	ev ;
+#define	BLACK	1
+#define	WHITE	0
+
+	if (dspp = XOpenDisplay("unix:0.0")) {
+		XSynchronize(dspp,1) ;
+		root = XDefaultRootWindow(dspp) ;
+		w1 = XCreateSimpleWindow(dspp,root,0,0,12,170,1,BLACK,WHITE) ;
+		printf("  w1:0x%x\n",w1) ;
+		XMapWindow(dspp,w1) ;
+		y = 0 ;
+		w2 = XCreateSimpleWindow(dspp,w1,0,y,10,27,1,BLACK,WHITE) ;
+		printf("  w2:0x%x\n",w2) ;
+		XMapWindow(dspp,w2) ;
+		w3 = XCreateSimpleWindow(dspp,w2,-1,-1,10,10,1,BLACK,WHITE) ;
+		printf("  w3:0x%x\n",w3) ;
+		XMapWindow(dspp,w3) ;
+		w4 = XCreateSimpleWindow(dspp,w2,-1,17,10,10,1,BLACK,WHITE) ;
+		printf("  w4:0x%x\n",w4) ;
+		XMapWindow(dspp,w4) ;
+		XSelectInput(dspp,w1,ButtonPressMask|ButtonReleaseMask) ;
+		XSelectInput(dspp,w3,ButtonPressMask|ButtonReleaseMask) ;
+		XSelectInput(dspp,w4,ButtonPressMask|ButtonReleaseMask) ;
+		while (1) {
+			XNextEvent(dspp,&ev) ;
+			printf("  typ:%d w:0x%x ptr:%d,%d\n",
+				ev.type,ev.xbutton.window,ev.xbutton.x,ev.xbutton.y) ;
+			if (ev.type == ButtonPress) {
+				if (ev.xbutton.window == w4) {
+					XGrabPointer(dspp,w4,False,ButtonReleaseMask,
+						GrabModeAsync,GrabModeAsync,w4,None,CurrentTime) ;
+					n = 4 ;
+					while (n--) {
+						y += 7 ;
+						XMoveWindow(dspp,w2,0,y) ;
+					}
+				}
+			}
+			else if (ev.type == ButtonRelease) {
+				if (ev.xbutton.window == w4) {
+					XUngrabPointer(dspp,CurrentTime) ;
+				}
+			}
+		}
+	}
+ }
+============================================================================
+To exhibit the bug:
+	Run the program.
+	You should see 4 windows:
+		A long skinny window, w1.
+		A shorter window, w2, parented to w1.
+		Two button windows, w3 and w4, positioned at the top and bottom
+			of w2 and parented to w2.
+	Position the pointer over window w4, and hold the mouse without moving.
+	Press a mouse button and hold it down.
+	The window w2 should move down, dragging pointer (and w3 & w4) with it.
+	Release the button.
+	Note that the pointer, confined to w4, will have a y position of -1
+		(i.e. it is on the border).
+	Press the button again without moving the mouse.
+	The event is delivered to window w3, even though the pointer is
+		nowhere near w3.
+
+Moving the pointer any amount in any direction corrects the error
+condition; moving it back to its -1 position gives correct results.
+
+Gary Aitken
+	ncar!boulder!stan!garya
+

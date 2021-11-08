@@ -1,0 +1,59 @@
+Return-Path: tek@cs.ucla.edu
+Received: from penzance.cs.ucla.edu by expo.lcs.mit.edu; Mon, 11 Apr 88 12:16:54 EDT
+Return-Path: <tek@CS.UCLA.EDU>
+Received: by penzance.cs.ucla.edu (Sendmail 5.58.2/2.00)
+	id AA01107; Mon, 11 Apr 88 09:15:46 PDT
+Date: Mon, 11 Apr 88 09:15:46 PDT
+From: tek@cs.ucla.edu (Ted Kim (ATW))
+Message-Id: <8804111615.AA01107@penzance.cs.ucla.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xlib man page installation
+
+### bug number:   350
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:	
+	SUN-3/60
+
+CLIENT OPERATING SYSTEM:
+	SUN OS 3.5
+
+DISPLAY:
+	CG4
+
+SYNOPSIS:
+	on "make install", Xlib man pages are installed with
+	suffix "3X"
+
+DESCRIPTION:
+	If you use the standard imake settings that come with the
+	distribution, man pages are all copied into a single directory
+	with the "ManSuffix" applied (which is "n" for "new" section)
+	Except for the Xlib man pages which end up with "3X" suffixes.
+	That confuses the SUN OS 3.5 "man" program which cannot find
+	those man pages, because it expects the "n" suffix for pages
+	in the "new" section.
+
+REPEAT-BY:
+	you really don't want to do this
+	(I assume the standard imake settings)
+
+	make World
+	make install
+
+FIX:
+	I suppose the Xlib man pages should really go in section 3,
+	anyway. But given the current setup, maybe the simplest thing
+	is just to have the "ManSuffix" applied to them.
+
+
+
+
+

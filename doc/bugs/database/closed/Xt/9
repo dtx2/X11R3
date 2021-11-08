@@ -1,0 +1,58 @@
+Return-Path: fred%hpcvxft@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Mon, 4 Apr 88 14:53:51 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA17809; Mon, 4 Apr 88 13:52:52 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Mon, 4 Apr 88 10:52:28 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA24049; Mon, 4 Apr 88 10:52:38 PST
+Received: from hpcvxft by hpcvxft.HP.COM; Mon, 4 Apr 88 11:53:12 pdt
+Message-Id: <8804041853.AA15624@hpcvxft.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: CoreSetValues() bug.
+X-Mailer: mh6.5
+Date: Mon, 04 Apr 88 11:53:06 PDT
+From: fred%hpcvxft@hplabs.hp.com
+
+### bug number:   260
+### area:         Xt
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+VERSION:
+	Xtk release 2
+
+SYNOPSIS:
+        Attempting to modify the 'mapped_when_managed' flag using
+        XtSetValues() does not work
+
+DESCRIPTION:
+	When using XtSetValues() to modify the state of the 
+        'mapped_when_managed' flag for a widget, the Core's set values
+        routine invokes XtSetMappedWhenManaged(), but passes in the
+        wrong widget Id.  
+
+        XtSetMappedWhenManaged() takes two parameters:
+
+           a widget Id
+           the new setting for the mapped_when_managed flag
+
+        One of the first things XtSetMappedWhenManaged() does is to verify
+        that the new setting is different than the current setting in the
+        widget; if they are the same, then it returns without doing anything.
+
+        When the Core's set values routine invokes XtSetMappedWhenManaged(),
+        it passes 'new' as the widget Id, and 'new->core.mapped_when_managed'
+        as the new setting.  XtSetMappedWhenManaged() sees that the new
+        value and the current value in the widget (the 'new' widget) are the
+        same, and returns without actually affecting the mapping of the
+        widget.
+
+REPEAT-BY:
+	Do anything that changes the mapped_when_managed flag.
+
+FIX:
+	The Core's set values routine should probably have passed in the
+        'old' widget Id, instead of the new.
+

@@ -1,0 +1,69 @@
+Return-Path: sequent!gssc!davec@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 19:26:53 EDT
+Received: by decwrl.dec.com (5.54.4/4.7.34)
+	id AA26872; Wed, 29 Jun 88 16:25:22 PDT
+From: sequent!gssc!davec@decwrl.dec.com
+Message-Id: <8806292325.AA26872@decwrl.dec.com>
+To: xbugs@decwrl.dec.com
+Subject: inconsistent number of parameters to CreatePixmap()
+Date: Wed, 29 Jun 88 15:37:27 PDT
+
+### bug number:   669
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	All
+
+CLIENT OPERATING SYSTEM:
+	All
+
+DISPLAY:
+	All
+
+SYNOPSIS:
+	 inconsistent number of parameters to CreatePixmap()
+
+DESCRIPTION:
+	 While looking through ddx/mi and dix, I noticed that
+	 (*pScreen->CreatePixmap) () was being called with different
+	 number of arguments.  Some places pass in 4 arguments, while
+	 others pass in 5 arguments.  The fifth argument specifies the
+	 format of the pixmap to be created.
+
+	 mi files:
+		miarc.c
+		mibitblt.c
+		miglblt.c
+		milines.c
+		miwidedash.c
+
+	dix files:
+		dispatch.c
+		gc.c
+		glyphcurs.c
+		window.c
+
+	Additionally, the apollo and cfb sample server code define
+	CreatePixmap() to take 5 arguments while mfb and qdvss code
+	define CreatePixmap() to take 4 arguments.  What is correct?
+
+
+REPEAT-BY:
+	Examine the code
+
+FIX:
+	
+
+
+
+Dave Cobbley
+Graphic Software Systems
+decwrl!sequent!gssc!davec
+(503) 629-9795
+

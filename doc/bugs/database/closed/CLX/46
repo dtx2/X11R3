@@ -1,0 +1,73 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Sat, 18 Jun 88 10:56:04 EDT
+Return-Path: <Bill.Chiles@chiles.slisp.cs.cmu.edu>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 165083; 17 Jun 88 18:40:49 EDT
+Received: by expo.lcs.mit.edu; Fri, 17 Jun 88 18:41:41 EDT
+Message-Id: <8806172241.AA26413@EXPO.LCS.MIT.EDU>
+Received: from CHILES.SLISP.CS.CMU.EDU by CHILES.SLISP.CS.CMU.EDU; 17 Jun 88 18:41:07 EDT
+To: bug-clx@expo.lcs.mit.edu
+Subject: EVENT-CASE (CLX)
+Date: Fri, 17 Jun 88 18:40:55 EDT
+From: Bill.Chiles@wb1.cs.cmu.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Sat, 18 Jun 88 10:56 EDT
+Resent-Message-Id: <19880618145627.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   615
+### area:         CLX
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	Moniterm (apa16)
+
+SYNOPSIS:
+	 EVENT-CASE is not binding event keyword arguments correctly.
+
+DESCRIPTION:
+	 In the following code, event-window and window are always bound to
+	 nil:
+	    (defconstant interesting-xevents-receive-keys
+	        '(:key-press :button-press :button-release :enter-notify
+		  :leave-notify :exposure :graphics-exposure :configure-notify
+		  :destroy-notify :unmap-notify :map-notify :reparent-notify
+		  :gravity-notify :circulate-notify))
+	    (defun deleting-window-drop-event (display win)
+	      (xlib:display-finish-output display)
+	      (let ((result nil))
+		(xlib:event-case (display :timeout 0)
+		  (#.interesting-xevents-receive-keys (event-window window)
+		   (if (or (eq event-window win) (eq window win))
+		       (setf result t)
+		       nil)))
+		result))
+	 I had to use the following code fragment to do what I wanted to do:
+	    (defun deleting-window-drop-event (display win)
+	      (xlib:display-finish-output display)
+	      (let ((result nil))
+		(xlib:process-event
+		 display :timeout 0
+		 :handler #'(lambda (&key event-window window &allow-other-keys)
+			      (if (or (eq event-window win) (eq window win))
+				  (setf result t)
+				  nil)))
+		result))
+	 Sure, what I ended up with is just fine, but my first attempt should
+	 have worked.  I use this in a window deletion hook as follows:
+	    ...
+	    (loop (unless (deleting-window-drop-event display window)
+	            (return)))
+
+Bill
+

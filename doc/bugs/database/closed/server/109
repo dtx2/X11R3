@@ -1,0 +1,39 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Return-Path: <Hornig@alderaan.scrc.symbolics.com>
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by expo.lcs.mit.edu; Wed, 30 Mar 88 11:57:56 EST
+Received: from MAMA-CASS.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 182143; Wed 30-Mar-88 11:56:43 EST
+Date: Wed, 30 Mar 88 11:56 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: server/ddx/mi/milines.c
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880330165632.3.HORNIG@MAMA-CASS.SCRC.Symbolics.COM>
+
+### bug number:   290
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	Missing static declaration.
+
+DESCRIPTION:
+	PtToAngle needs a static declaration before ist first use.
+
+REPEAT-BY:
+	Compile the file.
+

@@ -1,0 +1,51 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Wed, 27 Apr 88 17:41:30 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA04797; Wed, 27 Apr 88 16:40:24 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 27 Apr 88 08:53:32 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA24079; Wed, 27 Apr 88 09:53:30 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 27 Apr 88 09:54:51 pdt
+Message-Id: <8804271654.AA01701@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xclock usage msg
+X-Mailer: mh6.5
+Date: Wed, 27 Apr 88 09:54:44 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   428
+### area:         xclock
+### severity:     very low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Usage message for xclock incorrect with respect to -display & -geometry
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/xclock/xclock.c.old	Tue Apr 26 14:37:55 1988
+--- clients/xclock/xclock.c	Tue Apr 26 14:44:42 1988
+***************
+*** 43,50
+  	(void) printf ("       [-fg <color>] [-bg <color>] [-hd <color>]\n");
+  	(void) printf ("       [-hl <color>] [-bd <color>]\n");
+  	(void) printf ("       [-fn <font_name>] [-help] [-padding <pixels>]\n");
+! 	(void) printf ("       [-rv] [-update <seconds>] [-d [<host>]:[<vs>]]\n");
+! 	(void) printf ("       [-g =[<width>][x<height>][<+-><xoff>[<+-><yoff>]]]\n\n");
+  	exit(1);
+  }
+  
+
+--- 43,50 -----
+  	(void) printf ("       [-fg <color>] [-bg <color>] [-hd <color>]\n");
+  	(void) printf ("       [-hl <color>] [-bd <color>]\n");
+  	(void) printf ("       [-fn <font_name>] [-help] [-padding <pixels>]\n");
+! 	(void) printf ("       [-rv] [-update <seconds>] [-display <host>:<display>[.<screen>]]\n");
+! 	(void) printf ("       [-geometry =[<width>][x<height>][<+-><xoff>[<+-><yoff>]]]\n\n");
+  	exit(1);
+  }
+  
+

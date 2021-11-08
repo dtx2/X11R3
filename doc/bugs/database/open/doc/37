@@ -1,0 +1,54 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 23 Jun 88 23:28:51 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23772; Thu, 23 Jun 88 23:27:20 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 23 Jun 88 19:27:23 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA08628; Thu, 23 Jun 88 20:27:04 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 23 Jun 88 20:28:51 pdt
+Message-Id: <8806240328.AA06683@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: bitmap flood fill
+X-Mailer: mh6.5
+Date: Thu, 23 Jun 88 20:28:47 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   629
+### area:         doc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Bitmap description incomplete.
+DESCRIPTION:
+	The description for 'Flood Fill' is missing from the man page.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/bitmap/bitmap.man.old	Thu Jun 23 16:28:04 1988
+--- clients/bitmap/bitmap.man	Thu Jun 23 16:31:11 1988
+***************
+*** 223,228
+  .TP 8
+  .I Filled Circle
+  will draw a filled circle given the center and radius of the circle.
+  .PP
+  .TP 8
+  .I Set HotSpot
+
+--- 223,235 -----
+  .TP 8
+  .I Filled Circle
+  will draw a filled circle given the center and radius of the circle.
++ 
++ .PP
++ .TP 8
++ .I Flood Fill
++ will fill a bounded area. Note: if the area is not completely bounded,
++ you will get a 'leak' and the entire grid will be filled.
++ 
+  .PP
+  .TP 8
+  .I Set HotSpot
+

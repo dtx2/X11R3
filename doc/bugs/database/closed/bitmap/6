@@ -1,0 +1,91 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 21:23:45 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08348; Wed, 16 Mar 88 21:22:52 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 13:40:28 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA11582; Wed, 16 Mar 88 13:29:18 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 13:29:50 pst
+Message-Id: <8803162129.AA24701@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: bitmap bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 13:29:46 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   147
+### area:         bitmap
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	CIRCLE and FILLED CIRCLE do not clean up when terminated
+	partway through command.
+DESCRIPTION:
+	When CIRCLE or FILLED CIRCLE command are terminated part
+	way through the command, an X is left on the grid.
+REPEAT-BY:
+	Click on CIRCLE or FILLED CIRCLE. Click the pointer on
+	a grid square. Click the pointer on CIRCLE or FILLED
+	CIRCLE.
+FIX:
+*** bitmap.c.old	Tue Mar 15 16:34:08 1988
+--- bitmap.c	Tue Mar 15 16:35:44 1988
+***************
+*** 1431,1436
+  {
+  	int	i, j, x, x1, y1, x2, y2, dx, dy;
+  	double	rad, half;
+  
+  	if (AskUserForPoint(&x1, &y1, 0))
+  		return;
+
+--- 1431,1437 -----
+  {
+  	int	i, j, x, x1, y1, x2, y2, dx, dy;
+  	double	rad, half;
++ 	boolean	result;
+  
+  	if (AskUserForPoint(&x1, &y1, 0))
+  		return;
+***************
+*** 1434,1441
+  
+  	if (AskUserForPoint(&x1, &y1, 0))
+  		return;
+! 	if (AskUserForPoint(&x2, &y2, 1))
+! 		return;
+  	ExThroughRectangle (x1_square_exed_through, y1_square_exed_through,
+  		x2_square_exed_through, y2_square_exed_through);
+  	PlusThroughRectangle (x1_square_plus_through, y1_square_plus_through,
+
+--- 1435,1441 -----
+  
+  	if (AskUserForPoint(&x1, &y1, 0))
+  		return;
+! 	result = AskUserForPoint(&x2, &y2, 1);
+  	ExThroughRectangle (x1_square_exed_through, y1_square_exed_through,
+  		x2_square_exed_through, y2_square_exed_through);
+  	PlusThroughRectangle (x1_square_plus_through, y1_square_plus_through,
+***************
+*** 1440,1445
+  		x2_square_exed_through, y2_square_exed_through);
+  	PlusThroughRectangle (x1_square_plus_through, y1_square_plus_through,
+  		x2_square_plus_through, y2_square_plus_through);
+  
+  	dx = x2 - x1;
+  	dy = y2 - y1;
+
+--- 1440,1447 -----
+  		x2_square_exed_through, y2_square_exed_through);
+  	PlusThroughRectangle (x1_square_plus_through, y1_square_plus_through,
+  		x2_square_plus_through, y2_square_plus_through);
++ 	if (result)
++ 	   return;
+  
+  	dx = x2 - x1;
+  	dy = y2 - y1;
+

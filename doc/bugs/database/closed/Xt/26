@@ -1,0 +1,73 @@
+Return-Path: rusty%velveeta.Berkeley.EDU@berkeley.edu
+Received: from velveeta.Berkeley.EDU by EXPO.LCS.MIT.EDU; Tue, 22 Mar 88 01:58:07 EST
+Received: by velveeta.Berkeley.EDU (5.57/1.26)
+	id AA01158; Mon, 21 Mar 88 22:57:08 PST
+Date: Mon, 21 Mar 88 22:57:08 PST
+From: rusty%velveeta.Berkeley.EDU@berkeley.edu (rusty wright)
+Message-Id: <8803220657.AA01158@velveeta.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in X Toolkit Intrinsics doc
+
+### bug number:   190
+### area:         Xt
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+
+
+CLIENT OPERATING SYSTEM:
+
+
+DISPLAY:
+
+
+SYNOPSIS:
+
+	In the _X Toolkit Intrinsics -- C Language X Interface_
+	documentation there is a recurring bug.
+
+DESCRIPTION:
+
+	The first occurance is on page 14, section 3.5, 2nd paragraph;
+
+		A class initialization procedure is of type XtProc:
+
+			typedef void (*XtProc)();
+
+			void Proc()
+
+	Clearly, as the sample declaration shows, a class
+	initialization procedure is of type void, not XtProc.  What IS
+	of type XtProc is the class_initialize member in the
+	CoreClassPart struct/typedef.
+
+REPEAT-BY:
+
+	Write a class initialize procedure and declare it to be of
+	type XtProc (cuz that's what the doc says its type is) and
+	watch the compiler or lint complain about the wrong type,
+	e.g.:
+
+	XtProc my_class_init()
+	{
+		...
+	}
+
+FIX:
+
+	Change the wording to say that the field in the CoreClassPart
+	et. al. struct is of type XtProc.  Or, make up a new typedef (of
+	void) for those functions that are void, and rename XtProc
+	XtProcPtr; e.g.;
+
+	typedef void XtProc;		/* compiler probably won't buy this */
+	typedef XtProc (*XtProcPtr)();
+
+	XtProc Proc();
+

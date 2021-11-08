@@ -1,0 +1,196 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by EXPO.LCS.MIT.EDU; Thu, 5 May 88 19:22:16 EDT
+Date: Thu, 5 May 88 19:22 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: changing line-style doesn't always
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880505232208.7.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   472
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	cfb (for bug), mfb (for nit)
+
+AREA:
+	server
+
+SYNOPSIS:
+	changing (just) GCLineStyle doesn't actually cause a change
+
+DESCRIPTION:
+	Changing (just) the LineStyle of a gc doesn't force the new
+	style to activate when using cfbValidateGC.
+
+	While perusing the code, also noticed that both mfb and cfb
+	ValidateGCs were setting new_line for CapStyle unnecessarily.
+REPEAT:
+	(setf (xlib:gcontext-line-style gc) :dash)
+	(xlib:draw-line w gc 0 0 100 100)
+	(setf (xlib:gcontext-line-style gc) :solid)
+	(xlib:draw-line w gc 100 100 200 200)
+
+FILES:
+	server/ddx/cfb/cfbgc.c
+	server/ddx/hp/cfb/cfbgc.c
+	server/ddx/mfb/mfbgc.c
+	server/ddx/hp/mfb/mfbgc.c
+
+FIX:
+
+*** /tmp/,RCSt1a01586	Thu May  5 19:04:33 1988
+--- server/ddx/cfb/cfbgc.c	Thu May  5 19:04:10 1988
+***************
+*** 417,427 ****
+  	    new_fillspans = TRUE;
+  	    break;
+  	case GCLineStyle:
+- 	    break;
+  	case GCLineWidth:
+- 	case GCCapStyle:
+  	case GCJoinStyle:
+  	    new_line = TRUE;
+  	    break;
+  	case GCFillStyle:
+  	    new_text = TRUE;
+--- 417,427 ----
+  	    new_fillspans = TRUE;
+  	    break;
+  	case GCLineStyle:
+  	case GCLineWidth:
+  	case GCJoinStyle:
+  	    new_line = TRUE;
++ 	    break;
++ 	case GCCapStyle:
+  	    break;
+  	case GCFillStyle:
+  	    new_text = TRUE;
+
+*** /tmp/,RCSt1a01686	Thu May  5 19:20:48 1988
+--- server/ddx/hp/cfb/cfbgc.c	Thu May  5 19:01:44 1988
+***************
+*** 444,454 ****
+  	    new_fillspans = TRUE;
+  	    break;
+  	case GCLineStyle:
+- 	    break;
+  	case GCLineWidth:
+- 	case GCCapStyle:
+  	case GCJoinStyle:
+  	    new_line = TRUE;
+  	    break;
+  	case GCFillStyle:
+  	    new_text = TRUE;
+--- 444,454 ----
+  	    new_fillspans = TRUE;
+  	    break;
+  	case GCLineStyle:
+  	case GCLineWidth:
+  	case GCJoinStyle:
+  	    new_line = TRUE;
++ 	    break;
++ 	case GCCapStyle:
+  	    break;
+  	case GCFillStyle:
+  	    new_text = TRUE;
+
+*** /tmp/,RCSt1a01618	Thu May  5 19:09:58 1988
+--- server/ddx/mfb/mfbgc.c	Thu May  5 19:09:42 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbgc.c,v 1.119 88/02/02 17:00:44 rws Exp $ */
+  #include "X.h"
+  #include "Xmd.h"
+  #include "Xproto.h"
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbgc.c,v 1.120 88/05/05 19:09:31 rws Exp $ */
+  #include "X.h"
+  #include "Xmd.h"
+  #include "Xproto.h"
+***************
+*** 398,409 ****
+  	    new_rrop = TRUE;	/* for opaque stipples */
+  	    break;
+  	  case GCLineStyle:
+- 	    new_line = TRUE;
+- 	    break;
+  	  case GCLineWidth:
+- 	  case GCCapStyle:
+  	  case GCJoinStyle:
+  	    new_line = TRUE;
+  	    break;
+  	  case GCFillStyle:
+  	    new_fill = TRUE;
+--- 398,408 ----
+  	    new_rrop = TRUE;	/* for opaque stipples */
+  	    break;
+  	  case GCLineStyle:
+  	  case GCLineWidth:
+  	  case GCJoinStyle:
+  	    new_line = TRUE;
++ 	    break;
++ 	  case GCCapStyle:
+  	    break;
+  	  case GCFillStyle:
+  	    new_fill = TRUE;
+
+*** /tmp/,RCSt1a01643	Thu May  5 19:13:30 1988
+--- server/ddx/hp/mfb/mfbgc.c	Thu May  5 19:13:12 1988
+***************
+*** 48,54 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbgc.c,v 1.5 88/02/02 17:02:24 rws Exp $ */
+  #include "X.h"
+  #include "Xmd.h"
+  #include "Xproto.h"
+--- 48,54 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbgc.c,v 1.6 88/05/05 19:13:01 rws Exp $ */
+  #include "X.h"
+  #include "Xmd.h"
+  #include "Xproto.h"
+***************
+*** 425,436 ****
+  	    new_rrop = TRUE;	/* for opaque stipples */
+  	    break;
+  	  case GCLineStyle:
+- 	    new_line = TRUE;
+- 	    break;
+  	  case GCLineWidth:
+- 	  case GCCapStyle:
+  	  case GCJoinStyle:
+  	    new_line = TRUE;
+  	    break;
+  	  case GCFillStyle:
+  	    new_fill = TRUE;
+--- 425,435 ----
+  	    new_rrop = TRUE;	/* for opaque stipples */
+  	    break;
+  	  case GCLineStyle:
+  	  case GCLineWidth:
+  	  case GCJoinStyle:
+  	    new_line = TRUE;
++ 	    break;
++ 	  case GCCapStyle:
+  	    break;
+  	  case GCFillStyle:
+  	    new_fill = TRUE;
+

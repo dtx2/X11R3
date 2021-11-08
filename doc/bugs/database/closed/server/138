@@ -1,0 +1,413 @@
+Return-Path: nathanm%hpcvlx@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Wed, 22 Jun 88 13:01:40 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA20336; Wed, 22 Jun 88 12:59:36 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 22 Jun 88 08:59:28 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA20610; Wed, 22 Jun 88 09:58:47 PDT
+Received: by hpcvlx.HP.COM; Wed, 22 Jun 88 09:56:00 pdt
+Date: Wed, 22 Jun 88 09:56:00 pdt
+From: Nathan K. Meyers <nathanm%hpcvlx@hplabs.hp.com>
+Message-Id: <8806221656.AA25329@hpcvlx.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: Bug report & fix: wide dashed lines, joins, caps
+
+### bug number:   626
+### area:         server
+### severity:     low
+### comments:     this one has context diffs!
+
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	HP 9000 series 300
+
+CLIENT OPERATING SYSTEM:
+	HP-UX
+
+DISPLAY:
+	All displays
+
+SYNOPSIS:
+	Wide dashed lines, joins, caps generally dysfunctional
+
+DESCRIPTION:
+	When drawn at almost any non-vertical, non-horizontal,
+	non-45-degree angle, wide dashed lines are frequently composed
+	of extremely crooked dashes.  Caps and joins do not work
+	correctly or consistently on doubledashed lines.
+
+REPEAT-BY:
+	Draw a wide dashed line.
+
+FIX:
+
+The following shar script contains differences to server/ddx/mi/midash.c
+and server/ddx/mi/miwidedash.c to make wide dashed lines work properly.
+
+The diff was performed against the R2 code, and includes one unrelated
+change (the second patch in miwidedash.c) that comes from fix-trackers.
+This context diff also includes changes I sent in recently fixing part
+of the problem (crooked lines).
+
+Nathan Meyers
+nathanm@hp-pcd
+
+#---------------------------------- cut here ----------------------------------
+# This is a shell archive.  Remove anything before this line,
+# then unpack it by saving it in a file and typing "sh file".
+#
+# Wrapped by nathanm at hpcvlx on Wed Jun 22 09:48:05 1988
+#
+# This archive contains:
+#	midash.diff	miwidedash.diff	
+#
+# Error checking via wc(1) will be performed.
+
+LANG=""; export LANG
+
+echo x - midash.diff
+cat >midash.diff <<'@EOF'
+*** V11R2 midash.c
+--- fixed midash.c
+***************
+*** 23,28
+  ******************************************************************/
+  #include "miscstruct.h"
+  #include "mistruct.h"
+  
+  static miDashPtr CheckDashStorage();
+  
+
+--- 23,29 -----
+  ******************************************************************/
+  #include "miscstruct.h"
+  #include "mistruct.h"
++ #include "mifpoly.h"
+  
+  static miDashPtr CheckDashStorage();
+  
+***************
+*** 71,77
+  
+      int x, y, len;
+      int adx, ady, signdx, signdy;
+!     int du, dv, e1, e2, e;
+  
+      lenCur = offset;
+      which = EVEN_DASH;
+
+--- 72,78 -----
+  
+      int x, y, len;
+      int adx, ady, signdx, signdy;
+!     int du, dv, e1, e2, e, base_e;
+  
+      lenCur = offset;
+      which = EVEN_DASH;
+***************
+*** 123,129
+  	pseg->pt = pt1;
+  	pseg->e1 = e1;
+  	pseg->e2 = e2;
+! 	pseg->e = e;
+  	pseg->which = which;
+  	pseg->newLine = 1;
+  
+
+--- 124,130 -----
+  	pseg->pt = pt1;
+  	pseg->e1 = e1;
+  	pseg->e2 = e2;
+! 	base_e = pseg->e = e;
+  	pseg->which = which;
+  	pseg->newLine = 1;
+  
+***************
+*** 163,169
+  	    }
+  
+  	    lenCur++;
+! 	    if (lenCur >= lenMax)
+  	    {
+  		nseg++;
+  		pseg = CheckDashStorage(&psegBase, nseg, &nsegMax);
+
+--- 164,170 -----
+  	    }
+  
+  	    lenCur++;
+! 	    if (lenCur >= lenMax && (len || npt <= 1))
+  	    {
+  		nseg++;
+  		pseg = CheckDashStorage(&psegBase, nseg, &nsegMax);
+***************
+*** 186,194
+  	} /* while len-- */
+      } /* while --npt */
+  
+!     *pnseg = nseg;
+!     pseg = CheckDashStorage(&psegBase, nseg+1, &nsegMax);
+!     pseg->pt = pt2;
+      return psegBase;
+  } 
+  
+
+--- 187,203 -----
+  	} /* while len-- */
+      } /* while --npt */
+  
+!     /* Avoid duplication of last point... it confuses double-dashed caps. */
+!     if (PtEqual(pseg->pt,pt2) && pseg->e == base_e)
+!       *pnseg = nseg-1;
+!     else {
+!       *pnseg = nseg;
+!       pseg = CheckDashStorage(&psegBase, nseg+1, &nsegMax);
+!       pseg->pt = pt2;
+!       pseg->e = base_e;
+!       pseg->which = ~which;
+!       pseg->newLine = 0;
+!     }
+      return psegBase;
+  } 
+  
+@EOF
+if test "`wc -lwc <midash.diff`" != '    103    268   2086'
+then
+	echo ERROR: wc results of midash.diff are `wc -lwc <midash.diff` should be     103    268   2086
+fi
+
+chmod 644 midash.diff
+
+echo x - miwidedash.diff
+cat >miwidedash.diff <<'@EOF'
+*** V11R2 miwidedash.c
+--- fixed miwidedash.c
+***************
+*** 82,87
+      DDXPointPtr pPtIn;
+      DrawablePtr	pDrawTo;
+      GCPtr	pGCTo;
+  
+  
+      m = EPSILON;
+
+--- 82,88 -----
+      DDXPointPtr pPtIn;
+      DrawablePtr	pDrawTo;
+      GCPtr	pGCTo;
++     int		initerr;
+  
+  
+      m = EPSILON;
+***************
+*** 140,146
+  	dxi = xMax - xMin + width;
+  	dyi = yMax - yMin + width;
+  	pDrawTo = (DrawablePtr) (*pDraw->pScreen->CreatePixmap)
+! 	  (pDraw->pScreen, dxi, dyi, 1, XYBitmap);
+  	pGCTo =  GetScratchGC(1, pDraw->pScreen);
+  	gcvals[GCVALSWIDTH] = width;
+  	gcvals[GCVALSCAPSTYLE] = pGC->capStyle;
+
+--- 141,147 -----
+  	dxi = xMax - xMin + width;
+  	dyi = yMax - yMin + width;
+  	pDrawTo = (DrawablePtr) (*pDraw->pScreen->CreatePixmap)
+! 	  (pDraw->pScreen, dxi, dyi, 1);
+  	pGCTo =  GetScratchGC(1, pDraw->pScreen);
+  	gcvals[GCVALSWIDTH] = width;
+  	gcvals[GCVALSCAPSTYLE] = pGC->capStyle;
+***************
+*** 169,176
+  	if(dashes[i].newLine)
+  	{
+  	    /* calculate slope of the line */
+! 	    dx = (double) ((pPtsIn + 1)->x - pPtIn->x);
+! 	    dy = (double) ((pPtsIn + 1)->y - pPtIn->y);
+  	    pPtIn++;
+  	    /* use slope of line to figure out how to use error term */
+  	    fXmajor = (fabs(dx) > fabs(dy));
+
+--- 170,177 -----
+  	if(dashes[i].newLine)
+  	{
+  	    /* calculate slope of the line */
+! 	    dx = (double) ((pPtIn + 1)->x - pPtIn->x);
+! 	    dy = (double) ((pPtIn + 1)->y - pPtIn->y);
+  	    pPtIn++;
+  	    /* calculate initial error term */
+  	    initerr=dashes[i].e;
+***************
+*** 172,177
+  	    dx = (double) ((pPtsIn + 1)->x - pPtIn->x);
+  	    dy = (double) ((pPtsIn + 1)->y - pPtIn->y);
+  	    pPtIn++;
+  	    /* use slope of line to figure out how to use error term */
+  	    fXmajor = (fabs(dx) > fabs(dy));
+  	    if(fXmajor)
+
+--- 173,180 -----
+  	    dx = (double) ((pPtIn + 1)->x - pPtIn->x);
+  	    dy = (double) ((pPtIn + 1)->y - pPtIn->y);
+  	    pPtIn++;
++ 	    /* calculate initial error term */
++ 	    initerr=dashes[i].e;
+  	    /* use slope of line to figure out how to use error term */
+  	    fXmajor = (fabs(dx) > fabs(dy));
+  	    if(fXmajor)
+***************
+*** 175,181
+  	    /* use slope of line to figure out how to use error term */
+  	    fXmajor = (fabs(dx) > fabs(dy));
+  	    if(fXmajor)
+! 		m = !ISZERO(dx) ? (dy/dx) : EPSILON;
+  	    else
+  		m = !ISZERO(dy) ? (dx/dy) : EPSILON;
+  	}
+
+--- 178,184 -----
+  	    /* use slope of line to figure out how to use error term */
+  	    fXmajor = (fabs(dx) > fabs(dy));
+  	    if(fXmajor)
+! 		m = sign(dy)/(!ISZERO(dx) ? 2.0*fabs(dx) : EPSILON);
+  	    else
+  		m = sign(dx)/(!ISZERO(dy) ? 2.0*fabs(dy) : EPSILON);
+  	}
+***************
+*** 177,183
+  	    if(fXmajor)
+  		m = !ISZERO(dx) ? (dy/dx) : EPSILON;
+  	    else
+! 		m = !ISZERO(dy) ? (dx/dy) : EPSILON;
+  	}
+  	/* Add this point to our list, adjusting the error term as needed */
+  	ppt->x = (double) dashes[i].pt.x;
+
+--- 180,186 -----
+  	    if(fXmajor)
+  		m = sign(dy)/(!ISZERO(dx) ? 2.0*fabs(dx) : EPSILON);
+  	    else
+! 		m = sign(dx)/(!ISZERO(dy) ? 2.0*fabs(dy) : EPSILON);
+  	}
+  	/* Add this point to our list, adjusting the error term as needed */
+  	ppt->x = (double) dashes[i].pt.x +
+***************
+*** 180,187
+  		m = !ISZERO(dy) ? (dx/dy) : EPSILON;
+  	}
+  	/* Add this point to our list, adjusting the error term as needed */
+! 	ppt->x = (double) dashes[i].pt.x;
+! 	ppt->y = (double) dashes[i].pt.y;
+  
+  	if(i < 2 || i > nseg - 2)
+  	{
+
+--- 183,192 -----
+  		m = sign(dx)/(!ISZERO(dy) ? 2.0*fabs(dy) : EPSILON);
+  	}
+  	/* Add this point to our list, adjusting the error term as needed */
+! 	ppt->x = (double) dashes[i].pt.x +
+! 	    	    (fXmajor ? 0.0 : (double)(dashes[i].e-initerr)*m);
+! 	ppt->y = (double) dashes[i].pt.y +
+! 	    	    (fXmajor ? (double)(dashes[i].e-initerr)*m : 0.0);
+  
+  	if(i < 2 || i > nseg - 2)
+  	{
+***************
+*** 256,261
+  		/* calculate slope of the line */
+  		dx = (double) ((pPtIn + 1)->x - pPtIn->x);
+  		dy = (double) ((pPtIn + 1)->y - pPtIn->y);
+  		/* use slope of line to figure out how to use error term */
+  		fXmajor = (fabs(dx) > fabs(dy));
+  		if(fXmajor)
+
+--- 261,269 -----
+  		/* calculate slope of the line */
+  		dx = (double) ((pPtIn + 1)->x - pPtIn->x);
+  		dy = (double) ((pPtIn + 1)->y - pPtIn->y);
++ 		pPtIn++;
++ 	        /* calculate initial error term */
++ 	        initerr=dashes[i].e;
+  		/* use slope of line to figure out how to use error term */
+  		fXmajor = (fabs(dx) > fabs(dy));
+  	        if(fXmajor)
+***************
+*** 258,268
+  		dy = (double) ((pPtIn + 1)->y - pPtIn->y);
+  		/* use slope of line to figure out how to use error term */
+  		fXmajor = (fabs(dx) > fabs(dy));
+! 		if(fXmajor)
+! 		    m = ISZERO(dx) ? (dy/dx) : EPSILON;
+! 		else
+! 		    m = ISZERO(dy) ? (dx/dy) : EPSILON;
+! 		pPtIn++;
+  	    }
+  	    /* Add this point to our list */
+  	    ppt->x = (double) dashes[i].pt.x +
+
+--- 266,275 -----
+  	        initerr=dashes[i].e;
+  		/* use slope of line to figure out how to use error term */
+  		fXmajor = (fabs(dx) > fabs(dy));
+! 	        if(fXmajor)
+! 		    m = sign(dy)/(!ISZERO(dx) ? 2.0*fabs(dx) : EPSILON);
+! 	        else
+! 		    m = sign(dx)/(!ISZERO(dy) ? 2.0*fabs(dy) : EPSILON);
+  	    }
+  	    /* Add this point to our list */
+  	    ppt->x = (double) dashes[i].pt.x +
+***************
+*** 266,272
+  	    }
+  	    /* Add this point to our list */
+  	    ppt->x = (double) dashes[i].pt.x +
+! 	    		(fXmajor ? 0.0 : dashes[i].e*m);
+  	    ppt->y = (double) dashes[i].pt.y +
+  	    		(fXmajor ? dashes[i].e*m : 0.0);
+  	    ppt++;
+
+--- 273,279 -----
+  	    }
+  	    /* Add this point to our list */
+  	    ppt->x = (double) dashes[i].pt.x +
+! 	    	        (fXmajor ? 0.0 : (double)(dashes[i].e-initerr)*m);
+  	    ppt->y = (double) dashes[i].pt.y +
+  	    	        (fXmajor ? (double)(dashes[i].e-initerr)*m : 0.0);
+  	    ppt++;
+***************
+*** 268,274
+  	    ppt->x = (double) dashes[i].pt.x +
+  	    		(fXmajor ? 0.0 : dashes[i].e*m);
+  	    ppt->y = (double) dashes[i].pt.y +
+! 	    		(fXmajor ? dashes[i].e*m : 0.0);
+  	    ppt++;
+  	    which = dashes[i].which;
+  	    if((which != whichPrev) || (i == nseg))
+
+--- 275,281 -----
+  	    ppt->x = (double) dashes[i].pt.x +
+  	    	        (fXmajor ? 0.0 : (double)(dashes[i].e-initerr)*m);
+  	    ppt->y = (double) dashes[i].pt.y +
+! 	    	        (fXmajor ? (double)(dashes[i].e-initerr)*m : 0.0);
+  	    ppt++;
+  	    which = dashes[i].which;
+  	    if((which != whichPrev) || (i == nseg))
+@EOF
+if test "`wc -lwc <miwidedash.diff`" != '    213    910   6441'
+then
+	echo ERROR: wc results of miwidedash.diff are `wc -lwc <miwidedash.diff` should be     213    910   6441
+fi
+
+chmod 644 miwidedash.diff
+
+exit 0
+

@@ -1,0 +1,73 @@
+Return-Path: nathanm%hpcvlx@sde.hp.com
+Received: by expo.lcs.mit.edu; Wed, 17 Aug 88 20:03:15 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA06372; Wed, 17 Aug 88 20:02:59 EDT
+Received: from hp-pcd.HP.COM by hp-sde ; Wed, 17 Aug 88 14:10:54 pdt
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA14539; Wed, 17 Aug 88 14:09:31 PDT
+Received: by hpcvlx.HP.COM; Wed, 17 Aug 88 14:08:03 pdt
+Date: Wed, 17 Aug 88 14:08:03 pdt
+From: Nathan K. Meyers <nathanm%hpcvlx@sde.hp.com>
+Message-Id: <8808172108.AA21550@hpcvlx.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: Wide dashes bug
+
+### bug number:   883
+### area:         server
+### severity:     low
+### comments:     
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	All
+
+CLIENT OPERATING SYSTEM:
+	All
+
+DISPLAY:
+	All servers using mi wide dash code.
+
+SYNOPSIS:
+	Failure to validate GC in wide dash code.
+
+DESCRIPTION:
+	Miwidedash() fails to validate the GC after changing it at one
+	point.  When using the de Boor backing store scheme, this
+	results in failing to propagate the GC changes to the GC for the
+	backing-store pixmap, resulting in incorrect rendering to
+	obscured areas.
+
+REPEAT-BY:
+	Drawing double dashed line to partially obscured window with
+	backing store enabled.
+
+FIX:
+
+*** miwidedash.c	Wed Aug 17 14:00:34 1988
+***************
+*** 466,471
+  	if (!fTricky) {
+  	    /* gcinvert[1] is the original fg, and [2] is the orig. bg */
+  	    DoChangeGC(pGCTo, GCForeground | GCBackground, &gcinvert[1], 0);
+  	}
+      }
+      if(fTricky)
+
+--- 466,472 -----
+  	if (!fTricky) {
+  	    /* gcinvert[1] is the original fg, and [2] is the orig. bg */
+  	    DoChangeGC(pGCTo, GCForeground | GCBackground, &gcinvert[1], 0);
++ 	    ValidateGC(pDrawTo, pGCTo);
+  	}
+      }
+      if(fTricky)
+
+==============================================================================
+

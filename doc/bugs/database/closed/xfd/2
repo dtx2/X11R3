@@ -1,0 +1,66 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 21:25:08 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08392; Wed, 16 Mar 88 21:24:19 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 14:05:14 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA13394; Wed, 16 Mar 88 14:08:48 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 14:09:29 pst
+Message-Id: <8803162209.AA24854@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xfd bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 14:09:25 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   149
+### area:         xfd
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	xfd cycles forever.
+DESCRIPTION:
+	By hitting the right button on a mouse while in the xfd window,
+	the user can cycle forever.
+REPEAT-BY:
+	<What you did to get the error>
+FIX:
+*** xfd.c.old	Wed Mar 16 10:40:19 1988
+--- xfd.c	Wed Mar 16 10:40:38 1988
+***************
+*** 425,430
+   */
+  Go_Forward()
+  {
+  	first_char += x_boxes*y_boxes;
+  
+  	Display_Contents();
+
+--- 425,431 -----
+   */
+  Go_Forward()
+  {
++ if (first_char + x_boxes*y_boxes <= real_font->max_char_or_byte2) {
+  	first_char += x_boxes*y_boxes;
+  
+  	Display_Contents();
+***************
+*** 428,431
+  	first_char += x_boxes*y_boxes;
+  
+  	Display_Contents();
+  }
+
+--- 429,435 -----
+  	first_char += x_boxes*y_boxes;
+  
+  	Display_Contents();
++ 	}
++ else
++ 	Beep();
+  }
+

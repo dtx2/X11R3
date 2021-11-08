@@ -1,0 +1,49 @@
+Return-Path: jim
+Received: by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 09:16:30 EST
+Message-Id: <8803251416.AA04650@EXPO.LCS.MIT.EDU>
+From: attunix!sfrod!jmb@ucbvax.berkeley.edu
+Reply-To: attunix!sfrod!jmb@ucbvax.berkeley.edu
+To: xbugs
+Subject: re: X logo screensaver on a sun
+Date: Fri, 25 Mar 88 09:16:29 EST
+Sender: jim@EXPO.LCS.MIT.EDU
+
+### bug number:   215
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+------- Forwarded Message
+
+Return-Path: attunix!sfrod!jmb@ucbvax.berkeley.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Thu, 24 Mar 88 21:49:24 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA17221; Thu, 24 Mar 88 21:37:34 EST
+Received: by ucbvax.Berkeley.EDU (5.58/1.26)
+	id AA13620; Thu, 24 Mar 88 13:44:42 PST
+Date: Thu, 24 Mar 88 13:44:42 PST
+From: attunix!sfrod!jmb@ucbvax.berkeley.edu
+Message-Id: <8803242144.AA13620@ucbvax.Berkeley.EDU>
+To: attunix!athena.mit.edu!xpert@athena.mit.edu
+Subject: re: X logo screensaver on a sun
+
+If you look in the sun server code (server/ddx/sun/sunCG4C.c or the like)
+for the <foo>SaveScreen routine, you will see that the code implements an
+ioctl() that turns off the video regardless of what the user specifies as
+preferences.  This code could probably be modified to check the global dix
+variable "ScreenSaverBlanking" to determine the preference, bypass the ioctl()
+and set the return code as appropriate (see the SaveScreens() caller routine
+in server/dix/window.c).
+
+Jim Bash
+AT&T Bell Labs
+Room G-211, 190 River Road, Summit, NJ 07901
+(201) 522-6649
+[...|ucbvax|ihnp4|bellcore|allegra]!attunix!jmb
+
+
+------- End of Forwarded Message
+
+

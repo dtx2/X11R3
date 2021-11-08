@@ -1,0 +1,34 @@
+SRCS =	 cfbgc.c cfbwindow.c \
+	 cfbpntwin.c cfbmskbits.c cfbpixmap.c cfbbitblt.c \
+	 cfbfillsp.c cfbsetsp.c cfbscrinit.c \
+	 cfbgetsp.c cfbutils.c \
+	 cfbcmap.c cfboldmfb.c \
+	 cfbtegblt.c cfbbstore.c
+
+OBJS =   cfbgc.o cfbwindow.o \
+	 cfbgetsp.o cfbutils.o \
+	 cfbfillsp.o cfbsetsp.o cfbscrinit.o \
+	 cfbpntwin.o cfbmskbits.o cfbpixmap.o cfbbitblt.o \
+	 cfbcmap.o cfboldmfb.o \
+	 cfbtegblt.o cfbbstore.o
+
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+   INCLUDES = -I. -I../../include -I$(INCLUDESRC) -I../mfb
+   LINTLIBS = ../../dix/llib-ldix.ln ../../os/4.2bsd/llib-los.ln \
+	     ../mfb/llib-lmfb.ln ../mi/llib-lmi.ln
+
+NormalLibraryObjectRule()
+NormalLibraryTarget(cfb,$(OBJS))
+LintLibraryTarget(cfb,$(SRCS))
+
+lint:
+	@echo 'Expect the following warnings from lint:'
+	@echo '  cfbpntwin.c: srcStartOver set but not used'
+	@echo '  cfbfillsp.c: srcStartOver set but not used'
+	@echo '  cfbbitblt.c: tmpDst set but not used (4 of these)'
+	@echo '-------'
+
+NormalLintTarget($(SRCS))
+
+DependTarget()

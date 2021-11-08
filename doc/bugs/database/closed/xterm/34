@@ -1,0 +1,31 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 20:20:21 EST
+Received: by harvard.harvard.edu; Thu, 17 Mar 88 20:21:46 EST
+Received: from sing-sing.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA24344; Thu, 17 Mar 88 19:51:38 EST
+Received: by sing-sing.ksr.com (3.2/SMI-3.2)
+	id AA03519; Thu, 17 Mar 88 19:51:35 EST
+Date: Thu, 17 Mar 88 19:51:35 EST
+From: ksr!benson@harvard.harvard.edu (Benson Margulies)
+Message-Id: <8803180051.AA03519@sing-sing.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm suggestion
+
+### bug number:   168
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     this would involve a lot of work; one should set things up
+###               all resources are edittable and there is some callback that
+###               indicates what has changed.  too much work
+
+X11R2 xterm, Sun 3.5
+
+As a Symbolics refugee, I really miss the ability to modify ALL of the Xterm
+parameters (include log target and history depth) from within the xterm.
+I'm probably not telling you anything you don't already know.
+I would settle for commands that communicated with the current window via
+a socket with an agreed upon name, though on consideration that won't really
+work.
+

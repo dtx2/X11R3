@@ -1,0 +1,6 @@
+The following changes have been made to this directory since R2:
+
+     o  backing store support using the mi backing store code.
+     o  fix for cursor to include line-width in bounding box
+	computations.
+

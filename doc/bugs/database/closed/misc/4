@@ -1,0 +1,117 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:michaelh%cpt.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Thu, 13 Oct 88 14:26:16 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Thu 13 Oct 88 14:26:44-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id aa05044; 13 Oct 88 13:37 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa01206; 13 Oct 88 13:16 EDT
+Received: from tekecs.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA21927; Thu, 13 Oct 88 08:52:10 PDT
+Received: by tekecs.GWD.TEK.COM (5.17/6.24)
+	id AA19694; Thu, 13 Oct 88 08:50:58 PDT
+Received: by cpt.GWD.TEK (5.17/6.16)
+	id AA01444; Thu, 13 Oct 88 08:50:25 PDT
+From: Mike Herbert <michaelh@cpt.gwd.tek.com>
+Message-Id: <8810131550.AA01444@cpt.GWD.TEK>
+Date: Thu, 13 Oct 88 08:50:23 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd, michaelh@cpt.gwd
+Fcc: //shark/bd/X11/doc/bugtracking/xbugs_mail
+Subject: X11 R2 bug report: Bad class names for some clients
+
+### bug number:   1072
+### area:         misc
+### severity:     enhancement
+### comments:     We didn't fix this before because it would break a lot of 
+###               people's environments.  Unless there are overwhelming calls
+###               for this sort of change to be made, we aren't going to do
+###               anything about it.
+
+
+Mike Herbert
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2145
+michaelh@shark.GWD.TEK.COM
+
+--------------------
+VERSION:
+	X11 release 2 with fixes 1-215 applied
+
+CLIENT MACHINE:
+	any
+
+CLIENT OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+SYNOPSIS:
+	some clients and contribs that use Xtk give bad names or classes
+
+DESCRIPTION:
+	The bug that Jim found in xterm (MIT # 201) is in many clients
+	that use the toolkit.  Many class names are not capitalized
+	properly, others are completely bogus.  This bug should not have
+	been rejected - its correctness has been extensively discussed on
+	the net.  People should be well aware that the class names are
+	messed up in R2 - we fixed our Xterm in anticipation of this bug
+	being fixed. We need a documented convention on capitalization 
+	style for client class names.  Please let us know your intentions 
+	in this matter.
+
+REPEAT-BY:
+	mental excercise
+
+FIX:
+
+	Only the first letter of the application class name should be
+	capitalized, i.e.  Xterm, not XTerm.  The inconsistency in this
+	convention makes the class names unusable by mere mortals, so
+	some of them must be fixed.  Pick some convention, publish it,
+	and stick to it.
+
+Here are all (mostly bad) XtInitialize calls in R3 clients and contribs:
+
+clients:
+
+xbiff/xbiff.c:    toplevel = XtInitialize ("main", "XBiff", options, XtNumber (options),
+xclock/xclock.c:    toplevel = XtInitialize("main", "XClock", options, XtNumber(options), &argc, argv);
+xedit/xedit.c:    toplevel = XtInitialize( "xedit", "Xedit", NULL, 0, &argc, argv);
+<<<< OK!
+xload/xload.c:    toplevel = XtInitialize("main", "XLoad", options, XtNumber(options), &argc, argv);
+xlogo/xlogo.c:    toplevel = XtInitialize("main", "XLogo", NULL, 0, &argc, argv);
+xman/main.c:  top_menu = XtInitialize(TOPBOXNAME,"XMan", 
+xmh/init.c:    toplevel = XtInitialize("main", "Xmh", table, XtNumber(table),
+xterm/main.c:   standard XtInitialize options now */
+xterm/main.c:	toplevel = XtInitialize("xterm", "XTerm",
+
+contrib:
+
+Dclock/dclock.c:    toplevel = XtInitialize(name, "DClock", options, XtNumber(options),
+<<<< seems OK
+cpicker/cpicker.c:  realtop = XtInitialize(argv[0], "CPicker", NULL, 0, &argc, argv);
+<<<< seems OK
+cpicker/pixedit.c:  realtop = XtInitialize(argv[0], "PixEdit", NULL, 0, &argc, argv);
+<<<< seems OK
+kterm/main.c:	toplevel = XtInitialize("main", "KTerm",
+kterm/main.c:	toplevel = XtInitialize("main", "XTerm",
+mazewar/winX11.c:	w = XtInitialize(progName, "mazewar", opTable, XtNumber(opTable), 
+xcalendar/xcalendar.c:    toplevel = XtInitialize(NULL, "XCalendar", NULL, 0, &argc, argv);
+xcolors/xcolors.c:	toplevel = XtInitialize(	"main", "colordemo",
+xfig/main.c:	tool = XtInitialize("fig", "Fig", options, XtNumber(options),
+<<<< seems OK
+xmore/main.c:  top = XtInitialize(argv[0],"Topwidget",NULL,(unsigned int) 0,
+xpalette/xpalette.c:    toplevel = XtInitialize( NULL, "XPalette", options, XtNumber(options), &argc, argv);
+xpic/main.c:	toplevel = XtInitialize("xpic", "XPic", 
+xpic/newfonts.c:	Widget toplevel = XtInitialize("testfont", "TestFont", NULL, 0, 
+xpref/top_shell.c:	top_level = XtInitialize(NULL, "xpref", options, XtNumber(options),
+xstring/xstring.c:    toplevel = XtInitialize(argv[0], "XString", NULL, 0, &argc, argv);
+xtools/top_setup.c:	top_shell = XtInitialize("top", "XTools", options,
+xtroff/xwindows.c:	topLevel = XtInitialize("xtroff", "TroffPreviewer", NULL, 0, &argc,
+<<<< seems OK
+
+

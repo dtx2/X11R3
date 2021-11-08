@@ -1,0 +1,210 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:38:57 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26096; Tue, 5 Jul 88 14:37:06 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 10:37:06 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA29523; Tue, 5 Jul 88 11:37:06 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 5 Jul 88 11:38:48 pdt
+Message-Id: <8807051838.AA17867@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: font compiler bugs
+X-Mailer: mh6.5
+Date: Tue, 05 Jul 88 11:38:44 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   690
+### area:         fc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Calls system depentent include files
+	Should look for X11 files in the X11 directory
+	Takes a closer look at hex data.
+	fatals on SIZE xresolution,yresolution <= 0.
+	Takes a closer look at ENCODING value.
+	Makes sure there is a DWIDTH specification and that there
+		is at least one value given.
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** fonts/compiler/fc.c.orig	Fri May 27 21:01:24 1988
+--- fonts/compiler/fc.c	Tue Jun 28 11:16:59 1988
+***************
+*** 1,8
+  /* $Header: fc.c,v 1.5 88/05/27 10:34:22 tom Exp $ */
+  
+  #include <stdio.h>
+! #include <sys/types.h>
+! #include <sys/file.h> 
+  #include <errno.h> 
+  #include <ctype.h> 
+  /* #include <malloc.h> */	extern char *malloc(), *realloc();
+
+--- 1,7 -----
+  /* $Header: fc.c,v 1.5 88/05/27 10:34:22 tom Exp $ */
+  
+  #include <stdio.h>
+! #include <X11/Xos.h>
+  #include <errno.h> 
+  #include <ctype.h> 
+  /* #include <malloc.h> */	extern char *malloc(), *realloc();
+***************
+*** 8,15
+  /* #include <malloc.h> */	extern char *malloc(), *realloc();
+  
+  #include "misc.h"
+! #include "X.h"
+! #include "Xproto.h"
+  #include "fontstruct.h"
+  #include "font.h"
+  
+
+--- 7,14 -----
+  /* #include <malloc.h> */	extern char *malloc(), *realloc();
+  
+  #include "misc.h"
+! #include <X11/X.h>
+! #include <X11/Xproto.h>
+  #include "fontstruct.h"
+  #include "font.h"
+  
+***************
+*** 181,187
+      register char c;
+      int i;
+  
+!     for (i=2; i; i--) {
+  	c = *s++;
+  	if ((c >= '0') && (c <= '9'))
+  	    b = (b<<4) + (c - '0');
+
+--- 180,186 -----
+      register char c;
+      int i;
+  
+!     for (i=2; i && strlen(s); i--) {
+  	c = *s++;
+  	if ((c >= '0') && (c <= '9'))
+  	    b = (b<<4) + (c - '0');
+***************
+*** 190,196
+  	else if ((c >= 'a') && (c <= 'f'))
+  	    b = (b<<4) + 10 + (c - 'a');
+  	else
+! 	    return 0; /* bad data */
+      } 
+      return b;
+  }
+
+--- 189,195 -----
+  	else if ((c >= 'a') && (c <= 'f'))
+  	    b = (b<<4) + 10 + (c - 'a');
+  	else
+! 	    fatal("bad hex char '%c'", c);
+      } 
+      return b;
+  }
+***************
+*** 387,393
+  
+      if (!prefix(linebuf, "SIZE"))
+  	fatal("missing 'SIZE'");
+!     if ((sscanf(linebuf, "SIZE %f%d%d", &pointSize, &xRes, &yRes) != 3))
+  	fatal("bad 'SIZE'");
+      if (xRes != yRes)
+          fatal("x and y resolution must be equal");
+
+--- 386,393 -----
+  
+      if (!prefix(linebuf, "SIZE"))
+  	fatal("missing 'SIZE'");
+!     if ((sscanf(linebuf, "SIZE %f%d%d", &pointSize, &xRes, &yRes) != 3) ||
+! 		xRes < 1 || yRes < 1)
+  	fatal("bad 'SIZE'");
+      if (xRes != yRes)
+          fatal("x and y resolution must be equal");
+***************
+*** 531,537
+  	    fatal("bad character name");
+  
+  	getline( linebuf);
+! 	if ((t=sscanf(linebuf, "ENCODING %d %d", &enc, &enc2)) < 1)
+  	    fatal("bad 'ENCODING'");
+  	if (t == 2 && enc == -1)
+  	    enc = enc2;
+
+--- 531,538 -----
+  	    fatal("bad character name");
+  
+  	getline( linebuf);
+! 	if ((t=sscanf(linebuf, "ENCODING %d %d", &enc, &enc2)) < 1 ||
+! 		(t > 0 && enc < -1))
+  	    fatal("bad 'ENCODING'");
+  	if (t == 2 && enc == -1)
+  	    enc = enc2;
+***************
+*** 567,573
+  	    fatal("bad 'SWIDTH'");
+  
+  	getline( linebuf);
+! 	sscanf( linebuf, "DWIDTH %d %*d", &wx);
+  
+  	getline( linebuf);
+  	sscanf( linebuf, "BBX %d %d %d %d", &bw, &bh, &bl, &bb);
+
+--- 568,577 -----
+  	    fatal("bad 'SWIDTH'");
+  
+  	getline( linebuf);
+! 	if (!prefix(linebuf, "DWIDTH"))
+! 	    fatal("missing 'DWIDTH'");
+! 	if (sscanf( linebuf, "DWIDTH %d %*d", &wx) < 1)
+! 	    fatal("bad 'DWIDTH'");
+  
+  	getline( linebuf);
+  	sscanf( linebuf, "BBX %d %d %d %d", &bw, &bh, &bl, &bb);
+***************
+*** 612,617
+  	for (row=0; row < bh; row++) {
+  	    getline(linebuf);
+  	    p = linebuf;
+  	    for ( ix=0; ix < bytesperrow; ix++)
+  	    {
+  	        if ( bytesGlUsed >= bytesGlAlloced)
+
+--- 617,627 -----
+  	for (row=0; row < bh; row++) {
+  	    getline(linebuf);
+  	    p = linebuf;
++ 	    if (strlen(p) % 2)
++ 		fatal("bad hex byte");
++ 	    if (strlen(p) / 2 > bytesperrow)
++ 		fprintf(stderr, "Extra hex bytes ignored at line %d\n",
++ 				linenum);
+  	    for ( ix=0; ix < bytesperrow; ix++)
+  	    {
+  	        if ( bytesGlUsed >= bytesGlAlloced)
+***************
+*** 617,623
+  	        if ( bytesGlUsed >= bytesGlAlloced)
+  	    	pGl = (unsigned char *)realloc( pGl, (bytesGlAlloced *= 2));
+  	        pGl[bytesGlUsed] = hexbyte(p);
+! 	        p += 2;
+  	        bytesGlUsed++;
+  	    }
+   	    /*
+
+--- 627,633 -----
+  	        if ( bytesGlUsed >= bytesGlAlloced)
+  	    	pGl = (unsigned char *)realloc( pGl, (bytesGlAlloced *= 2));
+  	        pGl[bytesGlUsed] = hexbyte(p);
+! 	        if (strlen(p))  p += 2;
+  	        bytesGlUsed++;
+  	    }
+   	    /*
+

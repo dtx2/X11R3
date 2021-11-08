@@ -1,0 +1,116 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:davidsc@shark.gwd.tek.com
+Received: by expo.lcs.mit.edu; Thu, 28 Apr 88 00:25:16 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Thu 28 Apr 88 00:26:32-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ag27968; 27 Apr 88 18:50 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aq02074; 27 Apr 88 18:46 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA21431; Wed, 27 Apr 88 15:24:44 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA02786; Wed, 27 Apr 88 15:24:50 PDT
+From: David Schiferl <davidsc@shark.gwd.tek.com>
+Message-Id: <8804272224.AA02786@shark.GWD.TEK.COM>
+Date: Wed, 27 Apr 88 15:24:48 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com, bobmi@hp-pcd.uucp
+Fcc: bugsub_mit
+Subject: X11 R2 bug report: XtInitialize() 'shell_name' parm incorrectly used
+
+### bug number:   434
+### area:         Xt
+### severity:     low
+### comments:     
+
+
+David Schiferl
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2482
+davidsc@shark.tek.com
+...tektronix!shark!davidsc
+
+--------------------
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	all
+
+CLIENT OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+SYNOPSIS:
+	XtInitialize() 'shell_name' parameter is incorrectly used;
+	its use does not match the spec.
+
+DESCRIPTION:
+	Area: Xt
+	Files: lib/Xt/Initialize.c
+
+	XtInitialize() always extracts the last component of argv[0] to
+	use as the name of the instance of the application, rather than
+	using the value in the 'shell_name' parameter, as spec'd.
+	The value in the 'shell_name' parameter should be used unless 
+	'shell_name' is NULL.
+
+	XtCreateApplication() should pass in 'name', rather than 'shell_name'.
+
+REPEAT-BY:
+	read the code
+
+FIX:
+
+*** 358,368
+  	int min_sync_len = 0;
+  	char *name;		/* application instance name */
+  
+! 	name = rindex(argv[0], '/');
+! 	if(name)
+! 	    name++;
+! 	else
+! 	    name = argv[0];
+  
+  	/* save away argv and argc so I can set the properties latter */
+  
+
+--- 358,372 -----
+  	int min_sync_len = 0;
+  	char *name;		/* application instance name */
+  
+! 	if ((shell_name != NULL) && (*shell_name != '\0'))
+! 		name = shell_name;
+! 	else {
+! 		name = rindex(argv[0], '/');
+! 		if(name)
+! 	    	name++;
+! 		else
+! 	    	name = argv[0];
+! 	}
+  
+  	/* save away argv and argc so I can set the properties latter */
+  
+***************
+*** 465,471
+  	     Unlike most classes the shell widget class has no classname
+  	     The name is supplied in the call to XtInitialize.
+  	 */
+!         root = XtCreateApplicationShell(shell_name, applicationShellWidgetClass,
+                    args,num_args);
+  
+  
+
+--- 469,475 -----
+  	     Unlike most classes the shell widget class has no classname
+  	     The name is supplied in the call to XtInitialize.
+  	 */
+!         root = XtCreateApplicationShell(name, applicationShellWidgetClass,
+                    args,num_args);
+  
+  
+

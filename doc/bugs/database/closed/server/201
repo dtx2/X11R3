@@ -1,0 +1,72 @@
+Return-Path: elsie!ado@ncifcrf.gov
+Received: by expo.lcs.mit.edu; Sat, 23 Jul 88 17:01:38 EDT
+Received: by fcs280s.ncifcrf.gov (4.0/NCIFCRF-1.0)
+	id AA21497; Sat, 23 Jul 88 16:47:37 EDT
+Received: by elsie.UUCP (5.51/4.7)
+	id AA17990; Sat, 23 Jul 88 16:46:27 EDT
+Date: Sat, 23 Jul 88 16:46:27 EDT
+From: elsie!ado@ncifcrf.gov (Arthur David Olson)
+Message-Id: <8807232046.AA17990@elsie.UUCP>
+Apparently-To: xbugs@expo.lcs.mit.edu
+
+### bug number:   773
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	Sun UNIX 4.2 Release 3.5
+
+DISPLAY:
+	Sun B&W
+
+SYNOPSIS:
+	There's an incorrect reference in server/ddx/dec/qvss/Imakefile.
+
+DESCRIPTION:
+	It refers to file "../../lk201/llib-llk201.ln" rather than to file
+	"../lk201/llib-llk201.ln".
+
+REPEAT-BY:
+	Script started on Sat Jul 23 16:32:32 1988
+	elsie$ cd server/ddx/dec/qvss
+	elsie$ ls ../lk201/*.ln
+	../lk201/llib-llk201.ln
+	elsie$ make lint
+		lint -hbaaxc -I.  -I../../../include -I../../mfb -I./../../../../X11 -DCOMPRESSED_FONTS  -DLINT init.c qvss_io.c ../../../dix/llib-ldix.ln ../../../os/4.2bsd/llib-los.ln  ../../mfb/llib-lmfb.ln ../../mi/llib-lmi.ln ../../lk201/llib-llk201.ln
+		...
+	../../lk201/llib-llk201.ln: No such file or directory
+		...
+	elsie$ exit
+
+	script done on Sat Jul 23 16:37:44 1988
+
+FIX:
+	*** 1.1/server/ddx/dec/qvss/Imakefile	Sat Jul 23 16:40:42 1988
+	--- 1.2/server/ddx/dec/qvss/Imakefile	Sat Jul 23 16:40:43 1988
+	***************
+	*** 4,10 ****
+	  CDEBUGFLAGS = ServerCDebugFlags
+	  INCLUDES = -I.  -I../../../include -I../../mfb -I$(INCLUDESRC)
+	  LINTLIBS = ../../../dix/llib-ldix.ln ../../../os/4.2bsd/llib-los.ln \
+	! 	   ../../mfb/llib-lmfb.ln ../../mi/llib-lmi.ln ../../lk201/llib-llk201.ln
+	  
+	  all: $(OBJS)
+	  
+	--- 4,10 ----
+	  CDEBUGFLAGS = ServerCDebugFlags
+	  INCLUDES = -I.  -I../../../include -I../../mfb -I$(INCLUDESRC)
+	  LINTLIBS = ../../../dix/llib-ldix.ln ../../../os/4.2bsd/llib-los.ln \
+	! 	   ../../mfb/llib-lmfb.ln ../../mi/llib-lmi.ln ../lk201/llib-llk201.ln
+	  
+	  all: $(OBJS)
+	  
+-- 
+	ado@ncifcrf.gov			ADO is a trademark of Ampex.
+

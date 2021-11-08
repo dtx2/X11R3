@@ -1,0 +1,48 @@
+Return-Path: phil@brl.arpa 
+Received: from ZERMATT.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Sun, 6 Mar 88 23:36:05 EST
+Date:     Sun, 6 Mar 88 23:26:09 EST
+From: Phil Dykstra <phil@brl.arpa>
+To: xbugs@expo.lcs.mit.edu
+Subject:  makedepend clashes with some CDEBUGFLAGS
+Message-Id:  <8803062326.aa04907@SPARK.BRL.ARPA>
+
+### bug number:   44
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	Sun
+
+SYNOPSIS:
+	makedepend clashes with some CDEBUGFLAGS
+
+DESCRIPTION:
+	makedepend uses some flags of its own which may be
+	system cc dependent.  Most notably the sun cc
+	command has a -f<floating_point_option> flag which
+	if passed to makedepend bombs (since makedepend
+	used -f for a makefile spec.
+
+REPEAT-BY:
+	On a Sun, add for example -f68881 to CDEBUGFLAGS.
+	make dependencies (e.g. make World).
+
+FIX:
+	Perhaps a CDEPENDFLAGS should be created which would
+	ordinarily be set to CDEBUGFLAGS.  This however would
+	allow compiler flags which clash with makedepend
+	to be left out of the CDEPENDFLAGS definition.
+
+- Phil
+<phil@brl.arpa>

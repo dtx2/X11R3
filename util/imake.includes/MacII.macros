@@ -1,0 +1,65 @@
+/**/# platform:  $XConsortium: MacII.macros,v 1.30 88/10/23 11:00:39 jim Exp $
+
+/* it really is a system 5 box... */
+#define StandardSystemDefines -DmacII /* -DSYSV */
+#define StandardDefines StandardSystemDefines
+
+BOOTSTRAPCFLAGS = -DmacII
+             AS = as
+             CC = cc -B /usr/lib/big/
+            CPP = /lib/cpp
+             LD = ld
+           LINT = lint
+        INSTALL = bsdinstall
+           TAGS = ctags
+             RM = rm -f
+             MV = mv
+             LN = ln -s
+         RANLIB = /bin/true
+RANLIBINSTFLAGS = 
+             AR = ar clq
+             LS = ls
+       LINTOPTS = -axz
+    LINTLIBFLAG = -C
+           MAKE = make SHELL=/bin/sh
+STD_CPP_DEFINES = StandardSystemDefines
+    STD_DEFINES = StandardDefines
+
+/* This defines the server you want */
+#define XmacIIServer XmacII
+
+/* define this as you like for normal library compilation */
+#define LibraryDefines		StandardDefines
+
+#define BandAidLibraryNeeded		YES
+#define BandAidLibrarySources		Berklib.c
+#define BandAidLibraryObjects		Berklib.o
+#define BandAidLibraryMake()					@@\
+Berklib.c: sysV/Berklib.c					@@\
+	-rm -f Berklib.c					@@\
+	-ln -s sysV/Berklib.c .
+
+/* define this as you like for server compilation */
+#define ServerDefines		StandardDefines
+/* define this as you like for server font support */
+#define FontDefines	-DFONT_SNF -DFONT_BDF -DCOMPRESSED_FONTS
+
+/* -DTCPCONN allows TCP connections */
+/* -DUNIXCONN allows Unix domain connections */
+/* -DDNETCONN allows DECnet connections */
+
+#define ConnectionFlags		-DTCPCONN -DUNIXCONN
+
+/*
+ * override any parameters from site.def
+ */
+#define SystemV			YES	/* need system 5 style */
+
+
+/*
+ * If you wish to override the man page directories, do so here using just
+ * one tab between the parameter name (e.g. ManDirectoryRoot) and the
+ * value so that cpp doesn't get confused.
+ */
+#define ManDirectoryRoot	/usr/catman/x_man	
+

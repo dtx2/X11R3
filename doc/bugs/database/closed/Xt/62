@@ -1,0 +1,167 @@
+Return-Path: uunet!wyse1!mikew@rutgers.edu
+Received: from rutgers.edu by EXPO.LCS.MIT.EDU; Sun, 20 Mar 88 09:19:43 EST
+Received: by rutgers.edu (5.54/1.15) with UUCP 
+	id AA19517; Sat, 19 Mar 88 21:47:18 EST
+Received: by umix.cc.umich.edu (5.54/umix-2.0)
+	id AA20961; Thu, 17 Mar 88 13:17:57 EST
+Received: from wyse1.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA06599; Thu, 17 Mar 88 13:01:31 EST
+Received: from x2.wyse.com.com 
+	by wyse1.wyse.com (3.2/smail2.5/9-26-87)
+	id AA03680; Thu, 17 Mar 88 09:59:05 PST
+Received: by x2.wyse.com.com (3.2/SMI-3.2)
+	id AA11966; Thu, 17 Mar 88 09:58:11 PST
+Date: Thu, 17 Mar 88 09:58:11 PST
+From: mikew@wyse1.wyse.com (Mike Wexler)
+Message-Id: <8803171758.AA11966@x2.wyse.com.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in viewport widget
+
+### bug number:   181
+### area:         Xt
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     see also 210
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/280
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5,
+
+DISPLAY:
+	Sun 3/50
+
+SYNOPSIS:
+	When a viewport widget is created with the force scroll bars
+	option, it core dumps.
+
+DESCRIPTION:
+	Here is the stack backtrace:
+ CreateScrollbar(w = 0x54224, horizontal = '^A'), line 138 in "Viewport.c"
+`Viewport`Initialize(request = 0xefff92c, new = 0x54224), line 218 in "Viewport.
+c"
+CallInitialize(class = 0x40790, req_widget = 0xefff92c, new_widget = 0x54224, ar
+gs = 0xefffbe8, num_args = 2), line 84 in "Create.c"
+_XtCreate2(widget = 0x54224, args = 0xefffbe8, num_args = 2, parent_constraint_c
+lass = (nil)), line 168 in "Create.c"
+XtCreateWidget(name = 0x4009b "main", widgetClass = 0x40790, parent = 0x4efdc, a
+rgs = 0xefffbe8, num_args = 2), line 213 in "Create.c"
+XtCreateManagedWidget(name = 0x4009b "main", widgetClass = 0x40790, parent = 0x4
+efdc, args = 0xefffbe8, num_args = 2), line 235 in "Create.c"
+main(0x1, 0xefffc74, 0xefffc7c) at 0x2171
+
+
+REPEAT-BY:
+#ifndef lint
+static char rcsid[] = "$Header: xwidgets.c,v 1.11 88/02/14 15:15:09 rws Exp $";
+#endif	lint
+
+#include <stdio.h>
+#include <X11/Xatom.h>
+#include <X11/Intrinsic.h>
+#include <X11/Atoms.h>
+#include <X11/Box.h>
+#include <X11/Clock.h>
+#include <X11/Command.h>
+#include <X11/Dialog.h>
+#include <X11/Label.h>
+#include <X11/Load.h>
+#include <X11/Scroll.h>
+#include <X11/AsciiText.h>
+#include <X11/VPaned.h>
+#include <X11/Viewport.h>
+#include <X11/Cardinals.h>
+
+/* Command line options table.  Only resources are entered here...there is a
+   pass over the remaining options after XtParseCommand is let loose. */
+
+static XrmOptionDescRec options[] = {
+{"-label",	XtNlabel,	XrmoptionSepArg,	NULL}
+};
+
+
+/* ARGSUSED */
+Syntax(call)
+	char *call;
+{
+}
+
+/* ARGSUSED */
+void Quit(widget,closure,callData)
+    Widget widget;
+    caddr_t closure;		/* Widget */
+    caddr_t callData;
+{
+    fprintf(stderr,"command callback.\n");
+    XtDestroyWidget((Widget)closure);
+}
+
+/* ARGSUSED */
+void Destroyed(widget, closure, callData)
+    Widget widget;		/* unused */
+    caddr_t closure;		/* unused */
+    caddr_t callData;		/* unused */
+{
+    fprintf( stderr, "everything now destroyed.  Bye!\n" );
+    exit(0);
+}
+
+
+void main(argc, argv)
+    unsigned int argc;
+    char **argv;
+{
+    Widget toplevel, outer, form, viewport, box1, label, button, box2;
+    Widget new;
+    static XtCallbackRec callback[2]; /* K&R: initialized to NULL */
+    Arg arg[10];
+
+    toplevel = XtInitialize( NULL, "XBoxes", options, XtNumber(options),
+			     &argc, argv);
+
+    if (argc != 1) Syntax(argv[0]);
+
+    XtSetArg( arg[0], XtNallowVert, TRUE);
+    XtSetArg( arg[1], XtNforceBars, TRUE);
+    new=XtCreateManagedWidget("main",viewportWidgetClass,toplevel,arg,TWO);
+
+    XtSetArg( arg[0], XtNwidth, 200 );
+    outer = XtCreateManagedWidget( "vpaned", vPanedWidgetClass, new,
+				   arg, ONE );
+    XtAddCallback( new, XtNdestroyCallback, Destroyed, NULL );
+
+    callback[0].callback = Quit;
+    callback[0].closure = (caddr_t)toplevel;
+    XtSetArg( arg[0], XtNcallback, callback );
+    XtCreateManagedWidget( "quit", commandWidgetClass, outer, arg, ONE );
+
+    XtRealizeWidget(toplevel);
+    XtMainLoop();
+}
+
+
+FIX:
+	Don't dereference NULL pointers.
+
+COMMENTS:
+	According to Robert Scheifler bugs tend to get fixed on
+	a release by release basis.  The problem is that the people
+	writing this code seem to add as many null dereferencing
+	problems as they delete.  It might be a good idea for them
+	to modify their development environment so that NULL 
+	dereferences cause core dumps.  Dave Rosenthal says he
+	actually sent the code to the toolkit developers to do
+	this. 
+
+

@@ -1,0 +1,46 @@
+Return-Path: kubitron@athena.mit.edu
+Received: by expo.lcs.mit.edu; Sun, 11 Sep 88 22:58:30 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA06788; Sun, 11 Sep 88 22:58:34 EDT
+Received: by ALEFNULL.MIT.EDU (5.45/4.7) id AA02963; Sun, 11 Sep 88 22:58:26 EDT
+Message-Id: <8809120258.AA02963@ALEFNULL.MIT.EDU>
+To: swick@athena.mit.edu, xbugs@athena.mit.edu
+Subject: Default settings of caps-lock and control
+Date: Sun, 11 Sep 88 22:58:24 EDT
+From: John D. Kubiatowicz <kubitron@athena.mit.edu>
+
+### bug number:   963
+### area:         server
+### severity:     very low
+### comments:     
+
+The new Xibm code uses a PC layout by default.  This is bad, because
+this means that *by default*, the "Caps Lock" key is a control key, and
+the "Ctrl" key is a Caps Lock key.
+
+Regardless of whether or not this is the preferred orientation for many,
+it gives non intuitive behavior.  People who which to change things
+may use xmodmap.
+
+Patch follows:
+--KUBI--
+
+*** /tmp/,RCSt1002939	Sun Sep 11 22:54:01 1988
+--- ibmkeybd.c	Sun Sep 11 21:27:42 1988
+*** 30,35 ****
+  extern void ibmInfoMsg() ;
+  
+  int ibm_pckeys = 1 ;
+  
+  void
+  ibmUsePCKeyboard()
+--- 30,38 ----
+  
++ #ifdef	BSDrt
++ int ibm_pckeys = 0;
++ #else	BSDrt
+  int ibm_pckeys = 1 ;
++ #endif	BSDrt
+  
+  void
+  ibmUsePCKeyboard()
+

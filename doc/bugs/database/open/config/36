@@ -1,0 +1,86 @@
+Return-Path: elsie!ado@ncifcrf.gov
+Received: by expo.lcs.mit.edu; Sun, 24 Jul 88 15:10:09 EDT
+Received: by fcs280s.ncifcrf.gov (4.0/NCIFCRF-1.0)
+	id AA24121; Sun, 24 Jul 88 15:10:05 EDT
+Received: by elsie.UUCP (5.51/4.7)
+	id AA23846; Sun, 24 Jul 88 14:31:52 EDT
+Date: Sun, 24 Jul 88 14:31:52 EDT
+From: elsie!ado@ncifcrf.gov (Arthur David Olson)
+Message-Id: <8807241831.AA23846@elsie.UUCP>
+Apparently-To: xbugs@expo.lcs.mit.edu
+
+### bug number:   774
+### area:         config
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	Sun UNIX 4.2 Release 3.5
+
+DISPLAY:
+	Sun B&W
+
+SYNOPSIS:
+	The Imakefiles don't let you "make lintlib".
+
+REPEAT-BY:
+	Changing to the root of the X source tree and doing a "make lintlib",
+	then changing to the server subdirectory and doing a "make lintlib".
+	Note that the second make does work that the first should have.
+
+FIX:
+	*** 1.1/Imakefile	Sun Jul 24 14:24:53 1988
+	--- 1.2/Imakefile	Sun Jul 24 14:24:54 1988
+	***************
+	*** 26,32 ****
+			$(XMANSRC)
+	      LINTLIBDIRS = \
+			$(EXTENSIONSRC) \
+	! 		$(LIBSRC)
+	  
+	  MakeSubdirs($(DIRSTOMAKE) $(RGBSRC) $(XMANSRC))
+	  MakeLintLibSubdirs($(LINTLIBDIRS))
+	--- 26,34 ----
+			$(XMANSRC)
+	      LINTLIBDIRS = \
+			$(EXTENSIONSRC) \
+	! 		$(LIBSRC) \
+	! 		$(SERVERSRC) \
+	! 		$(CLIENTSRC)
+	  
+	  MakeSubdirs($(DIRSTOMAKE) $(RGBSRC) $(XMANSRC))
+	  MakeLintLibSubdirs($(LINTLIBDIRS))
+	*** 1.1/clients/Imakefile	Sun Jul 24 14:24:56 1988
+	--- 1.2/clients/Imakefile	Sun Jul 24 14:24:57 1988
+	***************
+	*** 6,10 ****
+	--- 6,13 ----
+		xpr xprop xrdb xrefresh xset xsetroot \
+		xterm xwd xwininfo xwud x10tox11 
+	  
+	+ LINTLIBDIRS = x10tox11
+	+ 
+	  MakeSubdirs($(SUBDIRS))
+	  DependSubdirs($(SUBDIRS))
+	+ MakeLintLibSubdirs($(LINTLIBDIRS))
+	*** 1.2/server/ddx/dec/qdss/libtl/Imakefile	Sun Jul 24 14:26:09 1988
+	--- 1.3/server/ddx/dec/qdss/libtl/Imakefile	Sun Jul 24 14:26:10 1988
+	***************
+	*** 72,77 ****
+	--- 72,78 ----
+	  DependTarget()
+	  
+	  NormalLintTarget($(SRCS))
+	+ LintLibraryTarget(tl,$(SRCS))
+	  
+	  clean::
+		$(RM) tlplanecopy.c
+-- 
+	ado@ncifcrf.gov			ADO is a trademark of Ampex.
+

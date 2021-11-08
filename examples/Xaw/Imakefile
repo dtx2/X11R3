@@ -1,0 +1,28 @@
+#ifdef RtArchitecture
+             CC = pcc
+#endif
+       INCLUDES = -I$(TOP)
+           SRCS = xboxes.c \
+                  xbuttonbox.c \
+                  xcommand.c \
+                  xhw.c \
+                  xlabel.c \
+                  xscroll.c \
+                  xsensitive.c \
+                  xtext.c \
+                  xwidgets.c
+LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
+
+all: xboxes xbuttonbox xcommand xhw xlabel xscroll xsensitive xtext xwidgets
+
+SingleProgramTarget(xboxes,xboxes.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xbuttonbox,xbuttonbox.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xcommand,xcommand.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xhw,xhw.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xlabel,xlabel.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xscroll,xscroll.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xsensitive,xsensitive.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xtext,xtext.o,$(LOCAL_LIBRARIES),)
+SingleProgramTarget(xwidgets,xwidgets.o,$(LOCAL_LIBRARIES),-lm)
+
+DependTarget()

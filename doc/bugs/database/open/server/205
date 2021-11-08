@@ -1,0 +1,214 @@
+Return-Path: mrmarx!davep@uunet.uu.net
+Received: by expo.lcs.mit.edu; Wed, 3 Aug 88 21:49:39 EDT
+Received: from mrmarx.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA11045; Wed, 3 Aug 88 21:49:37 EDT
+From: mrmarx!davep@uunet.uu.net
+Message-Id: <8808040149.AA11045@uunet.UU.NET>
+Date:  3-Aug-1988 19:12-EDT (Wednesday)
+To: xbugs@expo.lcs.mit.edu
+Cc: davep@uunet.uu.net
+Subject: bug with Xqdss filled arc rendering
+
+### bug number:   825
+### area:         server
+### severity:     low
+### comments:     
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2, patches 1-33 applied
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.2
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+	Pie-slice gilled arc rendering is very buggy for large extents.
+
+DESCRIPTION:
+	The rendering of pie-slice filled arcs can be very bad (e.g.,
+	large chunks of graphics outside the bounding rectangle of the
+	arc).  If 0 < startAngle < 180 degrees, there are problems if
+	extent is large enough to make endAngle > 360 degrees.  If
+	180 < startAngle < 360, there are problems if extent is large
+	enough to make endAngle > 180 degrees.
+
+REPEAT-BY:
+	Run following test program, which loops through drawing filled arcs.
+	Press button 1 to stop looping, then single-step forward to next arc.
+	Press button 2 to stop looping, then single-step back to previous arc.
+	Press button 3 to continue looping.
+	Press 'q' to quit.
+	Handles window resizing.
+
+FIX:
+	Unknown.
+
+--------------------- cut here, use "cc -o xarc xarc.c -lX11" -----------------
+#include <stdio.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+#define BUFSIZE 10
+
+Display *dpy;
+int screen;
+Window win;
+GC gc;
+unsigned int width, height;
+int startAngle = 0;
+int deltaAngle = 0;
+
+void UpdateDisplay();
+void NextArc();
+void PrevArc();
+
+
+main(argc, argv)
+int	argc;
+char	*argv[];
+{
+    XEvent event;
+    XSizeHints xsh;
+    XGCValues xgcv;
+    int n;
+    char buf[BUFSIZE];
+    int done, pause;
+
+    if (!(dpy = XOpenDisplay (NULL))) {
+        fprintf (stderr, "Couldn't open display\n");
+	exit(1);
+    }
+
+    screen = DefaultScreen (dpy);
+
+    xsh.flags = USPosition | USSize;
+    xsh.x = 0;
+    xsh.y = 0;
+    xsh.width = width = 500;
+    xsh.height = height = 500;
+
+    win = XCreateSimpleWindow (dpy, DefaultRootWindow (dpy),
+			       0, 0, xsh.width, xsh.height, 2,
+			       BlackPixel (dpy, screen), 
+			       WhitePixel (dpy, screen));
+    XSetNormalHints (dpy, win, &xsh);
+
+    XSelectInput (dpy, win,
+		  ButtonPressMask | ExposureMask | 
+		  StructureNotifyMask | KeyPressMask);
+    XMapWindow (dpy, win);
+
+    xgcv.foreground = BlackPixel (dpy, screen);
+    gc = XCreateGC (dpy, win, GCForeground, &xgcv);
+
+    done = 0;
+    pause = 0;
+    while (! done) {
+	if (! XPending (dpy) && ! pause) {
+	    NextArc ();
+	    continue;
+	}
+
+	XNextEvent (dpy, &event);
+
+	switch (event.type) {
+	  case Expose:
+	    if (event.xexpose.count == 0)
+		UpdateDisplay ();
+	    break;
+
+	  case ConfigureNotify:
+	    width = event.xconfigure.width;
+	    height = event.xconfigure.height;
+	    UpdateDisplay ();
+	    break;
+
+	  case ButtonPress:
+	    switch (((XButtonEvent *) &event)->button) {
+	      case Button1:
+		printf ("Start angle %d, extent %d\n", startAngle, deltaAngle);
+		if (pause) {
+		    XClearWindow (dpy, win);
+		    NextArc ();
+		}
+		pause = 1;
+		break;
+	      case Button2:
+		printf ("Start angle %d, extent %d\n", startAngle, deltaAngle);
+		if (pause) {
+		    XClearWindow (dpy, win);
+		    PrevArc ();
+		}
+		pause = 1;
+		break;
+	      case Button3:
+		pause = 0;
+		break;
+	    }
+	    break;
+
+	  case KeyPress:
+	    n = XLookupString ((XKeyEvent *) &event, buf, BUFSIZE,
+			       (KeySym *) NULL, (XComposeStatus *) NULL);
+	    if (n == 1 && (buf[0] == 'q' || buf[0] == 'Q'))
+		done = 1;
+	    break;
+
+	  default:
+	    break;
+	}
+
+    }
+
+    XDestroyWindow (dpy, win);
+    XCloseDisplay (dpy);
+}
+
+
+void UpdateDisplay ()
+{
+  XFillArc (dpy, win, gc, width/4, height/4, width/2, height/2,
+	    startAngle*64, deltaAngle*64);
+}
+
+
+void NextArc ()
+{
+    deltaAngle += 2;
+    if (deltaAngle > 360) {
+	deltaAngle = 0;
+	startAngle = (startAngle + 30) % 360;
+	XClearWindow (dpy, win);
+    }
+
+    UpdateDisplay ();
+    XSync (dpy, 0);
+}
+
+void PrevArc ()
+{
+    deltaAngle -= 2;
+    if (deltaAngle < 0) {
+	deltaAngle = 360;
+	startAngle = (startAngle + (360 - 30)) % 360;
+	XClearWindow (dpy, win);
+    }
+
+    UpdateDisplay ();
+    XSync (dpy, 0);
+}
+
+
+
+

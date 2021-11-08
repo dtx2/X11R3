@@ -1,0 +1,59 @@
+Return-Path: poseur!earle@elroy.jpl.nasa.gov
+Received: by expo.lcs.mit.edu; Fri, 30 Sep 88 01:32:18 EDT
+Received: from poseur.UUCP by elroy.jpl.nasa.gov (4.0/SMI-4.0+DXR)
+	id AA02938; Thu, 29 Sep 88 22:11:18 PDT
+Received: by poseur.Sun.COM (4.0/SMI-4.0)
+	id AA06417; Thu, 29 Sep 88 14:48:39 PDT
+Date: Thu, 29 Sep 88 14:48:39 PDT
+From: poseur!earle@elroy.jpl.nasa.gov (Greg Earle)
+Message-Id: <8809292148.AA06417@poseur.Sun.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xterm bug report
+
+### bug number:   1023
+### area:         xterm
+### severity:     low
+### comments:     temporary fix is to remove status line from sample termcap
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun-3/160, Monochrome
+
+CLIENT OPERATING SYSTEM:
+	SunOS 4.0
+
+DISPLAY:
+	bwtwo0
+
+SYNOPSIS:
+	xterm doesn't support status line yet its termcap entry claims to
+
+DESCRIPTION:
+	xterm's termcap entry claims to support a status line, with some
+    suitable escape sequences provided to enter the status line, exit the
+    status line, disable the status line, etc.
+
+	When running the 4BSD `sysline' program which makes use of this feature,
+    xterm steadfastly ignores the escape sequence to enter the status line,
+    which is `<ESC>[?E<ESC>[?%i%dT' ("<ESC>" indicating escape).
+
+REPEAT-BY:
+	Run `sysline' inside xterm.  The sysline output is properly put into
+    reverse video, but is not put on a status line or at the bottom of the
+    screen.
+
+FIX:
+	Unknown.  xterm's too big for me to grovel through ...
+
+COMMENT:
+    Of course, my xterm loses it's cookies whenever I try to select
+    Tektronix mode showing, so maybe my xterm is broken.
+
+SUBMITTER:
+	Greg Earle, Sun Microsystems	Los Angeles Consulting
+	poseur!earle@elroy.JPL.NASA.GOV
+
+

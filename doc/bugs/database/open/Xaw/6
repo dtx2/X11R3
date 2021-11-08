@@ -1,0 +1,73 @@
+Return-Path: ucbcad!ames!amdahl!cerebus!charlesb@ucbvax.berkeley.edu
+Received: by expo.lcs.mit.edu; Fri, 17 Jun 88 04:14:01 EDT
+Received: from cad.Berkeley.EDU by ucbvax.Berkeley.EDU (5.59/1.28)
+	id AA12295; Fri, 17 Jun 88 01:11:40 PDT
+Received: from ames.arc.nasa.gov by cad.Berkeley.EDU (5.58/1.28)
+	id AA04938; Fri, 17 Jun 88 01:10:52 PST
+Received: Fri, 17 Jun 88 01:04:29 PDT by ames.arc.nasa.gov (5.59/1.2)
+Received: by amdahl.uts.amdahl.com (/\../\ Smail3.1.1.4 #0.4)
+	id <m0dQGTc-000045C@amdahl.uts.amdahl.com>; Fri, 17 Jun 88 00:49 PDT
+Received: by cerebus.fai.com; id AA02189; Thu, 16 Jun 88 22:50:52-217:
+Date: Thu, 16 Jun 88 22:50:52-217:
+From: Charles Brauer <ucbcad!cerebus.Berkeley.EDU!ames!charlesb@ucbvax.berkeley.edu>
+Message-Id: <8806170550.AA02189@cerebus.fai.com>
+To: amdahl!expo.lcs.mit.edu!xbugs
+Subject: XtDiskSourceDestroy doesn't close file
+
+### bug number:   611
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/60C
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	cgfour0
+
+SYNOPSIS:
+
+	The XtDiskSourceDestroy is not releasing (closing) the associated file
+	descriptor.  The maximum number of file descriptors is soon reached,
+	an no more windows can be opened.
+
+DESCRIPTION:
+
+	Under the SunOS 3.4 operating system there is a limit of 30 file
+	descriptors that can be opened simultaneously.  With larger applications
+	that opens many windows (and hence, many widgets), together with the file
+	descriptors used by the application programs, the 30 file descriptor
+	limit is easily exceeded.  In SunOS 4.0 this limit is increased to 64,
+	but this still may be a problem.
+
+	The routine "fstat" showed that file descriptors were not being released
+	by the destroy callback widget.  By putting a "fclose" in the
+	XtDiskSourceDestroy routine, this released the file descriptor and solves
+	the problem.
+
+REPEAT-BY:
+	-
+
+FIX:
+
+*** DiskSrc.c	Fri Jun  3 18:04:19 1988
+--- DiskSrc.c.orig	Fri Jun  3 18:04:41 1988
+***************
+*** 357,363 ****
+          unlink(data->fileName);
+  	XtFree((char *) data->fileName);
+      }
+- 	fclose( data->file );
+      XtFree((char *) src->data);
+      XtFree((char *) src);
+  }
+--- 357,362 ----
+	(Preferred, but not necessary)
+
+

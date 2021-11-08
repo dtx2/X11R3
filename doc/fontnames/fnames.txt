@@ -1,0 +1,984 @@
+                  X LOGICAL FONT DESCRIPTION PROPOSAL
+
+(0) INTRODUCTION
+
+The current X protocol does not specify the contents of the font name or
+font name pattern supplied to ListFont, ListFontWithInfo, and OpenFont, the
+implication being that font naming is implementation dependent, probably
+bound to the file system naming conventions of the server. Client
+applications that wish to be portable across server implementations, with
+very different file systems, naming conventions, and font libraries, have no
+guarantee of being able to understand which fonts are available on a
+foreign server, or a mechanism of logically describing the font it is
+looking for.
+
+X clients should be able to find out the currently available typefaces, in
+what sizes, styles, etc, so that understandable information can be presented
+to the user in dialogue boxes, or that intelligent font fallbacks can be
+chosen, without the overhead of opening each font and inspection of font
+properties, i.e, through simple "ListFonts" requests (e.g., if a user
+selected a "Bodoni" type family, a client application should be able to
+query the server for all Bodoni fonts and present only those Sets, Weights,
+PointSizes available, etc).
+
+The lack of agreement on a required standard set of basic font properties,
+such as CapHeight, XHeight, Setwidth, DesignClassification, etc, make it
+nearly impossible for clients to do any intelligent font substitution when
+handling documents created on some foreign server using potentially unknown
+fonts.
+
+This document proposes a standard logical font description (LFD) to be used
+in X so that clients can query and access screen type libraries in a
+consistent manner across all X servers. In addition to completely specifying
+a given font via its FONTNAME, it also provides for a *standard* set of key
+FONT PROPERTIES that describe the font in more detail. This information is
+required by certain clients to automatically place subscripts, determine
+small capital heights, recommended leading, wordspace values, etc., and for
+matching/substitution purposes where complete font information is unknown or
+not needed. 
+
+It is intended that the entire LFD would be used as a font identifier in
+revisable documents, whereas only the FontName would be used directly by X
+servers.
+
+(1) GOALS
+
+This proposal meets the short and long-term goals to have a standard
+implementation-independent logical font description which is:
+
+    o	Unique font names;
+    o	Supports multiple vendors, arbitrary character sets;
+    o	Operating system and file system independent;
+    o	Supports arbitrarily complex font matching/substitution where 
+	need;
+    o	Simple pattern matching;
+    o	Extensible.
+
+(1.1) Unique font name
+
+It should be possible to have font names that are long enough and
+descriptive enough to have a reasonable probability of being unique without
+inventing a new registration organization. Resolution/size-dependent font
+masters, multi-vendor font libraries, etc, must be anticipated and handled
+by the font name alone.
+
+(1.2) Support multiple vendors and character sets
+
+The font name should distinguish between fonts that were supplied by
+different font vendors, but possibly have the same name. We anticipate a
+highly competitive font market where users will be able to buy fonts from a
+number of sources according to their personal/corporate/application
+requirements.
+
+A number of font vendors deliver each font with all chars designed for that
+font, where charsets mappings are defined by encoding vectors. Certain
+server implementations will force these charset mappings to proprietary or
+standard charsets statically, while others will desire to perform the
+mapping dynamically in the server.
+
+Provisions must be made which allows a font request to specify a specific
+charset mapping, in server environments where multiple charsets are
+supported. [Long-term plans should include provisions for supporting a
+completely general character set encoding mechanism in some kind of
+text/publishing extension to X.]
+
+(1.3) OS and file system independent
+
+Client applications wanting a particular font should be able to use the
+descriptive name, without knowing about the file system or other repository
+in use by the server (therefore, it follows, that the font name can NOT be
+equivalent to a font file name). However, it should be possible for servers
+to translate a given font name into a file name syntax that it knows how to
+deal with, without compromising the uniqueness of the font name. This
+algorithm should be reversible (exactly how this translation is done is
+implementation dependent).
+
+(1.4) Supports arbitrarily complex font matching/substitution 
+
+The LFD should define a standard set of font properties, with agreed upon
+fallbacks, for all fonts, so that client applications can derive
+font-specific formatting/display data, perform font matching/substitution
+when asked to handle a potentially unknown foreign font, etc. 
+
+(1.5) Simple pattern matching
+
+The font name should be amenable to simple pattern matching, e.g., allowing
+"don't care" and "care some" notions to be roughly expressed, to cut down on
+the set of fonts returned by a query (that would otherwise have to be
+expressed as "return all fonts"). It is also necessary to be able to
+constrain matching to just a few fields, such as the typeface "FamilyName",
+in order to minimize the number of fonts processed in servers with large
+commercial type libraries. This might be thought of as "return the first
+instance of" or "ignore this field" parsing. [note, restrictions on making
+protocol changes to V11 make this final point hard or impossible to meet]
+
+(1.6) Extensible 
+
+The proposed logical font description must be open, so that new font name
+fields & font properties can be added in the future. In particular, the
+description must be able to model continuously scaled outline fonts.
+
+(2) LOGICAL FONT DESCRIPTION
+
+This proposal separates font name info from font descriptive and matching
+info, i.e., the font name is used as a unique font id for programming
+interfaces (e.g., font name in X font access requests), the font properties
+give info needed to further describe the font for various purposes.
+
+The proposed logical font description is divided into 2 basic parts, the
+FONTNAME, which gives all font info needed to uniquely identify a font
+(according to goals described above), and a variable list of optional FONT
+PROPERTIES, that describe/classify the font. Rendering attributes that
+describe how the font should be transformed for a given client application's
+need (e.g., Outline, Shadow, ScaleX, AntiAlias, etc), could be appended to
+the proposed V1.1 name to allow some servers to support these font features
+(see Appendix B).
+
+The LFD is given below:
+
+LogicalFontDescription	::=	FontName
+				FontProperties
+
+
+(2.1) FONT NAME 
+
+In the X protocol specifications, the FontName is required to be a
+NULL-terminated string, as defined below, but the exact data structure used
+in a revisable document could be defined to some other more convenient form
+(see APPENDIX A). Following are the proposed fields to be used in font name,
+their semantics, and the structured string syntax.
+
+
+The FontName is describe below:
+
+FontName		::=	FontNameRegistry
+				Foundry
+				FamilyName
+				WeightName
+				Slant
+				SetwidthName
+				AddStyleName
+				PixelSize
+				PointSize
+				ResolutionX
+				ResolutionY
+				Spacing
+				AverageWidth
+				CharSetRegistry
+				CharSetEncoding
+
+
+(2.1.1) Font Name Syntax
+
+The proposed font name is a parsable string of the form:
+
+    "<FontNameRegistry>-<Foundry>-<FamilyName>-<WeightName>-<Slant>
+     -<SetwidthName>-<AddStyleName>-<PixelSize>-<PointSize>-<ResolutionX>
+     -<ResolutionY>-<Spacing>-<AverageWidth>-<CharSetRegistry>
+     -<CharSetEncoding>"
+
+where ISOLatin1 hyphen ('-') is the font name field delimiter.
+
+Field values will be restricted to characters in the ISOLatin1 character set
+encoding, i.e., certain fields may contain accented characters (e.g., type
+FamilyName of fonts designed and primarily used in Europe), and should not
+include the delimiter character, the ISOLatin1 underscore ('_'), ISOLatin1
+question mark ('?') or ISOLatin1 asterisk ('*'). Alphabetic case distinctions
+are for human readability concerns only - matching *must* be performed on
+strings independent of case. The entire font name string must have no more
+than 255 characters.
+
+(2.1.2) Font Name Field Definitions
+
+FontNameRegistry <code-string>
+
+A code-string that defines the registration authority that registered the
+specified FontName (e.g., "", "ISO", "DEC", "IBM", etc.) It is highly
+desirable that X adopt the proposed font name scheme, so that all conforming
+implementations could simply use the empty FontNameRegistry for most fonts. The
+beneficial implications for the X standard should be obvious.
+
+Foundry <code-string>
+
+This is the name or id of the type foundry that supplied the font in digital
+form, or the name of the font designer, if independent. The legal owner of a
+typeface, as well as other copyright information, should be captured in the
+font file properties as a foundry COPYRIGHT, and design NOTICE, and are not
+addressed in the font name per se.
+
+The reason this distinction is necessary is that, for example, a "Souvenir"
+licensed from ITC and digitized by Bitstream could be very different (it's
+CapHeight, XHeight, general weight, and of course, its glyph widths) from a
+"Souvenir" digitized by another type vendor, such as Compugraphic or Adobe.
+Each type foundry has it own standards and practices for tweaking a typeface
+for specific technology, or its own perception of market needs.
+
+It is up to the type supplier to supply and maintain a suitable code-string
+for this field (variable length, but should be fewer than 17 chars),
+although it is recommended that Foundry be the type supplier's corporate
+trademark.
+
+   Examples:
+	ITC		-for International Typeface Corporation
+	CG		-for CompuGraphic
+	Bitstream	-for Bitstream
+ 	Linotype	-for Linotype
+	Adobe		-for Adobe Systems
+
+[mention typeface trademark for family names used in examples]
+
+FamilyName <string> 
+
+The "typeface family" of the font. It denotes a range of typeface designs
+that are all variations of one basic typographic style. This must be spelled
+out in full, with words separated by spaces as required. This character
+string must be human-readable and suitable for presentation to a font user
+to identify the typeface (by convention the FamilyName is not usually
+translated). It is recommended that FamilyName be the trademarked commercial
+name.
+
+Note, that type foundry, design ownership or typeface style information such
+as italic or bold, or numeric encodings of these attributes (e.g., Univers 55),
+must not be included in the family name.
+
+It is up to the type supplier to supply and maintain a suitable string for
+this field (should be fewer than 32 chars), to secure the proper legal title
+to a given FamilyName, and to guard against the infringement of other's
+copyrights. [need some kind of language to tell people that fonts and
+typeface names are trademarked]
+
+   Examples:
+	Times
+	Univers
+	Snell Roundhand
+	Baskerville II
+	Avant Garde Gothic
+	New Century Schoolbook
+	Symbol
+
+WeightName <string>
+
+The font's "weight", i.e., a human-readable string that describes the
+nominal "blackness" of the font, according to the designer's or Foundry's
+judgment. The interpretation of this field is somewhat problematic, as, the
+designer's judgment of weight has traditionally depended upon the overall
+design of the typeface family in question (i.e., it is possible that the
+DemiBold weight of one font could be almost equivalent in "feel" to the Bold
+of a font from another family).
+
+WeightName is captured as an arbitrary string since it is an important part
+of a font's complete human-readable name, but it should *not* be used for
+font matching/substitution. Client applications should use the
+weight-related font properties (RELATIVE_WEIGHT & WEIGHT) that give the
+relative coded weight (UltraLight -> UltraBold), and the calculated weight,
+respectively, for this purpose.
+
+Slant <code-string>
+
+A code indicating whether the font is an italic, oblique, roman, etc, style
+design. "Roman" identifies a typeface design that is generally upright, the
+term "italic", meaning a slanted cursive typographic design, and "oblique"
+meaning an obliqued roman design. Slant also allows for reverse italic and
+reverse oblique fonts.
+
+The following codes are for programming convenience only, and must be
+converted into their equivalent human-readable form before being presented
+to a user. Human-readable forms are language-specific, i.e., they must be
+translated according to prevailing market/country custom.
+
+The encoding is as follows:
+
+   Mnemonic Code	Human-readable form
+   -------------	-------------------
+
+	'R'		Roman	
+	'I'		Italic
+	'O'		Oblique
+	'RI'		Reverse italic
+	'RO'		Reverse oblique
+
+SetwidthName <string>
+
+The font's "setwidth", i.e., a human-readable string that gives the nominal
+width per horizontal unit of the font, according to the designer's or
+Foundry's judgment. As with WeightName, the interpretation of this field is
+somewhat problematic, as, the designer's judgment of setwidth has
+traditionally depended upon the overall design of the typeface family in
+question.
+
+Condensed typefaces are often used to conserve column space in multi-column
+documents, while maintaining a given pointsize, whereas expanded versions are
+sometimes used for added emphasis.
+
+It is very important to distinguish a font's designed "setwidth" from an
+eventual distortion due to anamorphic scaling; a client application or
+user may want to digitally condense a condensed font to obtain an
+ultra condensed version, if none is available, etc (see APPENDIX B).
+
+AddStyleName <string>
+
+An additional style specification field, i.e., an arbitrary, human-readable
+string that may be needed to uniquely identify the font, e.g., "Serif",
+"Sans Serif", "Informal", "Swash", "Cursive", "Decorated", etc. Note,
+AddStyleName is NOT a typeface classification field (given as part of font
+properties), and will only be used for uniqueness (e.g., Adobe's new STONE
+family of fonts distinguish between Serif, SansSerif, and Informal styles,
+in the usual array of roman and italic weights).
+
+PixelSize <integer-string>
+
+A physical metric in device pixels which gives the size of the font, i.e.,
+the size of the EM square (char cell for monospaced fonts) used to design
+the font, including any extra vertical spacing. PixelSize is in the range 1
+to a "very-large-number".
+
+PixelSize would normally be used by an client applications that wanted a
+list of available fonts according to PixelSize, independent of the pointsize
+and resolution the font was designed for.
+
+PointSize <integer-string>
+
+A physical metric in device-*independent* units which gives the size that the
+font was designed for, i.e., the size of the EM square (char cell for
+monospaced fonts), including any extra vertical spacing. It would normally
+be used in conjunction with ResolutionY.
+
+Pointsize is expressed as a integer string in decipoints (where points are
+as defined in the X protocol, or 72.27 pts = 1 inch) in the range 1 to a
+"very-large-number".
+
+ResolutionX <integer-string>
+ResolutionY <integer-string>
+
+The horizontal and vertical resolution of the device that the font was
+designed for, measured in pixels/dots per inch (dpi). Horizontal and
+vertical values are required since a separate bitmap font must be designed
+for displays with very different aspect ratios, e.g., 1:1, 4:3, 2:1, etc.
+
+The separation of PixelSize, PointSize and Resolution is necessary because X
+allows for servers with very different video characteristics (horizontal and
+vertical resolution, screen and pixel size, pixel shape, etc.) to
+potentially access the same font library. The font name, then, must
+differentiate between a 14 point font designed for 75 dpi (14 pixels) or a
+14 point font designed for 150 (28 pixels), etc. Further, in servers that
+implement some or all fonts as continuously scaled outlines, PointSize and
+ResolutionY will help the server to differentiate between potentially
+separate font masters for text, title and display sizes or for other
+typographic considerations.
+
+Spacing <code-string>
+
+A code that indicates if the font is monospaced (fixed pitch), proportional
+spaced (variable pitch), or possibly a monospaced font that conforms to the
+traditional data processing character cell font model (e.g. as required by
+program/text editors, terminal emulators, etc).
+
+A character cell font, by definition, must follow the standard typewriter
+character cell model, i.e., the glyphs of the font can be thought of as
+"boxes" of the same width and height that can be imaged side by side to form
+text strings, or top to bottom to form text lines. In X, this means that all
+glyphs of the font are set on the same width (character-width =
+right-side-bearing = AverageWidth of font name), any extra vertical spacing
+needed by the font is embedded in the char cell itself, no glyph marks occur
+outside the char cell and all left-side-bearings must be zero (no kerning).
+
+Normally used in conjunction with AverageWidth, below, to further distinguish
+between possible versions of a monospaced font designed for different
+character densities.
+
+The encoding is as follows:
+
+   Mnemonic Code	Human-readable form
+   -------------	-------------------
+   
+	'M'		Monospaced
+	'P'		Proportional
+	'C'		Character cell
+
+AverageWidth <integer-string>
+
+An integer value giving the average, unweighted width of all glyphs in the
+font, measured in 1/10th device-dependent pixels. Note, for monospaced and
+character cell fonts, this is the character cell width. Pitch can easily be
+calculated or specified using the AverageWidth and ResolutionX values.
+
+CharSetRegistry <code-string>
+
+A code-string that defines the registration authority that registered the
+specified CharSetEncoding.  This will typically include both the organization
+and a specific standard number (e.g., "ISO8859").
+
+CharSetEncoding <code-string>
+
+A code-string that defines the character set encoding vector, (and
+implicitly its glyph repertoire) as registered with the CharSetRegistry
+(e.g., "1" stands for ISO Latin-1 when used with CharSetRegistry "ISO8859").
+Note, that the type of character set encoding (e.g., 1 byte vs. 2 byte)
+is implied by the CharSetEncoding itself.
+	
+Although X does not explicitly have any specific knowledge about character
+set encodings, it is expected that server implementers will prefer to embed
+knowledge of certain proprietary or industry standard charsets into their
+font library for reasons of performance and convenience. CharSetRegistry and
+CharSetEncoding allows a font request to specify a specific charset mapping
+in server environments where multiple charsets are supported. [Provisions
+for supporting a completely general character set encoding mechanism in some
+text/publishing extension would be desirable].
+
+It is proposed that all X servers will be required to support at least the
+ISO8859-1 CharSetRegistry/Encoding. The availability of any other registry or
+charset is font and server implementation dependent.
+
+
+(2.2) STANDARD FONT PROPERTIES
+
+The font properties will generally include the font name fields, plus other
+useful global font information such as the height of capitals (CAP_HEIGHT),
+calculated weight and setwidth (WEIGHT and SETWIDTH), etc, needed by clients
+to use the fonts intelligently. The LFD specifies an extensive list of
+possible X font properties, their interpretation and fallbacks if certain
+properties are not defined for a given font. Additional standard X font
+property definitions TBD, i.e., this list may have to grow. Note, the goal
+here is to provide client applications with enough font info to be able to
+make automatic formatting/display decisions with good typographic results.
+
+ISSUE: Fallback or default property values must be defined, so that font
+suppliers need not provide redundant font info.
+
+ISSUE: specify interpretation of these properties for continuously scalable
+fonts (e.g., inline or outline fonts).
+
+
+Properties		::=	MIN_SPACE
+				NORM_SPACE
+				MAX_SPACE
+				END_SPACE
+				SUPERSCRIPT_X
+				SUPERSCRIPT_Y
+				SUBSCRIPT_X
+				SUBSCRIPT_Y
+				UNDERLINE_POSITION
+				UNDERLINE_THICKNESS
+				STRIKEOUT_ASCENT
+				STRIKEOUT_DESCENT
+				ITALIC_ANGLE
+				QUAD_WIDTH
+				X_HEIGHT
+				WEIGHT
+				POINT_SIZE
+				RESOLUTION
+				FACE_NAME
+				COPYRIGHT
+				FAMILY_NAME
+				FONT_NAME_REGISTRY
+				FOUNDRY
+				WEIGHT_NAME
+				SLANT
+				SETWIDTH_NAME
+				ADD_STYLE_NAME
+				PIXEL_SIZE
+				RESOLUTION_X
+				RESOLUTION_Y
+				SPACING
+				AVERAGE_WIDTH
+				AVG_CAPITAL_WIDTH
+				AVG_LOWERCASE_WIDTH
+				CHARSET_REGISTRY
+				CHARSET_ENCODING
+				SETWIDTH
+				RELATIVE_SETWIDTH
+				RELATIVE_WEIGHT
+				CHARSET_COLLECTIONS
+				NORMAL_LEADING
+				CAP_HEIGHT
+				SUPERSCRIPT_SIZE
+				FIGURE_WIDTH
+				SUBSCRIPT_SIZE
+				SMALL_CAP_SIZE
+				NOTICE
+				DESIGN_CLASS0
+				DESIGN_CLASS1
+				DESTINATION
+				
+
+(2.2.1) Existing X Font Properties
+
+These font properties are described briefly in the X protocol spec & Xlib,
+and are summarized here for completeness. Some are incorrectly documented,
+while others are questionably defined.
+
+
+MIN_SPACE - an unsigned value that gives the minimum recommended wordspace
+value to be used with this font. 
+
+NORM_SPACE - an unsigned value that gives the normal/optimum recommended
+wordspace value to be used with this font.
+
+MAX_SPACE- an unsigned value that gives the maximum recommended wordspace
+value to be used with this font.
+
+END_SPACE - an unsigned value that gives the additional spacing at the end
+of sentences.
+
+SUPERSCRIPT_X - an int value that gives the recommended horizontal offset in
+pixels from the EM origin to the char origin of superscripts (see Xlib
+for details).
+
+SUPERSCRIPT_Y - an int value that gives the recommended vertical offset in
+pixels from the EM origin to the char origin of superscripts (see Xlib
+for details).
+
+SUBSCRIPT_X - an int value that gives the recommended horizontal offset in
+pixels from the EM origin to the char origin of subscripts (see Xlib for
+details).
+
+SUBSCRIPT_Y - an int value that gives the recommended vertical offset in
+pixels from the EM origin to the char origin of subscripts (see Xlib for
+details).
+
+UNDERLINE_POSITION - an int value that gives the recommended vertical offset
+in pixels from the baseline to the top of the underline.
+
+UNDERLINE_THICKNESS - an unsigned value that gives the recommended underline
+thickness, in pixels.
+
+STRIKEOUT_ASCENT - an int value that gives the vertical ascent for boxing or
+voiding glyphs in this font.
+
+STRIKEOUT_DESCENT - an int value that gives the vertical descent for boxing or
+voiding glyphs in this font.
+
+ITALIC_ANGLE - an int value that gives the overall italic angle that the
+font was designed to (see Xlib for details).
+
+QUAD_WIDTH - an int value that gives the width of 1 "EM", as in TeX. Often
+the width of digits 0-9.
+
+X_HEIGHT - as above, except the font x-height, usually the height of the
+lower case 'x'.
+
+WEIGHT - an int value that is the calculated weight of the font. Used for
+matching/substitution (algorithm TBD).
+
+POINT_SIZE - an int value that gives the pointsize that the font was
+designed for, in decipoints (as in X protocol doc, these are *printer's*
+points, i.e., 72.27 pts = 1 inch).
+
+RESOLUTION - an unsigned value that gives the number of pixels per point
+that the font was designed for, in 1/100ths.
+
+ISSUE: this should be expressed in pixels per inch, or meter and be equal to
+RESOLUTION_Y defined in FontName.
+
+FACE_NAME - a human-readable <string> that gives the full *typeface* name,
+including the owner, weight, slant, set, etc., but not the resolution, size,
+etc. Used as feedback during font selection.
+
+COPYRIGHT - a human-readable <string> that gives FOUNDRY copyright info for
+the font data.
+
+FAMILY_NAME - a human-readable <string> that gives the font's typeface
+family name, e.g., Times. Used for font selection/identification.
+
+(2.2.2) Font Name Properties
+
+These font properties are taken directly from the font name, which is
+defined in greater detail above.
+
+FONT_NAME_REGISTRY - a <code-string> that gives the registration authority that
+controls the font name, e.g., "", "DEC", "ISO", etc.
+
+FAMILY_NAME (as defined in above).
+
+FOUNDRY - a <code-string> that gives the name of the type foundry that
+produced the font, e.g., "Adobe", "Bitstream", "Linotype", etc.
+
+WEIGHT_NAME - a human-readable <string> that gives the weight of the font,
+e.g., "Bold", "Book", "SemiBold", etc. Used for font selection/identification.
+
+SLANT - an int code that describes the design slant, e.g., roman, italic,
+oblique, etc.
+
+SETWIDTH_NAME - a human-readable <string> that gives the setwidth of the
+font, e.g., "Condensed", "Narrow", etc. Used for font
+selection/identification.
+
+ADD_STYLE_NAME - a human-readable <string> that gives any additional style
+information needed to make the font name unique, such as "Serif" or "Swash",
+etc.
+
+PIXEL_SIZE - an int value that gives the size of font in device-dependent
+pixels.
+
+POINT_SIZE (as defined above).
+
+RESOLUTION_X - an int value that gives the horizontal resolution that the
+font was designed for, in dpi.
+
+RESOLUTION_Y - an int value that gives the vertical resolution that the
+font was designed for, in dpi.
+
+SPACING - an int code that describes the font spacing, e.g., monospaced,
+proportional, character cell, etc.
+
+AVERAGE_WIDTH - an int value that gives the unweighted average width of all
+the glyphs in the font, in 1/10th pixels. For monospaced fonts, this value
+is the exact width of all glyphs.
+
+CHARSET_REGISTRY - a human-readable <code-string> that specifies the
+registry that "owns" the charset encoding, i.e., will be "DEC" for all
+Digital servers.
+
+CHARSET_ENCODING - a human-readable <string> that specifies the charset
+encoding name, e.g., "ISOLatin1", "DECmath", etc. 
+
+
+(2.2.3) Descriptive/Matching properties
+
+SETWIDTH - an int value that is the calculated setwidth of the font. Used for
+matching/substitution (algorithm TBD).
+
+RELATIVE_SETWIDTH - a code that gives the setwidth of the font, relative to
+all known font setwidths (i.e., according to some arbitrary linear scale).
+
+The possible values are:
+
+	1	-UltraCondensed
+	2	-ExtraCondensed
+	3	-Condensed	
+	4	-SemiCondensed
+	5	-Medium (Normal, Regular, ...)
+	6	-SemiExpanded (DemiExpanded, ...)
+	7	-Expanded	
+	8	-ExtraExpanded (Wide, ...)
+	9	-UltraExpanded (ExtraWide, ...)
+
+RELATIVE_WEIGHT - a code that gives the weight of the font, relative to
+all known font weights (i.e., according to some arbitrary linear scale).
+
+The possible values are:
+
+	1	-UltraLight
+	2	-ExtraLight
+	3	-Light	
+	4	-SemiLight (Book, ...)
+	5	-Medium (Normal, Regular, ...)
+	6	-SemiBold (DemiBold, ...)
+	7	-Bold	
+	8	-ExtraBold (Heavy, ...)
+	9	-UltraBold (Black, ...)
+
+CHARSET_COLLECTIONS - a <code-string> that gives the known charset
+"collections", supported by the repertoire of glyphs in the font file (e.g.,
+"ASCII AdobeStandard ISOLatin1 ISOLatin2"). For future use to optimize
+charset switching in server.
+
+NORMAL_LEADING - an int value that gives the nominal interline leading, in
+pixels, (distance from baseline to baseline) recommended for the font
+(normally equal to the sum of the FONT_ASCENT & FONT_DESCENT). Although
+often equal to the PIXEL_SIZE of the font, may be smaller or larger,
+depending upon the font designer's choice of recommended leading.
+
+CAP_HEIGHT - an int value that gives the height of capitals, usually the cap
+'X' height, in pixels.
+
+AVG_CAPITAL_WIDTH - an int value that gives the unweighted average width of
+all the capital glyphs in the font, in 1/10th pixels. Used for more refined
+font matching.
+
+AVG_LOWERCASE_WIDTH - an int value that gives the unweighted average width of
+all the lower case glyphs in the font, in 1/10th pixels. Used for more refined
+font matching.
+
+FIGURE_WIDTH - as int value that gives the width of figures (digits 0-9) in
+this font, in pixels.
+
+SUPERSCRIPT_SIZE - an int value that gives the size of superscripts to be
+used with this font, in pixels. Note, that this will generally be smaller
+than the size of the current font, i.e., superscripts are imaged from a
+smaller font, offset according to SUPERSCRIPT_X & SUPERSCRIPT_Y.
+
+SUBSCRIPT_SIZE - as above, except for subscripts.
+
+SMALL_CAP_SIZE - an int value that gives the height of the small capitals to
+be used with this font, in pixels. As with superscripts/subscripts, small
+capitals are generally imaged from a smaller font. No offset X,Y is
+necessary. [font designers will balk at this, since small caps are often
+different glyph designs, but no one seems to have encoded SmallCaps as
+separate glyphs in some charset]
+
+ISSUE: SUPERIORS, INFERIORS (French & chemical)
+
+NOTICE - a human-readable <string> that gives the font design owner's
+copyright info (usually displayed during font selection).
+
+DESIGN_CLASS0 - a code that gives the general class of the font design,
+e.g., serif, sans serif, blackletter, etc. TBD, but probably should follow
+the pending ISO font standards work.
+
+DESIGN_CLASS1 - a code that gives the sub class within the general class
+defined by DESIGN_CLASS0 of the font design, e.g., slab serif for a general
+serif design class, etc.. TBD, as above.
+
+ISSUE: do we need a further DESIGN_CLASS distinction?
+
+DESTINATION - a code that gives the font design destination, i.e., whether
+it was designed as a screen proofing font to match printer font glyph widths
+(WYSIWYG), as an optimal video font (possibly with corresponding printer
+font) for extended screen viewing (VideoText), etc. The font design
+considerations are very different, and at current display resolutions, the
+readability and legibility of these two kinds of screen fonts are very
+different (WYSIWYG fonts are generally harder to read). This attribute would
+allow publishing clients, which will use X to model the printed page, and
+Video Text clients such as on-line documentation, to distinguish one set of
+fonts from the other.
+
+The encoding is as follows:
+   
+	0	- WYSIWYG
+	1	- Video Text
+
+
+(3) AFFECTED ELEMENTS OF THE X PROTOCOL
+
+No changes in the X protocol or sample server implementations are
+anticipated to adopt this proposal. All instances of ASCII in the protocol
+document should be changed to ISO Latin1.
+
+The following X protocol requests *must* use the proposed font naming 
+conventions:
+
+	OpenFont		name:STRING8
+	ListFonts		pattern:STRING8
+	ListFontsWithInfo	pattern:STRING8
+
+
+
+
+
+
+APPENDIX A
+
+		MANIPULATING THE FONT NAME
+
+It is proposed that the following font name access routines become a
+standard part of Xlib: (1) a string-based set to build up a font name pattern
+or to parse the font name string(s) returned by various X font access
+routines, and (2) a C data structure-based set to manipulate the font name
+as a standard data structure. 
+
+[these are given as c routines for the author's convenience, the list of
+routines is admittedly incomplete]
+
+
+/* LFD$Definitions.h - LFD C definitions & enumerated types */
+
+
+#define LFD$FN_DELIMITER (char) '-'	/* font name field delimiter */
+#define MAX_FN_FIELDS 14		/* number of fields in name */
+
+typedef enum {				/* Font name string field ids */
+
+    LFD$FN_REGISTRY 		= 0,	/* field position in string */
+    LFD$FN_FOUNDRY		= 1,
+    ....
+
+} LFD$EFNFIELD;
+
+typedef enum {				/* font properties enumerated types*/
+
+    LFD$FP_FAMILY_NAME 		= FAMILY_NAME_ATOM,
+    LFD$FP_WEIGHT		= WEIGHT_ATOM,
+    ...
+
+} EFONTPROPERTIES;
+
+typedef enum {				/* Slant field enumerated type defns */
+
+    ROMAN,
+    ITALIC,
+    OBLIQUE,
+    REVERSE_OBLIQUE,
+    REVERSE_ITALIC
+
+} LFD$ESLANT;
+
+
+typedef enum {				/* Spacing field enums type defns */
+
+    PROPORTIONAL,
+    MONOSPACED,
+    CHAR_CELL
+
+} LFD$ESPACING;
+
+
+typedef struct {			/* LFD data structure */
+
+    LFD$FONTNAMESTRUCT FontName;
+    int		nFontProperties;
+    XFontProp 	*pFontProperties;
+
+} LFD$STRUCT;
+
+
+typedef struct {			/* Font name data structure */
+
+    char 	*pstrFontNameRegistry;
+    char 	*pstrFoundry;
+    char 	*pstrFamilyName;
+    char 	*pstrWeightName;
+    LFD$ESLANT	eSlant;
+    char 	*pstrSetwidthName;
+    char 	*pstrAddStyleName;
+    int		PixelSize;
+    int		PointSize;
+    int		ResolutionX;
+    int		ResolutionY;
+    LFD$ESPACING eSpacing;
+    int		AverageWidth;
+    char 	*pstrCharsetRegistry;
+    char 	*pstrCharsetEncoding;
+
+} LFD$FONTNAMESTRUCT;
+
+/* end of "LFD$Definitions.h" */
+
+
+char *XGetFontNameField(eFieldID, pstrFontName, pFieldSize)
+
+XEFNFIELD eFieldID;		/* enumerated type field id to read */
+char 	*pstrFontName; 		/* ptr to the font name string */
+int 	*pFieldSize; 		/* ptr to int where field size is returned */
+
+
+/* "XGetFontNameField" is used to locate the font name field specifed by
+the "eFieldID" argument. Returns a ptr to the beginning of the field in the
+specified font name, or NULL if the field was not found. The field size is
+returned in the int specified by the ptr "pFieldSize".*/
+
+
+char *XSetFontNameField(eFieldID, pstrFontName, nFieldSize, pstrFieldValue)
+
+XEFNFIELD eFieldID;		/* enumerated type field id to update */
+char 	*pstrFontName; 		/* ptr to the font name string to update */
+int	nFieldSize;		/* the number of chars in given field */
+
+
+/* "XSetFontNameField" is used to update the font name field specified
+by the "eFieldID" argument. A ptr to the field string value and length is
+given by "pstrFieldValue" and "nFieldSize", respectively. Returns ptr to the
+updated font name string, "pstrFontName", or NULL, if the field ID was
+incorrect. Note, that any previous contents of the field in the font name
+string will be replaced. 
+
+Guaranteed to build a syntactically correct font name string, i.e., can be
+called with an empty font name, and will check that the field value is
+permitted for the current version-revision level.*/
+
+
+XFONTNAMESTRUCT *XSetFontNameStruct(pstrFontName, pFontNameStruct)
+
+char 	*pstrFontName; 		/* ptr to the font name string to convert */
+XFONTNAMESTRUCT *pFontNameStruct; /* ptr to buffer return font name DS */
+
+/* "XSetFontNameStruct" is used to convert a font name string, as used by
+X requests directly, into the equivalent LFD font name data structure.
+Should be used where the font name will be extensively modified, or for
+revisable document font interchange. Returns a ptr to the updated font name
+structure, "pFontNameStruct", or NULL if an error was encountered.*/
+
+
+char *XSetFontNameString(pstrFontName, pFontNameStruct)
+
+
+char 	*pstrFontName; 		/* ptr to a buffer to return font name */
+XFONTNAMESTRUCT *pFontNameStruct; /* ptr to the font name data structure */
+
+/* "XGetFontNameString" is used to convert a font name data structure
+into a valid font name string, according to the syntax specified in LFD.
+This font name can then be used directly by X font access requests or can be
+modified via "XSetFontNameField" to set up a suitable pattern match.
+Returns a ptr to the created font name string "pstrFontName", or NULL if an
+error was encountered.*/
+
+/* The following routine would have to be implemented as a protocol change to
+give the required performance.*/
+
+char **XListFamilyNames(pstrFontNamePattern)
+
+char 	*pstrfontNamePatten;		/* ptr to a font name pattern */
+
+/* "XListfamilyNames" is used as a fast server request to return only the
+list of available typeface FamilyNames. It functions much as the XListFonts
+request, except that the returned value is a ptr to a list of ptrs to
+FamilyName strings that matched the font name string pattern specified by
+pstrFontNamePattern. */
+
+
+APPENDIX B
+
+
+			FONT NAME RENDERING FIELDS
+
+Possible additions to the font name, to allow clients to instruct how fonts
+should be rendered by a server that supports these features, are given
+below. Although incomplete, they are provided here to generate discussion
+around the font issue.
+
+
+AntiAliasing <integer-string>			
+
+The font name should allow for the possibility in the future of an X server
+being able to cope with gray-level bitmap fonts or possibly being able to
+create them on the fly from outlines. Either way, the client application
+should be able to specify it really wants this kind of font or not (reasons
+of performance, quality issues, just applied for larger sizes, etc.).
+
+The supplied integer-string gives either the number of color planes or the
+number of gray levels to use, TBD.
+
+Outline <code>
+
+Although not always typographically correct, outline fonts are often
+generated by applying a given stroke weight to be used for tracing the
+outline of an outline font (large bitmap screen font outlines could be
+synthesized).
+
+It is recommended that the relative encoding conventions be adopted for the
+stroke weight, to remove EM relative unit considerations from client
+applications' responsibility.
+
+The possible values are:
+
+	1	-UltraLight
+	2	-ExtraLight
+	3	-Light	
+	4	-SemiLight 
+	5	-Medium (Normal, Regular, ...)
+	6	-SemiBold (DemiBold, ...)
+	7	-Bold	
+	8	-ExtraBold (Heavy, ...)
+	9	-UltraBold (Black, ...)
+
+Oblique [+|-] <integer-string>
+
+Oblique is not the same as italic, it is rather a digital distortion
+performed on an existing roman font (outline or bitmap). Often used by
+publishing applications to obtain "funny-looking" type effects for display
+pointsizes. Integer string is the signed angle of the oblique, relative to
+the 3:00 position, measured positive in counterclockwise direction in
+deci-degrees. Almost always restricted to +/- 45 degrees.
+
+Rotation [+|-] <integer-string>
+
+The orientation of all the glyphs in the font, i.e., their rotation angle
+around the EM (char cell) origin. Integer string is the signed angle of the
+rotation, relative to the 3:00 position, measured positive in the
+counterclockwise direction in deci-degrees.
+
+ScaleWidth <integer-string>
+
+An integer string giving the percentage of normal that the font is to be
+scaled horizontally, in 1/10th percent (1000 is normal). This attribute is
+supplied primarily for continuously scaled outline fonts.

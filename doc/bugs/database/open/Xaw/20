@@ -1,0 +1,62 @@
+Return-Path: masscomp!mouse!mitch@eddie.mit.edu
+Received: by EXPO.lcs.mit.edu; Sat, 9 Jul 88 14:19:30 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA23558@EDDIE.MIT.EDU>; Sat, 9 Jul 88 14:17:41 EDT
+Received: from localhost by mouse.masscomp.com id aa01469; 6 Jul 88 15:35 EDT
+To: masscomp!mit-eddie!expo.lcs.mit.edu!xbugs@mouse.masscomp.com
+Cc: mitch@mouse.masscomp.com
+Subject: Label widget Redisplay (Xaw/Label.c)
+Date: Wed, 06 Jul 88 15:35:17 -0400
+From: mitch@mouse.masscomp.com
+Message-Id:  <8807061535.aa01469@mouse.masscomp.com>
+
+### bug number:   760
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+e-mail: uunet!masscomp!mitch
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	MASSCOMP 5400
+
+CLIENT OPERATING SYSTEM:
+	RTU (Unix)
+
+DISPLAY:
+	GA1000
+
+SYNOPSIS:
+	When a label widget is resized, you sometimes wind up with the label
+	string "double-printed".
+
+DESCRIPTION:
+	When a label widget is resized, it sometimes recalculates the label
+	y position in a manner that is inconsistent with the way the server
+	moves the widget's window contents under the influence of center
+	bit gravity.  This results in the server moving the label string
+	and then the label widget's repainting the string one pixel lower on
+	the screen.  The result is looks like seeing double (except vertically).
+
+REPEAT-BY:
+	Run the xwidgets toolkit example and reposition the border below
+	the "at least one of everything!" label widget.  If you do this a
+	couple of times, each time moving it down one pixel, you will eventually
+	see this effect.
+
+FIX:
+	A simple minded fix I did was to add an XClearWindow call to the
+	Redisplay routine in the label widget (Xaw/Label.c).  I didn't see
+	any other way around it because the server calculates the new y
+	position of data for resized windows by halving the height change
+	and adding it to the old y value, but the label widget Resize function
+	calculates a new y by halving (widget height - label height).  Round
+	off effects in the two situations are different and, in general,
+	not related:  whether the height change is odd has no bearing on
+	whether (widget height - label height) is odd.
+

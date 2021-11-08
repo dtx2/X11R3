@@ -1,0 +1,15 @@
+       INCLUDES = -I. -I$(BDFTOSNFSRC) -I$(TOP) -I$(SERVERSRC)/include
+           SRCS = mkfontdir.c fontdir.c snf_util.c
+           OBJS = mkfontdir.o fontdir.o snf_util.o
+LOCAL_LIBRARIES = $(XMULIB)
+   FONT_DEFINES = FontDefines FontFilters
+
+
+#undef InstallManPage
+#define InstallManPage(file,dest)  /* as nothing */
+
+ComplexProgramTarget(mkfontdir)
+
+SpecialObjectRule(mkfontdir.o,$(ICONFIGFILES),$(FONT_DEFINES))
+
+InstallManPageLong(mkfntdir,$(MANDIR),mkfontdir)

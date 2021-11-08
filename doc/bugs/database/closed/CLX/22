@@ -1,0 +1,39 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 16:10:35 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 179346; Thu 17-Mar-88 16:09:30 EST
+Date: Thu, 17 Mar 88 16:09 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: XLIB::EVENT-DISPATCH
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com, york@alderaan.scrc.symbolics.com
+Message-Id: <19880317210929.4.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+### bug number:   161
+### area:         CLX
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	There is a typo in XLIB::EVENT-DISPATCH.
+
+DESCRIPTION:
+	The line "(dolist (event all-events)" should read
+"(dolist (event true-events)".
+
+REPEAT-BY:
+	Compile some CLX code.
+

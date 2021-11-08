@@ -1,0 +1,67 @@
+Return-Path: apollo!dpg@eddie.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 16 Jun 88 11:59:31 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA06679@EDDIE.MIT.EDU>; Thu, 16 Jun 88 11:58:09 EDT
+Received: by apollo.UUCP id AA00093; Thu, 16 Jun 88 10:31:31 edt
+From: David Gorgen <apollo!dpg@eddie.mit.edu>
+Message-Id: <8806161431.AA00093@apollo.UUCP>
+Date: Thu, 16 Jun 88 10:19:10 EDT
+Subject: Xlib bug in XLookupString
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   610
+### area:         Xlib
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	any
+
+CLIENT OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	Apollo
+
+SYNOPSIS:
+	XLookupString in Xlib does not properly handle vendor-private keysyms.
+
+DESCRIPTION:
+	XLookupString ignores the high-order 2 bytes of the keysym value,
+	and assumes they are zero.  If a vendor-private keysym with bit 29
+	turned on happens to match a standard keysym in the low 16 bits, it
+	will be taken to be that standard keysym.
+
+REPEAT-BY:
+	Define some new keysym with bit 29 on, like:
+
+#define apXK_Paste              0x1000FF04
+
+	Get this into the ks_names.h file and rebuild Xlib, and some client
+	like xterm.  Now if you bind this to some key and type that key in
+	the xterm, you will get control-D!!!
+
+FIX:
+	Note this is with respect to the R2 version of XKeyBind.c, i.e. before
+	any patches (like patch 20) are applied.
+
+        Is there any symbol defined for the vendor-private bit in a keysym
+        value (i.e. 0x10000000)?  I couldn't find one in a cursory inspection.
+
+*** lib/X/XKeyBind.c	Thu Mar  3 15:37:00 1988
+--- XKeyBind.c	Wed Jun 15 16:58:21 1988
+***************
+*** 239,244 ****
+--- 239,245 ----
+  	    if ( IsModifierKey(symbol)   || IsCursorKey(symbol)
+  		|| IsPFKey (symbol)      || IsFunctionKey(symbol)
+  		|| IsMiscFunctionKey(symbol)
++ 		|| (symbol & 0x10000000)
+  		|| (symbol == XK_Multi_key) || (symbol == XK_Kanji))  return 0;
+              buf[0] = byte4;
+  	    /* if X keysym, convert to ascii by grabbing low 7 bits */
+
+-------
+

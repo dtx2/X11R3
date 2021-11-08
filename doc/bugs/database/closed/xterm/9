@@ -1,0 +1,174 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Wed, 6 Apr 88 17:12:49 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8804062112.AA04541@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: xterm should allow tailoring of line cutting [with fix]
+Date: Wed, 06 Apr 88 17:12:48 EDT
+
+### bug number:   323
+### area:         xterm
+### severity:     
+### assigned to:  jim
+### status:       closed
+### comments:     fix supplied
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+AREA:
+	xterm
+
+SYNOPSIS:
+	xterm should allow the user to specify how to do line cuts.
+
+DESCRIPTION:
+	Many users prefer multiclick line cuts NOT to cut the newline.  Also,
+	it would be nice to be able to specify that multiclick line cuts NOT
+	cut back to the beginning of the line so that you can easily grab the
+	rest of a line.
+
+REPEAT-BY:
+	Look at the code; multiclick line cut.
+
+FILES:
+	clients/xterm/button.c
+	clients/xterm/charproc.c
+	clients/xterm/main.c
+	clients/xterm/ptyx.h
+
+FIX:
+	The following patches add support for the cutNewline and 
+	cutToBeginningOfLine resources as well as the corresponding
+	-cn and -cb flags.
+
+*** /tmp/,RCSt1a04493	Wed Apr  6 17:07:53 1988
+--- button.c	Wed Apr  6 17:00:00 1988
+***************
+*** 729,737 ****
+  			}
+  			break;
+  		case SELECTLINE :
+! 			startSCol = 0;
+! 			endSCol = 0;
+! 			++endSRow;
+  			break;
+  	}
+  	TrackText(startSRow, startSCol, endSRow, endSCol);
+--- 729,741 ----
+  			}
+  			break;
+  		case SELECTLINE :
+! 			if (term->screen.cutToBeginningOfLine) startSCol = 0;
+! 			if (term->screen.cutNewline) {
+! 			    endSCol = 0;
+! 			    ++endSRow;
+! 			} else {
+! 			    endSCol = LastTextCol(endSRow) + 1;
+! 			}
+  			break;
+  	}
+  	TrackText(startSRow, startSCol, endSRow, endSCol);
+*** /tmp/,RCSt1a04498	Wed Apr  6 17:07:56 1988
+--- charproc.c	Wed Apr  6 16:59:33 1988
+***************
+*** 62,67 ****
+--- 62,69 ----
+  #define XtNcharClass		"charClass"
+  #define	XtNcurses		"curses"
+  #define	XtNcursorColor		"cursorColor"
++ #define XtNcutNewline		"cutNewline"
++ #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
+  #define XtNgeometry		"geometry"
+  #define XtNtekGeometry		"tekGeometry"
+  #define	XtNinternalBorder	"internalBorder"
+***************
+*** 90,95 ****
+--- 92,99 ----
+  #define	XtCC132			"C132"
+  #define XtCCharClass		"CharClass"
+  #define	XtCCurses		"Curses"
++ #define XtCCutNewline		"CutNewline"
++ #define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
+  #define XtCGeometry		"Geometry"
+  #define	XtCJumpScroll		"JumpScroll"
+  #define	XtCLogfile		"Logfile"
+***************
+*** 178,183 ****
+--- 182,193 ----
+  {XtNcurses, XtCCurses, XtRBoolean, sizeof(Boolean),
+  	XtOffset(XtermWidget, screen.curses),
+  	XtRBoolean, (caddr_t) &defaultFALSE},
++ {XtNcutNewline, XtCCutNewline, XtRBoolean, sizeof(Boolean),
++ 	XtOffset(XtermWidget, screen.cutNewline),
++ 	XtRBoolean, (caddr_t) &defaultTRUE},
++ {XtNcutToBeginningOfLine, XtCCutToBeginningOfLine, XtRBoolean, sizeof(Boolean),
++ 	XtOffset(XtermWidget, screen.cutToBeginningOfLine),
++ 	XtRBoolean, (caddr_t) &defaultTRUE},
+  {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
+  	XtOffset(XtermWidget, core.background_pixel),
+  	XtRString, "White"},
+***************
+*** 1795,1800 ****
+--- 1805,1812 ----
+     new->misc.re_verse = request->misc.re_verse;
+     new->screen.multiClickTime = request->screen.multiClickTime;
+     new->screen.charClass = request->screen.charClass;
++    new->screen.cutNewline = request->screen.cutNewline;
++    new->screen.cutToBeginningOfLine = request->screen.cutToBeginningOfLine;
+  
+      /*
+       * set the colors if reverse video; this is somewhat tricky since
+*** /tmp/,RCSt1a04504	Wed Apr  6 17:08:01 1988
+--- main.c	Wed Apr  6 16:57:54 1988
+***************
+*** 173,179 ****
+--- 173,183 ----
+  {"-132",	"*c132",	XrmoptionNoArg,		(caddr_t) "on"},
+  {"+132",	"*c132",	XrmoptionNoArg,		(caddr_t) "off"},
+  {"-b",		"*internalBorder",XrmoptionSepArg,	(caddr_t) NULL},
++ {"-cb",		"*cutToBeginningOfLine", XrmoptionNoArg, (caddr_t) "off"},
++ {"+cb",		"*cutToBeginningOfLine", XrmoptionNoArg, (caddr_t) "on"},
+  {"-cc",		"*charClass",	XrmoptionSepArg,	(caddr_t) NULL},
++ {"-cn",		"*cutNewline",	XrmoptionNoArg,		(caddr_t) "off"},
++ {"+cn",		"*cutNewline",	XrmoptionNoArg,		(caddr_t) "on"},
+  {"-cr",		"*cursorColor",	XrmoptionSepArg,	(caddr_t) NULL},
+  {"-cu",		"*curses",	XrmoptionNoArg,		(caddr_t) "on"},
+  {"+cu",		"*curses",	XrmoptionNoArg,		(caddr_t) "off"},
+***************
+*** 612,618 ****
+  " [-i] [-j] [-l] [-lf logfile] [-ls] [-mb] [-ms mouse_color] \\\n",
+  " [-n name] [-nb bell_margin] [-rv] [-rw] [-s] [-mc msecs]\\\n",
+  " [-sb] [-si] [-sk] [-sl save_lines] [-sn] [-st] [-T title] [-t] [-tb] \\\n",
+! " [-vb] [=[width]x[height][[+-]xoff[[+-]yoff]]] \\\n",
+  " [%[width]x[height][[+-]xoff[[+-]yoff]]] [#[+-]xoff[[+-]yoff]] \\\n",
+  " [-e command_to_exec]\n\n",
+  "Fonts must be of fixed width and of same size;\n",
+--- 616,622 ----
+  " [-i] [-j] [-l] [-lf logfile] [-ls] [-mb] [-ms mouse_color] \\\n",
+  " [-n name] [-nb bell_margin] [-rv] [-rw] [-s] [-mc msecs]\\\n",
+  " [-sb] [-si] [-sk] [-sl save_lines] [-sn] [-st] [-T title] [-t] [-tb] \\\n",
+! " [-vb] [-cn] [-cb] [=[width]x[height][[+-]xoff[[+-]yoff]]] \\\n",
+  " [%[width]x[height][[+-]xoff[[+-]yoff]]] [#[+-]xoff[[+-]yoff]] \\\n",
+  " [-e command_to_exec]\n\n",
+  "Fonts must be of fixed width and of same size;\n",
+*** /tmp/,RCSt1a04509	Wed Apr  6 17:08:03 1988
+--- ptyx.h	Wed Apr  6 16:56:20 1988
+***************
+*** 327,332 ****
+--- 327,334 ----
+  	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
+  	int		multiClickTime;	 /* time between multiclick selects */
+  	char		*charClass;	/* for overriding word selection */
++ 	Boolean		cutNewline;	/* whether or not line cut has \n */
++ 	Boolean		cutToBeginningOfLine;  /* line cuts to BOL? */
+  } TScreen;
+  
+  /* meaning of bits in screen.select flag */
+

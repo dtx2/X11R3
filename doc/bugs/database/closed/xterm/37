@@ -1,0 +1,50 @@
+Return-Path: @MC.LCS.MIT.EDU:jim@vx.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 26 Apr 88 11:28:20 EDT
+Message-Id: <8804261528.AA20090@EXPO.LCS.MIT.EDU>
+Received: from VX.LCS.MIT.EDU by MC.LCS.MIT.EDU via Chaosnet; 26 APR 88  11:29:07 EDT
+Received: by VX.LCS.MIT.EDU with sendmail-4.12/4.8 id <AA21729@VX.LCS.MIT.EDU>; Tue, 26 Apr 88 11:25:26 edt
+Date: Tue, 26 Apr 88 11:25:26 edt
+From: Jim Fulton <jim@vx.lcs.mit.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Bug in xterm DECCOLM handling
+
+### bug number:   419
+### area:         xterm
+### severity:     low
+### comments:     this is a repeat of 656 (which has an example)
+
+Path: mit-vax!bloom-beacon!tut.cis.ohio-state.edu!mailrus!umix!uunet!mcvax!ukc!stl!stc!btnix!nwinton
+From: nwinton@btnix.UUCP (Neil Winton)
+Newsgroups: comp.windows.x
+Subject: Bug in xterm DECCOLM handling
+Keywords: xterm bug
+Message-ID: <734@btnix.UUCP>
+Date: 25 Apr 88 16:41:45 GMT
+Lines: 24
+
+There appears to be a bug in X11R2 xterm's handling of the DECCOLM (change
+from 132 to 80 columns or vice versa) escape sequence.  If xterm is invoked
+with the `-132' option then the window does indeed respond to the DECCOLM
+escape sequence and resize from 80x24 to 132x24.  Unfortunately, however,
+text is wrapped at 80 columns!  I have tried a number of fixes, none of which
+have been successful and I'm not (yet) enough of an X hacker to understand
+what's going on.
+
+One workaround that I have found is to manually fiddle with the window size
+after entering 132 mode.  After the resulting resize event has been seen
+by the window everything seems fine.  Unfortunately, and very curiously,
+however, switching into 132 mode seems to cause xterm to lose cognisance of
+the screen size in characters and it reports the resizing information in
+pixles instead!
+
+Has anyone else come across this/fixed this problem?
+
+	Neil
+
+E-Mail (UUCP)  NWinton@axion.bt.co.uk  (...!uunet!mcvax!ukc!axion!nwinton)
+Organisation   British Telecom Research Laboratories (RT3134)
+Snail Mail     BTRL, Rm 23 B68, Martlesham Heath, IPSWICH IP5 7RE, UK
+Telephone      +44 473 646079 (or +44 473 643210)
+*** This line intentionally left justified ***
+
+

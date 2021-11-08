@@ -1,0 +1,121 @@
+Return-Path: Richard.Draves@rpd.camelot.cs.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 22 Aug 88 01:35:43 EDT
+Received: from RPD.CAMELOT.CS.CMU.EDU by RPD.CAMELOT.CS.CMU.EDU; 22 Aug 88 01:34:48 EDT
+To: xbugs@expo.lcs.mit.edu
+Cc: zs01+@andrew.cmu.edu
+Subject: bug in aedCopyArea
+Date: Mon, 22 Aug 88 01:34:42 EDT
+Message-Id: <9433.588231282@RPD.CAMELOT.CS.CMU.EDU>
+From: Richard.Draves@rpd.camelot.cs.cmu.edu
+
+### bug number:   894
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	Viking/AED
+
+SYNOPSIS:
+	aedCopyArea doesn't call miSendNoExpose when it should
+
+DESCRIPTION:
+	The symptom is that if xterm scrolls while it is iconified,
+	the next scroll operation freezes xterm.  This is because
+	it never receives confirmation from the server that the first
+	scroll is finished; it loops waiting for an event that never
+	comes.  It handles expose events but ignores keyboard events.
+
+FIX:
+	The problem is that in some paths through aedCopyArea, when it
+	decides it doesn't actually have to do any work, it doesn't
+	call miSendNoExpose.  This also fixes a memory leak in aedCopyArea.
+	This also has a fix to aedCopyAreaFromPix which I picked up
+	from the ITC's sources and which I assume comes from IBM.  It
+	was calling miHandleExposures instead of miSendNoExpose.
+
+*** /afs/cs/archive/X.V11R2-source/server/ddx/ibm/aed/aedcparea.c	Fri Feb  5 15:04:25 1988
+--- server/ddx/ibm/aed/aedcparea.c	Wed Aug 17 21:16:01 1988
+***************
+*** 114,121 ****
+      BoxPtr pboxTmp, pboxNext, pboxBase, pboxNew1, pboxNew2;
+  				/* temporaries for shuffling rectangles */
+  
+!     if (!(pGC->planemask & 1))
+  	return;
+  
+      /*
+       * If the destination drawable is not a window then call the mi version.
+--- 114,123 ----
+      BoxPtr pboxTmp, pboxNext, pboxBase, pboxNew1, pboxNew2;
+  				/* temporaries for shuffling rectangles */
+  
+!     if (!(pGC->planemask & 1)) {
+! 	miSendNoExpose(pGC);
+  	return;
++     }
+  
+      /*
+       * If the destination drawable is not a window then call the mi version.
+***************
+*** 171,178 ****
+      prgnDst = miRegionCreate(&srcBox, 1);
+      miIntersect(prgnDst, prgnDst, prgnSrcClip);
+  
+!     if (!((WindowPtr)pDstDrawable)->realized)
+! 	return;
+      dstx += ((WindowPtr)pDstDrawable)->absCorner.x;
+      dsty += ((WindowPtr)pDstDrawable)->absCorner.y;
+  
+--- 173,182 ----
+      prgnDst = miRegionCreate(&srcBox, 1);
+      miIntersect(prgnDst, prgnDst, prgnSrcClip);
+  
+!     if (!((WindowPtr)pDstDrawable)->realized) {
+! 	miSendNoExpose(pGC);
+! 	goto freeRegions;
+!     }
+      dstx += ((WindowPtr)pDstDrawable)->absCorner.x;
+      dsty += ((WindowPtr)pDstDrawable)->absCorner.y;
+  
+***************
+*** 290,295 ****
+--- 294,300 ----
+  		          origSource.width, origSource.height,
+  		          origDest.x, origDest.y);
+  		
++ freeRegions:
+      miRegionDestroy(prgnDst);
+      if (realSrcClip)
+  	miRegionDestroy(prgnSrcClip);
+***************
+*** 401,411 ****
+  
+      if (!prgnDst->numRects)
+      {
+! 	if (((mfbPrivGC *)(pGC->devPriv))->fExpose)
+! 	    miHandleExposures(pSrcDrawable, pDstDrawable, pGC,
+! 			      origSource.x, origSource.y,
+! 			      origSource.width, origSource.height,
+! 			      origDest.x, origDest.y);
+  	(*pGC->pScreen->RegionDestroy)(prgnDst);
+  	if (realSrcClip)
+  	    (*pGC->pScreen->RegionDestroy)(prgnSrcClip);
+--- 406,412 ----
+  
+      if (!prgnDst->numRects)
+      {
+! 	miSendNoExpose(pGC);
+  	(*pGC->pScreen->RegionDestroy)(prgnDst);
+  	if (realSrcClip)
+  	    (*pGC->pScreen->RegionDestroy)(prgnSrcClip);
+

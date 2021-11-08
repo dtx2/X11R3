@@ -1,0 +1,41 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 16:28:19 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 181697; Mon 28-Mar-88 16:27:03 EST
+Date: Mon, 28 Mar 88 16:27 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: server/dix/colormap.c
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880328212707.4.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   271
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	Some static function declarations are missing.
+
+DESCRIPTION:
+	The static functions AllocDirect, AllocPseudo, AllocCP, and
+FreeCo are referenced before they are defined.  They need a static
+declaration at the top of the file if you really want them to be static
+and not default to extern.
+
+REPEAT-BY:
+	Compile the file.
+

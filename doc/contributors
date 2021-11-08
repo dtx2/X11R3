@@ -1,0 +1,125 @@
+Thanks to the Members and Affiliates of the MIT X Consortium for their
+financial support and technical contributions.
+
+Managerial Support (people without whose support and political battles
+current or past releases would never have materialized):
+
+Carol Berry, IBM
+Larry Breed, IBM
+Michael Dertouzos, MIT
+Sam Fuller, Digital
+Dan Geer, MIT
+Jeff Lane, Digital
+Rick LeFaivre, Tektronix
+Steve Lerman, MIT
+Al Lopez, Apollo
+Scott McGregor, Digital
+Jerry Saltzer, MIT
+Warren Teitelman, Sun
+Dave Verhoven, Tektronix
+Smokey Wallace, Digital
+
+Thanks also to DARPA, for supporting the research side of the X protocol.
+
+The people who made it happen, either with code or documentation; so
+many of these people worked on more than one major component of the
+system (toolkits, libraries, applications, servers) that we have not
+attempted to list people by component:
+
+Allen Akin, Digital
+Susan Angebranndt, Digital
+Paul Asente, Digital
+Don Bennett, HP
+Tom Benson, Digital
+Adam de Boor, UC Berkeley
+Todd Brunhoff, Tektronix
+Roman Budzianowski, MIT
+Richard Carling, Masscomp
+Colyn Case, Digital
+Ann Mei Chang, Digital
+Mike Chow, Digital
+Larry Church, Digital
+Bob Cline, HP
+Donna Converse, MIT
+Jeff Dike, Digital
+Raymond Drewry, Digital
+Jerry Farrell, Sun
+Burns Fisher, Digital
+Erik Fortune, IBM
+Jim Fulton, MIT
+Hania Gajewska, Digital
+Mike Gancarz, Digital
+Peter George, Digital
+Jim Gettys, Digital
+Dave Gorgen, Apollo
+Jackie Grandfield, Digital
+Joel Gringorten, Digital
+Phil Gust, HP
+Frank Hall, HP
+Peter Ham, Digital
+Jim Hamilton, Apollo
+Charles Haynes, Digital
+Scott Hennes, Apollo
+Harry Hersh, Digital
+Frances Ho, Sun
+Tom Houser, HP
+Rich Hyde, Digital
+John Irwin, Franz
+Richard Johnsson, Digital
+Phil Karlton, Digital
+Kathy Langone, Digital
+Mary Larson, Digital
+Geoff Lee, Sun
+Ed Lee, HP
+Michelle Leger, MIT
+Bob Leichner, HP
+Chris Lindblad, MIT
+Mark Manasse, Digital
+Stuart Marks, Sun
+Joel McCormack, Digital
+Rick McKay, HP
+Al Mento, Digital
+Don Mullis, Digital
+Hal Murray, Digital
+Todd Newman, Digital
+Ron Newman, MIT
+Mark Opperman, Sun
+LaMott Oren, TI
+Vince Orgovan, Digital
+Keith Packard, MIT
+Jack Palevich, HP
+Matt Pappas, MIT
+Chris Peterson, MIT
+Harry Phinney, HP
+Ram Rao, Digital
+Steve Reber, Apollo
+Loretta Guarino Reid, Digital
+David Rosenthal, Sun
+Robin Schaufler, Sun
+Bob Scheifler, MIT
+Mike Schwartz, Sun
+Dave Serisky, HP
+Alok Singhania, Sun
+Ralph Swick, MIT, Digital
+Al Tabayoyon, Apollo
+Fred Taft, HP
+Bob Terek, Apollo
+Leo Treggiari, Digital
+Jake VanNoy, Digital
+Pam Verno, Digital
+Smokey Wallace, Digital
+Jeff Weinstein, IBM
+Terry Weissman, Digital
+Ted Wilson, HP
+Al Wojtas, Digital
+Helen Wong, Sun
+
+The student staff at MIT Project Athena who helped in converting
+client applications and parts of libraries to the new protocol:
+
+Mark Lillibridge
+Rob French
+John Kohl
+Paul Rubin
+Chris Casey
+David Krikorian

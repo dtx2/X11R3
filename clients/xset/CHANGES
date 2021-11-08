@@ -1,0 +1,5 @@
+The following changes have been made to this directory since R2:
+
+     o  new options -fp, fp-, +fp, fp+ for editting font path.
+     o  new option fp= path to replace fp path.
+     o  new option fp rehash to cause server to reread font databases.

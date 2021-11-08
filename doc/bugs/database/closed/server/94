@@ -1,0 +1,84 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:toddb%tekcrl.crl@tektronix.tek.com
+Received: by EXPO.LCS.MIT.EDU; Thu, 12 May 88 01:35:52 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Thu 12 May 88 01:33:09-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ak02141; 11 May 88 22:01 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id ak12167; 11 May 88 21:41 EDT
+Received: by tektronix.TEK.COM (5.51/6.24)
+	id AA20933; Wed, 11 May 88 17:26:51 PDT
+Received: by tekcrl.CRL.TEK.COM (5.51/6.24)
+	id AA17901; Wed, 11 May 88 17:25:59 PDT
+Message-Id: <8805120025.AA17901@tekcrl.CRL.TEK.COM>
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.tek.com
+Subject: Dash value not checked in CreateGC or ChangeGC
+Date: 11 May 88 17:25:57 PDT (Wed)
+From: Todd Brunhoff <toddb%tekcrl.CRL@tektronix.tek.com>
+
+### bug number:   485
+### area:         server
+### severity:     low
+### comments:     
+
+Al, this is bug track id XWS00021
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Dash value not checked in CreateGC or ChangeGC
+		
+DESCRIPTION:
+	Under CreateGC, the protocol sez that the dashes value must be
+	non-zero, else a value error.  But the code in server/dix/gc.c
+	does not check the value at all.
+	
+REPEAT-BY:
+	Set the dashes value in a ChangeGC or CreateGC request to 0...
+	the sample server doesn't complain.
+FIX:
+
+*** /tmp/,RCSt1018872	Wed May 11 16:09:31 1988
+--- gc.c	Wed May 11 15:14:17 1988
+***************
+*** 348,358
+  		pval++;
+  		break;
+  	    case GCDashList:
+! 		xfree(pGC->dash);
+! 		pGC->numInDashList = 2;
+! 		pGC->dash = (unsigned char *)xalloc(2 * sizeof(unsigned char));
+! 		pGC->dash[0] = (CARD8)(*pval);
+! 		pGC->dash[1] = (CARD8)(*pval++);
+  		break;
+  	    case GCArcMode:
+  		if (((CARD8)*pval >= ArcChord) 
+
+--- 348,368 -----
+  		pval++;
+  		break;
+  	    case GCDashList:
+! 		if ((CARD8)*pval != 0)
+! 		{
+! 		    xfree(pGC->dash);
+! 		    pGC->numInDashList = 2;
+! 		    pGC->dash = (unsigned char *)
+! 			xalloc(2 * sizeof(unsigned char));
+! 		    pGC->dash[0] = (CARD8)(*pval);
+! 		    pGC->dash[1] = (CARD8)(*pval);
+! 		}
+! 		else
+! 		{
+! 		    clientErrorValue = (CARD8)*pval;
+! 		    error = BadValue;
+! 		}
+! 		pval++;
+  		break;
+  	    case GCArcMode:
+  		if (((CARD8)*pval >= ArcChord) 
+
+---------------
+Usenet:       {ucbvax,decvax,allegra,uw-beaver,hplabs}!tektronix!crl!toddb
+{CS,ARPA}net: toddb%crl.tek.csnet@relay.cs.net                       c--Q Q
+US:           Todd Brunhoff; Visual Systems Lab; Tektronix, Inc.         `
+              Box 500  MS 50-662, Beaverton OR 97077                     -
+Phone:        (503) 627-1121
+

@@ -1,0 +1,106 @@
+Return-Path: kddlab!kitt1.ws.sony.junet!michael@uunet.uu.net
+Received: from uunet.UU.NET by EXPO.LCS.MIT.EDU; Tue, 29 Mar 88 17:38:03 EST
+Received: from kddlab.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA20307; Tue, 29 Mar 88 17:37:12 EST
+Received: by kddlab.kddlabs.junet (4.12/6.2Junet)
+	id AA05371; Wed, 30 Mar 88 00:24:54+0900
+Received: from sonygw.sony.junet (sonygw.ARPA) by sonyve.isrc.sony.junet (1.2/6.3Junet-1.0)
+	id AA08315; Tue, 29 Mar 88 23:32:43+0900
+Received: by sonygw.sony.junet (5.51/6.3Junet-1.0)
+	id AA01101; Tue, 29 Mar 88 23:31:46+0900
+Received: from wsgw.ws.sony.junet (tko2.ARPA) by sonyvd.drc.sony.junet (4.12/6.3Junet-1.0)
+	id AA28412; Tue, 29 Mar 88 23:08:17+0900
+Received: from kitt1.ws.sony.junet (kitt1.ARPA) by wsgw.ws.sony.junet (4.12/6.3Junet-1.0)
+	id AA07624; Tue, 29 Mar 88 23:10:00 jst
+Received: from localhost.ARPA by kitt1.ws.sony.junet (4.12/6.3Junet-1.0)
+	id AA17844; Tue, 29 Mar 88 23:09:56 jst
+Return-Path: <michael@kitt1.ws.sony.junet>
+Message-Id: <8803291409.AA17844@kitt1.ws.sony.junet>
+To: xbugs@expo.lcs.mit.edu
+From: kddlab!uunet.uu.net!ws.sony.junet!michael@uunet.uu.net (Michael Knight)
+Organization: Knight Foundation.
+Return-Receipt-To: kddlab!uunet.uu.net!ws.sony.junet!michael@uunet.uu.net
+Subject: xterm bugs.
+Date: Tue, 29 Mar 88 23:09:54 +0900
+Sender: kddlab!kitt1.ws.sony.junet!michael@uunet.uu.net
+
+### bug number:   280
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sony NEWS
+
+CLIENT OPERATING SYSTEM:
+	NEWS-OS 3.0 (4.3BSD)
+
+DISPLAY:
+	NWB-225 (1280x1024 8 plane color display)
+
+SYNOPSIS:
+	WM_NORMAL_HINTS did not set true after ScrollBar on.
+
+DESCRIPTION:
+
+REPEAT-BY:
+	uwm did not resize xterm window correct after ScrollBar on.
+
+FIX:
+*** /tmp/,RCSt1017758	Tue Mar 29 22:55:10 1988
+--- /tmp/,RCSt2017758	Tue Mar 29 22:55:11 1988
+***************
+*** 1,8 ****
+  #ifndef lint
+! static char rcsid[] = "$Header: scrollbar.c,v 1.1 88/03/29 01:44:13 michael Exp $ Sony Corporation";
+  #endif
+  /*
+   * $Log:	scrollbar.c,v $
+   * Revision 1.1  88/03/29  01:44:13  michael
+   * Initial revision
+   * 
+--- 1,11 ----
+  #ifndef lint
+! static char rcsid[] = "$Header: scrollbar.c,v 1.2 88/03/29 13:46:52 michael Exp $ Sony Corporation";
+  #endif
+  /*
+   * $Log:	scrollbar.c,v $
++  * Revision 1.2  88/03/29  13:46:52  michael
++  * WM_NORMAL_HINTS did not set ture if Scrollbar on.
++  * 
+   * Revision 1.1  88/03/29  01:44:13  michael
+   * Initial revision
+   * 
+***************
+*** 88,95 ****
+  	sizehints.height = FontHeight(screen) * (screen->max_row + 1)
+  				+ min_height;
+  	sizehints.flags |= PMinSize|PResizeInc|PSize;
+- 	XSetSizeHints(screen->display,
+- 	 XtWindow(xw->core.parent), &sizehints, XA_WM_NORMAL_HINTS);
+  	XUngrabServer(screen->display);
+  
+  	XGetWindowAttributes( screen->display, TextWindow(screen),
+--- 91,96 ----
+***************
+*** 110,115 ****
+--- 111,118 ----
+  	    (unsigned) FontHeight(screen) * (screen->max_row + 1) + min_height,
+              &junk, &junk);
+  
++ 	XSetSizeHints(screen->display,
++ 	 XtWindow(xw->core.parent), &sizehints, XA_WM_NORMAL_HINTS);
+  	/* wait for a window manager to actually do it */
+  	XIfEvent( screen->display, &event, IsEventType, ConfigureNotify );
+  
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ Hideo Irie (Micheal Knight)	JUNET: michael@ws.sony.junet
+				UUNET: michael%ws.sony.junet@uunet.uu.net
+ Work Station Division. SuperMicro Systems Group. Sony Corp.
+ 6-7-35 Kitasinagawa Sinagawa-ku Tokyo JAPAN	TEL: 03(448)2111 ex-2907
+

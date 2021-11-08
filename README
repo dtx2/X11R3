@@ -1,0 +1,113 @@
+			     Release 3 at a Glance
+
+
+This is Version 11, Release 3 of the X Window System from MIT.  Make sure that
+you read the Release Notes (found in doc/releasenotes/) thoroughly before
+modifying anything.  Look at the X top level manual page (X.man in this
+directory) for general information on using X.
+
+
+Configuration
+
+This release has been compiled and run on the following configurations:
+
+	Sun 3/280 running SunOS 3.4
+	Sun 3/60 CG4, diskless running SunOS 3.4
+	Microvax II GPX running 4.3bsd
+	Microvax 3200 (Microvax III GPX) running Ultrix 3.0 (FT2)
+	Microvax 2000 monochrome and color running Ultrix 3.0 (FT2)
+	Microvax II Parallax running 4.3bsd
+	Hewlett-Packard 9000/350 topcat running HP-UX 6.01
+	Apple Macintosh II running A/UX
+	IBM PC/RT Megapel and apa16 running ACIS-4.3
+	Apollo DN3000 running DOMAIN/IX 9.7
+	Tektronix 4310 running UTEK 
+
+Since Makefiles are inherently unportable, this release uses a tool called
+"imake" to convert machine-independent descriptions (called Imakefiles) of what
+is to be build into machine-dependent Makefiles.  It is controlled by a variety
+of configuration parameters found in the directory util/imake.includes/.  The
+sample Makefiles included in the release are provided for bootstrapping and for
+systems that are unable to run imake.  See the file util/imake.includes/README
+for details on configuring X.
+
+If you are going to build the release on more than one machine and have a
+networked file system and symbolic links, you can save substantial amounts of
+disk space by building a shadow link tree that points to the master sources. 
+This has the added advantage of keeping your source tree as small as possible
+since object files elsewhere.  See util/scripts/lndir.sh and move contrib out
+of the way first.
+
+If the default configuration is acceptable, all you need to do is follow the
+directions in any server/ddx/*/README files that apply to you and type the
+following from the top level directory:
+
+	%  make World >& make.world
+
+Note the capitalization of World.  Do not name the output log file "make.log"
+as the build process deletes all files of that name. 
+
+Some systems will give compiler warnings, but the core distribution should 
+build without any significant errors.
+
+
+Installation
+
+Installation of this release is specifically designed to avoid conflict with
+X10 systems to allow you to use both on a single machine.  Furthermore, the
+installation is self contained in the following directories:
+
+	/usr/include/X11	for <X11/*.h> include files
+	/usr/bin/X11		executable programs
+	/usr/lib/X11		libraries, configuration files, fonts, etc.
+
+If your operating system supports symbolic links, you might want to create
+links for these three directories pointing to another partition.
+
+To install the release, type "make install >& make.install" (your redirection
+symbol may be different) as root from the top level directory.
+
+
+Since the "xinit" program (used to start the server and an initial terminal
+emulator) assumes that the default server to run is named "X", you'll want to
+create a symbolic link to the appropriate executable.  Thus, on a Sun you might
+want to do
+
+	# cd /usr/bin/X11
+	# ln -s Xsun X
+
+Site administrators are expected to provide user-friendly front ends to 
+xinit for their users.
+
+Check out the new xdm program.  It replaces xterm -L, is portable, very
+configurable, is provides a much prettier user interface.
+
+
+Testing it out
+
+Finally, make sure that /usr/bin/X11 (or wherever you set the BINDIR
+configuration parameter to) is in your path.  If everything is installed
+correctly, typing "xinit" should automatically start up the server and an
+initial xterm window.  If it doesn't, make sure that:
+
+	1.  there is link, script, or program in /usr/bin/X11 called X that
+	    starts the appropriate server for your system.
+
+	2.  xterm is setuid to root, if necessary.
+
+	3.  any site-specific fonts have been recompiled and mkfontdir
+	    run on them; check any applications and resources files for old
+	    X11 fonts (they have been moved to the user-contributed
+	    distribution).
+
+	4.  you follow any directions in the individual server/ddx 
+	    directories.
+
+	5.  you've read the Release Notes.
+
+
+
+Enjoy.
+
+	  "It's a window system named X, not a system named X Window"
+

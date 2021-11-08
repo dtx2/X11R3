@@ -1,0 +1,30 @@
+SRCS =	 apcgprfont.c apcbitblt.c apcbstore.c apcfill.c \
+         apcfillsp.c apcfont.pas apcgc.c apcgetsp.c apcmisc.c \
+         apcmskbits.c apcpixmap.c apcpushpxl.c apcscrinit.c \
+         apcsetsp.c apctext.c apcwindow.c apczerline.c
+
+
+OBJS =   apcgprfont.o apcbitblt.o apcbstore.o apcfill.o \
+         apcfillsp.o apcfont.bin apcgc.o apcgetsp.o apcmisc.o \
+         apcmskbits.o apcpixmap.o apcpushpxl.o apcscrinit.o \
+         apcsetsp.o apctext.o apcwindow.o apczerline.o
+
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+   INCLUDES = -I. -I.. -I../include -I../../../include -I$(INCLUDESRC)
+LINTLIBS = ../../../dix/llib-ldix.ln ../../../os/4.2bsd/llib-los.ln ../../mi/llib-lmi.ln
+
+all:: apcfont.bin
+
+NormalLibraryObjectRule()
+NormalLibraryTarget(apc,$(OBJS))
+
+apcfont.bin: apcfont.tar
+	-$(RM) apcfont.bin
+	tar -xvf apcfont.tar
+
+DependTarget()
+
+lintlib:
+
+NormalLintTarget($(SRCS))

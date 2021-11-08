@@ -1,0 +1,19 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu 
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:28:09 EST
+Date: Fri, 4 Mar 88 16:28 EST
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: query about #if defined()
+To: swick@athena.mit.edu, xbugs@expo.lcs.mit.edu
+In-Reply-To: <8803031449.AA12099@LYRE.MIT.EDU>
+Message-Id: <880304162830.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   30
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+The construct won't break anything, although it's kind of gross to have
+to check for ibm032 explicitly.  Is this better than the undefine hack
+in the .macros file?
+

@@ -1,0 +1,36 @@
+Return-Path: rfrench@athena.mit.edu
+Received: by expo.lcs.mit.edu; Sun, 28 Aug 88 15:55:57 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA28734; Sun, 28 Aug 88 15:56:06 EDT
+Received: by CAROLINGIA.MIT.EDU (5.45/4.7) id AA07490; Sun, 28 Aug 88 15:54:09 EDT
+Date: Sun, 28 Aug 88 15:54:09 EDT
+Message-Id: <8808281954.AA07490@CAROLINGIA.MIT.EDU>
+From: "Robert S. French" <rfrench@athena.mit.edu>
+Sender: rfrench@athena.mit.edu
+To: xbugs@expo.lcs.mit.edu
+Subject: X11R2: Xqdss server bug
+
+### bug number:   918
+### area:         server
+### severity:     low
+### comments:     
+
+
+X Version: X11R2
+
+Hardware: uVax w/8-plane QDSS.
+
+Problem:
+   Console messages printed while in the middle of a drawing operation
+cause the origin of the drawing operation to move.
+
+To reproduce:
+   Do a drawing operation that will take a reasonable amount of time,
+like an XDrawPoints with 10,000 points.  Cause a mesage to be printed
+on the console while the points are being draw.  The origin of the
+drawing operation will apparently change to (0,0) (relative to the
+root) in midstride, thus overwriting random things on the screen, and
+the next few operations performed will occur starting at (0,0) instead
+of the upper-left hand corner of the appropriate window.
+
+				Rob
+

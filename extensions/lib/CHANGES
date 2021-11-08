@@ -1,0 +1,7 @@
+The following changes have been made to this directory since R2:
+
+     o  ANSI preprocessor definitions have been added.
+     o  new video extension from Parallax Graphics has been added.
+     o  new input synthesis extension from the X Testing Consortium has
+	been added.
+

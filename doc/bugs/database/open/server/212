@@ -1,0 +1,57 @@
+Return-Path: amsdsg!jeff@uunet.uu.net
+Received: by expo.lcs.mit.edu; Wed, 17 Aug 88 10:39:48 EDT
+Received: from amsdsg.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA01476; Wed, 17 Aug 88 10:39:32 EDT
+Received: by amsdsg.uucp (5.51/HCX-2.2)
+	id AA10047; Wed, 17 Aug 88 09:34:17 EDT
+Date: Wed, 17 Aug 88 09:34:17 EDT
+From: amsdsg!jeff@uunet.uu.net (Jeff Barr)
+Message-Id: <8808171334.AA10047@amsdsg.uucp>
+To: uunet!expo.lcs.mit.edu!xbugs@uunet.uu.net
+
+### bug number:   882
+### area:         server
+### severity:     low
+### comments:     
+
+The attached bug report describes a problem I had, and a fix which
+I am not sure is correct (it works in our environment, but I'm not
+sure of the global implications).
+
+						Jeff Barr
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/60 
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	BW1
+
+SYNOPSIS:
+	When using UNIX-domain client <--> server communication, X creates
+	a socket named /tmp/.X11-unix/Xd (where d is the display number,
+	usually 0).  On a network with diskless nodes it is useful to share
+	/tmp among a number of machines.  This means that multiple machines
+	sharing /tmp and using X will overwrite each other's sockets.
+
+DESCRIPTION:
+	SYNOPSIS says it all.
+
+REPEAT-BY:
+	Have 2 machines sharing /tmp.  Start X on the first, then on the
+	second, using a DISPLAY value of "unix:0.0" on both.  On the
+	first machine, try to start an X client (e.g. xclock).  The
+	application will not start; it will report "unable to open display."
+
+FIX:
+	As a temporary fix, I inserted the hostname into the generated
+	socket name.  The change must be made in files
+	'server/os/4.2bsd/connection.c' and 'lib/X/XConnDis.c'.
+
+
+

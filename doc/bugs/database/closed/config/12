@@ -1,0 +1,44 @@
+Return-Path: jg@src.dec.com
+Received: from src.dec.com by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 16:43:51 EST
+Received: from jumbo.dec.com by src.dec.com (5.54.4/4.7.34)
+	id AA11936; Mon, 14 Mar 88 13:44:26 PST
+Received: from localhost by jumbo.dec.com (5.54.4/4.7.34)
+	id AA01036; Mon, 14 Mar 88 13:42:06 PST
+Message-Id: <8803142142.AA01036@jumbo.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: man page installation bug
+Date: Mon, 14 Mar 88 13:42:00 -0800
+From: jg@src.dec.com
+
+### bug number:   112
+### area:         config
+### severity:     
+### assigned to:  
+### status:       closed
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VAXstation 3200
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.2
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+	If /usr/man does not exist (for example, if you have a machine
+freashly installed, but without any manual pages, install fails.
+
+DESCRIPTION:
+	Installation fails on machines without /usr/man existing.
+
+REPEAT-BY:
+	Make sure /usr/man does not exist, then type "make install".
+
+FIX:
+	Have install create /usr/man
+

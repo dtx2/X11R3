@@ -1,0 +1,50 @@
+Return-Path: jlf%jlf.CRAY.COM@uc.msc.umn.edu
+Received: by EXPO.LCS.MIT.EDU; Tue, 19 Jul 88 18:00:56 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA21825; Tue, 19 Jul 88 16:59:35 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA13565; 3.2/CRI-2.9; Tue, 19 Jul 88 17:04:34 CDT
+Received: by jlf.cray.com
+	id AA04431; 3.2/CRI-2.9; Tue, 19 Jul 88 17:04:31 CDT
+Date: Tue, 19 Jul 88 17:04:31 CDT
+From: jlf%jlf.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8807192204.AA04431@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: XAllocColorCells porting bug
+Cc: bobo@jlf.cray.com, hrp@jlf.cray.com, wtg@jlf.cray.com
+
+### bug number:   736
+### area:         Xlib
+### severity:     low
+### comments:     [done -- jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	XAllocColorCells fails
+DESCRIPTION:
+	In reading the XAllocColorCells reply from the input buffer, 
+the code does not unpack the data to the user correctly.
+
+REPEAT-BY:
+	Running the Xlib test for XallocColorCells
+
+FIX:
+	Use XRead32 to unpack.  
+33,34c33,34
+< 	_XRead32 (dpy, (char *) pixels, 4L * (long) (rep.nPixels));
+< 	_XRead32 (dpy, (char *) masks, 4L * (long) (rep.nMasks));
+---
+> 	_XRead (dpy, (char *) pixels, 4L * (long) (rep.nPixels));
+> 	_XRead (dpy, (char *) masks, 4L * (long) (rep.nMasks));
+

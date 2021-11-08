@@ -1,0 +1,89 @@
+Return-Path: matt
+Received: by expo.lcs.mit.edu; Tue, 19 Jul 88 12:01:53 EDT
+From: matt@expo.lcs.mit.edu (Matt Pappas)
+Message-Id: <8807191601.AA02916@EXPO.LCS.MIT.EDU>
+To: bugs
+Cc: shep@allspice.lcs.mit.edu
+Subject: fixed bug in qdss qdcursor.c
+Date: Tue, 19 Jul 88 12:01:44 EDT
+
+### bug number:   709
+### area:         server
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	uVax 2/3 running berk 4.3 or ultrix 2.2/2.4
+
+DISPLAY:
+	DEC qdss (8 plane)
+
+AREA:
+	ddx/dec/qdss/qdcursor.c
+
+SYNOPSIS:
+	When a server is run on a non-console device (i.e. device minor
+number != 0), the cursor is invisible.  Server fine otherwise.
+
+DESCRIPTION:
+	The cursor_enable bit is never set in the dga csr, due to a bug
+in qdcursor.c.  The ifdef-ed code only happens for 24-plane systems.  (For no
+apparent or conceivable reason).  The appearance of this bug is somewhat
+sporadic, for if an x10 server was run beforehand, the cursor enable bit may
+already be set.
+
+REPEAT BY:
+	Running x11 on a non-console display directly after a cold boot always
+repeats the problem.
+
+FIX:
+--- qdcursor.c	Tue Jul 19 11:59:40 1988
+***************
+*** 192,200 ****
+          colors[1].red = pCurs->foreRed;
+          colors[1].green = pCurs->foreGreen;
+          colors[1].blue = pCurs->foreBlue;
+! #if NPLANES==24
+          dga->csr &= ~CURS_ENB;
+- #endif
+          qdStoreColors( NULL, 2, colors);
+      }
+      else  /*Vaxstar*/
+--- 192,199 ----
+          colors[1].red = pCurs->foreRed;
+          colors[1].green = pCurs->foreGreen;
+          colors[1].blue = pCurs->foreBlue;
+! 
+          dga->csr &= ~CURS_ENB;
+          qdStoreColors( NULL, 2, colors);
+      }
+      else  /*Vaxstar*/
+***************
+*** 242,251 ****
+  
+      ioctl( fd_qdss, QD_WTCURSOR, (short *)pCurs->devPriv[ pScr->myNum]);
+  
+! #if NPLANES==24
+!     dga->csr |= CURS_ENB;
+! #endif
+! 
+  }
+  
+  void
+--- 241,248 ----
+  
+      ioctl( fd_qdss, QD_WTCURSOR, (short *)pCurs->devPriv[ pScr->myNum]);
+  
+!     if (!Vaxstar)
+! 	dga->csr |= CURS_ENB;
+  }
+  
+  void
+

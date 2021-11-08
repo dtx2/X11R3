@@ -1,0 +1,38 @@
+Return-Path: Richard.Draves@rpd.camelot.cs.cmu.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Sun, 20 Mar 88 22:32:15 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA17191; Sun, 20 Mar 88 22:31:21 EST
+Message-Id: <8803210331.AA17191@ATHENA.MIT.EDU>
+Date: Sun, 20 Mar 88 22:28:58 EST
+From: Richard.Draves@rpd.camelot.cs.cmu.edu
+To: xbugs@athena.mit.edu
+Subject: bug in Sun server b/w colormap initialization
+
+### bug number:   186
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     similar to bug 185 for the RT
+
+This is a bug in sunBW2CreateColorMap (ddx/sun/sunBW2.c).  I don't
+think it manifests itself now.  (At least it doesn't on our Suns.)
+You may want to check the analogous functions for other displays.
+It looks like they were all copied from one source, and then the
+qvss got fixed and the others didn't.
+
+Rich
+
+*** server/ddx/sun/sunBW2.c	Mon Feb 29 00:37:32 1988
+--- /afs/cs.cmu.edu/os/source/usr/misc/.X11tra/src/X.V11R2/server/ddx/sun/sunBW2.c	Tue Mar 15 21:52:31 1988
+***************
+*** 179,184 ****
+--- 179,186 ----
+       * them in by hand.  If it were a more complex static map, it would be
+       * worth writing a for loop or three to initialize it */
+  
++     pix = 0;	/* start allocating with pixel 0 */
++ 
+      /* this will be pixel 0 */
+      red = green = blue = ~0;
+      AllocColor(pmap, &red, &green, &blue, &pix, 0);
+

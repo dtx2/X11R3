@@ -1,0 +1,61 @@
+Return-Path: henry@garp.mit.edu
+Received: by expo.lcs.mit.edu; Wed, 21 Sep 88 13:00:43 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA00142; Wed, 21 Sep 88 13:00:47 EDT
+Received: by GARP.MIT.EDU with sendmail-5.54/4.7 
+	id <AA05721@GARP.MIT.EDU>; Wed, 21 Sep 88 13:00:40 EDT
+Message-Id: <8809211700.AA05721@GARP.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: [<nlgilman@ATHENA.MIT.EDU: unhelpful error message ]
+Date: Wed, 21 Sep 88 13:00:37 EDT
+From: Henry Mensch <henry@garp.mit.edu>
+
+### bug number:   990
+### area:         xmodmap
+### severity:     low
+### comments:     it might be nice if it were to query the keyboard and somehow
+###               let you know which key(s) was(were) pressed
+
+i am able to duplicate this under X11R2 on the VAX 4.3BSD and RT/PC
+(AOS 4.3) platforms.
+
+-- Henry Mensch / MIT Project Athena Quality Assurance
+--------
+
+------- Forwarded Message
+
+Received: by E40-PO.MIT.EDU (5.45/4.7) id AA25317; Wed, 21 Sep 88 11:39:30 EDT
+From: <nlgilman@ATHENA.MIT.EDU>
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA28125; Wed, 21 Sep 88 11:35:57 EDT
+Received: by STEVE-DALLAS.MIT.EDU (5.45/4.7) id AA15663; Wed, 21 Sep 88 11:35:45 EDT
+Date: Wed, 21 Sep 88 11:35:45 EDT
+Message-Id: <8809211535.AA15663@STEVE-DALLAS.MIT.EDU>
+To: bugs@ATHENA.MIT.EDU
+Subject: unhelpful error message 
+
+On a 6.0c RT...
+
+I tried to run 
+xmodmap -l Caps_Lock +c Caps_Lock
+
+while caps lock was on, and it failed.  While this is reasonable
+behavior I got the following messages from xmodmap...
+
+xmodmap:  You have 2 seconds to lift your hands
+xmodmap:  You have 4 seconds to lift your hands
+xmodmap:  You have 8 seconds to lift your hands
+xmodmap:  You have 16 seconds to lift your hands
+xmodmap:  You have 32 seconds to lift your hands
+xmodmap:  unable to set modifier mapping, keyboard problem
+
+	While it is nice that it gives you a chance to change what is
+wrong, but as I wasn't depressing any keys I couldn't figure out what
+was wrong... If xmodmap is capable of detecting which key is
+"depressed," it would be nice if the error message changed when the
+offending key was a lock key, such as caps lock, num lock and such...
+
+
+Nancy Gilman
+
+------- End of Forwarded Message
+
+

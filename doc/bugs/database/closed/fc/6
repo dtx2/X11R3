@@ -1,0 +1,190 @@
+Return-Path: karlton@decwrl.dec.com
+Received: from sonora.dec.com ([128.45.1.52]) by expo.lcs.mit.edu; Thu, 31 Mar 88 09:52:02 EST
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA26323; Wed, 30 Mar 88 17:40:48 PST
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA25954; Wed, 30 Mar 88 17:40:43 PST
+Message-Id: <8803310140.AA25954@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: flowers%video.DEC@decwrl.dec.com
+Subject: font compiler should include font name as a property
+Date: Wed, 30 Mar 88 17:40:42 -0800
+From: Phil Karlton <karlton@decwrl.dec.com>
+
+### bug number:   302
+### area:         fc
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE: any
+
+CLIENT OPERATING SYSTEM: any
+
+DISPLAY: any
+
+SYNOPSIS: the FONT name is not one of the font properties
+
+DESCRIPTION:
+
+The string after the FONT declaration in a bdf file one of the more
+interesting things that applications would like to know. Right now it is being
+stuck into the FAMILY_NAME property if the latter is not specified in the
+property list in the file. It would be more appropriate to put into the FONT
+property.
+
+In particular, some FONT declarations include a size and this should not be
+part of the FAMILY_NAME. Other FONT declaraction (in particular on the MIT
+tape) seem to be file names. This is probably useless to most people. I
+certainly wouldn't call it the FAMILY_NAME property.
+
+REPEAT-BY: n/a
+
+FIX:
+
+*** /tmp/,RCSt1025932	Wed Mar 30 17:39:32 1988
+--- fc.c	Wed Mar 30 17:31:57 1988
+***************
+*** 1,4
+! /* $Header: fc.c,v 1.1 88/02/25 21:42:22 karlton Exp $ */
+  
+  #include <stdio.h>
+  #include <sys/file.h> 
+
+--- 1,4 -----
+! /* $Header: fc.c,v 1.6 88/01/31 17:57:21 rws Exp $ */
+  
+  #include <stdio.h>
+  #include <sys/file.h> 
+***************
+*** 216,221
+  
+  FontPropPtr pointSizeProp = NULLPROP;
+  FontPropPtr familyProp = NULLPROP;
+  FontPropPtr resolutionProp = NULLPROP;
+  FontPropPtr xHeightProp = NULLPROP;
+  FontPropPtr weightProp = NULLPROP;
+
+--- 216,222 -----
+  
+  FontPropPtr pointSizeProp = NULLPROP;
+  FontPropPtr familyProp = NULLPROP;
++ FontPropPtr fontProp = NULLPROP;
+  FontPropPtr resolutionProp = NULLPROP;
+  FontPropPtr xHeightProp = NULLPROP;
+  FontPropPtr weightProp = NULLPROP;
+***************
+*** 253,258
+      }
+      else if (streq(pfp->name , "POINT_SIZE"))
+  	pointSizeProp = pfp;
+      else if (streq(pfp->name , "FAMILY_NAME"))
+  	familyProp = pfp;
+      else if (streq(pfp->name , "RESOLUTION"))
+
+--- 254,261 -----
+      }
+      else if (streq(pfp->name , "POINT_SIZE"))
+  	pointSizeProp = pfp;
++     else if (streq(pfp->name , "FONT"))
++ 	fontProp = pfp;
+      else if (streq(pfp->name , "FAMILY_NAME"))
+  	familyProp = pfp;
+      else if (streq(pfp->name , "RESOLUTION"))
+***************
+*** 302,308
+      char	namebuf[100];
+      char	secondbuf[BUFSIZ];
+      char	thirdbuf[BUFSIZ];
+!     char	family[100];
+      char	*bdffile = NULL;
+      unsigned int attributes;
+      int		digitWidths = 0, digitCount = 0, ex = 0;
+
+--- 305,311 -----
+      char	namebuf[100];
+      char	secondbuf[BUFSIZ];
+      char	thirdbuf[BUFSIZ];
+!     char	fontName[200];
+      char	*bdffile = NULL;
+      unsigned int attributes;
+      int		digitWidths = 0, digitCount = 0, ex = 0;
+***************
+*** 380,386
+  	fatal("bad 'STARTFONT'");
+      getline(linebuf);
+  
+!     if (sscanf(linebuf, "FONT %s", family) != 1)
+  	fatal("bad 'FONT'");
+      getline(linebuf);
+  
+
+--- 383,389 -----
+  	fatal("bad 'STARTFONT'");
+      getline(linebuf);
+  
+!     if (sscanf(linebuf, "FONT %s", fontName) != 1)
+  	fatal("bad 'FONT'");
+      getline(linebuf);
+  
+***************
+*** 461,467
+  	    fatal("must have 'FONT_ASCENT' and 'FONT_DESCENT' properties");
+  	if (nprops != -1)
+  	    fatal("%d too few properties", nprops+1);
+! 	if (!familyProp) {
+  	    fi.nProps++;
+  	    pfp->name = (CARD32)("FAMILY_NAME");
+  	    pfp->value = (INT32)family;
+
+--- 464,470 -----
+  	    fatal("must have 'FONT_ASCENT' and 'FONT_DESCENT' properties");
+  	if (nprops != -1)
+  	    fatal("%d too few properties", nprops+1);
+! 	if (!fontProp) {
+  	    fi.nProps++;
+  	    pfp->name = (CARD32)("FONT");
+  	    pfp->value = (INT32)fontName;
+***************
+*** 463,470
+  	    fatal("%d too few properties", nprops+1);
+  	if (!familyProp) {
+  	    fi.nProps++;
+! 	    pfp->name = (CARD32)("FAMILY_NAME");
+! 	    pfp->value = (INT32)family;
+  	    pfp->indirect = TRUE;
+  	    familyProp = pfp++;
+  	}
+
+--- 466,473 -----
+  	    fatal("%d too few properties", nprops+1);
+  	if (!fontProp) {
+  	    fi.nProps++;
+! 	    pfp->name = (CARD32)("FONT");
+! 	    pfp->value = (INT32)fontName;
+  	    pfp->indirect = TRUE;
+  	    fontProp = pfp++;
+  	}
+***************
+*** 466,472
+  	    pfp->name = (CARD32)("FAMILY_NAME");
+  	    pfp->value = (INT32)family;
+  	    pfp->indirect = TRUE;
+! 	    familyProp = pfp++;
+  	}
+  	if (!pointSizeProp) {
+  	    fi.nProps++;
+
+--- 469,475 -----
+  	    pfp->name = (CARD32)("FONT");
+  	    pfp->value = (INT32)fontName;
+  	    pfp->indirect = TRUE;
+! 	    fontProp = pfp++;
+  	}
+  	if (!pointSizeProp) {
+  	    fi.nProps++;
+

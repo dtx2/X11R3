@@ -1,0 +1,56 @@
+Return-Path: shep@allspice.lcs.mit.edu
+Received: from PTT.LCS.MIT.EDU (ALLSPICE.LCS.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 13:51:47 EST
+Received: from shep.sage by PTT.LCS.MIT.EDU via PCMAIL with DMSP
+	id AA13431; Mon, 28 Mar 88 13:51:17 EST
+Date: Mon, 28 Mar 88 13:51:17 EST
+Message-Id: <8803281851.AA13431@PTT.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: Small movment of mouse cursor when I type the first character of my user name to login.
+Sender: shep@ALLSPICE.LCS.MIT.EDU
+From: shep@ALLSPICE.LCS.MIT.EDU
+Repository: PTT
+Originating-Client: sage
+
+### bug number:   267
+### area:         server
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     need to check on other init login systems
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	QDSS
+
+SYNOPSIS: 
+	Small movment of mouse cursor when I type the first character
+of my user name to login.
+
+DESCRIPTION:
+	When I type the first character of my user name into the login
+window, the mouse cursor moves a few pixels up and to the right.  This
+only happens on the first keystroke after the login window appears.
+Even pushing the shift key will do it.	
+
+REPEAT-BY:
+	Type a Ctrl-D to the login window on an idle screen (to be
+sure that you get a fresh window).  Now touch the shift key while
+carefully looking at the mouse cursor on the screen.  Notice that it
+moved. 
+
+My /etc/ttys file entry is this:
+
+ttyv0	"/usr/bin/X11/xterm -fn 6x13 -geometry =80x60-10+70 -display unix:0.0  -rv -L" xterm on  secure window="/usr/bin/X11/Xqdss 0"
+
+FIX:
+

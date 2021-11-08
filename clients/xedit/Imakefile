@@ -1,0 +1,10 @@
+#ifdef BandAidCompiler
+#include BandAidCompiler
+#endif
+
+LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
+  SYS_LIBRARIES = -lm
+           SRCS = xedit.c EDiskSrc.c ap.c commands.c ps.c util.c
+           OBJS = xedit.o EDiskSrc.o ap.o commands.o ps.o util.o
+
+ComplexProgramTarget(xedit)

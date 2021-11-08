@@ -1,0 +1,92 @@
+Return-Path: DCOOPER%ESDSDF.decnet@ge-crd.arpa
+Received: from GE-CRD.ARPA by expo.lcs.mit.edu; Wed, 13 Apr 88 14:49:48 EDT
+Message-Id: <8804131849.AA29886@EXPO.LCS.MIT.EDU>
+Date: 13 Apr 88 14:48 EST
+From: DCOOPER%ESDSDF.decnet@ge-crd.arpa
+Subject: Toolkit bug
+To: XBUGS@expo.lcs.mit.edu
+
+### bug number:   373
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     server bug mentioned copied into separate bug
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/260
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	CG2
+
+SYNOPSIS:
+	bug in toolkit intrinsics does not allow > 819 widgets
+
+
+DESCRIPTION:
+	 In Xtk/Event.c the routine ExpandTable, which expands
+	the widget/window hash table does not work properly.
+	This causes clients who create more than 800 odd widgets to
+	dump core.
+
+	After the fix below is applied, another problem appears:
+
+	Now a single client which creates more than 4000 widgets
+	crashes the server.  It is possible to have two clients one
+	with 2000 and one with 3000 though.  I can get away with 
+	around 1500 widgets for my application so I will leave this
+	problem to someone more ambitious.
+
+
+REPEAT-BY:
+	Create many widgets.
+
+
+FIX:
+	new ExpandTable():
+
+---------------------------------------------------------------
+
+static void ExpandTable() 
+{
+    HashTable   oldTable = table;
+    unsigned int i;
+    unsigned int newsize;
+ 
+    i = oldTable->size * 2;   
+    newsize = (unsigned) sizeof(HashTableRec)+i*sizeof(HashRec);
+    table = (HashTable) XtMalloc(newsize);
+    memset((char *) table, 0, newsize);
+    table->size = i;
+    table->count = oldTable->count;
+    for (i = 0; i<oldTable->size; i++) {
+        HashPtr hp;
+        hp = oldTable->entries[i]; 
+        while (hp != NULL) {
+            HashPtr temp = hp;
+            _XtRegisterWindow(hp->window, hp->widget);
+            hp = hp->next;
+            XtFree((char *) temp);
+        }
+    }
+    XtFree((char *)oldTable);
+}
+
+----------------------------------------------------------------
+
+	Dwight Cooper
+	Electronic Systems Dept.
+	General Electric Company
+	Moorestown, NJ
+
+
+

@@ -1,0 +1,41 @@
+Return-Path: ric@rioja.cc.umich.edu
+Received: by expo.lcs.mit.edu; Wed, 18 May 88 16:11:07 EDT
+Received: by rioja.cc.umich.edu (5.54/umix-2.0)
+	id AA00654; Wed, 18 May 88 16:13:46 EDT
+Date: Wed, 18 May 88 16:13:46 EDT
+From: ric@rioja.cc.umich.edu (Richard Campbell)
+Message-Id: <8805182013.AA00654@rioja.cc.umich.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Documentation Bug report
+
+### bug number:   516
+### area:         doc
+### severity:     low
+### comments:     
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	 SunOS 3.4
+
+DISPLAY:
+	19" Monochrome
+
+DESCRIPTION:
+	The X Toolkit Intrinsics manual refers to a "XtEventMask" type
+	throughout Chapter 10 Event handling. For example, the procedure
+	XtAddEventHandler shows the type of the event_mask paramneter
+	to be of type XtEventType. However, no such type exists. Referring
+	to the source and header files for the X Toolkit, shows that the
+	type for event_mask is actually EventMask.
+
+FIX:
+	Change either the documentation or add an XtEvent typedef.
+

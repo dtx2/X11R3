@@ -1,0 +1,81 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 10:09:01 EST
+Date: Thu, 10 Mar 88 10:09:01 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101509.AA00515@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: xpr bug
+
+### bug number:   76
+### area:         xpr
+### severity:     medium
+### status:       closed
+                    -ralph
+
+(Message inbox:50)
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 08:46:20 EST
+Return-Path: <jim@EXPO.LCS.MIT.EDU>
+Received: from EXPO.LCS.MIT.EDU (EXPO.LCS.MIT.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 126635; 27 Feb 88 09:09:46 EST
+Received: by EXPO.LCS.MIT.EDU; Sat, 27 Feb 88 09:09:56 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8802271409.AA15234@EXPO.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: xpr bug
+Date: Sat, 27 Feb 88 09:09:53 EST
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 10 Mar 88 08:46 EST
+Resent-Message-Id: <880310084619.8.RWS@KILLINGTON.LCS.MIT.EDU>
+
+Probably too late for R2, but for the queues (this may be a repeat).
+
+------- Forwarded Message
+
+Return-Path: treese@athena.mit.edu
+Received: from CHARON.MIT.EDU by EXPO.LCS.MIT.EDU; Fri, 26 Feb 88 20:37:35 EST
+Received: by CHARON.MIT.EDU (5.45/4.7)
+	id AA28595; Fri, 26 Feb 88 20:37:12 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA12819; Fri, 26 Feb 88 20:36:55 EST
+Received: by CIROCCO.MIT.EDU (5.45/4.7) id AA26587; Fri, 26 Feb 88 20:36:07 EST
+Message-Id: <8802270136.AA26587@CIROCCO.MIT.EDU>
+To: jim@athena.mit.edu
+Subject: xpr problem
+Date: Fri, 26 Feb 88 20:35:36 EST
+From: Win Treese <treese@athena.mit.edu>
+
+
+Do you want this for R2?  Sorry for the late-breaking news.
+I can send it to you, or you can pick it up from paris.
+
+	- Win
+
+- ------- Forwarded Message
+
+Received: by E40-PO.MIT.EDU (5.45/4.7) id AA13987; Fri, 19 Feb 88 12:41:06 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23101; Fri, 19 Feb 88 12:40:01 EST
+Received: by E40-369-2.MIT.EDU (5.45/4.7) id AA20216; Fri, 19 Feb 88 12:38:10 EST
+Message-Id: <8802191738.AA20216@E40-369-2.MIT.EDU>
+To: treese@ATHENA.MIT.EDU, xbugs@ATHENA.MIT.EDU
+Cc: ellis@ATHENA.MIT.EDU
+Subject: xpr.c bug
+Date: Fri, 19 Feb 88 12:38:05 EST
+From: Steve Ellis <ellis@ATHENA.MIT.EDU>
+
+
+    The present version of xpr does not reset the LN03 correctly. This has
+2 undesriable effects. First, an extra blank page is "printed" with each
+screen dump. The second problem occurs with "lpr", when multipule screen dumps
+are in the print queue; the failure to reset properly can cause header
+pages to be garbled.
+
+   Updated versions of xpr.c and lncmd.h that fix these bugs are located
+in ~ellis/xpr on paris. Also located there are xpr.diffs and lncmd.diffs
+showing "diff" results with the Athena X sources on paris.
+
+- ------- End of Forwarded Message
+
+
+------- End of Forwarded Message
+
+

@@ -1,0 +1,113 @@
+Return-Path: ric@rioja.cc.umich.edu
+Received: by expo.lcs.mit.edu; Thu, 28 Apr 88 18:58:55 EDT
+Received: by rioja.cc.umich.edu (5.54/umix-2.0)
+	id AA10574; Thu, 28 Apr 88 19:01:21 EDT
+Date: Thu, 28 Apr 88 19:01:21 EDT
+From: ric@rioja.cc.umich.edu (Richard Campbell)
+Message-Id: <8804282301.AA10574@rioja.cc.umich.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: XtAddTimeOut and XtNextEvent bug
+
+### bug number:   435
+### area:         Xt
+### severity:     high
+### comments:     null pointer deref
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	Monochrome
+
+SYNOPSIS:
+	XtNextEvent gets a Segmentation Violation when a single (the last?)
+	timer added by XtAddTimeOut goes off.
+
+REPEAT-BY:
+	Here is the test program:
+----------------------cut here-----------------------------
+#include <stdio.h>
+#include <X11/Intrinsic.h>
+#include <X11/Atoms.h>
+#include <X11/Command.h>
+#include <X11/Label.h>
+#include <X11/VPaned.h>
+
+Widget top,vpane,label,box,button;
+
+void
+quit(w,top,call)
+Widget w;
+caddr_t top,call;
+	{
+	XtDestroyWidget(top);
+	exit(0);
+	}
+void
+time_out(l,id)
+Widget l;
+XtIntervalId *id;
+	{
+	static Arg l_arg[] =	{ { XtNlabel, (XtArgVal) "hello, world" } };
+	XtSetValues(l,l_arg,XtNumber(l_arg));
+	}
+void
+InitWorld(argc,argv)
+unsigned int argc;
+char ** argv;
+	{
+	static Arg b_arg[] =	{ { XtNlabel, (XtArgVal) "Quit" } };
+
+	top = XtInitialize( argv[0], "XMWS", NULL, 0, &argc, argv );
+	vpane = XtCreateManagedWidget( "vpane", vPanedWidgetClass,top,NULL, 0 );
+	label = XtCreateManagedWidget( "label", labelWidgetClass, vpane,NULL,0);
+	button = XtCreateManagedWidget( "quit", commandWidgetClass, vpane, b_arg, XtNumber(b_arg) );
+
+	XtAddCallback( button, XtNcallback, (XtCallbackProc)quit, (caddr_t)top);
+
+	XtRealizeWidget(top);
+	}
+
+main(argc,argv)
+unsigned int argc;
+char ** argv;
+	{
+	XtIntervalId tid;
+	InitWorld(argc,argv);
+
+	tid = XtAddTimeOut(5000, (XtTimerCallbackProc)time_out, (caddr_t)label);
+	XtMainLoop();
+	}
+----------------------cut here-----------------------------
+
+FIX:
+ 	The test for the timer queue's NULL pointer in XtNextEvent 
+	should be part of the while loop. Here is the diff:
+
+diff NextEvent.c NextEvent.c.buggy
+458,463c458,465
+<       while( (TimerQueue != NULL) && IS_AFTER (TimerQueue->te_timer_value, cur
+_time)) {
+<               te_ptr = TimerQueue;
+<               TimerQueue = TimerQueue->te_next;
+<               te_ptr->te_next = NULL;
+<               TeCallProc(te_ptr);
+<               XtFree((char*)te_ptr);
+---
+>       if (TimerQueue!= NULL) {        /* check timeout queue */
+>               while(IS_AFTER (TimerQueue->te_timer_value, cur_time)) {
+>                       te_ptr = TimerQueue;
+>                       TimerQueue = TimerQueue->te_next;
+>                       te_ptr->te_next = NULL;
+>                       TeCallProc(te_ptr);
+>                       XtFree((char*)te_ptr);
+>               }
+

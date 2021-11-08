@@ -1,0 +1,64 @@
+Return-Path: solomon@cs.wisc.edu
+Received: by expo.lcs.mit.edu; Mon, 15 Aug 88 11:42:23 EDT
+Date: Mon, 15 Aug 88 10:42:57 CDT
+From: solomon@cs.wisc.edu (Marvin Solomon)
+Message-Id: <8808151542.AA16887@gjetost.cs.wisc.edu>
+Received: by gjetost.cs.wisc.edu; Mon, 15 Aug 88 10:42:57 CDT
+To: xbugs@expo.lcs.mit.edu
+Subject: yet another qdss bug
+
+### bug number:   871
+### area:         server
+### severity:     very high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VAXstation 3200
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	Qdss, 4plane, gray
+
+SYNOPSIS:
+	 Specifying width=0 in XQueryBestStipple throws the server into an
+	 infinite loop.
+
+DESCRIPTION:
+	 The documenation never mentions what the 'width' and 'height' arguments
+	 to XQueryBestSize() and friends are there for.  One might guess that
+	 the intent is to find the smallest good size >= the given dimensions
+	 (although that would contradict the "Best" in the names).
+	 This seems consistent with experimentation, which shows that that
+	 (at least on this server), width_return is simply width, rounded up to the
+	 next power of two.  (Height_return seems to be always the same as height).
+	 However, if you specify width=0, the server hangs in run state, consuming
+	 cpu cycles.
+
+REPEAT-BY:
+Run the following program and type "0 0" in response to the prompt.
+Make sure you have another terminal or a network connection to the host
+so you can kill and restart the server.
+
+#include <stdio.h>
+#include <X11/Xlib.h>
+main()
+{
+	Display *dpy=XOpenDisplay(0);
+	int win,wout,hin,hout,stat;
+
+	if (dpy<=0) printf("can't open display");
+
+	printf("w,h:"); fflush(stdout);
+	scanf("%d %d",&win,&hin);
+	printf("%d %d\n",win,hin);
+	wout = hout = -1;
+	stat = XQueryBestStipple(dpy,DefaultRootWindow(dpy),win,hin,&wout,&hout);
+	printf("stat %d, wout %d, hout %d\n",stat,wout,hout);
+}
+
+

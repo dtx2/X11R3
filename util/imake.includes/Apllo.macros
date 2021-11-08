@@ -1,0 +1,47 @@
+/**/# platform:  $XConsortium: Apllo.macros,v 1.44 88/10/23 11:00:30 jim Exp $
+
+BOOTSTRAPCFLAGS = 
+             AS = exit 1
+             CC = cc
+            CPP = /usr/lib/cpp
+             LD = ld
+           LINT = lint
+        INSTALL = install
+           TAGS = ctags
+             RM = rm -f
+             MV = mv
+             LN = ln -s
+         RANLIB = ranlib
+RANLIBINSTFLAGS = 
+             AR = ar clq
+             LS = ls
+            PAS = /com/pas
+       LINTOPTS = -axz
+    LINTLIBFLAG = -C
+           MAKE = make
+STD_CPP_DEFINES = 
+    STD_DEFINES = 
+
+/* This defines the server you want */
+#define XapolloServer Xapollo
+
+/* define this as you like for normal library compilation */
+#define LibraryDefines
+
+/* define this as you like for server compilation */
+#define ServerDefines		-DSWITCHER
+/* define this as you like for server font support */
+#define FontDefines	-DFONT_SNF -DFONT_BDF
+
+/* -DTCPCONN allows TCP connections */
+/* -DUNIXCONN allows Unix domain connections */
+/* -DDNETCONN allows DECnet connections */
+
+#define ConnectionFlags		-DTCPCONN -DUNIXCONN
+
+
+/*
+ * override any parameters from site.def
+ */
+
+

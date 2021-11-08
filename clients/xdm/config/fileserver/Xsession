@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# Xsession
+#
+# This is the program that is run as the client
+# for the display manager.  This example is
+# quite friendly as it attempts to run a per-user
+# .xsession file instead of forcing a particular
+# session layout
+#
+if [ -f $HOME/.xsession ]; then
+	if [ -x $HOME/.xsession ]; then
+		exec $HOME/.xsession
+	else
+		exec /bin/sh $HOME/.xsession
+	fi
+else
+	uwm &
+	exec xterm -geometry 80x24+270+272 -ls
+fi

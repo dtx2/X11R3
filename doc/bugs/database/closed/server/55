@@ -1,0 +1,36 @@
+Return-Path: bilbo.jta@seas.ucla.edu
+Received: by EXPO.LCS.MIT.EDU; Tue, 17 May 88 17:23:25 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA06995; Tue, 17 May 88 16:21:56 EST
+Message-Id: <8805172121.AA06995@ATHENA.MIT.EDU>
+Date:           Tue, 17 May 88 13:03:51 PDT
+From: Jim Anderson <bilbo.jta@seas.ucla.edu>
+Received:       from BILBO (193.255.1.3) by FRODO
+                id smtp.99509; Tue, 17 May 88 13:02:54 PDT
+To: xbugs@athena.mit.edu
+Cc: jta@athena.mit.edu
+Subject: Colormaps and root window
+
+### bug number:   505
+### area:         server
+### severity:     very low
+### comments:     
+
+If a client creates a colormap and calls XSetWindowColormap to set the
+root window's colormap to the new colormap, then, the client goes away
+or otherwises causes the new colormap to cease to exist, the root window
+ends up with a colormap of "None". 
+
+About 1/3 of the way through CreateWindow (dix/window.c) is a test that
+includes "pParent->colormap == None".  The success of this test results
+in BadMatch errors for a large percentage of window creations.  I'm not
+sure what may be an appropriate fix, if any, for this problem.
+
+1.  Disallow XSetWindowColormap for root windows.
+
+2.  If a root window's colormap goes away, reset it to the appropriate
+    default colormap.
+
+3.  Modify the test in CreateWindow.
+
+4.  Put it in a tuxedo and call it a feature.
+

@@ -1,0 +1,119 @@
+Return-Path: jupiter!bob@cad.berkeley.edu
+Received: by expo.lcs.mit.edu; Mon, 23 May 88 22:08:48 EDT
+Received: by cad.Berkeley.EDU (5.58/1.28)
+	id AA06721; Mon, 23 May 88 16:47:23 PST
+Received: by jupiter.IS (4.12/6.0.GT)
+	id AA15132; Mon, 23 May 88 16:43:03 pdt
+Date: Mon, 23 May 88 16:43:03 pdt
+From: Bob Schulman <jupiter!bob%jupiter@cad.berkeley.edu>
+Posted-Date: Mon, 23 May 88 16:43:03 pdt
+Message-Id: <8805232343.AA15132@jupiter.IS>
+To: xbugs@expo.lcs.mit.edu
+Cc: bob@cad.berkeley.edu
+
+### bug number:   534
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Jupiter Sun Satellite
+
+SYNOPSIS:
+	Calls to miGetPlane place successive scanlines data in same
+	unsigned long output word if width isn't large enough.
+
+DESCRIPTION:
+	 miGetPlane doesn't increment pCharsOut/pShortsOut/pLongsOut enough
+	 times if the argument 'w' isn't a multiple of 8/16/32. The code
+	 only increments the aforementioned pointers only when the counter
+	 'k' hits a multiple of 8/16/32. If w is less than 8/16/32, k
+	 never hits a multiple of 8/16/32, and our plucky pointer is never
+	 incremented. When the pointer isn't incremented, data from all
+	 the scanlines is ORd into the same data which
+	 pCharsOut/pShortsOut/pLongsOut points to.
+
+REPEAT-BY:
+	Hard to repeat. Sorry.
+
+FIX:
+
+	follows.....
+
+ *** mibitblt.c.distribution	Mon May 23 16:36:09 1988
+ --- mibitblt.c.fixed	Wed May 18 14:58:14 1988
+ ***************
+ *** 346,376 ****
+   		}
+   		if(BITMAP_SCANLINE_UNIT == 8)
+   		{
+   		    *pCharsOut |= (unsigned char) bit;
+   		    k++;
+ ! 		    if (k == 8)
+   		    {
+   		        pCharsOut++;
+   		        k = 0;
+   		    }
+   		}
+   		else if(BITMAP_SCANLINE_UNIT == 16)
+   		{
+   		    *pShortsOut |= (CARD16) bit;
+   		    k++;
+ ! 		    if (k == 16)
+   		    {
+   		        pShortsOut++;
+   		        k = 0;
+   		    }
+   		}
+   		if(BITMAP_SCANLINE_UNIT == 32)
+   		{
+   		    *pLongsOut |= (CARD32) bit;
+   		    k++;
+ ! 		    if (k == 32)
+   		    {
+   		        pLongsOut++;
+   		        k = 0;
+   		    }
+   		}
+ --- 346,376 ----
+   		}
+   		if(BITMAP_SCANLINE_UNIT == 8)
+   		{
+   		    *pCharsOut |= (unsigned char) bit;
+   		    k++;
+ ! 		    if (k == 8 || j == w - 1)
+   		    {
+   		        pCharsOut++;
+   		        k = 0;
+   		    }
+   		}
+   		else if(BITMAP_SCANLINE_UNIT == 16)
+   		{
+   		    *pShortsOut |= (CARD16) bit;
+   		    k++;
+ ! 		    if (k == 16 || j == w - 1)
+   		    {
+   		        pShortsOut++;
+   		        k = 0;
+   		    }
+   		}
+   		if(BITMAP_SCANLINE_UNIT == 32)
+   		{
+   		    *pLongsOut |= (CARD32) bit;
+   		    k++;
+ ! 		    if (k == 32 || j == w - 1)
+   		    {
+   		        pLongsOut++;
+   		        k = 0;
+   		    }
+   		}
+

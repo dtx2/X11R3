@@ -1,0 +1,85 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 15:49:38 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA03189; Wed, 29 Jun 88 14:47:37 CDT
+Date: Wed, 29 Jun 88 14:47:37 CDT
+From: wtg@uc.msc.umn.edu
+Message-Id: <8806291947.AA03189@uc.msc.umn.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   660
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2   Xaw
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	 Viewport widget tries to resize a window to height 0
+
+DESCRIPTION:
+	 Server returns 
+		Xerror: integer parameter out of range
+		Request Major Code 12 (xConfigure Window)
+
+The integer parameter was a height specification (value mask 0x8),
+the value was 0.  The value is set up during the Resize() routine
+of Viewport.c, which calls XtQueryGeometry(), which calls
+PreferredSize() in Box.c.  
+
+REPEAT-BY:
+	running standard widget test program
+
+FIX:
+I don't think that XtQueryGeometry should be called under the
+circumstances of the test.  I added code to check the 
+intended.request_mode variable before calling XtQueryGeometry.
+
+********************** Viewport.c ************************
+
+*** 432,451 ****
+  	}
+  	if (!w->viewport.allowvert || child->core.height < w->core.height) {
+  	    intended.request_mode |= CWHeight;
+  	    intended.height = w->core.height;
+  	}
+! #ifdef CRAY
+! 	if (intended.request_mode) {
+! 	    XtQueryGeometry( child, &intended, &reply );
+! 	    child_width = reply.width;
+! 	    child_height = reply.height;
+! 	} else {
+! 	    child_width = child->core.width;
+! 	    child_height = child->core.height;
+! 	}
+! #endif
+      }
+      else {
+  	child_width = 0;
+  	child_height = 0;
+      }
+--- 418,430 ----
+  	}
+  	if (!w->viewport.allowvert || child->core.height < w->core.height) {
+  	    intended.request_mode |= CWHeight;
+  	    intended.height = w->core.height;
+  	}
+! 	XtQueryGeometry( child, &intended, &reply );
+! 	child_width = reply.width;
+! 	child_height = reply.height;
+      }
+      else {
+  	child_width = 0;
+  	child_height = 0;
+      }
+

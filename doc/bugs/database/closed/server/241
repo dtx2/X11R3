@@ -1,0 +1,116 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:alt%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Thu, 6 Oct 88 14:58:09 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Thu 6 Oct 88 14:56:26-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ai15820; 6 Oct 88 13:24 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa23944; 6 Oct 88 13:06 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA25303; Thu, 6 Oct 88 09:54:33 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA29351; Thu, 6 Oct 88 09:54:26 PDT
+From: Al Tabayoyon <alt@shark.gwd.tek.com>
+Message-Id: <8810061654.AA29351@shark.GWD.TEK.COM>
+Date: Thu,  6 Oct 88 09:54:24 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com
+Fcc: //shark/bd/X11/doc/bugtracking/xbugs_mail
+Subject: X11 R2 bug report: Server crash when reading fonts.alias
+
+### bug number:   1059
+### area:         server
+### severity:     high
+### comments:     
+
+
+Al Tabayoyon
+M.S. 61-(ms)
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-(2149)
+alt@shark.tek.com
+
+--------------------
+VERSION:
+	X11 release 2 with fixes 1-215 applied
+
+CLIENT MACHINE:
+	4310
+	(Tektronix 4310 == 4315, 4316, 4317)
+	(Tektronix 4320 == 4324, 4325)
+	(Tektronix 4330 == 4335, 4336, 4337)
+
+CLIENT OPERATING SYSTEM:
+	UTEK 2.3 (== 4.2bsd kernel with some 4.3 utilities)
+
+DISPLAY:
+	4310
+
+SYNOPSIS:
+	X Server crashes when reading fonts.alias file
+
+DESCRIPTION:
+	Area: server
+	Files: os/4.2bsd/osfonts.c, fonts.alias
+
+	fonts.alias contains:
+	    vtbold       8x13bold
+	    vtsingle     8x13
+	    6x13	 fixed
+	    FILE_NAMES_ALIASES
+
+	8x13bold, 8x13, and fixed end up as a FontFile entry in the
+	FontTable.  When executing "AddFileNameAliases()" it dies
+	executing "*dot = NUL" for 8x13bold.  Furthermore,
+	"AddFileNameAliases()" does not check for a specific suffix
+	so if there was an embedded period, the name would erroneously
+	get truncated to that period.
+
+REPEAT-BY:
+	Attempt to bring up the server with the fonts.alias file.
+
+FIX:
+	Apply following patch to os/4.2bsd/osfonts.c:
+
+*** 41,46
+  #include "fonttype.h"
+  #include "fontdir.h"
+  
+  extern Atom	MakeAtom();
+  extern char *defaultFontPath;
+  
+
+--- 41,48 -----
+  #include "fonttype.h"
+  #include "fontdir.h"
+  
++ #define	FONTSUFFIX	".snf"
++ 
+  extern Atom	MakeAtom();
+  extern char *defaultFontPath;
+  
+***************
+*** 283,290
+  
+      for (i = 0; i < table->file.used; i++) {
+  	strcpy(copy, table->file.ff[i].name);
+! 	dot = rindex(copy, '.');
+! 	*dot = NUL;	/* strip off '.tail' */
+  	CopyISOLatin1Lowered ((unsigned char *)copy, (unsigned char *)copy,
+  			      strlen (copy));
+  	(void)  FindNameInFontTable(table, copy, &found);
+
+--- 285,295 -----
+  
+      for (i = 0; i < table->file.used; i++) {
+  	strcpy(copy, table->file.ff[i].name);
+! 	if (dot = rindex(copy, '.')) {
+! 	    if (strcmp(dot, FONTSUFFIX) == 0) {
+! 		*dot = NUL;	/* strip off font suffix */
+! 	    }
+! 	}
+  	CopyISOLatin1Lowered ((unsigned char *)copy, (unsigned char *)copy,
+  			      strlen (copy));
+  	(void)  FindNameInFontTable(table, copy, &found);
+

@@ -1,0 +1,55 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 10:10:11 EST
+Date: Thu, 10 Mar 88 10:10:11 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101510.AA00570@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: Re: Is XTERM done, finally? 
+
+### bug number:   80
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     duplicate of xterm/4 (#66), xterm/5 (#80), xterm/8 (#116),
+###               xterm/17 (#266), xterm/24 (#412), and xterm/28 (#560)
+
+
+
+(Message inbox:54)
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 08:48:11 EST
+Return-Path: <@EXPO.LCS.MIT.EDU:swick@ATHENA.MIT.EDU>
+Received: from EXPO.LCS.MIT.EDU (EXPO.LCS.MIT.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 124661; 22 Feb 88 10:24:47 EST
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 22 Feb 88 10:24:29 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA16158; Mon, 22 Feb 88 10:24:04 EST
+Received: by LYRE.MIT.EDU (5.45/4.7) id AA15508; Mon, 22 Feb 88 10:23:36 EST
+Message-Id: <8802221523.AA15508@LYRE.MIT.EDU>
+To: jim@expo.lcs.mit.edu (Jim Fulton)
+Cc: xbugs@athena.mit.edu
+Subject: Re: Is XTERM done, finally? 
+In-Reply-To: Your message of Mon, 22 Feb 88 10:15:08 -0500.
+             <8802221515.AA26617@EXPO.LCS.MIT.EDU> 
+Date: Mon, 22 Feb 88 10:23:32 EST
+From: Ralph R. Swick <swick@athena.mit.edu>
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 10 Mar 88 08:48 EST
+Resent-Message-Id: <880310084810.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+>   o  xterm -name foobar -T butwhat
+> 	[Ralph: gets an icon_name of 'foobar' instead of 'butwhat']
+
+since both
+
+	xterm -name foobar -xrm '*iconName:fritz' -T butwhat
+and
+	xterm -name foobar -n fritz -T butwhat
+
+work, I'd say punt on this.
+
+>   o  xterm -t leaves a cursor dribble the first time
+>	[this is an old bug]
+
+This is embarassing.  Given time, this should be fixed.
+

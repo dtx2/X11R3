@@ -1,0 +1,146 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Wed, 13 Apr 88 17:28:26 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08609; Wed, 13 Apr 88 16:27:12 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 13 Apr 88 13:26:45 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA20552; Wed, 13 Apr 88 13:26:42 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 13 Apr 88 14:29:10 pdt
+Message-Id: <8804132129.AA01386@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xinit kills
+X-Mailer: mh6.5
+Date: Wed, 13 Apr 88 14:29:05 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   378
+### area:         xinit
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     [shift-cntrl-reset stuff aborts Xhp]
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Recieve an XIO error when a <shift><cntrl><reset> is done.
+	clients hang around when a <shift><cntrl><reset> is done.
+DESCRIPTION:
+	I have a xinit execute a script upon start up. It starts up several
+	clients and then sleeps forever. xinit should kill this process when
+	the server dies by using the <shift><cntrl><reset>, instead I am 
+	recieving an XIO error.
+
+	The problem stems from xinit doing an XCloseDisplay after the server
+	has died. When a <shift><cntrl><reset> is done, the server dies and 
+	the shutdown routine in xinit is called. At this point there are
+	clients running. The display that was opened to test if the server
+	was running is now closed. Unfortunately, server is dead and xinit
+	receives an XIO error and aborts. Any client that is not an X
+	application will never notice that the server is dead and xinit never
+	sent a kill command.
+
+	Also changed the killpg definition for SYSV because on SYSV it is not
+	a valid process group.
+REPEAT-BY:
+	Ran the following script as the client to xinit.
+	/----------------- cut here -----------------------------------------
+
+	#  X WINDOW SYSTEM STARTUP SCRIPT
+	#
+	#  This shell script is used to setup the initial X clients.  It is
+	#  passed as a parameter to xinit, to be run by xinit along with the 
+	#  X server.  When this script terminates the X window system will be
+	#  terminated.
+
+	#  Standard output and error output for programs started by this script
+	#  are redirected to /dev/null (i.e. discarded).  This avoids
+	#  output to the screen that would mess up the window system display.
+
+	exec >/dev/null 2>/dev/null
+
+
+	#  Setup a default WMDIR if it is not set (for use by HP Windows/9000).
+
+	: ${DISPLAY:=`hostname`:0.0}; export DISPLAY
+ 
+	#  The following X clients are started up as part of the initial window
+	#  system environment.  Users can change or add to these default clients
+	#  in order to set up a custom environment.  All clients started up in
+	#  this script should be run in the background.
+	#
+	xterm =80x24+1+1 &
+
+	uwm &
+
+	#  The following "wait" call is done to insure that all terminated
+	#  child processes are cleaned up (i.e., no <defunct> processes are
+	#  left around).
+
+	wait
+
+	#  All the X clients started by this script have terminated.  Now
+	#  sleep forever (if this script terminates the window system will
+	#  be terminated).  When the window system is terminated with
+	#  [Shift][CTRL][Reset] this script will be killed.
+
+	exec sleep 4000000000
+
+	#  The window system is terminated when this script is terminated.
+SUGGESTED FIX:
+*** clients/xinit/xinit.c.old	Wed Apr 13 10:37:22 1988
+--- clients/xinit/xinit.c	Wed Apr 13 12:45:50 1988
+***************
+*** 148,153
+  #endif /* SYSV */
+  	if ((serverpid = startServer(server)) > 0
+  	 && (clientpid = startClient(client)) > 0) {
+  		pid = -1;
+  		while (pid != clientpid && pid != serverpid)
+  			pid = wait(NULL);
+
+--- 148,155 -----
+  #endif /* SYSV */
+  	if ((serverpid = startServer(server)) > 0
+  	 && (clientpid = startClient(client)) > 0) {
++ 		/* now that the client has started close our display */
++ 		XCloseDisplay(xd);
+  		pid = -1;
+  		while (pid != clientpid && pid != serverpid)
+  			pid = wait(NULL);
+***************
+*** 316,322
+  }
+  
+  #ifdef SYSV
+! #define killpg(pgrp, sig) kill(-(pgrp), sig)
+  #endif /* SYSV */
+  
+  static
+
+--- 318,324 -----
+  }
+  
+  #ifdef SYSV
+! #define killpg(pgrp, sig) kill(pgrp, sig)
+  #endif /* SYSV */
+  
+  static
+***************
+*** 325,332
+  {
+  	/* have kept display opened, so close it now */
+  	if (clientpid > 0) {
+- 		XCloseDisplay(xd);
+- 
+  		/* HUP all local clients to allow them to clean up */
+  		errno = 0;
+  		if ((killpg(clientpid, SIGHUP) != 0) &&
+
+--- 327,332 -----
+  {
+  	/* have kept display opened, so close it now */
+  	if (clientpid > 0) {
+  		/* HUP all local clients to allow them to clean up */
+  		errno = 0;
+  		if ((killpg(clientpid, SIGHUP) != 0) &&
+

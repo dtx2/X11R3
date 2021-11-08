@@ -1,0 +1,5 @@
+This is a new utility for R3.  However, it is only a prototype and is subject
+to change without notice.  The ICCCM pseudoroot interfaces that it uses are 
+experimental and no attempt will be made to maintain compatibility should
+changes be required.  This program is provided primarily for people wishing
+to explore how pseudoroots might be used.

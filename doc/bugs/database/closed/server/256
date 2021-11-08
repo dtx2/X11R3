@@ -1,0 +1,29 @@
+Return-Path: hania@wsl.dec.com
+Received: by expo.lcs.mit.edu; Sat, 15 Oct 88 03:15:45 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA00329; Sat, 15 Oct 88 00:15:32 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA07896; Sat, 15 Oct 88 00:14:13 PDT
+Message-Id: <8810150714.AA07896@gilroy.pa.dec.com>
+To: fisher%decwin.DEC@gilroy.dec.com, ram%flume.DEC@gilroy.dec.com,
+        joel@wsl.dec.com, xbugs@expo.lcs.mit.edu, mlongo@wsl.dec.com,
+        rws@zermatt.mit.edu
+Cc: guarino@wsl.dec.com, hania@wsl.dec.com
+Subject: bug in dix/window.c
+Date: Sat, 15 Oct 88 00:14:12 PDT
+From: hania@wsl.dec.com
+
+### bug number:   1075
+### area:         server
+### severity:     medium
+### comments:     
+
+In procedure ChangeWindowAttributes , under case CWColormap , the field
+XE.u.colormap.colormap is not being set, which results in clients
+receiving bogus values in ColormapNotify events.  The line that's
+missing (from the obvious place) is
+
+	xE.u.colormap.colormap = cmap;
+
+   Hania and Mark
+

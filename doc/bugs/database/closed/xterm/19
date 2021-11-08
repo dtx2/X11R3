@@ -1,0 +1,75 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Wed, 18 May 88 14:52:58 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8805181852.AA08443@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: xterm -l (logging) doesn't work
+Organization: X Consortium, MIT Laboratory for Computer Science
+Date: Wed, 18 May 88 14:52:57 EDT
+
+### bug number:   515
+### area:         xterm
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+AREA:
+	xterm
+
+SYNOPSIS:
+	xterm logging didn't work on startup
+
+DESCRIPTION:
+	Enabling logging in xterm (either through xterm -l or by setting
+	the "*logging: on" resource didn't work.  It was checking a global
+	instead of looking at the xterm widget.
+
+REPEAT-BY:
+	xterm -l 
+
+FILES:
+	./clients/xterm/main.c
+
+FIX:
+	% (cd top-of-R2-source; patch <this-msg)
+
+*** /tmp/,RCSt1a08385		Wed May 18 14:46:49 1988
+--- ./clients/xterm/main.c	Wed May 18 14:37:28 1988
+***************
+*** 140,146 ****
+  #endif	/* SYSV */
+  static char *get_ty;
+  static int inhibit;
+- static int log_on;
+  static char passedPty[2];	/* name if pty if slave */
+  static int loginpty;
+  #ifdef TIOCCONS
+--- 140,145 ----
+***************
+*** 579,586 ****
+  	    write (pty, buf, strlen (buf));
+  	}
+  
+! 	if(log_on) {
+! 		log_on = FALSE;
+  		StartLog(screen);
+  	}
+  	screen->inhibit = inhibit;
+--- 578,584 ----
+  	    write (pty, buf, strlen (buf));
+  	}
+  
+! 	if (term->misc.log_on) {
+  		StartLog(screen);
+  	}
+  	screen->inhibit = inhibit;
+

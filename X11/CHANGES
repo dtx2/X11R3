@@ -1,0 +1,10 @@
+The following changes have been made to this directory since R2:
+
+     o  Atoms.h has been removed; applications should be using StringDefs.h.
+     o  the header for Xmu.h is now included.
+     o  the headers for the List and Box widgets are now included.
+     o  Xmd.h has numerous new defines to make writing protocol structures
+	portable across non-32bit architectures.
+     o  JUSkeysym.h added; keysyms being proposed by Japan Users Society
+     o  Xproto.h reworked to avoid depending on sizeof()
+     o  the header file Misc.h has been renamed to XawMisc.h

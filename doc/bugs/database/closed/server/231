@@ -1,0 +1,50 @@
+Return-Path: stan!larry!markc@boulder.colorado.edu
+Received: by expo.lcs.mit.edu; Mon, 3 Oct 88 18:54:38 EDT
+Return-Path: <stan!larry!markc@boulder.Colorado.EDU>
+Received: by boulder.Colorado.EDU (cu.grandpoobah.052088)
+Received: from larry.SAE1.com by stan.com (3.2/SMI-3.2)
+	id AA01841; Mon, 3 Oct 88 13:11:29 MDT
+Received: by larry.SAE1.com (3.2/SMI-3.2)
+	id AA01853; Mon, 3 Oct 88 13:11:21 MDT
+Date: Mon, 3 Oct 88 13:11:21 MDT
+From: stan!larry!markc@boulder.colorado.edu (Mark Connell)
+Message-Id: <8810031911.AA01853@larry.SAE1.com>
+To: boulder!bugs@expo.lcs.mit.edu
+Subject: R3 server bug - nClients decremented too many times.
+
+### bug number:   1043
+### area:         server
+### severity:     very high
+### comments:     QDSS has similar troubles.
+
+
+System:	  Sun 4/260, SunOS4.0, Color display, X.V11R3b.  Could not duplicate
+	this on a Sun3, or Sun4 w/monochrome, but I didn't try very hard.
+
+Problem:  nClients will sometimes get decremented twice when a single client
+	exits.  Eventually, nClients goes to 0 and the server resets itself even
+	though there are still clients running.  After this, either the clients
+	will die with a protocol error because their window no longer exist,
+	or the server will crash with a segmentation violation.
+
+Duplicate by:  Start a single client (I used xinit to spawn an xterm,
+	or a test program that created a single window and wrote a string
+	to it every 10 seconds). Run 'xsetroot -solid blue' (or any other color)
+	2 or 3 times.  The other clients window will be destroyed.  With the
+	test program, the client would exit with a protocol error after the
+	window was destroyed.
+
+Fix: The server will run if CloseDownClient is changed back to the R2 code by
+	deleting line #3210 of dix/dispatch.c.  This looks like a fix for the
+	infamous 'growing server' bug, but I don't think it is the right fix.
+
+
+                                        Mark A. Connell
+                                        Solbourne Computer, Inc.
+                                        2190 Miller Drive
+                                        Longmont, Co	80501
+                                        (303) 772-3400
+                                         ...!ncar!boulder!stan!markc
+
+
+

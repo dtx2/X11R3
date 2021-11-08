@@ -1,0 +1,89 @@
+Return-Path: bp@june.cs.washington.edu
+Received: from june.cs.washington.edu by expo.lcs.mit.edu; Fri, 8 Apr 88 19:05:38 EDT
+Received: by june.cs.washington.edu (5.52.1/6.13)
+	id AA06207; Fri, 8 Apr 88 16:03:46 PDT
+Date: Fri, 8 Apr 88 16:03:46 PDT
+Return-Path: <bp@june.cs.washington.edu>
+Message-Id: <8804082303.AA06207@june.cs.washington.edu>
+From: Brian Pinkerton <bp@june.cs.washington.edu>
+To: xbugs@expo.lcs.mit.edu
+Word-Of-The-Day: icosahedron
+Subject: a bug [in server with Unix domain socket protection]
+
+### bug number:   343
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	4.3BSD
+
+DISPLAY:
+	QVSS
+
+SYNOPSIS:
+	Clients cannot open display 'unix:0' because the socket name
+	/tmp/.X11-unix/X0 is protected against world write.
+
+DESCRIPTION:
+	When creating the unix domain socket /tmp/.X11-unix/X0 the
+	server does not set its umask.  Thus, the socket is created
+	with the default mode for root, 755.  This mode makes the
+	socket unwriteable by clients which are not running as the
+	superuser.
+
+REPEAT-BY:
+	Run any program (like uwm) as a normal user and specify the
+	display as 'unix:0'.
+
+FIX:
+	1) chmod 777 /tmp/.X11-unix/X0 (this won't survive server restart)
+	or
+	2) edit server/os/4.2bsd/connection.c and fix as indicated:
+
+
+*** connection.c.orig	Fri Apr  8 14:20:07 1988
+--- connection.c	Fri Apr  8 14:24:30 1988
+***************
+*** 204,213 ****
+  
+  #ifdef UNIXCONN
+      unsock.sun_family = AF_UNIX;
+- #ifdef X_UNIX_DIR
+      oldUmask = umask (0);
+      mkdir (X_UNIX_DIR, 0777);
+-     (void)umask(oldUmask);
+  #endif
+      strcpy (unsock.sun_path, X_UNIX_PATH);
+      strcat (unsock.sun_path, display);
+--- 204,212 ----
+  
+  #ifdef UNIXCONN
+      unsock.sun_family = AF_UNIX;
+      oldUmask = umask (0);
++ #ifdef X_UNIX_DIR
+      mkdir (X_UNIX_DIR, 0777);
+  #endif
+      strcpy (unsock.sun_path, X_UNIX_PATH);
+      strcat (unsock.sun_path, display);
+***************
+*** 223,228 ****
+--- 222,228 ----
+  	if (listen (request, 5)) Error ("Unix Listening");
+  	WellKnownConnections |= (1 << request);
+      }
++     (void)umask(oldUmask);
+  #endif /*UNIXCONN */
+  
+  #ifdef DNETCONN
+
+

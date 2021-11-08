@@ -1,0 +1,92 @@
+Return-Path: xmaint@opus.silvlis.com
+Received: by expo.lcs.mit.edu; Tue, 24 May 88 16:10:05 EDT
+Received: from sun.Sun.COM by Sun.COM (4.0/SMI-4.0)
+	id AA17786; Tue, 24 May 88 13:07:54 PDT
+Received: from opus.silvlis.com by sun.Sun.COM (4.0/SMI-4.0)
+	id AA18514; Tue, 24 May 88 13:10:37 PDT
+Received: from opus.silvlis.com by silvlis.com (4.0/SMI-3.2-880516)
+	id AA22413 for xbugs@expo.lcs.mit.edu; Tue, 24 May 88 12:55:02 PDT
+Received: by opus.silvlis.com (4.0/SMI-4.0Beta-880511)
+	id AA00922 for eag@fox; Tue, 24 May 88 12:55:14 PDT
+Date: Tue, 24 May 88 12:55:14 PDT
+Message-Id: <8805241955.AA00922@opus.silvlis.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: hplabs!hp-pcd!x-ray@sun.com
+From: Mark Baushke <xmaint@opus.silvlis.com>
+Sender: xmaint@opus.silvlis.com
+Organization: Silvar-Lisco, 1080 Marsh Road, Menlo Park, CA 94025-1053
+Phone.......: (415) 853-6472 (Office)
+Subject: Problem with Xr11 Imakefile: "make install" doesn't work
+
+### bug number:   535
+### area:         contrib
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/60C and Sun 3/50  
+
+CLIENT OPERATING SYSTEM:
+	SunOS 4.0Beta1
+	SunOS 3.4
+
+DISPLAY:
+	Standard Sun monitors (using /dev/cgfour0 and /dev/bwtwo1 for
+	the Sun 3/60C).
+
+SYNOPSIS:
+	The Imakefile for Xr11 appears to be incomplete. No install is
+	actually performed when a "make install" command is executed.
+
+DESCRIPTION:
+	The Imakefile for Xr11 does not perform the install of either
+	the include directory or the libXr11.a library. (It is also
+	missing lint libraries.) The fix below is not very pretty or
+	clean. The "InstallLibrary" was straight forward enough,
+	however, the install for the contrib/Xr11/src/include/Xr11
+	directory is not obvious. I also could not find any Imakefile
+	rules to build a lint library given that the source exists in
+	multiple subdirectories.
+
+REPEAT-BY:
+	After doing a make install in contrib/Xr11 and not finding
+	either the library or the include files had been installed.
+
+FIX:
+
+
+*** Imakefile.orig	Sun Feb 21 12:38:37 1988
+--- Imakefile	Tue May 24 12:37:10 1988
+***************
+*** 7,12 ****
+--- 7,32 ----
+  #define PassCDebugFlags 'CDEBUGFLAGS=$(CDEBUGFLAGS)'
+  
+       SUBDIRS = Dialog Editor Intrinsic
++ # The definitions for XRINCDIR and XRINCFILES are not part of the original
++ # Imakefile, they have been included for use with added rules below.
++     XRINCDIR = $(DESTDIR)/usr/include/Xr11
++   XRINCFILES = Xrlib.h defs.h XGetKbdId.h in_types.h keycode.h \
++ 	       types.h xr-copyright.h
+  
++ 
+  MakeSubdirs($(SUBDIRS))
+  DependSubdirs($(SUBDIRS))
++ 
++ # The following lines were missing from the original Imakefile
++ # They have been included to attempt to do the install and make
++ # the lint library.
++ install:: 
++ 	@echo "installing $(XRINCDIR)"; \
++ 	$(INSTALL) -d $(XRINCDIR)
++ 	@cd include/Xr11; case '${MFLAGS}' in *[i]*) set +e;; esac; \
++ 	for i in $(XRINCFILES); do \
++ 	(set -x; $(INSTALL) -c $(INSTALLFLAGS) $$i $(XRINCDIR)); \
++ 	done
++ 
++ InstallLibrary(Xr11,$(USRLIBDIR))
++ 
+

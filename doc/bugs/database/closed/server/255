@@ -1,0 +1,715 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:scotthe%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Tue, 27 Sep 88 00:01:32 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Mon 26 Sep 88 23:57:30-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id aa29341; 26 Sep 88 21:25 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa11804; 26 Sep 88 21:12 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA03773; Mon, 26 Sep 88 18:05:00 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA24454; Mon, 26 Sep 88 18:04:51 PDT
+From: Scott Hennes <scotthe@shark.gwd.tek.com>
+Message-Id: <8809270104.AA24454@shark.GWD.TEK.COM>
+Date: Mon, 26 Sep 88 18:04:48 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com
+Fcc: //shark/bd/X11/doc/bugtracking/xbugs_mail
+Bcc: keith
+Subject: X11 R3 bug report: Clipmasking in mibstore.c
+
+### bug number:   1014
+### area:         server
+### severity:     high
+### comments:     actually two fixes; includes one for miBSCopyPlane
+
+
+Scott Hennes
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2144
+tektronix!shark!scotthe
+
+--------------------
+VERSION:
+	X11 release 3
+
+CLIENT MACHINE:
+	Tektronix 4316
+
+CLIENT OPERATING SYSTEM:
+	UTEK 2.3 (== 4.2bsd kernel with some 4.3 utilities)
+
+DISPLAY:
+	Tektronix 4316
+
+SYNOPSIS:
+	CT_PIXMAP not allowed in mibstore.c
+
+DESCRIPTION:
+	Area: server
+	Files: server/ddx/mi/mibstore.c, server/include/mibstore.h
+
+	The backing store code in mibstore.c does not allow a clientClipType
+	of CT_PIXMAP.  The following enhancements will allow this file
+	to be used by servers which implement clipmasks.
+
+	Note that there is an unrelated mibstore.c bugfix contained in these 
+	diffs:  miBSCopyPlane misoptimized.
+
+
+REPEAT-BY:
+	
+
+        FIX:
+
+    - Required change NOT given in diffs here:
+	New parameter added to all calls to miInitBackingStore
+
+    - New routine required in mfb/cfb (probably in {m/c}fbgc.c):
+/*
+ *	NAME
+ *		{m/c}fbSetClipmaskRgn - Set BackingStore GC clipmask region
+ *
+ *	SYNOPSIS
+ */
+void
+{m/c}fbSetClipmaskRgn(pGC, prgnBackingClipmask)
+    GCPtr pGC;				/* in/out: BackingStore GC */
+    RegionPtr prgnBackingClipmask;	/* in: BackingStore Region */
+/*
+ *	DESCRIPTION
+ *		This routine is called only if clientClipType is CT_PIXMAP.
+ *		This routine must restrict output of graphics primitives
+ *		using pGC to areas within prgnBackingClipmask.
+ *
+ *		The sample server does not currently implement use of a 
+ *		clipmask pixmap by any graphic primitive.  
+ *		Therefore, this routine does not currently do anything.
+ *		
+ *	RETURNS
+ *		None
+ *
+ */
+{
+}
+
+    Major changes to mibstore.c/mibstore.h:
+
+    - Avoid optimizations based on clientClip bounding box in routines
+	miBSCopyArea and miBSCopyPlane if clientClipType is CT_PIXMAP.
+    - Added new function argument to miInitBackingStore:
+	miInitBackingStore(pWin, SaveAreas, RestoreAreas, SetClipmaskRgn)
+    - miValidateBackingStore:
+	If clientClipType is CT_PIXMAP,
+	    Create tempRgn and put proper clipping region into it
+	    Let CopyGC copy clipmask into backing GC if needed
+	    Call 
+		(* pBackingStore->SetClipmaskRgn) (pBackingGC, tempRgn);
+		after call to ValidateGC at end of miValidateBackingStore.
+
+    Note that there is an unrelated mibstore.c bugfix contained in these diffs:
+	miBSCopyPlane changed 
+	    dy = bdsty - pExtents->y1;	to
+	    dy = pExtents->y1 - bdsty;
+
+
+*** /shark/bf/evaluation/pre_r3/server/ddx/mi/mibstore.c	Tue Sep  6 11:50:25 1988
+--- mibstore.c	Mon Sep 26 14:36:44 1988
+***************
+*** 73,80
+   *	    when backing-store changes.
+   *	- The DestroyWindow function should call miFreeBackingStore if
+   *	    backingStore != NotUseful.
+-  *	- The clientClipType of the GC must *always* be either CT_NONE or
+-  *	    CT_REGION, with appropriate values in the clientClip field.
+   *	- The GetSpans function must call miBSGetSpans at the end of its
+   *	    operation, passing in the source drawable, a pixmap via which
+   *	    spans from the backing store may be drawn into those fetched from
+
+--- 73,78 -----
+   *	    when backing-store changes.
+   *	- The DestroyWindow function should call miFreeBackingStore if
+   *	    backingStore != NotUseful.
+   *	- The GetSpans function must call miBSGetSpans at the end of its
+   *	    operation, passing in the source drawable, a pixmap via which
+   *	    spans from the backing store may be drawn into those fetched from
+***************
+*** 1236,1262
+  	     * from the backing store saved region.  So, copying
+  	     * *to* the backing store is always safe
+  	     */
+! 	    /*
+! 	     * adjust srcx, srcy, w, h, dstx, dsty to be clipped to
+! 	     * the backing store.  An unnecessary optimisation,
+! 	     * but a useful one when GetSpans is slow.
+! 	     */
+! 	    pExtents = (*pDst->pScreen->RegionExtents) (pBackingGC->clientClip);
+! 	    bsrcx = srcx;
+! 	    bsrcy = srcy;
+! 	    bw = w;
+! 	    bh = h;
+! 	    bdstx = dstx;
+! 	    bdsty = dsty;
+! 	    dx = pExtents->x1 - bdstx;
+! 	    if (dx > 0)
+!  	    {
+! 		bsrcx += dx;
+! 		bdstx += dx;
+! 		bw -= dx;
+! 	    }
+! 	    dy = pExtents->y1 - bdsty;
+! 	    if (dy > 0)
+  	    {
+  		bsrcy += dy;
+  		bdsty += dy;
+
+--- 1234,1240 -----
+  	     * from the backing store saved region.  So, copying
+  	     * *to* the backing store is always safe
+  	     */
+! 	    if (pGC->clientClipType != CT_PIXMAP)
+  	    {
+  		/*
+  		 * adjust srcx, srcy, w, h, dstx, dsty to be clipped to
+***************
+*** 1258,1266
+  	    dy = pExtents->y1 - bdsty;
+  	    if (dy > 0)
+  	    {
+! 		bsrcy += dy;
+! 		bdsty += dy;
+! 		bh -= dy;
+  	    }
+  	    dx = (bdstx + bw) - pExtents->x2;
+  	    if (dx > 0)
+
+--- 1236,1278 -----
+  	     */
+  	    if (pGC->clientClipType != CT_PIXMAP)
+  	    {
+! 		/*
+! 		 * adjust srcx, srcy, w, h, dstx, dsty to be clipped to
+! 		 * the backing store.  An unnecessary optimisation,
+! 		 * but a useful one when GetSpans is slow.
+! 		 */
+! 		pExtents = (*pDst->pScreen->RegionExtents)
+! 			(pBackingGC->clientClip);
+! 		bsrcx = srcx;
+! 		bsrcy = srcy;
+! 		bw = w;
+! 		bh = h;
+! 		bdstx = dstx;
+! 		bdsty = dsty;
+! 		dx = pExtents->x1 - bdstx;
+! 		if (dx > 0)
+! 		{
+! 		    bsrcx += dx;
+! 		    bdstx += dx;
+! 		    bw -= dx;
+! 		}
+! 		dy = pExtents->y1 - bdsty;
+! 		if (dy > 0)
+! 		{
+! 		    bsrcy += dy;
+! 		    bdsty += dy;
+! 		    bh -= dy;
+! 		}
+! 		dx = (bdstx + bw) - pExtents->x2;
+! 		if (dx > 0)
+! 		    bw -= dx;
+! 		dy = (bdsty + bh) - pExtents->y2;
+! 		if (dy > 0)
+! 		    bh -= dy;
+! 		if (bw > 0 && bh > 0)
+! 		    pixExposed = (* pBackingGC->CopyArea) (pSrc, 
+! 				pBackingStore->pBackingPixmap, pBackingGC, 
+! 				bsrcx, bsrcy, bw, bh, bdstx, bdsty);
+  	    }
+  	    else
+  		pixExposed = (* pBackingGC->CopyArea) (pSrc, 
+***************
+*** 1262,1277
+  		bdsty += dy;
+  		bh -= dy;
+  	    }
+! 	    dx = (bdstx + bw) - pExtents->x2;
+! 	    if (dx > 0)
+! 	        bw -= dx;
+! 	    dy = (bdsty + bh) - pExtents->y2;
+! 	    if (dy > 0)
+! 	        bh -= dy;
+! 	    if (bw > 0 && bh > 0)
+! 		pixExposed = (* pBackingGC->CopyArea) (pSrc, pBackingStore->pBackingPixmap,
+! 					  pBackingGC, bsrcx, bsrcy, bw, bh,
+! 					  bdstx, bdsty);
+  	    winExposed = (* pPriv->CopyArea) (pSrc, pDst, pGC, srcx, srcy, w, h, dstx, dsty);
+  	}
+  	pPriv->inUse = FALSE;
+
+--- 1274,1284 -----
+  				pBackingStore->pBackingPixmap, pBackingGC, 
+  				bsrcx, bsrcy, bw, bh, bdstx, bdsty);
+  	    }
+! 	    else
+! 		pixExposed = (* pBackingGC->CopyArea) (pSrc, 
+! 				pBackingStore->pBackingPixmap, pBackingGC,
+! 				srcx, srcy, w, h, dstx, dsty);
+! 
+  	    winExposed = (* pPriv->CopyArea) (pSrc, pDst, pGC, srcx, srcy, w, h, dstx, dsty);
+  	}
+  	pPriv->inUse = FALSE;
+***************
+*** 1338,1364
+  	     * from the backing store saved region.  So, copying
+  	     * *to* the backing store is always safe
+  	     */
+! 	    /*
+! 	     * adjust srcx, srcy, w, h, dstx, dsty to be clipped to
+! 	     * the backing store.  An unnecessary optimisation,
+! 	     * but a useful one when GetSpans is slow.
+! 	     */
+! 	    pExtents = (*pDst->pScreen->RegionExtents) (pBackingGC->clientClip);
+! 	    bsrcx = srcx;
+! 	    bsrcy = srcy;
+! 	    bw = w;
+! 	    bh = h;
+! 	    bdstx = dstx;
+! 	    bdsty = dsty;
+! 	    dx = pExtents->x1 - bdstx;
+! 	    if (dx > 0)
+!  	    {
+! 		bsrcx += dx;
+! 		bdstx += dx;
+! 		bw -= dx;
+! 	    }
+! 	    dy = bdsty - pExtents->y1;
+! 	    if (dy > 0)
+  	    {
+  		bsrcy += dy;
+  		bdsty += dy;
+
+--- 1345,1351 -----
+  	     * from the backing store saved region.  So, copying
+  	     * *to* the backing store is always safe
+  	     */
+! 	    if (pGC->clientClipType != CT_PIXMAP)
+  	    {
+  		/*
+  		 * adjust srcx, srcy, w, h, dstx, dsty to be clipped to
+***************
+*** 1360,1368
+  	    dy = bdsty - pExtents->y1;
+  	    if (dy > 0)
+  	    {
+! 		bsrcy += dy;
+! 		bdsty += dy;
+! 		bh -= dy;
+  	    }
+  	    dx = (bdstx + bw) - pExtents->x2;
+  	    if (dx > 0)
+
+--- 1347,1389 -----
+  	     */
+  	    if (pGC->clientClipType != CT_PIXMAP)
+  	    {
+! 		/*
+! 		 * adjust srcx, srcy, w, h, dstx, dsty to be clipped to
+! 		 * the backing store.  An unnecessary optimisation,
+! 		 * but a useful one when GetSpans is slow.
+! 		 */
+! 		pExtents = (*pDst->pScreen->RegionExtents) (pBackingGC->clientClip);
+! 		bsrcx = srcx;
+! 		bsrcy = srcy;
+! 		bw = w;
+! 		bh = h;
+! 		bdstx = dstx;
+! 		bdsty = dsty;
+! 		dx = pExtents->x1 - bdstx;
+! 		if (dx > 0)
+! 		{
+! 		    bsrcx += dx;
+! 		    bdstx += dx;
+! 		    bw -= dx;
+! 		}
+! 		dy = pExtents->y1 - bdsty;
+! 		if (dy > 0)
+! 		{
+! 		    bsrcy += dy;
+! 		    bdsty += dy;
+! 		    bh -= dy;
+! 		}
+! 		dx = (bdstx + bw) - pExtents->x2;
+! 		if (dx > 0)
+! 		    bw -= dx;
+! 		dy = (bdsty + bh) - pExtents->y2;
+! 		if (dy > 0)
+! 		    bh -= dy;
+! 		if (bw > 0 && bh > 0)
+! 		    pixExposed = (* pBackingGC->CopyPlane) (pSrc, 
+! 					pBackingStore->pBackingPixmap,
+! 					pBackingGC, bsrcx, bsrcy, bw, bh,
+! 					bdstx, bdsty, plane);
+  	    }
+  	    else
+  		pixExposed = (* pBackingGC->CopyPlane) (pSrc, 
+***************
+*** 1364,1379
+  		bdsty += dy;
+  		bh -= dy;
+  	    }
+! 	    dx = (bdstx + bw) - pExtents->x2;
+! 	    if (dx > 0)
+! 	        bw -= dx;
+! 	    dy = (bdsty + bh) - pExtents->y2;
+! 	    if (dy > 0)
+! 	        bh -= dy;
+! 	    if (bw > 0 && bh > 0)
+! 		pixExposed = (* pBackingGC->CopyPlane) (pSrc, pBackingStore->pBackingPixmap,
+! 					  pBackingGC, bsrcx, bsrcy, bw, bh,
+! 					  bdstx, bdsty, plane);
+  	    winExposed = (* pPriv->CopyPlane) (pSrc, pDst, pGC, srcx, srcy, w, h,
+  				  dstx, dsty, plane);
+  	    
+
+--- 1385,1396 -----
+  					pBackingGC, bsrcx, bsrcy, bw, bh,
+  					bdstx, bdsty, plane);
+  	    }
+! 	    else
+! 		pixExposed = (* pBackingGC->CopyPlane) (pSrc, 
+! 					pBackingStore->pBackingPixmap,
+! 					pBackingGC, srcx, srcy, w, h,
+! 					dstx, dsty, plane);
+! 
+  	    winExposed = (* pPriv->CopyPlane) (pSrc, pDst, pGC, srcx, srcy, w, h,
+  				  dstx, dsty, plane);
+  	    
+***************
+*** 2212,2218
+   *-----------------------------------------------------------------------
+   */
+  void
+! miInitBackingStore(pWin, SaveAreas, RestoreAreas)
+      WindowPtr 	  pWin;
+      void    	  (*SaveAreas)();
+      void    	  (*RestoreAreas)();
+
+--- 2229,2235 -----
+   *-----------------------------------------------------------------------
+   */
+  void
+! miInitBackingStore(pWin, SaveAreas, RestoreAreas, SetClipmaskRgn)
+      WindowPtr 	  pWin;
+      void    	  (*SaveAreas)();
+      void    	  (*RestoreAreas)();
+***************
+*** 2216,2221
+      WindowPtr 	  pWin;
+      void    	  (*SaveAreas)();
+      void    	  (*RestoreAreas)();
+  {
+      register MIBackingStorePtr pBackingStore;
+      register ScreenPtr 	    pScreen;
+
+--- 2233,2239 -----
+      WindowPtr 	  pWin;
+      void    	  (*SaveAreas)();
+      void    	  (*RestoreAreas)();
++     void    	  (*SetClipmaskRgn)();
+  {
+      register MIBackingStorePtr pBackingStore;
+      register ScreenPtr 	    pScreen;
+***************
+*** 2235,2240
+  					 &status);
+  	pBackingStore->SaveAreas = SaveAreas;
+  	pBackingStore->RestoreAreas = RestoreAreas;
+  	pBackingStore->viewable = (Bool)pWin->viewable;
+  	pBackingStore->status = StatusNoPixmap;
+  	pBackingStore->backgroundTile = NullPixmap;
+
+--- 2253,2259 -----
+  					 &status);
+  	pBackingStore->SaveAreas = SaveAreas;
+  	pBackingStore->RestoreAreas = RestoreAreas;
++ 	pBackingStore->SetClipmaskRgn = SetClipmaskRgn;
+  	pBackingStore->viewable = (Bool)pWin->viewable;
+  	pBackingStore->status = StatusNoPixmap;
+  	pBackingStore->backgroundTile = NullPixmap;
+***************
+*** 2865,2874
+   * miValidateBackingStore --
+   *	Called from output-library's ValidateGC routine once it has done
+   *	what it needs to do. Takes note of changes in the GC and updates
+!  *	pGC in the GC's devBackingStore accordingly. pGC->clientClipType
+!  *	must be either CT_REGION or CT_NONE. Once this function has been
+!  *	called when validating a GC, it must be called every time the GC
+!  *	is validated. It's addictive...
+   *
+   * Results:
+   *	None.
+
+--- 2884,2892 -----
+   * miValidateBackingStore --
+   *	Called from output-library's ValidateGC routine once it has done
+   *	what it needs to do. Takes note of changes in the GC and updates
+!  *	pGC in the GC's devBackingStore accordingly.
+!  *	Once this function has been called when validating a GC, it must 
+!  *	be called every time the GC is validated. It's addictive...
+   *
+   * Results:
+   *	None.
+***************
+*** 2908,2913
+      int	    	  	stateChanges;
+      register int  	index, mask;
+      int			lift_functions;
+  
+      if (pDrawable->type == DRAWABLE_WINDOW)
+      {
+
+--- 2926,2932 -----
+      int	    	  	stateChanges;
+      register int  	index, mask;
+      int			lift_functions;
++     RegionPtr		tempRgn = NULL;
+  
+      if (pDrawable->type == DRAWABLE_WINDOW)
+      {
+***************
+*** 2983,2989
+      {
+  	if ((*pGC->pScreen->RegionNotEmpty) (pBackingStore->pSavedRegion))
+   	{
+- 	    RegionPtr tempRgn;
+  	
+  	    tempRgn = (*pGC->pScreen->RegionCreate) (NULL, 1);
+  	    if (pGC->clientClipType == CT_NONE)
+
+--- 3002,3007 -----
+      {
+  	if ((*pGC->pScreen->RegionNotEmpty) (pBackingStore->pSavedRegion))
+   	{
+  	
+  	    tempRgn = (*pGC->pScreen->RegionCreate) (NULL, 1);
+  	    if ((pGC->clientClipType == CT_NONE) || 
+***************
+*** 2986,2992
+  	    RegionPtr tempRgn;
+  	
+  	    tempRgn = (*pGC->pScreen->RegionCreate) (NULL, 1);
+! 	    if (pGC->clientClipType == CT_NONE)
+  	    {
+  		(*pGC->pScreen->RegionCopy) (tempRgn, pBackingStore->pSavedRegion); 
+  	    }
+
+--- 3004,3011 -----
+   	{
+  	
+  	    tempRgn = (*pGC->pScreen->RegionCreate) (NULL, 1);
+! 	    if ((pGC->clientClipType == CT_NONE) || 
+! 		(pGC->clientClipType == CT_PIXMAP))
+  	    {
+  		(*pGC->pScreen->RegionCopy) (tempRgn, pBackingStore->pSavedRegion); 
+  	    }
+***************
+*** 2997,3007
+  		 * its proper origin.
+  		 */
+  
+- 		if (pGC->clientClipType != CT_REGION) {
+- 		    FatalError("miValidateBackingStore: client clip not a region");
+- 		    /*NOTREACHED*/
+- 		}
+- 	    
+  		(*pGC->pScreen->RegionCopy) (tempRgn, pGC->clientClip);
+  		(*pGC->pScreen->TranslateRegion) (tempRgn,
+  						  pGC->clipOrg.x,
+
+--- 3016,3021 -----
+  		 * its proper origin.
+  		 */
+  
+  		(*pGC->pScreen->RegionCopy) (tempRgn, pGC->clientClip);
+  		(*pGC->pScreen->TranslateRegion) (tempRgn,
+  						  pGC->clipOrg.x,
+***************
+*** 3025,3035
+  		(*pGC->pScreen->RegionDestroy) (translatedClip);
+  	    }
+  
+! 	    /*
+! 	     * Finally, install the new clip list as the clientClip for the
+! 	     * backing GC. The output library is responsible for destroying
+! 	     * tempRgn when the time comes.
+! 	     */
+  
+  	    (*pBackingGC->ChangeClip) (pBackingGC, CT_REGION, tempRgn, 0);
+  
+
+--- 3039,3051 -----
+  		(*pGC->pScreen->RegionDestroy) (translatedClip);
+  	    }
+  
+! 	    if (pGC->clientClipType != CT_PIXMAP)
+! 	    {
+! 		/*
+! 		 * Finally, install the new clip list as the clientClip for the
+! 		 * backing GC. The output library is responsible for destroying
+! 		 * tempRgn when the time comes.
+! 		 */
+  
+  		(*pBackingGC->ChangeClip) (pBackingGC, CT_REGION, tempRgn, 0);
+  	    }
+***************
+*** 3031,3037
+  	     * tempRgn when the time comes.
+  	     */
+  
+! 	    (*pBackingGC->ChangeClip) (pBackingGC, CT_REGION, tempRgn, 0);
+  
+  	    if (!(*pGC->pScreen->RegionNotEmpty) (tempRgn)) {
+  		lift_functions = TRUE;
+
+--- 3047,3054 -----
+  		 * tempRgn when the time comes.
+  		 */
+  
+! 		(*pBackingGC->ChangeClip) (pBackingGC, CT_REGION, tempRgn, 0);
+! 	    }
+  
+  	    if (!(*pGC->pScreen->RegionNotEmpty) (tempRgn)) {
+  		lift_functions = TRUE;
+***************
+*** 3055,3064
+  	    pBackingStore->status = StatusVDirty;
+      }
+  
+-     /*
+-      * all of these bits have already been dealt with for
+-      * pBackingGC above and needn't be looked at again
+-      */
+  
+      stateChanges &= ~(GCClipXOrigin|GCClipYOrigin|GCClipMask|GCSubwindowMode);
+  
+
+--- 3072,3077 -----
+  	    pBackingStore->status = StatusVDirty;
+      }
+  
+  
+      if (pGC->clientClipType != CT_PIXMAP)
+      {
+***************
+*** 3060,3066
+       * pBackingGC above and needn't be looked at again
+       */
+  
+!     stateChanges &= ~(GCClipXOrigin|GCClipYOrigin|GCClipMask|GCSubwindowMode);
+  
+      if (!lift_functions && (pWin->backingStore == NotUseful ||
+          ((pWin->backingStore & 3) == WhenMapped && !pWin->realized)))
+
+--- 3073,3089 -----
+      }
+  
+  
+!     if (pGC->clientClipType != CT_PIXMAP)
+!     {
+! 	/*
+! 	 * all of these bits have already been dealt with for
+! 	 * pBackingGC above and needn't be looked at again
+! 	 */
+! 	pPriv->changes &= 
+! 		~(GCClipXOrigin|GCClipYOrigin|GCClipMask|GCSubwindowMode);
+! 	stateChanges &= 
+! 		~(GCClipXOrigin|GCClipYOrigin|GCClipMask|GCSubwindowMode);
+!     }
+  
+      if (!lift_functions && (pWin->backingStore == NotUseful ||
+          ((pWin->backingStore & 3) == WhenMapped && !pWin->realized)))
+***************
+*** 3167,3172
+  	    }
+  	    pPriv->gcHooked = FALSE;
+  	}
+  	return;
+      }
+  
+
+--- 3190,3199 -----
+  	    }
+  	    pPriv->gcHooked = FALSE;
+  	}
++ 	if ((pGC->clientClipType == CT_PIXMAP) && tempRgn)
++ 	{
++ 	    (* pGC->pScreen->RegionDestroy) (tempRgn);
++ 	}
+  	return;
+      }
+  
+***************
+*** 3286,3292
+      }
+  
+      if (pBackingStore->pBackingPixmap->drawable.serialNumber
+!         != pBackingGC->serialNumber)
+  	ValidateGC((DrawablePtr)pBackingStore->pBackingPixmap, pBackingGC);
+  
+      if (pBackingGC->clientClip == 0) {
+
+--- 3313,3319 -----
+      }
+  
+      if (pBackingStore->pBackingPixmap->drawable.serialNumber
+!         != pBackingGC->serialNumber) {
+  	ValidateGC((DrawablePtr)pBackingStore->pBackingPixmap, pBackingGC);
+  	if ((pGC->clientClipType == CT_PIXMAP) && tempRgn)
+  	    (* pBackingStore->SetClipmaskRgn) (pBackingGC, tempRgn);
+***************
+*** 3288,3293
+      if (pBackingStore->pBackingPixmap->drawable.serialNumber
+          != pBackingGC->serialNumber)
+  	ValidateGC((DrawablePtr)pBackingStore->pBackingPixmap, pBackingGC);
+  
+      if (pBackingGC->clientClip == 0) {
+      	ErrorF ("backing store clip list nil");
+
+--- 3315,3326 -----
+      if (pBackingStore->pBackingPixmap->drawable.serialNumber
+          != pBackingGC->serialNumber) {
+  	ValidateGC((DrawablePtr)pBackingStore->pBackingPixmap, pBackingGC);
++ 	if ((pGC->clientClipType == CT_PIXMAP) && tempRgn)
++ 	    (* pBackingStore->SetClipmaskRgn) (pBackingGC, tempRgn);
++     }
++ 
++     if ((pGC->clientClipType == CT_PIXMAP) && tempRgn)
++ 	(* pGC->pScreen->RegionDestroy) (tempRgn);
+  
+      if (pBackingGC->clientClip == 0) {
+      	ErrorF ("backing store clip list nil");
+
+*** /shark/bf/evaluation/pre_r3/server/include/mibstore.h	Tue Sep  6 12:49:18 1988
+--- mibstore.h	Tue Sep 20 19:36:38 1988
+***************
+*** 36,41
+  				     * save the obscured areas */
+      void    	  (*RestoreAreas)();/* Device-dependent function to actually
+  				     * restore exposed areas */
+  } MIBackingStoreRec, *MIBackingStorePtr;
+  
+  #define StatusNoPixmap	1	/* pixmap has not been created */
+
+--- 36,43 -----
+  				     * save the obscured areas */
+      void    	  (*RestoreAreas)();/* Device-dependent function to actually
+  				     * restore exposed areas */
++     void    	  (*SetClipmaskRgn)();/* Device-dependent function to set
++ 				     * BackingStore GC clipmask region */
+  } MIBackingStoreRec, *MIBackingStorePtr;
+  
+  #define StatusNoPixmap	1	/* pixmap has not been created */
+

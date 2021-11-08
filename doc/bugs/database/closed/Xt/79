@@ -1,0 +1,65 @@
+Return-Path: wbc@maxlin.dartmouth.edu
+Received: by expo.lcs.mit.edu; Thu, 13 Oct 88 14:53:08 EDT
+Received: from maxlin.dartmouth.edu by dartvax.dartmouth.edu (5.59D/3.7R)
+	id AA26444; Thu, 13 Oct 88 13:42:15 EDT
+Received: by maxlin.dartmouth.edu (4.0/3.2LEAF)
+	id AA07531; Thu, 13 Oct 88 13:41:17 EDT
+Date: Thu, 13 Oct 88 13:41:17 EDT
+From: wbc@maxlin.dartmouth.edu (Wayne B Cripps)
+Message-Id: <8810131741.AA07531@maxlin.dartmouth.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   1073
+### area:         Xt
+### severity:     medium
+### comments:     some very disgusting code below...
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Convex
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	Sun CG on Sun 3/50 running Son 4.0
+
+SYNOPSIS:
+	 Programs Using the X toolit crash
+
+DESCRIPTION:
+	in lib/Xt, in Resources.c, in the routine XRMGetResources, there is a
+	call to XrmCompileResourceList, which is executed if the test in the
+	previous line succeeds.  The test is whether the value of 
+	resources->resource_offset cast from unsigned to an int is greater
+	than 0, if it is, XRMGetResources does it's conversion, and sets
+	the value in resources->resource_offset to a negative number.  Thus,
+	the test fails subsequently.  Unfortunately, when the convex initializes
+	the field resources->resource_offset with the location of a routine, 
+	that value is sometimes great enough to cast to a negative number,
+	and so the resource doesn't compile.  The convex uses a ring protection
+	scheme using the three high bits of the address for protection, and system
+	stuff sets the bits to low values, user stuff sets bits to high values,
+	which may cast to a negative number.
+	
+	
+REPEAT-BY:
+	Compile and run the xwidgets test program supplied by the distribution.
+
+FIX:
+	A VERY CRUDE HACK! - I set the test to test for
+	 if ((resources->resource_offset <= 0xffff0000)
+       which is purely emperical, and works for my application.
+       
+       
+       Wayne Cripps
+       wbc@maxlin.dartmouth.edu
+

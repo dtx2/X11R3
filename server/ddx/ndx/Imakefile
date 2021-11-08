@@ -1,0 +1,17 @@
+SRCS = init.c ndx_io.c
+OBJS = init.o ndx_io.o
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+INCLUDES = -I.  -I../../include -I../mfb -I$(INCLUDESRC) -I../cfb
+LINTLIBS = ../../dix/llib-ldix.ln ../../os/4.2bsd/llib-los.ln \
+	   ../mfb/llib-lmfb.ln ../mi/llib-lmi.ln
+
+all: $(OBJS)
+
+NormalLibraryObjectRule()
+NormalLintTarget($(SRCS))
+
+lintlib:
+
+DependTarget()
+InstallManPage(Xndx,$(MANDIR))

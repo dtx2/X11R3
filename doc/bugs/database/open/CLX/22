@@ -1,0 +1,86 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: by expo.lcs.mit.edu; Wed, 19 Oct 88 11:26:26 EDT
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 231085; Wed 19-Oct-88 11:00:33 EDT
+Date: Wed, 19 Oct 88 11:00 EDT
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CLX image code in Genera
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19881019150030.2.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   1085
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	The CLX 1-bit image code runs very slowly.
+
+DESCRIPTION:
+	It copies the image 1 bit at a time.
+
+FIX:
+	The following Genera-specific code runs much faster:
+
+
+Source compare made by Hornig on 10/19/88 10:48:59			-*-Fundamental-*-
+of File AA:>sys>x11>clx>image.lisp.11
+with File AA:>sys>x11>clx>image.lisp.13
+**** File AA:>sys>x11>clx>image.lisp.11, Line #403, After "(defun z-format-row-1 (data index pixarray row src-x width)"
+  (with-vector (data (simple-array card8 (*)))
+**** File AA:>sys>x11>clx>image.lisp.newest, Line #403, After "(defun z-format-row-1 (data index pixarray row src-x width)"
+  #+Genera
+  (sys:with-data-stack
+    (let* ((index (+ index (ash src-x -3)))
+	   (src-x (logand src-x 7))
+	   (data-pixels (+ width src-x))
+	   (data-octets (ash (+ data-pixels 7) -3))
+	   (revdata (sys:make-stack-array data-octets :element-type 'card8))
+	   (revdata-overlay (sys:make-stack-array data-pixels :element-type 'bit
+						  :displaced-to revdata))
+	   (pixarray-overlay (sys:make-stack-array width :element-type 'bit
+						   :displaced-to pixarray
+						   :displaced-index-offset
+						   (array-row-major-index pixarray row 0))))
+      (declare (sys:array-register revdata))
+      (with-vector (data (simple-array card8 (*)))
+	(dotimes (i data-octets)
+	  (setf (aref revdata i) (byte-reverse (aref data (+ index i))))))
+      (replace pixarray-overlay revdata-overlay :start2 src-x)))
+  #-Genera
+  (with-vector (data (simple-array card8 (*)))
+***************
+
+**** File AA:>sys>x11>clx>image.lisp.11, Line #928, After "(defun copy-pixarray-row-1 (buffer index pixarray row src-x width)"
+  (with-vector (buffer (simple-array card8 (*)))
+**** File AA:>sys>x11>clx>image.lisp.newest, Line #947, After "(defun copy-pixarray-row-1 (buffer index pixarray row src-x width)"
+  #+Genera
+  (sys:with-data-stack
+    (let* ((buffer-overlay
+	     (sys:make-stack-array width :element-type 'bit
+				   :displaced-to buffer :displaced-index-offset index))
+	   (pixarray-overlay
+	     (sys:make-stack-array width :element-type 'bit
+				   :displaced-to pixarray
+				   :displaced-index-offset
+				   (array-row-major-index pixarray row src-x))))
+      (replace buffer-overlay pixarray-overlay)
+      (bit-reverse-vector buffer index (ash (+ width 7) -3))))
+  #-Genera
+  (with-vector (buffer (simple-array card8 (*)))
+***************
+
+Done.
+

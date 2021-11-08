@@ -1,0 +1,160 @@
+Return-Path: karlton@wsl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 26 Apr 88 20:39:43 EDT
+Received: from gilroy.dec.com by decwrl.dec.com (5.54.4/4.7.34)
+	id AA29945; Tue, 26 Apr 88 17:38:37 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA10235; Tue, 26 Apr 88 17:38:32 PDT
+Message-Id: <8804270038.AA10235@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xqdss does not support CopyPlanes
+Date: Tue, 26 Apr 88 17:38:29 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+
+### bug number:   423
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.0
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+	 CopyPlanes is not supported.
+
+DESCRIPTION:
+	 (More detailed description)
+
+REPEAT-BY:
+	run "pix -w 600" for various values of 600. The two images
+	should be the same.
+
+============================ pix.c ======================================
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <strings.h>
+
+static Display *dpy;
+int pwidth = 16;
+
+#define NULL 0
+typedef unsigned char byte;
+
+#define ps_width 16
+#define ps_height 16
+static char ps_bits[] = {
+   0xc0, 0x3f, 0x60, 0x20, 0x50, 0x20, 0x48, 0x20, 0x7c, 0x20, 0x04, 0x20,
+   0x64, 0x20, 0xa4, 0x2c, 0xa4, 0x2a, 0x64, 0x22, 0x24, 0x24, 0x24, 0x28,
+   0x24, 0x2a, 0x04, 0x26, 0x04, 0x20, 0xfc, 0x3f};
+
+void StartConnectionToServer(argc, argv)
+int	argc;
+char	*argv[];
+{
+    char *display;
+    int i;
+
+    display = 0;
+    for(i = 1; i < argc; i++)
+    {
+        if(index(argv[i], ':') != 0)
+	    display = argv[i];
+        else if ((argv[i][0] =='-') && (argv[i][1] =='w'))
+        {
+	    i++;
+            pwidth = atoi(argv[i]);
+        }
+    }
+    if (! (dpy = XOpenDisplay(display)))
+    {
+       perror("Cannot open display\n");
+       exit(0);
+   }
+}
+
+static XImage *
+XImageFromData(dpy, data, width, height)
+    Display *dpy;
+    byte *data;
+    int width, height;
+{
+    XImage *image;
+
+    image = XCreateImage(dpy, NULL, 1, XYBitmap, 0, (char *)data,
+	                 width, height, 8, (width + 7) / 8);
+    image->byte_order = LSBFirst;
+    image->bitmap_bit_order = LSBFirst;
+    return image;
+}
+
+extern char* gets();
+main(argc, argv)
+    int argc;
+    char **argv;
+
+{
+    Window w;
+    GC pixmapGC, bitmapGC;
+    XGCValues gcv;
+    char    line[30];
+    int     width, height;
+    char   *name = "Pixmap test";
+    int     x_hot, y_hot, status;
+    Pixmap pixmap, bitmap;
+    XImage * image;
+#define HEIGHT 16
+    XColor colors[2];
+
+    StartConnectionToServer (argc, argv);
+    XSynchronize (dpy, 1);
+    width = height = 600;
+
+    colors[0].pixel = BlackPixel(dpy, 0);
+    colors[1].pixel = WhitePixel(dpy, 0);
+    XQueryColors(dpy, DefaultColormap(dpy, 0), colors, 2);
+    w = XCreateSimpleWindow (dpy, RootWindow (dpy, 0), 50, 50, width,
+	    height, 1, WhitePixel (dpy, 0), BlackPixel (dpy, 0));
+
+    XChangeProperty (dpy, w, XA_WM_NAME, XA_STRING, 8, PropModeReplace,
+	    name, strlen (name));
+    XMapWindow (dpy, w);
+
+    gcv.foreground = BlackPixel (dpy, 0);
+    gcv.background = WhitePixel (dpy, 0);
+    pixmapGC = XCreateGC (dpy, w, GCForeground | GCBackground, &gcv);
+
+    bitmap = XCreatePixmap (dpy, w, pwidth, HEIGHT, 1);
+    gcv.foreground = 1;
+    gcv.background = 0;
+    bitmapGC = XCreateGC (dpy, bitmap, GCForeground | GCBackground, &gcv);
+
+    image = XImageFromData (dpy, ps_bits, ps_width, ps_height);
+    if (status == BitmapSuccess) {
+	for (status = 0; status < pwidth; status += image->width)
+	    XPutImage(
+		dpy, bitmap, bitmapGC, image, 0, 0, status, 0,
+		image->width, image->height);
+	pixmap = XCreatePixmap (
+		dpy, w, pwidth, HEIGHT, DefaultDepth (dpy, 0));
+	XCopyPlane (
+		dpy, bitmap, w, pixmapGC, 0, 0, pwidth, HEIGHT, 10, 10, 0x1);
+	XCopyPlane (
+		dpy, bitmap, pixmap, pixmapGC, 0, 0, pwidth, 
+		HEIGHT, 0, 0, 0x1);
+	XCopyArea (
+		dpy, pixmap, w, pixmapGC, 0, 0, pwidth, HEIGHT, 10, 20+HEIGHT);
+    }
+    XSync (dpy, 0);
+    printf ("Type CR to exit\n");
+    (void) gets (line);
+}
+

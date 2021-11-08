@@ -1,0 +1,128 @@
+Return-Path: dac%ni.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Thu, 22 Sep 88 19:36:58 EDT
+Received: from hall.cray.com by uc.msc.umn.edu (5.59/1.14)
+	id AA05325; Thu, 22 Sep 88 18:34:22 CDT
+Received: from quixote.cray.com by hall.cray.com
+	id AA28282; 3.2/CRI-3.6; Thu, 22 Sep 88 18:41:36 CDT
+Received: by quixote.cray.com
+	id AA06830; 3.2/CRI-3.6; Thu, 22 Sep 88 18:41:29 CDT
+Date: Thu, 22 Sep 88 18:41:29 CDT
+From: dac%ni.CRAY.COM@uc.msc.umn.edu (Dave Cahlander)
+Message-Id: <8809222341.AA06830@quixote.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: X11R3 Beta
+Cc: grm@ni.cray.com, jlf@ni.cray.com, keith@ni.cray.com
+
+### bug number:   999
+### area:         xterm
+### severity:     closed
+### comments:     already fixed; diffs to be sent to fix-trackers
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    Sun 3/50 running SunOS 3.2
+
+
+DISPLAY:
+    Sun monchrome
+
+
+WINDOW MANAGER:
+    uwm
+
+
+AREA:
+    xterm
+
+
+SYNOPSIS:
+     vi does not know about window size when executed in an
+     xterm window.
+
+
+DESCRIPTION:
+    The window size parameters, COLUMN and LINES, are not set
+    with the X11R3 version of xterm.  This setting is done in
+    two places - main.c and screen.c.  The code in screen.c
+    works correctly to handle resize of a window.  The code
+    in main.c sets the window size of file descriptor screen->request,
+    and then closes this file.
+
+
+REPEAT BY:
+    Bring up xterm.  Execute vi.  The text scrolls off the top of the
+    screen.  Can also be repeated by running the test program:
+---------------------------
+#include <sys/ioctl.h>
+main()
+{
+	struct ttysize ts;
+	ioctl(0,TIOCGSIZE, &ts);
+	printf("%d %d\n",ts.ts_lines, ts.ts_cols);
+}
+---------------------------
+    When xterm first comes up, the window size is "0 0".  After
+    a resize, it indicates the correct size.
+
+    [can also use stty -everything]
+
+
+SAMPLE FIX:
+    [here is the fix that we inserted]
+*** /tmp/,RCSt1a21081	Thu Sep 29 17:06:08 1988
+--- main.c	Thu Sep 29 10:46:57 1988
+***************
+*** 1,11 ****
+  #ifndef lint
+! static char rcs_id[] = "$XConsortium: main.c,v 1.90 88/09/16 16:20:12 jim Exp $";
+  #endif	/* lint */
+  
+  /*
+!  * WARNING:  This code (particularly, the tty setup code) is a historical
+!  * relic and should not be confused with a real toolkit application or a
+!  * an example of how to do anything.  It really needs a rewrite.  Badly.
+   */
+  
+  #include <X11/copyright.h>
+--- 1,12 ----
+  #ifndef lint
+! static char rcs_id[] = "$XConsortium: main.c,v 1.92 88/09/26 12:03:19 jim Exp $";
+  #endif	/* lint */
+  
+  /*
+!  * The tty setup code was completely rewritten by Dave Serisky at 
+!  * Hewlett-Packard and should now work properly under both System V and
+!  * 4BSD.  However, the toolkit stuff is still pretty crufty.  In general,
+!  * beware, for there be dragons here.
+   */
+  
+  #include <X11/copyright.h>
+***************
+*** 1763,1768 ****
+--- 1764,1780 ----
+  #else	/* USE_SYSV_PGRP */
+  		(void) write(cp_pipe[1], &handshake, sizeof(handshake));
+  #endif	/* !USE_SYSV_PGRP */
++ 
++ 		/* need to reset after all the ioctl bashing we did above */
++ #ifdef sun
++ #ifdef TIOCSSIZE
++ 		ioctl  (0, TIOCSSIZE, &ts);
++ #endif	/* TIOCSSIZE */
++ #else	/* not sun */
++ #ifdef TIOCSWINSZ
++ 		ioctl (0, TIOCSWINSZ, (char *)&ws);
++ #endif	/* TIOCSWINSZ */
++ #endif	/* sun */
+  
+  		if (command_to_exec) {
+  			execvp(*command_to_exec, command_to_exec);

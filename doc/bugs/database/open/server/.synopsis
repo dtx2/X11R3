@@ -1,0 +1,214 @@
+102	347	huge tiles and stipples have problems
+
+103	349	xsetroot -gray seems to screw up suceeding requests
+
+104	359	 getimage bug
+
+106	367	servers don't respect max-request-length connections break
+		with Broken Pipe on large requests
+
+107	374	bug in toolkit intrinsics does not allow > 819 widgets
+
+108	375	XMapRaised
+
+109	383	IBM Megapel bitmaps are broken
+
+111	387	running xmag results in a black window, even though the
+		area selected with the cross-hair cursor has green and red
+		circles in it.
+
+113	393	The Xqdss server grows in size as X is being used.  It does
+		not seem to ever get smaller.
+
+115	401	unexpected MotionNotify events
+
+116	405	SelectionClear can be sent to the wrong client
+
+118	415	Horizontal odd width double dashed lines don't match up.
+
+119	417	When drawing text (XDrawString, XDrawImageString), the text
+		will not appear unless the plane_mask in the GC is >=
+		0x100.
+
+121	422	Tiling bugs, colormap bugs.
+
+122	423	CopyPlanes is not supported.
+
+123	425	Setting then unsetting a clipmask causes output lossage
+		using Xqdss
+
+124	432	Configure-window makes diagonal windows
+
+125	439	XPutImage displays scrambled images from time to time.
+
+128	448	Wide Dashed lines are drawn incorrect.  Doglegs.
+
+129	451	1) text does not appear on screen with planemask set 2)
+		dashed line does not appear when function set to GXinvert
+
+130	458	When drawing a filled primitive (eg rectangle, arc) using a
+		stipple pattern and with fill style set to FillStippled,
+		the background of the pattern is not transparent.
+
+131	463	setting a stipple in the GC does not work with wide lines
+
+138	483	The Sun CG4 X Server does not work properly when given
+		certain -dev options. X won't run on top of suntools under
+		certain conditions.
+
+139	485	Dash value not checked in CreateGC or ChangeGC
+
+140	489	X server writes on tail of rgb.dir
+
+141	492	SaveSet processing is putting window down off by BW of
+		window.
+
+143	504	screen flashes as strange times or goes blank and never
+		comes back.
+
+146	510	mfbValidateGC checks font boundaries incorrectly
+
+147	527	stipple glitches
+
+148	170	the server forgets that i did an "xset r off"
+
+149	534	Calls to miGetPlane place successive scanlines data in same
+		unsigned long output word if width isn't large enough.
+
+150	538	array size too small
+
+151	544	Illegal C code in qdpushpxl.c:qdPPPix1chan: null storage
+		definition
+
+152	547	bad #define in maskbits.h for GETLEFTBITS_ALIGNMENT == 1
+
+153	548	X11 R2 and SUN 3/60(F)C  (long)
+
+154	551	shift-lock not handled correctly
+
+155	553	The MSBFirst version of getstipplepixels() doesn't work
+		with 24 bit pixels.
+
+158	559	InitExtensions() in the sample server is in the wrong
+		place.
+
+160	563	mfbGetSpans() screws up when (x % 32) == 0 && (width % 32)
+		== 0
+
+161	565	SendConnectionSetupInfo() walk the various available
+		visuals incorrectly.
+
+162	583	Background-colored part of double dashes drawn with wrong
+		coordinates.
+
+163	600	a slow no-op of painting background to self in DrawLogo.
+
+164	602	When tiling on a color sun, the tile doesn't start at 0,0
+
+27	74	XMoveArea with IncludeInferiors on the root doesn't work.
+
+28	77	A couple of Sun X11 fixes
+
+38	124	Cursor movement from screen to screen is broken.  (Release
+		2 IBM TCS bug #4)
+
+48	213	Lint complains about many many assignments of unsigned ints
+		to longs.
+
+50	216	When ForgetGravity is in effect in SlideAndSizeWindow,
+		ExposeAll is called for an entire tree, even though the
+		bitGravity of the parent isn't supposed to affect
+		inferiors.
+
+51	217	bitGravity can be hazardous to your winGravity
+
+52	219	If a GrabKey has been activated as a result of pressing
+		(and holding down) modifier key(s) in some window, then a
+		ButtonPress event following the KeyPress event(s) will not
+		have the modifier key(s) properly indicated in the
+		xbutton.state field.  This is true for at least the case of
+		GrabKey and GrabButton passive grabs set for the parent of
+		a window.
+
+53	221	Screen locks up if someone connects to port 6000.
+
+54	225	alloca for local_alloc in the server.
+
+55	226	TraverseTree(ExposeAll) in window.c *is* according to spec
+
+58	238	Passing pointers (fPointer = 1) doesn't work.
+
+63	248	4 bit pixels
+
+64	251	Invalid cast of pointer to integer.
+
+65	254	Windows with winGravity that are children of windows with
+		bitGravity != ForgetGravity lose big-time.
+
+66	255	Sorry, folks. Those patches I sent you for properly
+		handling window and bit gravity had a bug in them --
+		children of unrealized windows wouldn't have their winSize
+		regions shifted properly when their parent was configured.
+
+69	267	Small movment of mouse cursor when I type the first
+		character of my user name to login.
+
+70	268	cfbDestroyPixmap is passed an extra argument (the resource
+		ID) by FreeClientResources.  This causes it to fail due to
+		an argument mismatch.
+
+71	269	cfmUnmapWindow has the wrong arguments.
+
+73	271	Some static function declarations are missing.
+
+74	272	console idle time is impossible to get in X 11, Release 2
+
+75	283	Static functions are misdeclared.
+
+76	284	Missing static declarations.
+
+77	285	Missing static declaration.
+
+78	286	Missing static declaration.
+
+79	287	Type mismatch.
+
+8	10	NoopDDA is defined in server/dix/dixutils.c to accept no
+		arguments, but it is called in various places with
+		arguments.
+
+80	288	Unsafe comparison.
+
+81	289	Missing static declaration.
+
+82	290	Missing static declaration.
+
+83	291	Missing static declaration.
+
+84	292	Calls miGetPlane with bad argument.
+
+85	293	Bad definition.
+
+86	294	Bad return value.
+
+87	295	Bogosity is too bogus.
+
+88	296	mfbFreeVisual declares the wrong return type.
+
+89	297	Missing return statement.
+
+90	298	HACK ALERT to hacky.
+
+91	299	Missing return statements.
+
+92	300	Bogosity alert.
+
+93	308	GetImage leaves cursor turned on
+
+94	321	GetImage should cause BadMatch if a window isn't viewable,
+		but doesn't.
+
+95	326	Having problem running X.V11R2 on a GPX
+
+99	341	Getimage returning incorrect bits.
+

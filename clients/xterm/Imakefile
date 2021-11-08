@@ -1,0 +1,46 @@
+/**/###########################################################################
+/**/#                                                                         #
+/**/#                         Attention xterm porters                         #
+/**/#                                                                         #
+/**/#                                                                         #
+/**/# Xterm assumes that bcopy can handle overlapping arguments.  If your     #
+/**/# bcopy (or memcpy) can't, write a routine called Bcopy that can and      #
+/**/# the -DBcopy argument from the DEFINES list given below.  If possible,   #
+/**/# try to avoid extra procedure calls as this routine is used a lot.       #
+/**/#                                                                         #
+/**/###########################################################################
+
+#ifdef BandAidCompiler
+#include BandAidCompiler
+#endif
+
+/*
+ * The configuration parameter GettyProgramName may be found in the
+ * appropriate .macros in the directory $(TOP)/util/imake.includes/.
+ */
+
+#if defined(SunArchitecture) && SunOSPlatform && OSMajorVersion >= 4
+#define GettyProgram '-DGETTY_EXE="/usr/etc/getty"'
+#else
+#define GettyProgram /* as nothing */
+#endif
+/* add -DWTMP and -DLASTLOG if you want them */
+        DEFINES = -DMODEMENU -DUTMP -DBcopy=bcopy GettyProgram
+          SRCS1 = button.c charproc.c cursor.c data.c input.c \
+		  main.c menu.c misc.c screen.c scrollbar.c tabs.c \
+		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c
+          OBJS1 = main.o input.o charproc.o cursor.o util.o tabs.o \
+		  screen.o scrollbar.o button.o Tekproc.o misc.o \
+		  VTPrsTbl.o TekPrsTbl.o data.o menu.o
+          SRCS2 = resize.c
+          OBJS2 = resize.o
+       PROGRAMS = resize xterm
+   INSTALLFLAGS = $(INSTUIDFLAGS)
+       INCLUDES = -I$(TOOLKITSRC) -I$(TOP)
+
+
+ComplexProgramTarget_1(xterm,$(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB),-ltermcap)
+
+SingleProgramTarget(resize,$(OBJS2),,-lc -ltermcap)
+InstallProgramWithFlags(resize, $(BINDIR), )
+InstallManPage(resize,$(MANDIR))

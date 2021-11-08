@@ -1,0 +1,46 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:47 EST
+Date: Fri, 4 Mar 88 16:13:47 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA05066@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: mfbDestroyPixmap
+
+### bug number:   21
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 17:23:04 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 175934; Thu 3-Mar-88 17:22:17 EST
+Date: Thu, 3 Mar 88 17:22 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: mfbDestroyPixmap
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com
+Message-Id: <19880303222205.8.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	mfbDestroyPixmap is passed an extra argument by
+FreeClientResources.
+
+DESCRIPTION:
+	 This causes a blowup on machines that check numbers of
+arguments.
+
+REPEAT-BY:
+	Allocate a pixmap, then close the connection.

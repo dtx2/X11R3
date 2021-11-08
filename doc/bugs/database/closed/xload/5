@@ -1,0 +1,100 @@
+Return-Path: sequent!michael@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 20 Sep 88 17:25:13 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA09886; Tue, 20 Sep 88 17:24:56 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA01691; Tue, 20 Sep 88 14:24:43 PDT
+Message-Id: <8809202124.AA01691@decwrl.dec.com>
+To: xbugs@athena.mit.edu
+Subject: R3B - Xaw/Load.c needs Sequent mods
+Cc: michael@decwrl.dec.com, len@decwrl.dec.com
+Date: Tue, 20 Sep 88 13:38:59 PDT
+From: Michael Squires <sequent!michael@decwrl.dec.com>
+
+### bug number:   985
+### area:         xload
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 3 (pre-release)
+SYNOPSIS:
+	The load widget needs some definitions for Sequent systems.
+DESCRIPTION:
+	Configuration:
+		server:	Sun 3/50, SunOS3.2
+		client: Symmetry S81, Dynix 3.0.12
+
+REPEAT-BY:
+	Try to compile on a Sequent system.
+FIX:
+
+*** Load.c	Tue Sep  6 13:41:53 1988
+--- /w/michael/xnew/src/lib/Xaw/Load.c	Tue Sep 20 12:58:43 1988
+***************
+*** 62,67
+  #ifdef UTEK
+  #define FSCALE	100.0
+  #endif
+  
+  extern long lseek();
+  extern void exit();
+
+--- 88,96 -----
+  #ifdef UTEK
+  #define FSCALE	100.0
+  #endif
++ #ifdef sequent
++ #define FSCALE	1000.0
++ #endif
+  
+  extern long lseek();
+  extern void exit();
+***************
+*** 402,407
+  # define KERNEL_FILE "/vmunix"
+  # endif /* SYSTYPE_SYSV */
+  #endif /* mips */
+  /*
+   * provide default for everyone else
+   */
+
+--- 432,440 -----
+  # define KERNEL_FILE "/vmunix"
+  # endif /* SYSTYPE_SYSV */
+  #endif /* mips */
++ #ifdef sequent
++ #define KERNEL_FILE "/dynix"
++ #endif /* sequent */
+  /*
+   * provide default for everyone else
+   */
+***************
+*** 505,511
+  
+  	(void) lseek(kmem, loadavg_seek, 0);
+  #endif /* macII */
+! #if defined(sun) || defined (UTEK)
+  	{
+  		long temp;
+  		(void) read(kmem, (char *)&temp, sizeof(long));
+
+--- 538,544 -----
+  
+  	(void) lseek(kmem, loadavg_seek, 0);
+  #endif /* macII */
+! #if defined(sun) || defined (UTEK) || defined(sequent)
+  	{
+  		long temp;
+  		(void) read(kmem, (char *)&temp, sizeof(long));
+
+
+
+
+			Michael Squires
+			Sequent Computer Systems, Inc.
+			15450 SW Koll Parkway
+			Beaverton, OR  97006
+			(503) 626-5700 x9891
+			sequent!michael@decwrl.dec.com
+			michael%sequent.uucp@tektronix.tek.com@relay.cs.net
+

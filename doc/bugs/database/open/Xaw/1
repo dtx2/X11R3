@@ -1,0 +1,54 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Wed, 1 Jun 88 09:17:11 EDT
+Date: Wed, 1 Jun 88 09:17 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: Scroll.c call_data botch?
+To: swick@athena.mit.edu, xbugs@expo.lcs.mit.edu
+Message-Id: <19880601131718.6.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   552
+### area:         Xaw
+### severity:     low
+### comments:     
+
+Date: Wed, 1 Jun 88 08:17 EDT
+From: Michael Squires <sequent!michael@decwrl.dec.com>
+
+4) Specific technical puzzler: (I may have missed a bug report/fix on
+this but thought I had kept up to date - a pointer to the right place
+is great)
+    
+    - the Xt documentation I have (X.V11R2) says (section 5.1) that
+	a callbackproc takes three args: w, client_data, call_data -
+	where the two 'data's are "caddr_t" - unless I'm missing
+	something, that means my callbackproc gets a pointer to a
+	data object for the call_data
+    - the Xaw documentation (X.V11R2) says (section 3.4) that the
+	scrollbar widget callbackproc for thumbing is called with:
+	(w,client_data,percent) where client_data IS a "caddr_t" but
+	percent is a "float"
+    - the Xaw module Scroll.c certainly agrees with the Xaw doc by
+	passing a float, and the examples/Xaw/xscroll.c example
+	declares it that way
+    - however, the Xt stuff (Callbacks.c) treats it as a "caddr_t"
+	and passes it through several levels that way
+    - the stuff builds & runs on my Sun fine, but blows up on both
+	our ns32032 and i386 machines
+    - it looks like whats happening is that the "float" in Scroll.c
+	is being promoted to a double (when passed by value in a function
+	call) and getting truncated to the top 32 bits as it is passed
+	along - this works on a VAX (and apparently on a Sun) - all you
+	lose is some precision (which you never had anyway) - but on
+	the ns32032 & i386 with IEEE format floating point the top
+	32 bits of a double (which is what the callback proc is REALLY
+	expecting, since floats are promoted) ARE NOT a valid number.
+
+	to receive *top, then everything works fine on the i386 (haven't
+	tried it yet on ns32032 & Sun, but assume it will work)
+    - note that this is happening from Scroll.c with "position" from
+	the scrollbar, but since thats an "int" then nothing got caught
+    - so, either the Xaw doc/code/examples are wrong and not in
+	compliance with the Xt spec OR the Xt spec is wrong (but I think
+	it does describe the correct interface) OR I'm badly screwed up -
+	any thoughts?
+

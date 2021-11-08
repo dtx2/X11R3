@@ -1,0 +1,112 @@
+Return-Path: vesper%3d.DEC@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 3 May 88 10:45:07 EDT
+Received: by decwrl.dec.com (5.54.4/4.7.34)
+	id AA06648; Tue, 3 May 88 07:44:06 PDT
+Message-Id: <8805031444.AA06648@decwrl.dec.com>
+From: vesper%3d.DEC@decwrl.dec.com (This is not a mail personal name)
+Date: 3 May 88 10:44
+To: xbugs@expo.lcs.mit.edu, VESPER%3d.DEC@decwrl.dec.com
+Subject: XLookupString doesn't handle Ctrl-3 as Escape
+
+### bug number:   444
+### area:         Xlib
+### severity:     very low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VAXstation II/GPX, but it doesn't matter since it is all in XLIB
+
+CLIENT OPERATING SYSTEM:
+	VMS, but again it doesn't matter
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+
+    XLookupString does not handle ^2 through ^8.
+
+DESCRIPTION:
+
+    XLookupString does not handle the `new' (vt200 era) control-key
+    combinations for ESC and others.
+
+	    key		expected result
+
+	    2		NUL (0/0)
+	    3		ESC (1/11)
+	    4		FS (1/12)
+	    5		GS (1/13)
+	    6		RS (1/14)
+	    7		US (1/15)
+	    8		DEL (7/15)
+
+    I believe that these combinations are part of ANSI X4.23-1982,
+    Keyboard Arrangement for Alphanumeric Machines.
+
+REPEAT-BY:
+
+    Hold down Ctrl, type `3', in an Xterm, for example.  You will
+    get a `3' instead of an escape (^[).
+
+FIX:
+    Make the following modifications to XKeybind.c:
+
+************
+File AFV:[XV11R2.LIB.X]XKEYBIND.C;13
+   22   #define HAS_CTRL(c)  ( ((c) >= XK_at && (c) <= XK_asciitilde)  \
+   23       || ((c) >= XK_2 && (c) <= XK_8) \
+   24       || (c) == XK_Delete \
+   25       || (c) == XK_space)
+   26   
+******
+File AFV:[XV11R2.LIB.X]XKEYBIND.C;1
+   15   #define HAS_CTRL(c)  (((c) >= '@' && (c) <= '\177') || (c) == ' ')
+   16   
+************
+************
+File AFV:[XV11R2.LIB.X]XKEYBIND.C;13
+  231   
+  232   	/* CTRL overrides shift and lock */
+  233   	/* SHIFT overrides lock */
+  234   
+  235        if ((event->state & ControlMask) && HAS_CTRL (symbol) ) 
+  236   	    {}	/* don't change to upper symbol even if ShiftMask is set */
+  237   
+  238        else if ((event->state & ControlMask) && HAS_CTRL (usymbol) ) 
+  239   	    symbol = usymbol;	/* ignore ShiftMask and use upper symbol */
+  240   
+  241        else if ((event->state & ShiftMask) && usymbol != NoSymbol)
+  242   	     symbol = usymbol;
+  243   
+  244        else if (event->state & LockMask) {
+  245   	XModifierKeymap *m = event->display->modifiermap;
+******
+File AFV:[XV11R2.LIB.X]XKEYBIND.C;1
+  201        if (event->state & LockMask) {
+  202   	XModifierKeymap *m = event->display->modifiermap;
+************
+************
+File AFV:[XV11R2.LIB.X]XKEYBIND.C;13
+  377   	    if ((event->state & ControlMask) && HAS_CTRL(symbol)) {
+  378   		if (symbol == XK_2) buf[0] = 000;
+  379   		else if (symbol >= XK_3 && symbol <= XK_7) {
+  380   		    buf[0] -= (XK_3 - 033);
+  381   		    }
+  382   		else if (symbol == XK_8) buf[0] = 0177;
+  383   	        else buf[0] = buf[0] & 0x1F;
+  384   		}
+  385        	    length = 1;
+******
+File AFV:[XV11R2.LIB.X]XKEYBIND.C;1
+  247   	    if ((event->state & ControlMask) && HAS_CTRL(buf[0]))
+  248   	        buf[0] = buf[0] & 0x1F;
+  249        	    length = 1;
+************
+
+Andy V
+

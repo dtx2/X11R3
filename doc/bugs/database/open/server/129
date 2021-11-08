@@ -1,0 +1,200 @@
+Return-Path: ellis@ATHENA.MIT.EDU
+Received: by expo.lcs.mit.edu; Wed, 4 May 88 09:54:36 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA29337; Wed, 4 May 88 08:53:21 EST
+Received: by E40-369-2.MIT.EDU (5.45/4.7) id AA29405; Wed, 4 May 88 09:52:25 EDT
+Message-Id: <8805041352.AA29405@E40-369-2.MIT.EDU>
+To: xbugs@ATHENA.MIT.EDU
+Cc: ellis@ATHENA.MIT.EDU
+Subject: 2 Xqdss bugs
+Date: Wed, 04 May 88 09:52:21 EDT
+From: Steve Ellis <ellis@ATHENA.MIT.EDU>
+
+### bug number:   451
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+        1) text does not appear on screen with planemask set
+
+        2) dashed line does not appear when function set to GXinvert
+
+DESCRIPTION:
+        1) For an application intended to run on a VSII/GPX with 
+           black foreground and white background, the planemask was
+           set by "gcv.plane_mask = foreground ^ background;" so that
+           xor drawing would produce desired results. Using a gc with
+           this planemask and GXcopy causes text to not appear.
+
+        2) Dashed lines do not appear on screen when draw function is
+           set to GXinvert.
+	
+REPEAT-BY:
+        compile and run sample program below. 
+
+/* Sample program to show Xqdss bugs */
+  
+#include <stdio.h>
+#include <ctype.h>
+#include <math.h>
+#include <strings.h>
+  
+  /* X11 include files */
+  
+#include <X11/Xlib.h>
+
+static Display *dpyp;
+static int bloxscreen;
+static int bloxdepth;
+static Window window;
+static XSetWindowAttributes bloxwindow;
+static unsigned int bloxwmask;
+
+
+/* Default values for screen layout */
+
+#define DEFAULT_X_OFFSET 0
+#define DEFAULT_Y_OFFSET 0
+#define DEFAULT_X_SIZE 200
+#define DEFAULT_Y_SIZE 200
+#define DEFAULT_BORDER_WIDTH 2
+
+/* these variable control where the window appears on the screen */
+
+static int x_offset     = DEFAULT_X_OFFSET;
+static int y_offset     = DEFAULT_Y_OFFSET;
+static int x_size       = DEFAULT_X_SIZE;
+static int y_size       = DEFAULT_Y_SIZE;
+static int border_width = DEFAULT_BORDER_WIDTH;
+
+#define CFP CopyFromParent
+
+  /* Graphics context related declarations */
+  GC dash_gc,text_gc;
+
+
+static int foreground, background;	/* pixel values for drawing colors */
+
+/*
+ *	VAXstation initialization routine.
+ */
+
+main(argc,argv)
+  int argc;
+  char *argv;
+{
+
+  char *cp;
+  char *getenv();
+  XGCValues gcv;
+  unsigned long gcvmask;
+   char *display = NULL;
+   XEvent event;
+   unsigned long planemask;
+   int dfunc;
+  
+  if( !(dpyp = XOpenDisplay(display)) ){
+    fprintf (stderr,
+	     "%s in %s:  Unable to open display.\n"
+	    );
+    
+  } 
+  bloxscreen = DefaultScreen(dpyp);
+  bloxdepth  = DefaultDepth(dpyp,bloxscreen);
+
+  
+  if (dpyp == (Display *) NULL) {
+    fprintf (stderr,
+	     "%s in %s:  Unable to open display.\n"
+	     );
+  }
+  
+#ifdef XDEBUG
+  XSynchronize(dpyp,YES);	
+#endif XDEBUG
+  
+  /* Set up master window for blox. */
+
+  foreground = BlackPixel(dpyp,bloxscreen);
+  background = WhitePixel(dpyp,bloxscreen);
+
+  /* The drawing masks as set result in black graphics on a white */
+  /* background.  See if the environment variable BGB_BACKGROUND */
+  /* is set to "BLACK", if so twiddle the background and the */
+  /* forground. */
+  
+  cp = getenv("BGB_BACKGROUND");
+  if ((strncmp(cp, "BLACK", 5) == 0) || (strncmp(cp, "black", 5) == 0)) {
+    foreground = WhitePixel(dpyp,bloxscreen);
+    background = BlackPixel(dpyp,bloxscreen);
+  }
+  
+  bloxwindow.background_pixel = background ;
+  bloxwindow.border_pixel     = foreground ;
+/*  bloxwindow.backing_store    = WhenMapped ; */
+  bloxwindow.backing_store    = NotUseful ;
+  bloxwindow.override_redirect         = True ;
+  bloxwmask = 
+    CWBackPixel | CWBorderPixel | CWBackingStore | CWOverrideRedirect ;
+  
+  
+  window = XCreateWindow(dpyp, RootWindow(dpyp,bloxscreen), 
+			 x_offset, y_offset, x_size, y_size,
+			 border_width,CFP,CFP,CFP,
+			 bloxwmask, &bloxwindow);
+  
+  
+  if (!window) {
+    fprintf (stderr, 
+	     "%s in %s:  Error opening main window.\n"
+	     );
+    XCloseDisplay (dpyp);
+  }
+  
+
+  /* Make the window visible on the screen. */
+  XSelectInput(dpyp,window,ExposureMask);
+  XMapWindow (dpyp, window);
+
+  XMaskEvent(dpyp,ExposureMask,&event);
+  /* set default graphics_context*/	
+
+  gcv.foreground = foreground;
+  gcv.background = background;
+  gcv.plane_mask = foreground ^ background;
+  gcv.function   = GXcopy;
+  gcv.fill_style = FillSolid;
+  gcv.line_style = LineOnOffDash;
+  gcv.graphics_exposures = False;
+  
+  gcvmask = GCForeground | GCBackground | GCFillStyle | 
+    GCLineStyle | GCGraphicsExposures  |GCFunction|GCPlaneMask;
+  
+  text_gc = XCreateGC(dpyp,window,gcvmask,&gcv);
+  gcv.function = GXinvert;
+  gcv.plane_mask = ~0;
+  dash_gc = XCreateGC(dpyp,window,gcvmask,&gcv);
+
+  /* On Xqdss, line and rectangle appear, no text */
+
+  XDrawString(dpyp,window, text_gc,10,25,"ABCDEFGHIJKL",12);
+  XDrawLine(dpyp,window,text_gc,10,27,75,27);
+  XFillRectangle(dpyp,window,text_gc,10,50,20,20);
+	
+  /* On Xqdss, String and rectangle appear, Dashed line does not appear */
+
+  XDrawString(dpyp,window, dash_gc,10,100,"ABCDEFGHIJKL",12);
+  XDrawLine(dpyp,window,dash_gc,10,102,75,102);
+  XFillRectangle(dpyp,window,dash_gc,10,150,20,20);
+
+  XFlush(dpyp);
+  
+  sleep (10);
+  
+
+}
+
+

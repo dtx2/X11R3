@@ -1,0 +1,273 @@
+Return-Path: harrisr@turing.cs.rpi.edu
+Received: by EXPO.LCS.MIT.EDU; Wed, 20 Jul 88 17:29:01 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA15856; Wed, 20 Jul 88 17:28:58 EDT
+Received: by fs3.cs.rpi.edu (5.54/1.2-RPI-CS-Dept)
+	id AA02764; Wed, 20 Jul 88 17:14:58 EDT
+Date: Wed, 20 Jul 88 17:14:55 EDT
+From: harrisr@turing.cs.rpi.edu (Richard Harris)
+Received: by turing.cs.rpi.edu (3.2/1.2-RPI-CS-Dept)
+	id AA18744; Wed, 20 Jul 88 17:14:55 EDT
+Message-Id: <8807202114.AA18744@turing.cs.rpi.edu>
+To: xbugs@athena.mit.edu
+Subject: some fixes to CLX  (X11R2)
+
+### bug number:   750
+### area:         CLX
+### severity:     low
+### comments:     
+
+Here are (most of) the patches to CLX that I use.
+Let me know if you want more explanation of these changes.
+
+Rick Harris
+
+clx: display-resource-id-map should be an eql hash table, not eq
+gcontext: put compiler-let inside the defuns, helping simple-minded compilers
+input: event-loop: timeout can also be :queued-only, providing better synchronization:
+                    use event-loop with timeout :queued-only following a display-finish-output
+       process-event: if handler is a list, it is a function
+                      this allow the handler to be uncompiled or traced
+macros: make-array has no keyword :data-type
+manager: defsetf cut-buffer fixes
+text: add :initial-element 0 to the make-array call
+
+*** /us2/src/X.V11R2/lib/CLX/clx.l	Fri Feb 26 00:26:31 1988
+--- clx.lisp	Sun Jun 19 00:53:30 1988
+***************
+*** 426,432 ****
+    (resource-id-byte nil)			; resource ID mask field (used with DPB & LDB)
+    (resource-id-count 0 :type resource-id)	; resource ID mask count
+  						; (used for allocating ID's)
+!   (resource-id-map (make-hash-table :test #+explorer #'eql #-explorer #'eq
+  				    :size *resource-id-map-size*)
+  		   :type hash-table)		; hash table maps resource-id's to
+  						; objects (used in lookup functions)
+--- 429,435 ----
+    (resource-id-byte nil)			; resource ID mask field (used with DPB & LDB)
+    (resource-id-count 0 :type resource-id)	; resource ID mask count
+  						; (used for allocating ID's)
+!   (resource-id-map (make-hash-table :test #'eql
+  				    :size *resource-id-map-size*)
+  		   :type hash-table)		; hash table maps resource-id's to
+  						; objects (used in lookup functions)
+*** /us2/src/X.V11R2/lib/CLX/gcontext.l	Fri Feb 26 00:26:58 1988
+--- gcontext.lisp	Wed Apr 13 18:30:08 1988
+***************
+*** 207,230 ****
+  	 (internal-accessor (xintern 'gcontext-internal- name))
+  	 (internal-setfer (xintern 'set- gcontext-name)))
+      `(within-definition (,name def-gc-accessor)
+!        (compiler-let ((*buffer* '(gcontext-display gcontext)))
+! 
+! 	 (defun ,gcontext-name (gcontext)
+! 	   (declare (type gcontext gcontext))
+! 	   (declare-values (or null ,type))
+  	   (let ((value (,internal-accessor (gcontext-local-state gcontext))))
+  	     (declare (type (or null card32) value))
+! 	     (when value ;; Don't do anything when value isn't known
+! 	       (decode-type ,type value))))
+         
+  	 (defun ,internal-setfer (gcontext value)
+  	   (declare (type gcontext gcontext)
+  		    (type ,type value))
+! 	   (modify-gcontext (gcontext local-state)
+! 	     (setf (,internal-accessor local-state) (encode-type ,type value))
+! 	     value))
+         
+! 	 (defsetf ,gcontext-name ,internal-setfer)))))
+  
+  (defmacro incf-internal-timestamp (state)
+    (let ((ts (gensym)))
+--- 207,230 ----
+  	 (internal-accessor (xintern 'gcontext-internal- name))
+  	 (internal-setfer (xintern 'set- gcontext-name)))
+      `(within-definition (,name def-gc-accessor)
+!        (defun ,gcontext-name (gcontext)
+! 	 (declare (type gcontext gcontext))
+! 	 (declare-values (or null ,type))
+! 	 (compiler-let ((*buffer* '(gcontext-display gcontext)))
+  	   (let ((value (,internal-accessor (gcontext-local-state gcontext))))
+  	     (declare (type (or null card32) value))
+! 	     (when value;; Don't do anything when value isn't known
+! 	       (decode-type ,type value)))))
+         
+  	 (defun ,internal-setfer (gcontext value)
+  	   (declare (type gcontext gcontext)
+  		    (type ,type value))
+! 	   (compiler-let ((*buffer* '(gcontext-display gcontext)))
+! 	     (modify-gcontext (gcontext local-state)
+! 	       (setf (,internal-accessor local-state) (encode-type ,type value))
+! 	       value)))
+         
+! 	 (defsetf ,gcontext-name ,internal-setfer))))
+  
+  (defmacro incf-internal-timestamp (state)
+    (let ((ts (gensym)))
+*** /us2/src/X.V11R2/lib/CLX/input.l	Fri Feb 26 00:27:03 1988
+--- input.lisp	Sat Jun 18 23:28:33 1988
+***************
+*** 630,637 ****
+  			       (setq keywords (append item keywords))
+  			       `((,(putify type) ,index
+  				  (check-consistency ',names ,@item) ,@args))))))))
+!     #-excl
+!     (ignore get-index put-index)
+      `(within-definition (,name declare-event)
+         (defun ,get-macro (display event-key variable)
+  	 ;; Note: we take pains to macroexpand the get-code here to enable application
+--- 630,636 ----
+  			       (setq keywords (append item keywords))
+  			       `((,(putify type) ,index
+  				  (check-consistency ',names ,@item) ,@args))))))))
+!     (progn get-index put-index)
+      `(within-definition (,name declare-event)
+         (defun ,get-macro (display event-key variable)
+  	 ;; Note: we take pains to macroexpand the get-code here to enable application
+***************
+*** 863,869 ****
+  	   (setq ,previous *recursive-event-queue*
+  		 ,events (cdr *recursive-event-queue*)))
+  	 (do ((,result nil))
+! 	     (,result ,result)
+  						; Read events when queue empty
+  	   (unless ,events
+  	     (when (wait-for-event ,display ,timeout ,force-output-p)
+--- 862,869 ----
+  	   (setq ,previous *recursive-event-queue*
+  		 ,events (cdr *recursive-event-queue*)))
+  	 (do ((,result nil))
+! 	     ((or ,result (and (null ,events) (eql ,timeout :queued-only)))
+! 	      ,result)
+  						; Read events when queue empty
+  	   (unless ,events
+  	     (when (wait-for-event ,display ,timeout ,force-output-p)
+***************
+*** 904,910 ****
+    ;; until non-nil is generated for some event, or for the specified timeout (in
+    ;; seconds, if given); however, it is acceptable for an implementation to wait only
+    ;; once on network data, and therefore timeout prematurely.  Returns nil on
+!   ;; timeout.  If handler is a sequence, it is expected to contain handler functions
+    ;; specific to each event class; the event code is used to index the sequence,
+    ;; fetching the appropriate handler.  Handler is called with raw resource-ids, not
+    ;; with resource objects.  The arguments to the handler are described using declare-event.
+--- 904,910 ----
+    ;; until non-nil is generated for some event, or for the specified timeout (in
+    ;; seconds, if given); however, it is acceptable for an implementation to wait only
+    ;; once on network data, and therefore timeout prematurely.  Returns nil on
+!   ;; timeout.  If handler is a vector, it is expected to contain handler functions
+    ;; specific to each event class; the event code is used to index the sequence,
+    ;; fetching the appropriate handler.  Handler is called with raw resource-ids, not
+    ;; with resource objects.  The arguments to the handler are described using declare-event.
+***************
+*** 913,920 ****
+    ;; from the queue (it is left in place), NIL means the event is removed.
+    
+    (declare (type display display)
+! 	   (type t handler) ;; (or (sequence (function (display &rest key-vals) t))
+! 	   ;;	   (function (display event-key &rest key-vals) t))
+  	   (type (or null number) timeout)
+  	   (type boolean peek-p))
+    (event-loop (display event timeout peek-p discard-p force-output-p)
+--- 913,921 ----
+    ;; from the queue (it is left in place), NIL means the event is removed.
+    
+    (declare (type display display)
+! 	   (type t handler) ; if handler is a list, it should be a function
+! 	   ;; (or (vector (function (display &rest key-vals) t))
+! 	   ;;	          (function (display event-key &rest key-vals) t))
+  	   (type (or null number) timeout)
+  	   (type boolean peek-p))
+    (event-loop (display event timeout peek-p discard-p force-output-p)
+***************
+*** 922,930 ****
+  	   (event-decoder (and (< event-code (length *event-handler-vector*))
+  			       (aref *event-handler-vector* event-code))))
+        (if event-decoder
+! 	  (let ((event-handler (if (type? handler 'sequence)
+  				   (and (< event-code (length handler))
+! 					(elt handler event-code))
+  				 handler)))
+  	    (if event-handler
+  		(funcall event-decoder display event event-handler)
+--- 923,931 ----
+  	   (event-decoder (and (< event-code (length *event-handler-vector*))
+  			       (aref *event-handler-vector* event-code))))
+        (if event-decoder
+! 	  (let ((event-handler (if (type? handler 'vector)
+  				   (and (< event-code (length handler))
+! 					(aref handler event-code))
+  				 handler)))
+  	    (if event-handler
+  		(funcall event-decoder display event event-handler)
+*** /us2/src/X.V11R2/lib/CLX/macros.l	Fri Feb 26 00:27:06 1988
+--- macros.lisp	Wed Apr 13 18:38:23 1988
+***************
+*** 367,373 ****
+  
+  (defmacro client-message-event-get-sequence ()
+    '(let* ((format (read-card8 1))
+! 	  (sequence (make-array 20 :data-type `(unsigned-byte ,format))))
+       (do ((i 12)
+  	  (j 0 (1+ j)))
+  	 ((>= i 32))
+--- 367,373 ----
+  
+  (defmacro client-message-event-get-sequence ()
+    '(let* ((format (read-card8 1))
+! 	  (sequence (make-array 20 :element-type `(unsigned-byte ,format))))
+       (do ((i 12)
+  	  (j 0 (1+ j)))
+  	 ((>= i 32))
+*** /us2/src/X.V11R2/lib/CLX/manager.l	Fri Feb 26 00:27:08 1988
+--- manager.lisp	Fri Jul 15 00:23:47 1988
+***************
+*** 602,608 ****
+  		  :start start :end end :transform transform)))
+  
+  ;; Implement the following:
+! ;; (DEFSETF cut-buffer (display buffer &key (type :string) (FORMAT 8)
+  ;;			        (transform #'char->card8) (start 0) end) (data)
+  ;; In order to avoid having to pass positional parameters to set-cut-buffer,
+  ;; We've got to do the following.  WHAT A PAIN...
+--- 602,608 ----
+  		  :start start :end end :transform transform)))
+  
+  ;; Implement the following:
+! ;; (DEFSETF cut-buffer (display &key buffer (type :string) (FORMAT 8)
+  ;;			        (transform #'char->card8) (start 0) end) (data)
+  ;; In order to avoid having to pass positional parameters to set-cut-buffer,
+  ;; We've got to do the following.  WHAT A PAIN...
+***************
+*** 621,628 ****
+  		`(cut-buffer ,@options)))
+      (unless (member (car option) '(:buffer :type :format :start :end :transform))
+        (error "Keyword arg ~s isn't recognized" (car option)))
+-     (push (car option) temps)
+-     (push (car option) values)
+      (let ((x (gensym)))
+        (push x temps)
+        (push (cadr option) values)
+--- 621,626 ----
+*** /us2/src/X.V11R2/lib/CLX/text.l	Fri Feb 26 00:27:18 1988
+--- text.lisp	Wed Apr 13 18:43:42 1988
+***************
+*** 1106,1112 ****
+  			     (>= (array-dimension data 1) keysyms-per-keycode))
+  			data
+  		      (make-array `(,(+ start keycode-count) ,keysyms-per-keycode)
+! 				  :element-type 'keysym)))
+  	    (i start (1+ i)))
+  	   ((zerop keycode-count) (setq data result))
+  	(buffer-input display buffer-bbuf 0 bytes-per-keycode)
+--- 1106,1113 ----
+  			     (>= (array-dimension data 1) keysyms-per-keycode))
+  			data
+  		      (make-array `(,(+ start keycode-count) ,keysyms-per-keycode)
+! 				  :element-type 'keysym
+! 				  :initial-element 0)))
+  	    (i start (1+ i)))
+  	   ((zerop keycode-count) (setq data result))
+  	(buffer-input display buffer-bbuf 0 bytes-per-keycode)
+
+--- The End ---
+

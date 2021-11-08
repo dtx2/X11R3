@@ -1,0 +1,55 @@
+Return-Path: Richard.Draves@ius3.ius.cs.cmu.edu
+Received: by expo.lcs.mit.edu; Sun, 19 Jun 88 21:03:08 EDT
+Message-Id: <8806200103.AA06058@EXPO.LCS.MIT.EDU>
+Date: Sun, 19 Jun 88 21:03:04 EDT
+From: Richard.Draves@ius3.ius.cs.cmu.edu
+To: xbugs@expo.lcs.mit.edu
+Subject: fc bug
+
+### bug number:   616
+### area:         fc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	APA-16
+
+SYNOPSIS:
+	fc gets divide-by-zero floating exception
+
+DESCRIPTION:
+	When I tried feeding some converted X10 fonts through fc, it died
+	due to a divide-by-zero exception.  I tracked down the problem to
+	the computeweight function, which doesn't check for a zero denominator.
+	I am not sure if a legal BDF file could cause this problem.  I fixed
+	the problem by making computeweight return -1 in this case, but the
+	proper thing to do might be to call fatal().
+
+REPEAT-BY:
+	Try to run the converted X10 fonts dolby.bdf or icons.bdf (found on
+	expo) through fc.
+
+FIX:
+*** fonts/compiler/fc.c.~1~	Sun Jun 19 18:59:16 1988
+--- fonts/compiler/fc.c	Sun Jun 19 18:59:42 1988
+***************
+*** 277,282 ****
+--- 277,284 ----
+      for (i=0; i<n1dChars(font->pFI); i++)
+  	width += font->pCI[i].metrics.characterWidth;
+      area = width*(font->pFI->fontAscent+font->pFI->fontDescent);
++     if (area == 0)
++ 	return -1;
+      for (i=0,p=font->pGlyphs; i<font->pFI->maxbounds.byteOffset; i++,p++)
+      	for (b=(*p); b; b >>= 1)
+  	    bits += b & 1;
+

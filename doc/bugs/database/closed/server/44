@@ -1,0 +1,79 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 28 Apr 88 14:42:35 EDT
+Date: Thu, 28 Apr 88 14:41 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: server CirculateNotify bug
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880428184137.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   464
+### area:         server
+### severity:     low
+### comments:	  
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	all
+
+AREA:
+	server
+
+SYNOPSIS:
+	CirculateNotify events generated on the wrong windows
+
+DESCRIPTION:
+	For CirculateNotify events, DeliverEvents was being
+	called with the parent window, rather than the window
+	actually circulated, causing events to either not be
+	generated or generated on the wrong windows.
+
+REPEAT-BY:
+	run the circulate test in the Testing Consortium test suite
+
+FILES:
+	server/dix/window.c
+
+FIX:
+
+*** /tmp/,RCSt1a16659	Thu Apr 28 14:41:12 1988
+--- server/dix/window.c	Thu Apr 28 14:37:29 1988
+***************
+*** 22,28 ****
+  
+  ******************************************************************/
+  
+! /* $Header: window.c,v 1.201 88/03/16 10:29:24 rws Exp $ */
+  
+  #include "X.h"
+  #define NEED_REPLIES
+--- 22,28 ----
+  
+  ******************************************************************/
+  
+! /* $Header: window.c,v 1.202 88/04/28 14:37:10 rws Exp $ */
+  
+  #include "X.h"
+  #define NEED_REPLIES
+***************
+*** 2238,2244 ****
+  						        : (WindowPtr)NULL);
+  
+      event.u.u.type = CirculateNotify;
+!     DeliverEvents(pParent, &event, 1, NullWindow);
+      return(Success);
+  }
+  
+--- 2238,2244 ----
+  						        : (WindowPtr)NULL);
+  
+      event.u.u.type = CirculateNotify;
+!     DeliverEvents(pWin, &event, 1, NullWindow);
+      return(Success);
+  }
+  
+

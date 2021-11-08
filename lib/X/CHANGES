@@ -1,0 +1,49 @@
+The following changes have been made to this directory since R2:
+
+     o  XMisc.c has been added; it contains several routines for accessing
+	opaque information and was adopted in June.
+     o  Xlib now runs on the Cray and should be much easier to port to 
+       	non-32bit architectures.  As a result, several new mechanisms 
+	have been added:
+	     -  new ifdef MUSTCOPY for machines that need to copy data in and
+		out of network buffers instead of referencing. 
+	     -  new SIZEOF macro and lots of sizeof_ symbolic constants for 
+		computing size of protocol structures.
+	     -  new NEXTPTR macro for finding address of data following a
+		typed pointer; returns a (char *) on MUSTCOPY machines and
+		(type *) on direct dereference machines.
+	     -  new Data16, _XRead16, _XRead16Pad, Data32, and _XRead32
+		for converting arrays of shorts and longs to and from
+		INT16 and INT32.
+	     -  new macro OneDataCard32 for inserting a single data word.
+	     -  new STARTITERATE and ENDITERATE for walking network buffer.
+     o  The routines XChangeProperty and XGetWindowProperty now take care of
+	converting arrays of chars, shorts, and longs to and from INT8, 
+	INT16, and INT32.
+     o  The XCheck*Event routines and _XReadEvents have been changed to only
+	flush if they are about to block.
+     o  An experimental implementation of the ICCCM pseudoroots has been
+	provided for prototyping rooms or debugging nested window managers.
+	HOWEVER, IT IS NOT PART OF THE XLIB SPECIFICATION AND IS SUBJECT TO 
+	CHANGE OR REMOVAL WITHOUT NOTICE.  See the client "pseudoroot".
+     o  Untested support for Mips computers has been contributed.
+     o  Graphics Contexts cache flushing improved.
+     o  Signed network protocol objects (e.g. INT8, INT16, and INT32 within
+	an xSomething structure) now are extracted using the cvt macros in
+	X11/Xmd.h because bitfields are not guaranteed to honor signs.
+     o  preprocessor lines of the form #endif FOO have been changed to 
+	#endif /* FOO */ according to spec.
+     o  XGetWindowProperties always mallocs space for its return data even if
+	the data has zero elements, to match the Xlib manual.
+     o  XLookupString now has list of key bindings per display, can cope with
+	mod map changes, handles up and down case of all Latin-1, doesn't
+	convert non-Latin-1 keysyms, understand Control 2-8 and /, and use
+	prefered protocol definition for CapsLock.
+     o  fixed memory leaks from not freeing vendor name or event queue list.
+     o  make XPutImage handle nibble shifting.
+     o  better region code, including fix for overflow on complex regions.
+     o  made SendEvent subevent structure be a byte array on MUSTCOPY machines
+	because the protocol request wasn't quadaligned.
+     o  XrmPutfileDatabase will write file with proper special char quoting.
+     o  fixed cursor font caching.
+

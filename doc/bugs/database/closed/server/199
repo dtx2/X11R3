@@ -1,0 +1,46 @@
+Return-Path: ha%srfsup.DEC@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 12 Jul 88 17:52:44 EDT
+Received: by decwrl.dec.com (5.54.4/4.7.34)
+	id AA05481; Tue, 12 Jul 88 14:50:56 PDT
+Date: Tue, 12 Jul 88 14:50:56 PDT
+Message-Id: <8807122150.AA05481@decwrl.dec.com>
+From: ha%srfsup.DEC@decwrl.dec.com
+To: xbugs@expo.lcs.mit.edu
+Subject: X.V11R2 install problem
+
+### bug number:   710
+### area:         server
+### severity:     low
+### comments:     
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Monochrome DEC VaxStation 2000
+
+CLIENT OPERATING SYSTEM:
+	Ultrix Release 2.2
+
+DISPLAY:
+	QVSS
+
+SYNOPSIS:
+	The mouse cursor remains a 16x16 white block.
+
+DESCRIPTION:
+
+REPEAT-BY:
+
+FIX:
+
+The following line needs to be inserted after line 608 in the file
+qvss_io.c:
+
+ioctl(fdQVSS, QIOWCURSOR, (short *)pCurs->devPriv[pScr->myNum]);
+
+or the mouse cursor remains a 16x16 white block.
+
+

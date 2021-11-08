@@ -1,0 +1,50 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 23 Jun 88 23:26:09 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23722; Thu, 23 Jun 88 23:24:45 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 23 Jun 88 19:24:53 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA08601; Thu, 23 Jun 88 20:24:35 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 23 Jun 88 20:26:23 pdt
+Message-Id: <8806240326.AA06637@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: Clock widget problem
+X-Mailer: mh6.5
+Date: Thu, 23 Jun 88 20:26:18 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   627
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Negative padding is nonsense.
+DESCRIPTION:
+	Allowing the user to specify a negative padding can cause
+	miscalculations by the widget and is illogical.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** lib/Xaw/Clock.c.old	Tue Jun 14 08:32:25 1988
+--- lib/Xaw/Clock.c	Tue Jun 14 08:33:26 1988
+***************
+*** 152,157
+      else
+          valuemask &= ~GCFont;	/* use server default font */
+  
+      min_width = min_height = ANALOG_SIZE_DEFAULT;
+      if(!w->clock.analog) {
+         char *str;
+
+--- 152,159 -----
+      else
+          valuemask &= ~GCFont;	/* use server default font */
+  
++     if (w->clock.padding < 0)
++ 	w->clock.padding = 8;
+      min_width = min_height = ANALOG_SIZE_DEFAULT;
+      if(!w->clock.analog) {
+         char *str;
+

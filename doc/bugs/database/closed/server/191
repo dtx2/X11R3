@@ -1,0 +1,44 @@
+Return-Path: shep@allspice.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 30 Aug 88 16:10:24 EDT
+Received: from shep.sage by PTT.LCS.MIT.EDU via PCMAIL with DMSP
+	id AA09557; Tue, 30 Aug 88 16:10:33 EDT
+Date: Tue, 30 Aug 88 16:10:33 EDT
+Message-Id: <8808302010.AA09557@PTT.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: "xhost +" doesn't get reset when server resets
+Sender: shep@ALLSPICE.LCS.MIT.EDU
+From: shep@ALLSPICE.LCS.MIT.EDU
+Repository: PTT
+Originating-Client: sage
+
+### bug number:   925
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	QDSS
+
+SYNOPSIS:
+	"xhost +" doesn't get reset when server resets
+
+DESCRIPTION:
+
+REPEAT-BY:
+	Log in to an xterm/Xserver which have been started by
+/etc/init.   Type "xhost +".  Log out.  Log in again.  Type "xhost".
+Note that host access control is still disabled.
+
+FIX:
+
+

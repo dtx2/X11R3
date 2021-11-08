@@ -1,0 +1,46 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by expo.lcs.mit.edu; Thu, 7 Apr 88 08:35:50 EDT
+Received: by harvard.harvard.edu; Thu, 7 Apr 88 07:37:26 EST
+Received: from jeeves.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA27510; Thu, 7 Apr 88 07:59:05 EDT
+Received: by jeeves.ksr.com (3.2/SMI-3.2)
+	id AA02971; Thu, 7 Apr 88 07:59:05 EDT
+Message-Id: <8804071159.AA02971@jeeves.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: focus pocus
+Reply-To: ksr!benson@harvard.harvard.edu
+Date: Thu, 07 Apr 88 07:59:03 EDT
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   328
+### area:         misc
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/140 / Sun4
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	Sun 3/50
+
+SYNOPSIS:
+	Focus dosen't get inherited by pop-ups.
+
+DESCRIPTION:
+	I claim that when the keyboard is focussed to an application,
+and that application pops up window to solicit input from the user,
+that the focus should travel down into the pop-up. 
+
+You can demonstrate this with the xmh Compose button.
+
+

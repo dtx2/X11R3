@@ -1,0 +1,61 @@
+Return-Path: jlf%jlf.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Thu, 14 Jul 88 09:48:21 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA12260; Thu, 14 Jul 88 08:45:07 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA11016; 3.2/CRI-2.9; Thu, 14 Jul 88 08:49:38 CDT
+Received: by jlf.cray.com
+	id AA00702; 3.2/CRI-2.9; Thu, 14 Jul 88 08:49:32 CDT
+Date: Thu, 14 Jul 88 08:49:32 CDT
+From: jlf%jlf.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8807141349.AA00702@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: XSetPntMap.c bug
+Cc: bobo@jlf.cray.com, hrp@jlf.cray.com, wtg@jlf.cray.com
+
+### bug number:   734
+### area:         Xlib
+### severity:     low
+### comments:     [done -- jim]
+
+In testing the function XChangeKeyboardMapping, we encountered
+an error in the size of the data sent to the server.  It turned
+out to be the sizeof CARD32, which is defined as unsigned long
+and is 8 bytes on a Cray.  Note that we already had changed the
+routine to use Data32.
+
+Also note the routine XAllPlanes.c uses a hardcoded 4 in place of 
+sizeof CARD32.
+
+The encouraging news is that this problem was found using the Xlib
+test suite.
+
+Here is the context diffs:
+diff -c XSetPntMap.c ../sunXlib
+*** XSetPntMap.c        Wed Jul 13 16:53:19 1988
+--- ../sunXlib/XSetPntMap.c     Fri Jun 10 14:35:47 1988
+***************
+*** 46,57 ****
+      req->keySymsPerKeyCode = keysyms_per_keycode;
+      req->firstKeyCode = first_keycode;
+      req->length += nkeycodes * keysyms_per_keycode;
+!     nbytes = keysyms_per_keycode * nkeycodes * 4;
+! #ifdef CRAY
+!     Data32 (dpy, (char *)keysyms, nbytes);
+! #else
+      Data (dpy, (char *)keysyms, nbytes);
+- #endif
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return;
+--- 46,53 ----
+      req->keySymsPerKeyCode = keysyms_per_keycode;
+      req->firstKeyCode = first_keycode;
+      req->length += nkeycodes * keysyms_per_keycode;
+!     nbytes = keysyms_per_keycode * nkeycodes * sizeof (CARD32);
+      Data (dpy, (char *)keysyms, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return;
+
+

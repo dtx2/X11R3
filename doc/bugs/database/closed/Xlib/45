@@ -1,0 +1,69 @@
+Return-Path: jlf%sierra.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Thu, 4 Aug 88 18:55:31 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA12993; Thu, 4 Aug 88 17:53:11 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA05898; 3.2/CRI-3.1; Thu, 4 Aug 88 17:59:26 CDT
+Received: by jlf.cray.com
+	id AA01040; 3.2/CRI-3.1; Thu, 4 Aug 88 17:59:21 CDT
+Date: Thu, 4 Aug 88 17:59:21 CDT
+From: jlf%sierra.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8808042259.AA01040@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: Cray XListInstalledColormaps bug report
+Cc: bobo@sierra.cray.com, hrp@sierra.cray.com, joel@uf.msc.umn.edu,
+        wtg@sierra.cray.com
+
+### bug number:   827
+### area:         Xlib
+### severity:     low
+### comments:     [done -- jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+
+	XlistInstalledColormap test hung
+
+DESCRIPTION:
+
+	XListInstalledColormaps was not unpacking the input
+	buffer correctly.
+
+REPEAT-BY:
+
+	Run test for XListInstalledColormaps
+
+FIX:
+
+X11/Xlib/XLiICmaps.c	Wed Jul 20 10:52:42 1988
+***************
+*** 28,43 ****
+  	
+  
+      *n = rep.nColormaps;
+- #ifdef CRAY
+-     nbytes = rep.nColormaps * sizeof(Colormap);
+-     cmaps = (Colormap *) Xmalloc(nbytes);
+-     nbytes = rep.nColormaps * 4;
+-     _XRead32 (dpy, (char *) cmaps, nbytes);
+- #else
+      cmaps = (Colormap *) Xmalloc(
+  	(unsigned) (nbytes = ((long)rep.nColormaps * sizeof(Colormap))));
+      _XRead (dpy, (char *) cmaps, nbytes);
+- #endif
+  
+      UnlockDisplay(dpy);
+      SyncHandle();
+--- 28,36 ----
+

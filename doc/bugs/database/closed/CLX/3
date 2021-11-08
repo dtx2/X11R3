@@ -1,0 +1,41 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com 
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:35:12 EST
+Received: from CREEPER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 176270; Fri 4-Mar-88 16:33:51 EST
+Date: Fri, 4 Mar 88 16:33 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: image.lisp
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com, york@alderaan.scrc.symbolics.com
+Message-Id: <19880304213342.2.HORNIG@CREEPER.SCRC.Symbolics.COM>
+
+### bug number:   31
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	lib/CLX/image.lisp treats pixarray's as vectors.
+
+DESCRIPTION:
+	Many functions in image.lisp use WITH-VECTOR on pixarray's.
+pixarray's are not vectors, they are arrays.  This will not work on the
+Symbolics.
+
+REPEAT-BY:
+	Tried to call PUT-IMAGE.
+
+FIX:
+	Remove them.

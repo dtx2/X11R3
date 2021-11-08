@@ -1,0 +1,51 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: by expo.lcs.mit.edu; Sun, 12 Jun 88 18:21:25 EDT
+Received: by harvard.harvard.edu; Sun, 12 Jun 88 18:22:31 EDT
+Received: by ksr.com (3.2/SMI-3.2)
+	id AA24881; Sun, 12 Jun 88 17:31:27 EDT
+Message-Id: <8806122131.AA24881@ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: WINDOWID is apparently all wrong in xterm
+Reply-To: benson@ksr.com
+Date: Sun, 12 Jun 88 17:31:26 EDT
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   593
+### area:         xterm
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2 plus patches up to 33, including
+        slave xterm fixes.
+
+CLIENT MACHINE:
+ sun 4/280
+
+CLIENT OPERATING SYSTEM:
+ sunOS Sys4-3.2
+
+DISPLAY:
+ Sun 3/50 running SunOS 3.5
+
+SYNOPSIS:
+   WINDOWID in the env and the windowid sent back by a slave xterm
+are both wrong.
+
+DESCRIPTION:
+WINDOWID contains a decimal number that when hexified bears 
+no particular resemblance to the windowid reported by xwininfo,
+nor to any children reported with -tree. It seems to always be of the 
+form 0x1200009 or 0xb00009. IE, it allways ends in 00009.
+
+A perusal of the code shows nothing that sets screen->fullTwin,
+which is what is used for this purpose. I may not have looked hard
+enough. I find that idea pretty hard to credit, since it would appear
+that many other things would bust. Perhaps it is set after 
+WINDOWID/the slave line are done?
+
+
+
+
+

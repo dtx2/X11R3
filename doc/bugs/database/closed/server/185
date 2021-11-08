@@ -1,0 +1,155 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Fri, 20 May 88 17:22:34 EDT
+Date: Fri, 20 May 88 17:21 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: cfb-based stippling glitches
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880520212122.3.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   527
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	sun and hp (cfb based)
+
+AREA:
+	server
+
+SYNOPSIS:
+	stipple glitches
+
+DESCRIPTION:
+	[Detailed description.]
+
+REPEAT-BY:
+	run the program, move it around on the screen, and click
+	a pointer button in it.  from some screen positions
+	you should find two little glitches extending from the
+	circles.
+
+FILES:
+	probably cfbfillsp.c
+
+FIX:
+
+EXAMPLE:
+
+#include <stdio.h>
+#include <math.h>
+#include <strings.h>
+#include <signal.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+#include <sys/time.h>
+
+extern char *getenv();
+
+
+/* objects */
+Display	 *dpy;
+Window   theWindow,theInputWindow;
+Pixmap   pix;
+
+#define WIDTH  512
+#define HEIGHT 512
+#define BORDER 1
+
+XEvent			event;
+XSetWindowAttributes	xswa;
+XGCValues		xgcv;
+GContext		gc;
+Visual			visual;
+
+Colormap 	colors;
+XColor	xcsd, xced;
+
+/**************/
+main(argc, argv)      
+    int   argc;
+    char *argv[];
+/**************/
+{
+
+int	x,y;
+int	height,width,border;
+int	offset;
+int ForeColor,BackColor,Color;
+char *display = NULL;
+int XDEBUG;
+
+char *p;			/* get environment variable */
+
+/*****************************************************/
+
+    p = getenv("XDEBUG");
+    if(p)
+	sscanf(p, "%x", &XDEBUG );
+    else
+	XDEBUG = 0;
+
+    /* Open up the display. */
+
+    if ((dpy = XOpenDisplay(display)) == NULL) {
+        fprintf(stderr, "%s: Can't open display '%s'\n",argv[0], display);
+        exit(1);
+    }
+
+    /* Open the main window output. */
+    x = 0;
+    y = 0;
+    width = WIDTH;
+    height = HEIGHT;
+    border = 0 /*BORDER*/;
+
+    pix = XCreatePixmap(dpy, RootWindow(dpy, DefaultScreen(dpy)), 128, 128,
+      1 );
+    xgcv.function = GXcopy;
+    xgcv.foreground = 1; /* */
+    xgcv.line_style = LineSolid;
+    gc = (GContext)XCreateGC(dpy,pix,GCFunction|GCLineStyle|GCForeground,&xgcv);
+
+    XFillArc(dpy, pix, gc, 0, 0, 128, 128, 0, 360*64 );
+
+    XFreeGC( dpy, gc );
+
+    xswa.background_pixel = BlackPixel(dpy, DefaultScreen(dpy)); /* */
+    xswa.border_pixel = WhitePixel(dpy, DefaultScreen(dpy));
+    xswa.event_mask = ExposureMask|ButtonPressMask;
+    visual.visualid = CopyFromParent;
+    theWindow = XCreateWindow(dpy, RootWindow(dpy, DefaultScreen(dpy)),
+		x, y, width, height, border,
+		CopyFromParent, InputOutput, &visual, 
+		CWBackPixel | CWBorderPixel | CWEventMask,
+		&xswa );
+    
+    xgcv.function = GXcopy /*GXor*/;
+    xgcv.foreground = WhitePixel(dpy, DefaultScreen(dpy)); /* */
+    xgcv.background = BlackPixel(dpy, DefaultScreen(dpy));
+    xgcv.stipple = pix; /*color*/
+    xgcv.fill_style = FillStippled/* */;
+    xgcv.line_width = 256;
+    xgcv.ts_x_origin = 17;
+    xgcv.ts_y_origin = 5;
+    gc = (GContext)XCreateGC(dpy, RootWindow(dpy, DefaultScreen(dpy)),
+	GCFunction|GCLineWidth|GCForeground|GCBackground|GCStipple|GCFillStyle|GCTileStipXOrigin|GCTileStipYOrigin, &xgcv);
+
+    XMapWindow(dpy, theWindow);
+
+    /**************** Main loop *****************/
+
+    while (1) {
+        XNextEvent(dpy, &event);
+	XClearWindow(dpy, theWindow );
+        XDrawLine(dpy, theWindow, gc, 0, 64, 256, 64 ); /*  */
+    }  /* end while loop */
+}
+

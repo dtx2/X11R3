@@ -1,0 +1,66 @@
+Return-Path: rusty%math.Berkeley.EDU@cartan.berkeley.edu
+Received: by EXPO.LCS.MIT.EDU; Tue, 17 May 88 16:21:17 EDT
+Received: from velveeta.berkeley.edu
+	by cartan.berkeley.edu (5.54 (CFC 4.22.3)/1.16.17l)
+	id AA15823; Tue, 17 May 88 13:19:47 PDT
+Received: by velveeta (3.2/SMI-3.0DEV3.7MXv)
+	id AA07991; Tue, 17 May 88 13:18:12 PDT
+Date: Tue, 17 May 88 13:18:12 PDT
+From: rusty%math.Berkeley.EDU@cartan.berkeley.edu
+Message-Id: <8805172018.AA07991@velveeta>
+To: xbugs@expo.lcs.mit.edu
+Subject: screen saver troubles
+
+### bug number:   504
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	sun 3.5
+
+DISPLAY:
+	sun 3/50
+
+SYNOPSIS:
+	screen flashes as strange times or goes blank and never comes
+	back.
+
+DESCRIPTION:
+
+(1) When I come in in the morning and the screen is blanked, I usually
+bring it back by pressing either the sun's Alternate key or the Left
+or Right keys because they don't generate any output.  Then,
+(sometimes) when I move the mouse the screen goes blank (black) and
+nothing can get it back short of rebooting.
+
+(2) Sometimes, just as I start to move the mouse the screen flashes,
+as if the screen blanking was just going to come on but I interrupted
+it by moving the mouse.  Not enough time has elapsed with no mouse or
+keyboard activity for the screen blanking to have occured as expected.
+
+Here's the output of "xset q":
+
+Keyboard Control Values:
+Key Click Volume (%): 100 
+Bell Volume (%): 50 	Bell Pitch (Hz): 400 	Bell Duration (msec): 100 
+Pointer (Mouse) Control Values:
+Acceleration: 8 	Threshold: 8 
+Screen Saver:
+Prefer Blanking: Yes	Allow Exposures: Yes	Time-out: 600 	 Cycle: 600
+Font Path: /usr/custom/x11/lib/fonts/
+
+REPEAT-BY:
+	Both of these problems are random.  I get around the first
+	problem by bringing the screen back by moving the mouse now
+	instead of pressing a key.
+
+FIX:
+	(Preferred, but not necessary)
+

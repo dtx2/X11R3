@@ -1,0 +1,44 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 18 Aug 88 07:56:59 EDT
+Return-Path: <xpert-request@ATHENA.MIT.EDU>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 186146; 18 Aug 88 00:03:52 EDT
+Received: by expo.lcs.mit.edu; Wed, 17 Aug 88 23:58:56 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA09315; Wed, 17 Aug 88 23:59:08 EDT
+Received: by BLOOM-BEACON.MIT.EDU with sendmail-5.59/4.7 
+	id <AA00471@BLOOM-BEACON.MIT.EDU>; Wed, 17 Aug 88 23:53:51 EDT
+Received: from USENET by bloom-beacon.mit.edu with netnews
+	for xpert@athena.mit.edu (xpert@athena.mit.edu)
+	(contact usenet@bloom-beacon.mit.edu if you have questions)
+Date: 16 Aug 88 01:33:24 GMT
+From: mcvax!ukc!warwick!daffy@uunet.uu.net  (Steve Hunt)
+Organization: Computer Science, Warwick University, UK
+Subject: Tab stop bug in Text widgets (X11R2)
+Message-Id: <760@ubu.warwick.UUCP>
+Sender: xpert-request@athena.mit.edu
+To: xpert@athena.mit.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 18 Aug 88 07:57 EDT
+Resent-Message-Id: <19880818115759.8.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   884
+### area:         Xaw
+### severity:     low
+### comments:     
+
+Has anyone investigated the weird behaviour of tab stops in Xedit?
+I find that the first stop on a line is ~ 5 characters, and the rest ~ 8
+chars.  (Well actually this applies to any Text widget that has a
+scrollbar down the left edge -- the difference between 5 and 8 chars
+looks very like the width of the scrollbar so presumably something
+is forgetting to subtract something somewhere...)
+
+This is probably dead easy to fix given the above clue but I just
+don't have the time right now.  Has anyone already looked into this?
+
+	-- Steve
+"SCCS - the source code motel!  Programs check in and never check out!"
+	-- Ken Thompson
+
+-- Steve Hunt -- daffy@warwick.UUCP --
+

@@ -1,0 +1,54 @@
+Return-Path: jim
+Received: by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 17:45:08 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803252245.AA21070@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: problem with X_ChangeKeyboardMapping (or maybe XChangeKeyboardMapping)
+Date: Fri, 25 Mar 88 17:45:07 EST
+
+### bug number:   227
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+VERSION:
+	X Version 11 Release 2
+
+CLIENT MACHINE:
+	all
+
+CLIENT OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+AREA:
+	server (or possibly Xlib)
+
+SYNOPSIS:
+	Growing the keyboard map with XChangeKeyboardMapping messes up 
+	keyboard map.
+
+DESCRIPTION:
+	Increasing the size of the keyboard map by calling
+	XChangeKeyboardMapping with a longer entry still doesn't work.  It 
+	ends up adding duplicate entries in strange places, resulting in
+	random keys that can't be shifted or unshifted.
+
+REPEAT-BY:
+	This was found while looking into have an underscore keysym generated
+	for CONTROL-? (on keyboards with ? and / on the same key):
+
+		xmodmap -e "keysym slash = slash question underscore"
+
+FILES:
+	server/dix/
+	lib/X/XSetPntMap.c [maybe]
+
+FIX:
+	not available yet
+

@@ -1,0 +1,82 @@
+Return-Path: dba+@andrew.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 26 Sep 88 16:47:25 EDT
+Received: by andrew.cmu.edu (5.54/3.15) id <AA01666> for xbugs@expo.lcs.mit.edu; Mon, 26 Sep 88 16:46:20 EDT
+Received: via switchmail; Mon, 26 Sep 88 16:46:10 -0400 (EDT)
+Received: from po5.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/service/mailqs/q004/QF.po5.andrew.cmu.edu.233eac2b.e08be>;
+          Mon, 26 Sep 88 16:44:34 -0400 (EDT)
+Received: from kane.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/usr3/dba/.Outgoing/QF.kane.andrew.cmu.edu.233e577a.29f1500>;
+          Mon, 26 Sep 88 10:43:07 -0400 (EDT)
+Received: from Version.6.23.N.CUILIB.3.44.SNAP.NOT.LINKED.kane.andrew.cmu.edu.rt.r3
+          via MS.5.5.kane.andrew.cmu.edu.rt_r3;
+          Mon, 26 Sep 88 10:43:06 -0400 (EDT)
+Message-Id: <YXDZRuy00UkRAJ00cx@andrew.cmu.edu>
+Date: Mon, 26 Sep 88 10:43:06 -0400 (EDT)
+From: David Anderson <dba+@andrew.cmu.edu>
+X-Andrew-Message-Size: 1337+0
+To: xbugs@expo.lcs.mit.edu
+Subject: backing store bugs in RT apa16
+Cc: ibmuupa!erik.UUCP@harvard.harvard.edu
+
+### bug number:   1009
+### area:         server
+### severity:     high
+### comments:     ibm ddx-specific
+
+VERSION:
+
+    R3beta
+
+CLIENT MACHINE and OPERATING SYSTEM:
+
+    RT APC running ACIS 4.3
+
+DISPLAY:
+
+    IBM apa16
+
+WINDOW MANAGER:
+
+    uwm (any)
+
+AREA:
+
+    apa16 ddx
+
+SYNOPSIS:
+
+   Scrolling partially obscured windows that use backing store causes
+   their contents to be trashed with multiple copies of the obscured
+   region.
+
+DESCRIPTION:
+
+   The apa16 has a pipelined display processor that runs concurrently
+   wrt the main processor.  Before using the RT processor to move
+   bits on the screen, it is necessary to wait for the display
+   processor to empty its queue. This fix deals with what seems to be
+   the most common failure, but other backing store problems remain.
+   All calls out to mfb code need to be covered treated carefully.
+
+REPEAT BY:
+
+   Cover the upper-right corner of a window with backing store, then
+   scroll it down.  Single stepping through the server in a debugger
+   will "fix" the problem, since that avoids the race condition.
+
+SAMPLE FIX:
+
+*** apa16bblt.c.lnk     Fri Sep  2 14:58:29 1988
+--- apa16bblt.c Thu Sep 15 21:23:09 1988
+***************
+*** 111,116 ****
+--- 111,117 ----
+
+      if ((pSrcDrawable->type!=DRAWABLE_WINDOW)||
+        (pDstDrawable->type!=DRAWABLE_WINDOW)) {
++       QUEUE_WAIT();
+        return(mfbCopyArea(pSrcDrawable,pDstDrawable,pGC,srcx,srcy,
+                                                width,height,dstx,dsty));
+      }
+

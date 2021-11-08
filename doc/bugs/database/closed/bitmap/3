@@ -1,0 +1,56 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 21:21:25 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08288; Wed, 16 Mar 88 21:20:30 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 13:40:01 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA11686; Wed, 16 Mar 88 13:36:12 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 13:36:44 pst
+Message-Id: <8803162136.AA24767@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: bitmap bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 13:36:39 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   143
+### area:         bitmap
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	If the pointer is clicked outside the grid while LINE, CIRCLE
+	or FILLED CIRCLE is in effect, the command does not terminate.
+DESCRIPTION:
+	Currently, all the commands except LINE, CIRCLE and FILLED CIRCLE
+	will terminate when the pointer is clicked outside the grid while
+	the command is in effect. This is an inconsistancy.
+REPEAT-BY:
+	Click on LINE, CIRCLE or FILLED CIRCLE. Click the pointer in the
+	grid. Click the pointer outside the grid.
+FIX:
+*** bitmap.c.old	Tue Mar 15 16:36:52 1988
+--- bitmap.c	Wed Mar 16 08:57:11 1988
+***************
+*** 1763,1769
+    XEvent event;
+    boolean this_window;
+  
+!   XSelectInput (d, outer_window, ButtonPressMask | StructureNotifyMask);
+      /* so we can detect button action outside grid */
+    XDefineCursor (d, outer_window, dot);
+  
+
+--- 1763,1770 -----
+    XEvent event;
+    boolean this_window;
+  
+!   XSelectInput (d, outer_window,
+!     ButtonPressMask | ButtonReleaseMask | StructureNotifyMask);
+      /* so we can detect button action outside grid */
+    XDefineCursor (d, outer_window, dot);
+  
+

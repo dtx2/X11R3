@@ -1,0 +1,43 @@
+Return-Path: joel@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 19 Apr 88 22:44:48 EDT
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA10014; Tue, 19 Apr 88 19:43:03 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA15737; Tue, 19 Apr 88 19:42:16 PDT
+Message-Id: <8804200242.AA15737@gilroy.dec.com>
+To: mikey@decwrl.dec.com
+Cc: dec-toolkit@decwrl.dec.com, xbugs@expo.lcs.mit.edu
+Subject: Shells without a managed child cannot be realized
+Date: Tue, 19 Apr 88 19:42:13 -0700
+From: joel@decwrl.dec.com
+
+### bug number:   396
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     should eventually be added to the spec.
+
+
+(And more generally, ANY widget with a 0 width or height cannot be realized.)
+
+Your program created a top-level application shell with a call to
+XtInitialize, and a child with a call to XtCreateWidget.  However, it did not
+manage the shell's child, either by a separate call to XtManageChild or by
+using XtCreateManagedWidget rather than XtCreateWidget.
+
+This leaves the shell's width and height fields 0.  When the shell's realize
+method is called, it calls passes these 0 values onto XCreateWindow.  For some
+reason I've never understood the server considers it a bug when you try to
+create a window of size 0,0.
+
+So your program is okay now, but the intrinsics really ought to be
+fixed--perhaps in several places.  For example, I've seen this 0,0 problem
+before, and it STILL took me a while to find it.  A check for 0 width or
+height in XtCreateWindow would be far more useful than the cryptic error that
+Xlib returns.  And in this specific case, the shell's realize procedure should
+probably check to see that its child is managed, which would have been an even
+more useful error to you.
+
+- Joel McCormack
+

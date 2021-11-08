@@ -1,0 +1,97 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Fri, 30 Sep 88 10:44:24 EDT
+Return-Path: <Oren@home.csc.ti.com>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 193021; 12 Sep 88 12:52:55 EDT
+Received: by expo.lcs.mit.edu; Mon, 12 Sep 88 12:49:03 EDT
+Received: by ti.com id AA20944; Mon, 12 Sep 88 11:48:42 CDT
+Received: from SI by tilde id AA16373; Mon, 12 Sep 88 11:35:06 CDT
+Message-Id: <2799074088-381253@SI>
+Sender: OREN@si.csc.ti.com
+Date: Mon, 12 Sep 88  11:34:48 CDT
+From: LaMott Oren <Oren@home.csc.ti.com>
+To: bug-clx@expo.lcs.mit.edu
+Subject: Rel3 pre-release CLX
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Fri, 30 Sep 88 10:48 EDT
+Resent-Message-Id: <19880930144811.4.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   1031
+### area:         CLX
+### severity:     medium
+### comments:     
+
+I found a couple nits:
+* The (simple-vector keyword (*)) type in decode mask should be
+      (simple-array keyword (*))
+
+* write-bitmap-file declares a LENGTH variable, when there is none.
+
+The fix for read-bitvector256 I sent in last Friday didn't make it in
+the release, but it's in the diff's below for completeness.
+
+If you get around to it, it would be nice to do a zmacs lisp lowercase
+buffer on CLX/debug/trace.l
+
+Lots of good changes in CLX for release 3, Thanks!
+However, I'm disappointed that there's still no fast
+buffer-write-default implementation for KCL or Lucid.
+All those non-lispm declarations won't gain much compared
+to removing this bottleneck.
+
+
+
+diff -c -r CLX/buffer.l /tan/u1/oren/clx3/buffer.l
+*** CLX/buffer.l	Tue Aug 30 09:58:30 1988
+--- /tan/u1/oren/clx3/buffer.l	Mon Sep 12 11:05:42 1988
+***************
+*** 1254,1260 ****
+      (declare-array (simple-bit-vector 256) result)
+      (do ((i (index+ boffset 1) (index+ i 1)) ;; Skip first byte
+  	 (j 8 (index+ j 8)))
+! 	((= i 32))
+        (declare (type array-index i j))
+        (do ((byte (aref-card8 buffer-bbuf i) (index-ash byte -1))
+  	   (k j (index+ k 1)))
+--- 1254,1260 ----
+      (declare-array (simple-bit-vector 256) result)
+      (do ((i (index+ boffset 1) (index+ i 1)) ;; Skip first byte
+  	 (j 8 (index+ j 8)))
+! 	((index>= j 256))
+        (declare (type array-index i j))
+        (do ((byte (aref-card8 buffer-bbuf i) (index-ash byte -1))
+  	   (k j (index+ k 1)))
+diff -c -r CLX/clx.l /tan/u1/oren/clx3/clx.l
+*** CLX/clx.l	Mon Aug 29 20:41:11 1988
+--- /tan/u1/oren/clx3/clx.l	Mon Sep 12 11:05:46 1988
+***************
+*** 871,877 ****
+  		(setq mask (logior mask (ash 1 bit)))))))))
+  
+  (defun decode-mask (key-vector mask)
+!   (declare (type (simple-vector keyword (*)) key-vector)
+  	   (type mask32 mask))
+    (declare-values list)
+    (do ((m mask (ash m -1))
+--- 871,877 ----
+  		(setq mask (logior mask (ash 1 bit)))))))))
+  
+  (defun decode-mask (key-vector mask)
+!   (declare (type (simple-array keyword (*)) key-vector)
+  	   (type mask32 mask))
+    (declare-values list)
+    (do ((m mask (ash m -1))
+diff -c -r CLX/image.l /tan/u1/oren/clx3/image.l
+*** CLX/image.l	Wed Aug 24 20:30:25 1988
+--- /tan/u1/oren/clx3/image.l	Mon Sep 12 11:06:10 1988
+***************
+*** 1384,1390 ****
+  	     (type stringable name)
+  	     (type card16 width height)
+  	     (type card16 byte-width line-width line byte-number count)
+- 	     (type array-index length)
+  	     (type (simple-array card8 (*)) data))
+      (with-vector (data (simple-array card8 (*)))
+        (setq name (string-downcase (string name)))
+--- 1384,1389 ----
+

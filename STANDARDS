@@ -1,0 +1,110 @@
+The major goal of the MIT X Consortium is to promote cooperation within the
+computer industry in the creation of standard software interfaces at all layers
+in the X Window System environment.  This software distribution is a
+by-product.  The status of various standards and proposed standards, and of the
+software in this distribution, is explained below.
+
+The Version 11 protocol, as defined by the specification in doc/Protocol/, is
+the foundation standard for the X Window System.  The Consortium expects all
+X11 servers provided by vendors to conform to this specification.  The server
+implementations found in server/ are sample implementations, not reference
+implementations.  Although much of the code is believed to be correct, the code
+should be assumed to be in error wherever it conflicts with the specification.
+The server interfaces described in doc/Server/ are not Consortium standards,
+although it is hoped the extension interface defined in doc/Server/ext.doc
+can be used to implement reasonably portable server extensions.
+
+None of the protocol extensions defined in extensions/ and doc/extensions/ are
+standards; these interfaces are highly unlikely to be supported in most product
+servers, and are subject to change or deletion without warning.
+
+The C Xlib interface, as defined by the reference manual in doc/Xlib/, is the
+standard programming interface to the protocol for the C language.  The
+Consortium views Xlib as an exclusive standard (the Consortium will not adopt
+any other interface to the protocol for C as a standard), and expects all
+vendors providing X interfaces for C to also provide Xlib.  The Xlib
+implementation in lib/X/ and lib/oldX/ is a sample implementation, not a
+reference implementation, although the code is believed to be essentially
+correct.  Any interfaces that appear to be external in the implementation but
+are not documented in the reference manual are not part of the standard, are
+subject to change without warning, and should not be relied upon.  The
+pseudo-root code in XOpenDisplay is experimental, not part of the standard,
+and subject to change without warning.
+
+The Common Lisp CLX interface, implemented in lib/CLX, is not a Consortium
+standard.  However, the Consortium expects to review the interface for
+standardization in the near future.  Parts of the interface may change during
+that review process.
+
+The Xt Intrinsics, as defined by the reference manual in doc/Xt, is a standard
+toolkit interface for C.  Xt is a non-exclusive standard; the Consortium does
+not preclude adopting other interfaces in the future, and does not require all
+C toolkits to be layered on top of Xt.  Vendors providing Xlib as a product are
+expected to provide the Xt Intrinsics as well.  The implementation in lib/Xt/
+is a sample implementation, not a reference implementation.  The code is
+believed to be reasonably correct.  Any interfaces that appear to be external
+in the implementation but are not documented in the reference manual are not
+part of the standard, are subject to change without warning, and should not be
+relied upon.
+
+The Athena Widget set, as defined in doc/Xaw/ and implemented in lib/Xaw/, is
+not a Consortium standard.  MIT Project Athena has primary control over this
+interface definition.
+
+Not all of the include files in X11/ are parts of Consortium standards.  The
+ones that are (as part of Xlib) are X.h, Xatom.h, Xproto.h, Xprotostr.h,
+keysym.h, and keysymdef.h.
+
+The Xmu library, implemented in lib/Xmu/, is not a Consortium standard.  This
+library consists of various utility routines deemed generally useful by the MIT
+staff.  This library will probably expand in the future.
+
+The RGB database, defined in rgb/rgb.txt, is not a Consortium standard.
+A better database is very much needed.
+
+Bitmap Distribution Format (BDF), defined in doc/bdf/, is a standard font
+source interchange format.  BDF is a non-exclusive standard; the Consortium
+does not preclude adopting other formats in the future.  Vendors providing
+servers are expected to provide a compiler to convert BDF format to whatever
+formats are usable by those servers.  The sample compiler provided in
+fonts/bdftosnf/ is not a Consortium standard, and the SNF format used in the
+sample server is not a Consortium standard.
+
+None of the fonts provided in fonts/bdf/ are Consortium standards; vendors are
+free to ship whatever fonts they desire.  The font naming scheme used for the
+Adobe, Bitstream, and Digital fonts is under review by the Consortium as a
+standard.  This scheme is described in doc/fontnames/fnames.txt.
+
+None of the applications in this distribution are Consortium standards;
+vendors are free to ship whatever applications they desire.
+
+Nothing in contrib/ is a Consortium standard.
+
+The PEX protocol extension, defined in doc/extensions/pex/, is awaiting a
+proof of concept (in the form of a public implementation) before final
+acceptance as a Consortium standard.  The PEX protocol may still change as a
+result of implementation feedback.
+
+
+A number of specifications are in the process of being reviewed by the
+Consortium for possible standardization.  A brief summary of these is provided
+below.  After review within the Consortium, the specifications will be made
+available for a public review.
+
+Inter-Client Communication Conventions Manual (ICCCM)
+    Sponsor:		Sun
+
+Multi-Buffering Protocol Extension (double/multi-buffering and stereo)
+    Sponsor:		Digital
+
+Font Naming (consistent font naming scheme)
+    Sponsor:		Digital
+
+Compound String Format (multi-lingual text)
+    Sponsor:		Digital
+
+Image Processing Protocol Extension
+    Sponsor:		Digital
+
+Input Device Extension (additional input devices)
+    Sponsor:		HP and Ardent

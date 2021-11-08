@@ -1,0 +1,86 @@
+Return-Path: mit-erl!apollo!terek@eddie.mit.edu
+Received: by expo.lcs.mit.edu; Mon, 20 Jun 88 19:55:20 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA20784@EDDIE.MIT.EDU>; Mon, 20 Jun 88 19:53:53 EDT
+From: mit-erl!apollo!terek@eddie.mit.edu
+Received: from apollo by erl id AA11331g; Mon, 20 Jun 88 19:38:51 EDT
+Received: by apollo.UUCP id AA05363; Mon, 20 Jun 88 17:23:03 edt
+Message-Id: <8806202123.AA05363@apollo.UUCP>
+Date: Mon, 20 Jun 88 15:37:37 EDT 
+Subject:  miarc.c -- Convex passed for non-convex polygons
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   621
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	mi
+
+DISPLAY:
+	mi
+
+AREA:
+	server
+
+SYNOPSIS:
+	miPolyFillArc passes Convex for non-convex polygons
+
+DESCRIPTION:
+
+	There is a slight problem with miPolyFillArc: if the arc is not a
+	full circle, you are passing Convex to FillPolygon. This is fine if
+	it is a half circle or less, but not so fine if more than 180
+	degrees. Do you agree? Nobody has noticed a problem, I'll bet,
+	because mi does not pay attention to the Convex/NonConvex hint. Diff
+	follows:
+
+REPEAT-BY:
+	stare at code
+
+FILES:
+	server/ddx/mi/miarc.c
+
+FIX:
+
+*** miarc.c     Mon Jun 20 15:53:15 1988
+--- miarc.c.fix Mon Jun 20 15:52:22 1988
+***************
+*** 276,282 ****
+            {
+                pPts[0].x = parcs[i].x + parcs[i].width/2;
+                pPts[0].y = parcs[i].y + parcs[i].height/2;
+!               (*pGC->FillPolygon)(pDraw, pGC, Convex,
+                                    CoordModeOrigin, cpt + 1, pPts);
+                Xfree((pointer) pPts);
+            }
+--- 276,282 ----
+            {
+                pPts[0].x = parcs[i].x + parcs[i].width/2;
+                pPts[0].y = parcs[i].y + parcs[i].height/2;
+!               (*pGC->FillPolygon)(pDraw, pGC, Nonconvex,
+                                    CoordModeOrigin, cpt + 1, pPts);
+                Xfree((pointer) pPts);
+            }
+
+
+
+                                                   Thanx,
+
+
+                                                   Bob Terek
+
+
+
+Bob Terek                           {decvax,umix,mit-erl}!apollo!terek
+Apollo Computer                     apollo!terek@eddie.mit.edu
+X Development                       terek@apollo.uucp
+
+
+"If it wasn't for all the free spam, I'd have gone home weeks ago!"
+
+

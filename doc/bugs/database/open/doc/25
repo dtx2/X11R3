@@ -1,0 +1,76 @@
+Return-Path: kam@hpcvaaz.mit.edu
+Received: by expo.lcs.mit.edu; Wed, 27 Apr 88 17:47:27 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA04933; Wed, 27 Apr 88 16:46:15 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 27 Apr 88 09:20:22 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA25174; Wed, 27 Apr 88 10:20:08 PDT
+Received: by hpcvaaz.HP.COM; Wed, 27 Apr 88 10:18:35 pdt
+Date: Wed, 27 Apr 88 10:18:35 pdt
+From: Keith Marchington <kam@hpcvaaz.mit.edu>
+Return-Path: <kam@hpcvaaz>
+Message-Id: <8804271718.AA00753@hpcvaaz.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+
+### bug number:   430
+### area:         doc
+### severity:     low
+### comments:     
+
+
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+
+A slight inconsistency exists between the Xlib document and the behavior of
+DIX.  In the Xlib document it states in reference to XDefineCursor:
+
+>  XDefineCursor(display, w, cursor)
+>        Display *display;
+>        Window w;
+>        Cursor cursor;
+>  
+>  
+>  display   Specifies the connection to the X server.
+>  
+>  w         Specifies the window ID.
+>  
+>  cursor    Specifies the cursor that is to be displayed when
+>            the pointer is in the specified window.  You can <****
+>            pass None if no cursor is to be displayed.       <****
+
+Which leads one to believe that this is the mechanism used to turn a
+window's cursor off.
+
+In the protocol document, under ChangeWindowAttributes it says:
+
+        Changing the cursor of a root window to None restores the default
+	cursor.
+
+And nothing more.  
+
+In the sample DIX layer, when an XDefineCursor call is made with the 
+cursor set to None, DIX climbs the window hierarchy until it finds 
+a window with a non-null cursor, and uses that for the request.
+
+Which is correct?  DIX or the Xlib document?
+
+Keith Marchington
+HP 
+Corvallis, Oregon
+
+
+DESCRIPTION:
+
+Not necessary.
+
+REPEAT-BY:
+
+Did an XDefineCursor with the cursor parameter set to None and got the
+root window's cursor.
+
+FIX:
+
+
+
+

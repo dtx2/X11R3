@@ -1,0 +1,108 @@
+Return-Path: blumen@arisia.xerox.com
+Received: by expo.lcs.mit.edu; Thu, 28 Jul 88 18:54:04 EDT
+Received: by arisia.Xerox.COM (4.0/SMI-DDN)
+	id AA02073; Thu, 28 Jul 88 13:25:20 PDT
+Date: Thu, 28 Jul 88 13:25:20 PDT
+From: blumen@arisia.xerox.com (Robert Blumen)
+Message-Id: <8807282025.AA02073@arisia.Xerox.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in Xaw Viewport widget 
+Cc: blumen@arisia.xerox.com
+
+### bug number:   799
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Sun
+
+SYNOPSIS:
+	viewport change managed does not set its own size properly
+
+DESCRIPTION:
+	A viewport widget is created and a child widget is added.
+XtManageChildren is used on the child widget to inform the viewport.
+The viewport's ChangeManaged function does not resize the viewport to
+the size of the child, or any other non-zero size.  ChangeManaged does
+call DoLayout, but this function does not modify the widget argument,
+and ChangeManaged ignores the result.  So the viewport ends up with
+width and height zero.  XtManageChildren is called on the viewport to
+cause it to be mapped.  An X protocol error is generated  when the
+viewport is created. 
+
+REPEAT-BY:
+/* compile with cc bug.c -lXaw -lXt -lX11 */
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <X11/Cardinals.h>
+#include <X11/Shell.h>
+#include <X11/Box.h>
+#include <X11/Viewport.h>
+#include <X11/Label.h>
+#include <X11/Command.h>
+
+Widget outer;
+
+void 
+main(argc, argv)
+	unsigned int argc;
+	char **argv;
+{
+	Arg args[1];
+	void make_viewport();
+	Widget toplevel, button;
+
+	toplevel = XtInitialize( "bug", "Bug", (XrmOptionDescRec *) NULL, 
+				(Cardinal) 0, &argc, argv);
+	outer = XtCreateManagedWidget( "base_box", boxWidgetClass, toplevel, 
+				      args, (Cardinal) 0);
+	button = XtCreateManagedWidget("button", commandWidgetClass, outer,
+				       args, (Cardinal) 0);
+	XtAddCallback(button, XtNcallback, make_viewport);
+
+	XtRealizeWidget(toplevel);
+	XtMainLoop();
+}
+
+void
+make_viewport(w, client, call)
+	Widget w;
+	caddr_t client, call;
+{
+	Arg args[10];
+	Cardinal i;
+	Widget port, view;
+
+	i = 0;
+	XtSetArg( args[i], XtNallowVert, True); i++;
+	XtSetArg( args[i], XtNallowHoriz, True); i++;
+	port = XtCreateWidget( "port", viewportWidgetClass, outer, args, i);
+
+	i = 0;
+	XtSetArg( args[i], XtNlabel, "This is a very long label, much too \
+long to fit in a small box");
+	view = XtCreateWidget( "view", labelWidgetClass, port, args, i);
+
+	XtManageChildren(&view, ONE);
+	XtManageChildren(&port, ONE);
+	return;
+}
+
+
+
+FIX:
+	I am not really sure.  Perhaps the ChangeManaged should
+consider the result of DoLayout, and assign some compromise size to
+the viewport if it cannot be as big as its child.
+
+

@@ -1,0 +1,78 @@
+Return-Path: jlf%sierra.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Thu, 28 Jul 88 17:11:42 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA10822; Thu, 28 Jul 88 13:37:34 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA25788; 3.2/CRI-3.1; Thu, 28 Jul 88 13:43:14 CDT
+Received: by jlf.cray.com
+	id AA09367; 3.2/CRI-3.1; Thu, 28 Jul 88 13:43:12 CDT
+Date: Thu, 28 Jul 88 13:43:12 CDT
+From: jlf%sierra.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8807281843.AA09367@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: cray Xlib bug
+Cc: bobo@sierra.cray.com, hrp@sierra.cray.com, wtg@sierra.cray.com
+
+### bug number:   796
+### area:         Xlib
+### severity:     low
+### comments:     [done for now -- jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	Test for GetNormalHints failed
+
+DESCRIPTION:
+	The GetNormalHints test expects return values of -1, but
+	received values like 4294967295 (0xffffffff).  This is
+	because the values are not sign extended for 64bit machines.
+
+REPEAT-BY:
+	Running test for GetNormalHints
+
+FIX:
+
+	Sign extending when necessary
+
+*** XGetHints.c	Thu Jul 28 13:10:02 1988
+--- /usr/yafs1/X/X11/XDIST/X.V11R2/lib/X/XGetHints.c	Thu Feb 25 21:55:00 1988
+***************
+*** 68,92 ****
+  	hints->min_aspect.y = prop->minAspectY;
+  	hints->max_aspect.x = prop->maxAspectX;
+  	hints->max_aspect.y = prop->maxAspectY;
+- #ifdef CRAY
+- #define SIGN32 0x80000000
+- #define SIGNEXTEND 0xffffffff00000000
+- 	if (hints->flags & SIGN32) hints->flags |= SIGNEXTEND;
+- 	if (hints->x & SIGN32) hints->x |= SIGNEXTEND;
+- 	if (hints->y & SIGN32) hints->y |= SIGNEXTEND;
+- 	if (hints->width & SIGN32) hints->width |= SIGNEXTEND;
+- 	if (hints->height & SIGN32) hints->height |= SIGNEXTEND;
+- 	if (hints->min_width & SIGN32) hints->min_width |= SIGNEXTEND;
+- 	if (hints->min_height & SIGN32) hints->min_height |= SIGNEXTEND;
+- 	if (hints->max_width & SIGN32) hints->max_width |= SIGNEXTEND;
+- 	if (hints->max_height & SIGN32) hints->max_height |= SIGNEXTEND;
+- 	if (hints->width_inc & SIGN32) hints->width_inc |= SIGNEXTEND;
+- 	if (hints->height_inc & SIGN32) hints->height_inc |= SIGNEXTEND;
+- 	if (hints->min_aspect.x & SIGN32) hints->min_aspect.x |= SIGNEXTEND;
+- 	if (hints->min_aspect.y & SIGN32) hints->min_aspect.y |= SIGNEXTEND;
+- 	if (hints->max_aspect.x & SIGN32) hints->max_aspect.x |= SIGNEXTEND;
+- 	if (hints->max_aspect.y & SIGN32) hints->max_aspect.y |= SIGNEXTEND;
+- #endif
+  	Xfree((char *)prop);
+  	return(1);
+  }
+--- 68,73 ----
+

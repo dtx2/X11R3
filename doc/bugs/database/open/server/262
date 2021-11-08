@@ -1,0 +1,107 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 4 Oct 88 17:55:42 EDT
+Return-Path: <karlton@wsl.dec.com>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 185762; 16 Aug 88 23:24:11 EDT
+Received: by expo.lcs.mit.edu; Tue, 16 Aug 88 23:23:22 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA11037; Tue, 16 Aug 88 20:23:30 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA06936; Tue, 16 Aug 88 20:23:27 PDT
+Message-Id: <8808170323.AA06936@gilroy.pa.dec.com>
+To: us@expo.lcs.mit.edu
+Subject: mfbscreeninit takes too few arguments by one
+Date: Tue, 16 Aug 88 20:23:26 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Tue, 4 Oct 88 17:56 EDT
+Resent-Message-Id: <19881004215602.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   1047
+### area:         server
+### severity:     enhancement
+### comments:     
+
+It needs to know the pixmap width as well as the screen width. This is
+the change that I made to support some hardware that has a fixed notion
+about the inter-scan-line distance. It could be that the distance
+should be expressed as bytes instead of pixels.
+
+I claim that similar changes need to be made to cfbscreeninit.
+
+PK
+=--===================================================================
+*** mfbscrinit.c	Tue Aug 16 19:43:34 1988
+--- /tmp/mfbscrinit.c	Tue Aug 16 20:20:48 1988
+***************
+*** 21,27
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbscrinit.c,v 1.53 88/01/03 17:06:17 rws Exp $ */
+  
+  #include "X.h"
+  #include "Xproto.h"	/* for xColorItem */
+
+--- 21,27 -----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbscrinit.c,v 1.1 88/06/20 13:40:04 karlton Exp $ */
+  
+  #include "X.h"
+  #include "Xproto.h"	/* for xColorItem */
+***************
+*** 47,53
+  
+  /* dts * (inch/dot) * (25.4 mm / inch) = mm */
+  Bool
+! mfbScreenInit(index, pScreen, pbits, xsize, ysize, dpix, dpiy)
+      int index;
+      register ScreenPtr pScreen;
+      pointer pbits;		/* pointer to screen bitmap */
+
+--- 47,53 -----
+  
+  /* dts * (inch/dot) * (25.4 mm / inch) = mm */
+  Bool
+! mfbScreenInit(index, pScreen, pbits, xsize, ysize, dpix, dpiy, width)
+      int index;
+      register ScreenPtr pScreen;
+      pointer pbits;		/* pointer to screen bitmap */
+***************
+*** 53,58
+      pointer pbits;		/* pointer to screen bitmap */
+      int xsize, ysize;		/* in pixels */
+      int dpix, dpiy;		/* dots per inch */
+  {
+      DepthPtr	pDepth;
+      VisualPtr	pVisual;
+
+--- 53,59 -----
+      pointer pbits;		/* pointer to screen bitmap */
+      int xsize, ysize;		/* in pixels */
+      int dpix, dpiy;		/* dots per inch */
++     int width;			/* pixelwidth of frame buffer */
+  {
+      DepthPtr	pDepth;
+      VisualPtr	pVisual;
+***************
+*** 91,97
+      pPixmap->height = ysize;
+      pPixmap->refcnt = 1;
+      pPixmap->devPrivate = pbits;
+!     pPixmap->devKind = PixmapBytePad(xsize, 1);
+      pScreen->devPrivate = (pointer)pPixmap;
+  
+      /* anything that mfb doesn't know about is assumed to be done
+
+--- 92,98 -----
+      pPixmap->height = ysize;
+      pPixmap->refcnt = 1;
+      pPixmap->devPrivate = pbits;
+!     pPixmap->devKind = PixmapBytePad(width, 1);
+      pScreen->devPrivate = (pointer)pPixmap;
+  
+      /* anything that mfb doesn't know about is assumed to be done
+

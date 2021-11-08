@@ -1,0 +1,342 @@
+Return-Path: masscomp!mouse!mitch@eddie.mit.edu
+Received: by EXPO.lcs.mit.edu; Sat, 9 Jul 88 14:19:19 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA23536@EDDIE.MIT.EDU>; Sat, 9 Jul 88 14:17:05 EDT
+Received: from localhost by mouse.masscomp.com id aa01256; 6 Jul 88 12:43 EDT
+To: masscomp!mit-eddie!expo.lcs.mit.edu!xbugs@mouse.masscomp.com
+Cc: mitch@mouse.masscomp.com
+Subject: More on Clock widget bug (Xaw/Clock.c)
+Date: Wed, 06 Jul 88 12:43:08 -0400
+From: mitch@mouse.masscomp.com
+Message-Id:  <8807061243.aa01256@mouse.masscomp.com>
+
+### bug number:   762
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	MASSCOMP 5400
+
+CLIENT OPERATING SYSTEM:
+	RTU (Unix)
+
+DISPLAY:
+	GA1000
+
+SYNOPSIS:
+	 Under some circumstances, clock widget breaks with back-to-back
+	 exposure events.
+	 (Report on this bug sent 7/5 contains incorrect fix).
+
+DESCRIPTION:
+	 If the clock widget receives two exposure events in a row, the first
+	 of which is before the clock is about to tick and the second after
+	 the same tick, you wind up with two copies of the minute hand.  One
+	 points to the old minute value, and the other points to the new
+	 time.
+
+	 The DrawClockFace routine in Clock.c sets the numseg field in the
+	 clock widget instance structure to 0.  The clock_tic
+	 routine uses this field to decide whether to erase the old hands.
+	 In the above scenario, Redisplay is called in response to the
+	 first exposure event.  It calls DrawClockFace, which sets numseg
+	 to 0, and then calls clock_tic, which redraws the hands.  On the
+	 second exposure, Redisplay is called, which again calls DrawClockFace
+	 and clock_tic.  Here, numseg is still zero, so that clock_tic's test
+	 for erasing the old hands says not to.  Consequently, it leaves the
+	 old hand on the screen and then goes ahead to (correctly) draw the
+	 new hand.
+
+REPEAT-BY:
+	Position an xclock so that it is partially occluded but with the hands
+	visible.  Raise it so that it redraws itself and then lower it.  If
+	you raise it again after the next clock minute tick, you wind up with
+	both the old and the new minute hands.
+
+FIX:
+	These are the changes I wound up making in Xaw/Clock.h and include/ClockP.h:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ClockP.h
+***************
+*** 56,66
+  #define _XtClockP_h
+  
+  #include <X11/Clock.h>
+  #include <X11/CoreP.h>
+  
+! #define SEG_BUFF_SIZE		128
+  
+  /* New fields for the clock widget instance record */
+  typedef struct {
+  	 Pixel	fgpixel;	/* color index for text */
+  	 Pixel	Hipixel;	/* color index for Highlighting */
+
+- --- 56,66 -----
+  #define _XtClockP_h
+  
+  #include <X11/Clock.h>
+  #include <X11/CoreP.h>
+  
+! #define SEG_BUFF_SIZE		20
+  
+  /* New fields for the clock widget instance record */
+  typedef struct {
+  	 Pixel	fgpixel;	/* color index for text */
+  	 Pixel	Hipixel;	/* color index for Highlighting */
+***************
+*** 76,85
+  	 Boolean reverse_video;
+  	 Boolean chime;
+  	 Boolean beeped;
+  	 Boolean analog;
+  	 Boolean show_second_hand;
+  	 Dimension second_hand_length;
+  	 Dimension minute_hand_length;
+  	 Dimension hour_hand_length;
+  	 Dimension hand_width;
+  	 Dimension second_hand_width;
+
+- --- 76,87 -----
+  	 Boolean reverse_video;
+  	 Boolean chime;
+  	 Boolean beeped;
+  	 Boolean analog;
+  	 Boolean show_second_hand;
++ 	 Boolean hm_hands_showing;	/* hour & minute hands are on screen (MASSCOMP) */
++ 	 Boolean sec_hand_showing;	/* second hand is on screen (MASSCOMP) */
+  	 Dimension second_hand_length;
+  	 Dimension minute_hand_length;
+  	 Dimension hour_hand_length;
+  	 Dimension hand_width;
+  	 Dimension second_hand_width;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Xaw/Clock.c
+***************
+*** 236,241
+      w->clock.HandGC = XtGetGC((Widget)w, valuemask, &myXGCV);
+  
+      w->clock.show_second_hand = (w->clock.update <= SECOND_HAND_TIME);
+  }
+  
+  static void Realize (gw, valueMask, attrs)
+
+- --- 236,243 -----
+      w->clock.HandGC = XtGetGC((Widget)w, valuemask, &myXGCV);
+  
+      w->clock.show_second_hand = (w->clock.update <= SECOND_HAND_TIME);
++     w->clock.hm_hands_showing = FALSE;	/* MASSCOMP */
++     w->clock.sec_hand_showing = FALSE;	/* MASSCOMP */
+  }
+  
+  static void Realize (gw, valueMask, attrs)
+***************
+*** 289,294
+      ClockWidget w = (ClockWidget) gw;
+      if (w->clock.analog)
+          DrawClockFace(w);
+      clock_tic((caddr_t)w, (XtIntervalId)NULL);
+  }
+  
+
+- --- 291,303 -----
+      ClockWidget w = (ClockWidget) gw;
+      if (w->clock.analog)
+          DrawClockFace(w);
++ 
++     /*
++     ** Force erase and redraw of clock hands.
++     */
++     w->clock.otm.tm_hour = -1;
++     w->clock.otm.tm_min = -1;
++     w->clock.otm.tm_sec = -1;
+      clock_tic((caddr_t)w, (XtIntervalId)NULL);
+  }
+  
+***************
+*** 349,356
+  			/*
+  			 * Erase old hands.
+  			 */
+! 			if(w->clock.numseg > 0) {
+! 			    if (w->clock.show_second_hand == TRUE) {
+  				XDrawLines(dpy, win,
+  					w->clock.EraseGC,
+  					w->clock.sec,
+
+- --- 360,371 -----
+  	    /*
+  	     * Erase old hands.
+  	     */
+! 	    if (w->clock.sec_hand_showing && tm.tm_sec != w->clock.otm.tm_sec)
+! 	    {
+! 		/*
+! 		** Erase second hand.
+! 		*/
+! 		w->clock.sec_hand_showing = FALSE;
+  		XDrawLines(dpy, win,
+  			w->clock.EraseGC,
+  			w->clock.sec,
+***************
+*** 365,372
+  				    );
+  				}
+  			    }
+! 			    if(	tm.tm_min != w->clock.otm.tm_min ||
+! 				tm.tm_hour != w->clock.otm.tm_hour ) {
+  				XDrawLines( dpy,
+  					   win,
+  					   w->clock.EraseGC,
+
+- --- 380,392 -----
+  		    );
+  		}
+  	    }
+! 	    if (w->clock.hm_hands_showing &&
+! 		(tm.tm_min != w->clock.otm.tm_min || tm.tm_hour != w->clock.otm.tm_hour))
+! 	    {
+! 		/*
+! 		** Erase hour and minute hands.
+! 		*/
+! 		w->clock.hm_hands_showing = FALSE;
+  		XDrawLines( dpy,
+  			   win,
+  			   w->clock.EraseGC,
+***************
+*** 393,399
+  				    );
+  				}
+  			    }
+- - 		    }
+  
+  		    if (w->clock.numseg == 0 ||
+  			tm.tm_min != w->clock.otm.tm_min ||
+
+- --- 413,418 -----
+  		    );
+  		}
+  	    }
+  
+  	    if (!w->clock.hm_hands_showing)
+  	    {
+***************
+*** 395,403
+  			    }
+  		    }
+  
+! 		    if (w->clock.numseg == 0 ||
+! 			tm.tm_min != w->clock.otm.tm_min ||
+! 			tm.tm_hour != w->clock.otm.tm_hour) {
+  			    w->clock.segbuffptr = w->clock.segbuff;
+  			    w->clock.numseg = 0;
+  			    /*
+
+- --- 414,422 -----
+  		}
+  	    }
+  
+! 	    if (!w->clock.hm_hands_showing)
+! 	    {
+! 		w->clock.hm_hands_showing = TRUE;	/* MASSCOMP */
+  		w->clock.segbuffptr = w->clock.segbuff;
+  		w->clock.numseg = 0;
+  		/*
+***************
+*** 441,447
+  
+  			    w->clock.sec = w->clock.segbuffptr;
+  		    }
+! 		    if (w->clock.show_second_hand == TRUE) {
+  			    w->clock.segbuffptr = w->clock.sec;
+  			    DrawSecond(w,
+  				w->clock.second_hand_length - 2, 
+
+- --- 460,472 -----
+  
+  		w->clock.sec = w->clock.segbuffptr;
+  	    }
+! 
+! 	    if (w->clock.show_second_hand  &&  !w->clock.sec_hand_showing)
+! 	    {
+! 		/*
+! 		** Draw second hand.
+! 		*/
+! 		w->clock.sec_hand_showing = TRUE;	/* MASSCOMP */
+  		w->clock.segbuffptr = w->clock.sec;
+  		DrawSecond(w,
+  		    w->clock.second_hand_length - 2, 
+***************
+*** 657,682
+
+/*
+ *  Draw the clock face (every fifth tick-mark is longer
+ *  than the others).
+ */
+static void DrawClockFace(w)
+ClockWidget w;
+{
+	register int i;
+	register int delta = (w->clock.radius - w->clock.second_hand_length) / 3;
+	
+	w->clock.segbuffptr = w->clock.segbuff;
+	w->clock.numseg = 0;
+	for (i = 0; i < 60; i++)
+		DrawLine(w, (i % 5) == 0 ? w->clock.second_hand_length : (w->clock.radius - delta),
+                   w->clock.radius, ((double) i)/60.);
+	/*
+	 * Go ahead and draw it.
+	 */
+	XDrawSegments(XtDisplay(w), XtWindow(w),
+		      w->clock.myGC, (XSegment *) &(w->clock.segbuff[0]),
+		      w->clock.numseg/2);
+	
+	w->clock.segbuffptr = w->clock.segbuff;
+	w->clock.numseg = 0;
+}
+
+- --- 682,714 -----
+/*
+ *  Draw the clock face (every fifth tick-mark is longer
+ *  than the others).
+ */
+static void DrawClockFace(w)
+ClockWidget w;
+{
+	int i, j;
+	int delta = (w->clock.radius - w->clock.second_hand_length) / 3;
+	XPoint segbuff[120];
+	double angle = 0.0;
+	
+	w->clock.segbuffptr = segbuff;
+	w->clock.numseg = 0;
+	for (i = 0; i < 12; i++)
+	{
+	    DrawLine(w, w->clock.second_hand_length, w->clock.radius, angle); /* Long */
+	    angle += 1/60.;
+	    for (j=0; j < 4; j++)
+	    {
+		DrawLine(w, w->clock.radius - delta, w->clock.radius, angle); /* Short */
+		angle += 1/60.;
+	    }
+	}
+
+	/*
+	 * Go ahead and draw it.
+	 */
+	XDrawSegments(XtDisplay(w), XtWindow(w), w->clock.myGC, segbuff, w->clock.numseg/2);
+	
+	w->clock.segbuffptr = w->clock.segbuff;
+	w->clock.numseg = 0;
+}
+
+------- End of Forwarded Message
+
+

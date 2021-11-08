@@ -1,0 +1,16 @@
+The following changes have been made to this directory since R2:
+
+     o  new OS routine CloseDownWellKnownSockets added.
+     o  new font naming scheme that separates font names from file names.
+     o  support for multiple font formats (SNF, BDF, compressed, etc.)
+     o  hpux and macII support integrated into generic 4.2bsd.
+     o  support for delayed and non-blocking writes added.
+     o  access control now gets restored on server reset.
+     o  DECnet object name changed as per Digital standards.
+     o  bugs in wildcard matching have been fixed.
+     o  huge input buffers are periodically shrunk.
+     o  font names and color names are now case insensative; lowercasing for
+	ISO Latin 1 names is done properly.
+     o  new routines ddxProcessArguments and ddxUseMsg are called to give the
+	individual ddx libraries a chance to parse command line arguments and
+	print usage messages.

@@ -1,0 +1,64 @@
+Return-Path: henry@garp.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 22 Sep 88 22:32:39 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA15525; Thu, 22 Sep 88 22:32:43 EDT
+Received: by GARP.MIT.EDU with sendmail-5.54/4.7 
+	id <AA01956@GARP.MIT.EDU>; Thu, 22 Sep 88 22:32:39 EDT
+Message-Id: <8809230232.AA01956@GARP.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: [Roger A. Roach: xmh]
+Date: Thu, 22 Sep 88 22:32:38 EDT
+From: Henry Mensch <henry@garp.mit.edu>
+
+### bug number:   1001
+### area:         xmh
+### severity:     medium low
+### comments:     
+
+
+these are both problems on the RT/PC AOS and VAX 4.3BSD platforms with
+X11R2.
+
+--
+-- Henry Mensch / <henry@ATHENA.MIT.EDU>
+-- Project Athena Quality Assurance
+
+
+------- Forwarded Message
+
+To: Bugs@ATHENA.MIT.EDU
+Subject: xmh
+Date: Wed, 21 Sep 88 14:11:30 EDT
+From: Roger A. Roach <rar@ATHENA.MIT.EDU>
+
+
+The xmh that comes with Release 6.0 has some (mis)features which I
+could not find documented as changes (I could not find any
+documentation of xmh changes when there are obviously some).  Thus I
+assume that they might be bugs and am reporting them.
+
+1. When entering text (composing, replying, forwarding) the input
+lines are not wrapped in the window.  They appear to be wrapped before
+sending and the received mail look OK.  However the lack of wrapping
+in the window makes it impossible to check the mail or make changes.
+
+2. When opening up a folder, the list of messages is reset to the
+first message instead of the last as was done previously.  Since I
+normally keep a lot of messages in my inbox or log folders, this makes
+it harder to check the most recent entries.  I would like at least
+some option to display the tail end of the group instead of the front
+end.
+
+3. Possibly a third problem is that xmh allows me to scroll past the
+list of messages.  I thought that the previous version was ignore
+scroll requests once it got to the last (or first) message.  I may be
+wrong on this, but I don't remember scrolling past the end of the
+messages prior to release 6.
+
+If there were any new features added, I'd appreciate knowing about them.  I
+did notice the longer names for the boxes (not sure that is a feature).
+
+					Roger Roach
+
+------- End of Forwarded Message
+
+

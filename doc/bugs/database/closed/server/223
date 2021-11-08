@@ -1,0 +1,98 @@
+Return-Path: dba+@andrew.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 26 Sep 88 16:48:33 EDT
+Received: by andrew.cmu.edu (5.54/3.15) id <AA01681> for xbugs@expo.lcs.mit.edu; Mon, 26 Sep 88 16:47:34 EDT
+Received: via switchmail; Mon, 26 Sep 88 16:47:24 -0400 (EDT)
+Received: from po5.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/service/mailqs/q004/QF.po5.andrew.cmu.edu.233eac55.1abe>;
+          Mon, 26 Sep 88 16:45:20 -0400 (EDT)
+Received: from kane.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/usr3/dba/.Outgoing/QF.kane.andrew.cmu.edu.233e5844.4a41500>;
+          Mon, 26 Sep 88 10:46:29 -0400 (EDT)
+Received: from Version.6.23.N.CUILIB.3.44.SNAP.NOT.LINKED.kane.andrew.cmu.edu.rt.r3
+          via MS.5.5.kane.andrew.cmu.edu.rt_r3;
+          Mon, 26 Sep 88 10:46:28 -0400 (EDT)
+Message-Id: <8XDZV4y00UkRMJ014d@andrew.cmu.edu>
+Date: Mon, 26 Sep 88 10:46:28 -0400 (EDT)
+From: David Anderson <dba+@andrew.cmu.edu>
+X-Andrew-Message-Size: 1376+0
+To: xbugs@expo.lcs.mit.edu
+Subject: font caching bugs in RT apa16 server
+Cc: ibmuupa!erik.UUCP@harvard.harvard.edu
+
+### bug number:   1013
+### area:         server
+### severity:     high
+### comments:     ibm ddx-specific
+
+VERSION:
+
+    R3beta
+
+CLIENT MACHINE and OPERATING SYSTEM:
+
+    RT APC running ACIS 4.3
+
+DISPLAY:
+
+    IBM apa16
+
+WINDOW MANAGER:
+
+    uwm (any)
+
+AREA:
+
+    apa16 ddx
+
+SYNOPSIS:
+
+    server goes into infinite loop, or
+
+    server crashes when a lot of fonts are used
+
+DESCRIPTION:
+
+    If it can find a band that is already free, and large enough,
+    afbFindFreeable should return it (and not pOld, which may be
+    NULL).  When afbFindFreeable returns NULL, afbForce
+    goes into an infinite loop.
+
+    afbFree doesn't correctly coalesce its bands.
+
+REPEAT BY:
+
+    Use a lot of fonts, so that the font cache is filled; examine the
+    code.
+
+SAMPLE FIX:
+
+*** apa16font.c.lnk     Fri Sep  2 14:58:34 1988
+--- apa16font.c Tue Sep 13 22:09:35 1988
+***************
+*** 168,174 ****
+            if (rHt>=height) {
+
+                if (pAB->afbFont==NULL) {
+!                   if (height>0)       return(pOld);
+                }
+                else if ((pOld==NULL)||(pAB->afbLast<oldest)) {
+                    pOld= pAB;
+--- 168,174 ----
+            if (rHt>=height) {
+
+                if (pAB->afbFont==NULL) {
+!                   if (height>0)       return(pAB);
+                }
+                else if ((pOld==NULL)||(pAB->afbLast<oldest)) {
+                    pOld= pAB;
+***************
+*** 264,270 ****
+      if ((pTmp!=NULL)&&(pTmp->afbFont==NULL)) {
+        pTmp->afbY2=    pAB->afbY2;
+        pTmp->afbNext=  pAB->afbNext;
+-       pTmp=   pAB->afbNext;
+        Xfree(pAB);
+        pAB= pTmp;
+      }
+--- 264,269 ----
+

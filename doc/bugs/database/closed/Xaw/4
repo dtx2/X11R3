@@ -1,0 +1,24 @@
+Return-Path: mikey@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Fri, 24 Jun 88 17:41:45 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA13714; Fri, 24 Jun 88 17:40:21 EDT
+Received: from acetes.dec.com by decwrl.dec.com (5.54.4/4.7.34)
+	id AA16896; Fri, 24 Jun 88 14:40:10 PDT
+Received: by acetes.dec.com (5.54.3/4.7.34)
+	id AA23486; Fri, 24 Jun 88 14:40:03 PDT
+Date: Fri, 24 Jun 88 14:40:03 PDT
+From: mikey@decwrl.dec.com (Mike Yang)
+Message-Id: <8806242140.AA23486@acetes.dec.com>
+To: xbugs@athena.mit.edu
+Subject: scrollbarClassRec not declared extern in ScrollP.h
+
+### bug number:   640
+### area:         Xaw
+### severity:     low
+### comments:     
+
+DESCRIPION:
+	In Scroll.c, scrollbarClassRec should not be declared static and it
+	should be declared extern in ScrollP.h.
+
+
+

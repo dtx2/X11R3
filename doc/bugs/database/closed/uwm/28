@@ -1,0 +1,57 @@
+Return-Path: gregh@bilbo.locus
+Received: by expo.lcs.mit.edu; Fri, 10 Jun 88 15:56:52 EDT
+Received: by devnet (1.0L/0.07) id AA30092; Wed, 8 Jun 88 15:21:51 PDT
+Date: Wed, 8 Jun 88 15:21:51 PDT
+From: Gregory Holmberg <gregh@bilbo.locus>
+Message-Id: <8806082221.AA30092@devnet>
+To: xbugs@expo.lcs.mit.edu
+Subject:        Uwm bug
+
+### bug number:   589
+### area:         uwm
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	BellTech 386
+
+CLIENT OPERATING SYSTEM:
+	AT&T Unix System V Release 3
+
+DISPLAY:
+	EGA
+
+SYNOPSIS:
+	 Uwm - icon text can get eaten due to the icon window not being
+	 refreshed at times.
+
+DESCRIPTION:
+	Moving a text icon that was partially obscured by a uwm menu eats
+	some of the icon text.
+
+REPEAT-BY:
+	 Situation: running uwm and have a text icon created by uwm for the
+	 client because it didn't offer an icon hint.  Now bring up a uwm menu
+	 containing the move operation.  Bring up the menu such that it
+	 will partially obscure the icon, leaving enough of the icon to be
+	 able to move the icon window, but covering some of the icon's text.
+	 Select move from the uwm menu and move the icon.
+
+	 You'll see that the portion of the icon that was covered by the menu
+	 is not refreshed.  Only the move operation has this problem.  Move
+	 opaque doesn't even have it.  Also clients that supplied a bitmap
+	 for the icon do not have this problem.  Also it only happens for icons
+	 that were obscured by the menu.  Icons obscured by any other window and
+	 then moved do not have this problem.
+
+FIX:
+	Don't know.  However, it would be nice if the menu disappeared
+	immediately after you selected from it, instead of staying up until
+	you start the operation.  That way you could bring up the menu over
+	a window and still ba able to operate on that window even if it was
+	completely obscured by the menu.  This would have the side effect of
+	simply avoiding the situation where the bug occurs.
+

@@ -1,0 +1,40 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 11:02:53 EST
+Date: Thu, 17 Mar 88 11:02 EST
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: Xlib Doc. Error
+To: markc%hpcvss@hplabs.hp.com, jg@decwrl.dec.com
+Cc: xbugs@expo.lcs.mit.edu
+In-Reply-To: <8803162103.AA14350@hpcvss.HP.COM>
+Message-Id: <880317110216.8.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   154
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       
+### comments:     
+
+    From: Mark F. Cook <markc%hpcvss@hplabs.HP.COM>
+    Date: Wed, 16 Mar 88 13:03:49 PST
+
+    Perhaps I'm misinterpreting the text, but I think that a part of section 5 in
+    the Xlib document references an incorrect structure field.  In the "Graphics
+    Resource Functions" section, the following text appears:
+
+	  "The dash_list value allowed here is actually a simplified
+	   form of the more general patterns that can be set with
+	   XSetDashes.  Specifying a value of N here is equivalent to
+	   specifying the two element list [N, N] in XSetDashes.  The
+	   value must be nonzero. Otherwise, a BadValue error is
+	   generated.  The meaning of dash_offset and dash_list are
+	   explained for the XSetDashes function."
+
+    In the first sentence, shouldn't 'dash_list' actually be 'dashes' (the last
+    field in the XGCValues structure)?  From the gist of the paragraph, I assume
+    that they are saying that XGCValues.dashes is a simplified form of the
+    dash_list which is specified as a parameter in XSetDashes().
+
+You are correct.  The offending reference is on page 66, Section 5.3.
+
+

@@ -1,0 +1,49 @@
+Return-Path: sequent!michael@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 13 Sep 88 21:21:24 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07581; Tue, 13 Sep 88 21:21:26 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA01254; Tue, 13 Sep 88 18:21:09 PDT
+Message-Id: <8809140121.AA01254@decwrl.dec.com>
+To: xbugs@athena.mit.edu
+Subject: some Xlib modules still have 'rcsid'
+Cc: michael@decwrl.dec.com, len@decwrl.dec.com
+Date: Tue, 13 Sep 88 16:43:29 PDT
+From: Michael Squires <sequent!michael@decwrl.dec.com>
+
+### bug number:   969
+### area:         Xlib
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 3 (pre-release)
+SYNOPSIS:
+	Some Xlib modules (8 of 'em) still have 'rcsid' in rather
+	than just '$XConsortium' as a comment
+DESCRIPTION:
+	Configuration:
+		server:	Sun 3/50, SunOS3.2
+		client: Symmetry S81, Dynix 3.0.12
+
+ParseCmd.c:static char rcsid[] = "$XConsortium: ParseCmd.c,v 1.13 88/09/06 16:04:04 jim Exp $";
+Quarks.c:static char rcsid[] = "$XConsortium: Quarks.c,v 1.12 88/09/06 16:04:01 jim Exp $";
+XErrDes.c:static char rcsid[] = "$XConsortium: XErrDes.c,v 11.27 88/09/06 16:06:58 jim Exp $";
+XEvToWire.c:static char rcsid[] = "$XConsortium: XEvToWire.c,v 11.16 88/09/06 16:07:00 jim Exp $";
+XGetDflt.c:static char rcsid[] = "$XConsortium: XGetDflt.c,v 1.13 88/09/06 16:07:44 jim Exp $";
+XOpenDis.c:static char *rcsid_xopendisplay_c = "$XConsortium: XOpenDis.c,v 11.67 88/09/06 16:08:49 jim Exp $";
+XlibInt.c:static char rcsid[] = "$XConsortium: XlibInt.c,v 11.83 88/09/06 16:09:43 jim Exp $";
+Xrm.c:static char rcsid[] = "$XConsortium: Xrm.c,v 1.18 88/09/06 16:09:24 jim Exp $";
+
+REPEAT-BY:
+	Look at the code
+FIX:
+
+
+			Michael Squires
+			Sequent Computer Systems, Inc.
+			15450 SW Koll Parkway
+			Beaverton, OR  97006
+			(503) 626-5700 x9891
+			sequent!michael@decwrl.dec.com
+			michael%sequent.uucp@tektronix.tek.com@relay.cs.net
+

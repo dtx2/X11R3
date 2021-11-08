@@ -1,0 +1,40 @@
+Return-Path: fred%hpcvxft@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 19 May 88 12:48:06 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05651; Thu, 19 May 88 11:46:46 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 19 May 88 08:46:29 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA06256; Thu, 19 May 88 09:46:25 PDT
+Received: from hpcvxft by hpcvxft.HP.COM; Thu, 19 May 88 09:46:45 pdt
+Message-Id: <8805191646.AA03642@hpcvxft.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Cc: swick%athena.mit.edu%hplabs@hplabs.hp.com, fred%hpcvxft@hplabs.hp.com
+Subject: Lost LeaveNotify event.
+X-Mailer: mh6.5
+Date: Thu, 19 May 88 09:46:39 PDT
+From: fred%hpcvxft@hplabs.hp.com
+
+### bug number:   521
+### area:         Xt
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	LeaveNotify events occasionally are not generated.
+
+DESCRIPTION:
+	I have a widget hierarchy which uses the Xtk focus mechanism to
+        implement a traversal scheme.  When the user moves the cursor into
+        the widget hierarchy, the current traversal widget highlights itself.
+        When the user moves the cursor out of the widget hierarchy, the
+        current traversal widget is supposed to dehighlight itself.  On
+        occasion, the widget will not dehighlight itself.  I added some
+        prints to XtDispatchEvent(), in an attempt to determine whether the
+        toolkit was discarding these events for some reason, or whether X
+        was not generating the events; it turned out that X was not generating
+        these events.
+
+

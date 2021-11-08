@@ -1,0 +1,11 @@
+# $XConsortium: Imakefile,v 1.5 88/10/23 11:15:29 jim Exp $
+     HEADERS = zoid.h bezier.h
+INSTALLFLAGS = -m 0444
+
+all:
+	@echo "skipping make all in extensions/include"
+
+InstallMultiple($(HEADERS),$(INCDIR))
+
+depend:
+	@echo "skipping make depend in extensions/include"

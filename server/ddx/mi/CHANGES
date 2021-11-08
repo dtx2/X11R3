@@ -1,0 +1,22 @@
+The following changes have been made to this directory since R2:
+
+     o  New and improved wide line, wide arc and filled arc code.
+	All but filled arcs should now conform to the protocol.  Mostly now
+        slower.
+     o  New interface to CopyArea/CopyPlane integrated info mibitblt.c,
+	other bugs in CopyArea/CopyPlane fixed.
+     o  Machine independent version of Backing Store implemented.  This
+	also caused some interface changes with DIX, so be cautious.
+     o  miPaintWindow optimized to eliminate GC allocation and reverification.
+	This is still a good candidate for replacement in the device library,
+	as the amount of extra work here is still large in some cases.
+     o  new routine miSendGraphicsExpose which should be placed in
+	pScreen->SendGraphicsExpose.  This conforms to the new
+	CopyArea/CopyPlane interface.
+     o  new file miinitext.c -- InitExtensions now lives in the DDX and
+	this file is used by several devices which don't have special hardware.
+     o  new hook in miValidateTree.  call miClipNotify with a function
+	to be called whenever the clipList for a window changes.  Parallax
+	uses this function to update a mask plane on the screen to select
+	video windows.
+     o  Various bugs in CopyPlane, GetImage, PutImage, and stippling fixed.

@@ -1,0 +1,55 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 10:06:41 EST
+Date: Thu, 10 Mar 88 10:06:41 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101506.AA00411@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: with-gcontext-bindings
+
+### bug number:   68
+### area:         CLX
+### severity:     
+### assigned to:  
+### status:       closed
+
+(Message inbox:42)
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 08:40:51 EST
+Return-Path: <@UCBARPA.BERKELEY.EDU:franz!sparky!jdi@ucbarpa.Berkeley.EDU>
+Received: from ucbarpa.Berkeley.EDU (UCBARPA.BERKELEY.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 129448; 4 Mar 88 04:34:02 EST
+Received: by ucbarpa.Berkeley.EDU (5.58/1.26)
+	id AA02841; Fri, 4 Mar 88 01:14:59 PST
+Received: from sparky by franz (5.5/3.14)
+	id AA08699; Fri, 4 Mar 88 01:16:50 PST
+Received: by sparky (3.2/3.14)
+	id AA19492; Fri, 4 Mar 88 01:10:42 PST
+Return-Path: <sparky!jdi>
+Message-Id: <8803040910.AA19492@sparky>
+To: bug-clx@zermatt.lcs.mit.edu
+Subject: with-gcontext-bindings
+Date: Fri, 04 Mar 88 01:10:41 PST
+From: John Irwin <franz!sparky!jdi@ucbarpa.berkeley.edu>
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 10 Mar 88 08:40 EST
+Resent-Message-Id: <880310084050.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+
+with-gcontext doesn't work right on non lisp machines when cache-p is t.
+
+(it works ok when cache-p is nil)
+
+Repeat by:
+(with-gcontext (gc :function boole-c2) (foo))
+
+then later using gc without a (with-gcontext) wrapper -- function will
+still be set to boole-c2 on the server side, but (gcontext-function gc)
+will return boole-1 to lisp.
+
+The problem should be in with-gcontext-bindings for non lispm, but I'm not
+really sure what it's doing so I can give a fix.
+Why is the lispm with-gcontext-bindings different from the nonlispm, anyway?
+
+	
+	-- John (jdi%franz.UUCP@ucbarpa.Berkeley.EDU)
+

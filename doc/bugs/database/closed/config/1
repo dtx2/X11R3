@@ -1,0 +1,44 @@
+Return-Path: shipley%widow.Berkeley.EDU@lilac.berkeley.edu
+Received: from lilac.berkeley.edu by EXPO.LCS.MIT.EDU; Wed, 30 Mar 88 07:55:18 EST
+Received: from web5f.berkeley.edu
+	by lilac.berkeley.edu (5.54 (CFC 4.22.3)/1.16.18)
+	id AA10927; Wed, 30 Mar 88 12:53:23 GMT
+Received: by web5f.berkeley.edu (3.2/SMI-3.0DEV3.7MXl)
+	id AA11017; Wed, 30 Mar 88 04:53:38 PST
+Date: Wed, 30 Mar 88 04:53:38 PST
+From: shipley%widow.Berkeley.EDU@lilac.berkeley.edu
+Message-Id: <8803301253.AA11017@web5f.berkeley.edu>
+To: xbugs@expo.lcs.mit.edu
+Cc: webhacks%widow.Berkeley.EDU@lilac.berkeley.edu
+
+### bug number:   281
+### area:         config
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     rejected [we've renamed it enough times]
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/280
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Mono.
+
+SYNOPSIS:
+	 Xtklib named the same as the X10R4 
+
+DESCRIPTION:
+	 Xtklib named the same as the X10R4 version causing difficulty
+	 in running both versions on the same disk structure.
+
+FIX:
+	rename the X11 Toolkit to X11tlib.a
+
+

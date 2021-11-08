@@ -1,0 +1,47 @@
+Return-Path: susan@wsl.dec.com
+Received: by expo.lcs.mit.edu; Mon, 17 Oct 88 15:09:02 EDT
+Received: from gnome7.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA23503; Mon, 17 Oct 88 12:08:40 PDT
+Received: by gnome7.pa.dec.com (5.57/4.7.34)
+	id AA02655; Mon, 17 Oct 88 12:08:14 PDT
+Message-Id: <8810171908.AA02655@gnome7.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu, joel@wsl.dec.com, vasudev@wsl.dec.com
+Subject: Colormap notification bug in ChangeWindowAttributes
+Date: Mon, 17 Oct 88 12:08:12 PDT
+From: Susan Angebranndt <susan@wsl.dec.com>
+
+### bug number:   1079
+### area:         server
+### severity:     high
+### comments:     our fix is given at the end
+
+
+The following code is in ChangeWindowAttributes, WINDOW.C:
+
+                    pWin->colormap = cmap;
+                    xE.u.u.type = ColormapNotify;
+                    xE.u.colormap.window = pWin->wid;
+                    xE.u.colormap.new = xTrue;
+                    xE.u.colormap.state = IsMapInstalled(cmap, pWin);
+                    DeliverEvents(pWin, &xE, 1, (WindowPtr) NULL);
+
+The top line needs to be changed to 
+
+		    xE.u.u.colormap = pWin->colormap = cmap; 
+
+Otherwise, the colormap field of the event is uninitialized, and the window
+manager does not understand if you set a colormap into a window after the
+window is mapped.
+
+*** /tmp/,RCSt1a16128	Fri Oct 21 18:01:39 1988
+--- window.c	Sat Oct 15 09:10:21 1988
+***************
+*** 1413,1418 ****
+--- 1413,1419 ----
+  		    pWin->colormap = cmap;
+  		    xE.u.u.type = ColormapNotify;
+  		    xE.u.colormap.window = pWin->wid;
++ 		    xE.u.colormap.colormap = cmap;
+  	            xE.u.colormap.new = xTrue;
+  	            xE.u.colormap.state = IsMapInstalled(cmap, pWin);
+  		    DeliverEvents(pWin, &xE, 1, (WindowPtr) NULL);

@@ -1,0 +1,184 @@
+Return-Path: dunham@hc.dspo.gov
+Received: by EXPO.LCS.MIT.EDU; Tue, 19 Jul 88 15:57:50 EDT
+Received: by hc.dspo.gov (5.54/1.14)
+	id AA10236; Tue, 19 Jul 88 10:23:35 MDT
+Date: Tue, 19 Jul 88 10:23:35 MDT
+From: dunham@hc.dspo.gov (Scott R. Dunham)
+Message-Id: <8807191623.AA10236@hc.dspo.gov>
+To: xbugs@expo.lcs.mit.edu
+Subject: Spring Loaded Popups bug in Xt Toolkit
+Cc: sun!applicon!alphatech!ksh
+
+### bug number:   752
+### area:         Xt
+### severity:     low
+### comments:     
+
+
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/260
+
+CLIENT OPERATING SYSTEM:
+	Sun OS 4.0 & 3.5
+
+DISPLAY:
+	CGTwo0
+
+SYNOPSIS:
+	The sping loaded popups are not getting button release
+	events outside the window or inside there children.
+	 (Brief description of the problem)
+
+DESCRIPTION:
+	When a spring loaded popup is mapped using the Translation
+	MenuPopup (shell), and the shell is created at startup time,
+	it does not get the events ( as per the Intrinsics Manual).
+	If the Button up occurs in the X Root window, the
+	popup does not recieve the event. Nor does the popup recieve
+	the event if it occurs in the children of the shells child.
+	(ie: the menu items). The menu items that normally get a button up
+	are not receiving the event even though the event is dispatched.
+	The Popup does however receive the event if it occurs in its single
+	child.
+	 (More detailed description)
+
+REPEAT-BY:
+/* This Program demonstrates the event problems mentioned above */
+/* it is easily compiled and link with the standard Xaw, Xt, and X libs. */
+
+/* I used my own event loop to catch the button up events and find the
+   windows that they occur in. The Menu Item buttons should have the
+   callbacks called on the button ups but this only happens if there
+   was first a buuton down in the Menu Item dispite the fact that the
+   button up event is being dispatched for the Menu Item Window.
+
+	I am still unsure how the Shell widget and Menu Item button
+   will both get the same event inorder to make this work properly
+
+	If I am missing something in the logic or the event manipulation
+   Please Let me know.
+
+	dunham@hc.dspo.gov
+
+	Thank you Kevin Heneghan
+*/
+
+#include <stdio.h>
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <X11/Box.h>
+#include <X11/Command.h>
+#include <X11/Shell.h>
+
+static Widget root;
+static Widget popup;
+static Widget toplevel;
+static Widget button[2];
+static Widget bb;
+static Widget b;
+        
+XtCallbackProc quit(w,closure,call_data)
+     Widget w;
+     caddr_t closure;
+     caddr_t call_data;
+{
+  exit(0);
+}
+
+XtCallbackProc dummy(w,closure,call_data)
+     Widget w;
+     caddr_t closure;
+     caddr_t call_data;
+{
+printf("Notified in menu Item button up lost from shell\n");
+}
+
+
+/*----------------------------------------------------------------*/
+main (argc, argv)
+	int     argc;
+	char	**argv;
+/*----------------------------------------------------------------*/
+{
+int i;
+Arg args[2];
+Widget mi[4];
+
+    /* translation table for the shell */
+static String shell_trans_table =  "<Btn1Up>:	MenuPopdown()";
+
+    /* translation table for the button */
+static String button_trans_table = "<Btn1Down>:	MenuPopup(popup) notify()";
+
+
+XtTranslations shell_trans;	/* compiled translation table */
+XtTranslations button_trans;	/* compiled translation table */
+
+    toplevel = XtInitialize (argv[0], "TopLevel", NULL, 0, &argc, argv);
+
+    XtSetArg(args[0], XtNwidth, 125);
+    XtSetArg(args[1], XtNheight, 150);
+    root = XtCreateManagedWidget (argv[0],boxWidgetClass,toplevel,args,
+				  XtNumber(args));
+
+    XtSetArg(args[0], XtNwidth, 150);
+    XtSetArg(args[1], XtNheight, 200);
+    shell_trans = XtParseTranslationTable(shell_trans_table);
+
+    popup = XtCreatePopupShell( "popup",overrideShellWidgetClass,
+			       root, args, XtNumber(args));
+
+    XtOverrideTranslations(popup, shell_trans);
+    XtRealizeWidget (toplevel);
+
+    button_trans = XtParseTranslationTable(button_trans_table);
+
+    XtSetArg (args[0],XtNtranslations, button_trans);
+    button[0] = XtCreateManagedWidget (" Press for Menu ",commandWidgetClass,root, args,1);
+    XtOverrideTranslations(button[0], button_trans);
+    
+    button[1] = XtCreateManagedWidget (" Press to  Exit ",commandWidgetClass,root, NULL,0);
+    XtAddCallback (button[1],XtNcallback,quit,NULL);
+
+    XtSetArg(args[0], XtNwidth, 150);
+    XtSetArg(args[1], XtNheight, 200);
+    bb = XtCreateManagedWidget ("Menu Plane",boxWidgetClass,popup,args,
+				  XtNumber(args));    
+    for (i=0; i<=3; i++)
+      {
+	mi[i] = XtCreateManagedWidget ("   Menu Item Button   ",
+				    commandWidgetClass, bb, NULL,0);
+	XtAddCallback (mi[i],XtNcallback,dummy,(caddr_t *)popup);
+      }
+    myloop();
+}
+
+
+myloop()
+{
+  XEvent event;
+  while (1)
+    {
+      XtNextEvent (&event);
+      if (event.type == ButtonRelease)
+	printf ("Button Up Window = %d\n",event.xany.window);
+      XtDispatchEvent (&event);
+    }
+}
+
+	(What you did to get the error; include test program if appropriate)
+
+FIX:
+	Unknown.
+	(Preferred, but not necessary)
+

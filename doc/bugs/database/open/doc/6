@@ -1,0 +1,44 @@
+Return-Path: bromley@think.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Sat, 12 Mar 88 22:12:31 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA17344; Sat, 12 Mar 88 22:04:03 EST
+Return-Path: <bromley@Think.COM>
+Received: from lysippe.think.com by Think.COM; Sat, 12 Mar 88 22:02:51 EST
+Received: by lysippe.think.com; Sat, 12 Mar 88 22:02:47 EST
+Date: Sat, 12 Mar 88 22:02:47 EST
+From: bromley@think.com
+Message-Id: <8803130302.AA19495@lysippe.think.com>
+To: RWS@zermatt.lcs.mit.edu
+Cc: xpert@think.com
+In-Reply-To: Robert Scheifler's message of Thu, 10 Mar 88 09:00 EST <880310090039.4.RWS@KILLINGTON.LCS.MIT.EDU>
+Subject: slight documentation problems
+
+### bug number:   106
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       
+
+   Date: Thu, 10 Mar 88 09:00 EST
+   From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+
+       Date: Thu, 10 Mar 88 00:38:16 EST
+       From: bromley@Think.COM
+
+       I recently unpacked the X.V11R2 distribution and found that
+       doc/Toolkit/{widgets,usenix}.PS had problems.
+
+   I just extracted these files from core.hc on expo, and they are
+   identical to the files in our source pool.  For reference, the sum for
+   widgets.PS is 53372, and the sum for usenix.PS is 60188.  Perhaps you
+   were just bitten by the SunOS 3.4 tcp bug that everyone is complaining
+   about.  I suggest you try sucking core.hc over again.
+
+
+I brought core.hc over again, but usenix.PS still had problems.  It printed out
+more this time, but the last half was mangled.  Everything upto and including
+page 5 was fine.  Then there was a blank page, except for the page number,
+followed by a completely blank page, and then 6 mangled pages.  The last 6 pages
+were all offset up 2/3 of a page and slightly to the right, so that only the
+lower third of the text was visible at the top of the page.  The order of the
+pages also appeared to be reversed wrt previous pages.  
+

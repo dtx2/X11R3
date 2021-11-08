@@ -1,0 +1,110 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:@tektronix.tek.com:scotthe@shark.gwd.tek.com
+Received: by expo.lcs.mit.edu; Mon, 17 Oct 88 23:33:29 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Mon 17 Oct 88 23:43:03-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id aa17234; 17 Oct 88 19:32 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa07479; 17 Oct 88 19:17 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA05434; Mon, 17 Oct 88 16:21:23 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA25008; Mon, 17 Oct 88 16:20:45 PDT
+From: Scott Hennes <scotthe@shark.gwd.tek.com>
+Message-Id: <8810172320.AA25008@shark.GWD.TEK.COM>
+Date: Mon, 17 Oct 88 16:20:43 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com
+Subject: X11 R3 bug: awm SaveUnders crashes server
+
+### bug number:   1083
+### area:         server
+### severity:     high
+### comments:     
+
+
+Scott Hennes
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2144
+tektronix!shark!scotthe
+
+--------------------
+VERSION:
+	X11 pre-release 3
+
+CLIENT MACHINE:
+	Tektronix 4316
+
+CLIENT OPERATING SYSTEM:
+	UTEK 3.0 (== 4.2bsd kernel with some 4.3 utilities)
+
+DISPLAY:
+	Tektronix 4316
+
+SYNOPSIS:
+	SaveUnders with awm can crash server
+
+DESCRIPTION:
+	Area: server
+	Files: (full pathname of files)
+
+	This is a resubmission of bug 926.  More detail of server action
+	is presented here.
+
+	Resizing a window with awm when saveUnder has been loaded as a
+	resource can cause a server crash.  This is the scenario:
+	    1. awm reconfigures the parent window.  Everything is OK
+	    2. awm then reconfigures the child window.  Routine
+	    SlideAndSizeWindow calls ValidateTree with the parent window
+	    as the window argument and then calls DoObscures with
+	    the parent window as the window argument.
+	    3. miValidateTree updates pWin->backStorage->oldAbsCorner for
+	    the window hierarchy starting no higher than the CHILDREN of its
+	    window argument.
+	    4. DoObscures() calls SaveDoomedAreas on every window with backing
+	    stores from ITS WINDOW ARGUMENT on down.
+	The net effect of this is that DoObscures is calling SaveDoomedAreas
+	on the parent of the window being reconfigured but this parent has
+	not had its pWin->backStorage->oldAbsCorner updated.  If you are
+	lucky, you just save the wrong information into the backing pixmap;
+	if you are unlucky, you get a segmentation fault when you read
+	beyond the bounds of your frame buffer.
+
+	This can be fixed with a hack that changes the window argument to
+	DoObscures when called from SlideAndSizeWindow from "pParent" to
+	"pWin" if "pParent" is not the root window.  I doubt that this
+	is the true fix.  I don't understand the design well enough at this
+	time to attempt to submit a good fix.
+
+	There may be a similar problem in MoveWindow; it has the same
+	sequence of calls to ValidateTree and DoObscures.  I haven't looked
+	into this.
+
+
+REPEAT-BY:
+    Using the following 'default' file:
+
+    ----------------------------------default-------------------------------
+    awm*saveUnder:	on
+    ------------------------------------------------------------------------
+
+    1) xrdb -load default
+    2) awm &
+    3) xterm -geometry =80x60 &
+    4) 'reframe' the window to 80x24
+    5) 'move' the window
+    6) 'reframe' the window to 80x60
+
+
+    This should cause the server to crash.
+
+    (These numbers may be specific for the font and our frame buffer size.
+    The 80X60 window is entirely on-screen.
+    You may have to play around some to get this to happen on another machine).
+
+        FIX:
+	(Preferred, but not necessary)
+
+

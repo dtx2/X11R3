@@ -1,0 +1,51 @@
+Return-Path: eichin@athena.mit.edu
+Received: by expo.lcs.mit.edu; Sun, 10 Jul 88 12:20:36 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA27595; Sun, 10 Jul 88 12:18:49 EDT
+Received: by KREMVAX.MIT.EDU (5.45/4.7) id AA14329; Sun, 10 Jul 88 12:18:41 EDT
+Date: Sun, 10 Jul 88 12:18:41 EDT
+From: Mark W. Eichin <eichin@athena.mit.edu>
+Message-Id: <8807101618.AA14329@KREMVAX.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: Xlib Memory leaks (minor)
+
+### bug number:   729
+### area:         Xlib
+### severity:     low
+### comments:     
+
+Note: The following things are fairly low priority. I was using MPROF
+to hunt down *all* of the memory leaks in an X application of mine,
+and came across a few things that contributed to the noise of
+not-quite-static data that there should be some way to free. In most
+applications, these won't matter, but then most applications don't
+bother to call XCloseDisplay (it doesn't even get *linked* into the
+Toolkit applications...) These turn out to be fixable, so I contribute
+the code. 
+
+1) XCloseDisplay doesn't free dpy->vendor. This is Xmalloc'd in
+XOpenDisplay. Fix: in _XFreeDisplayStructure, XOpenDis.c, line 465
+	if (dpy->display_name)
+	   Xfree (dpy->display_name);
++	if (dpy->vendor)
++	   Xfree (dpy->vendor);
+
+
+2) XCloseDisplay also doesn't free the _qfree list. In fact, nothing
+does. While it never gets bigger than necessary, I have seen it get
+above 30K in a real application. XFreeQ could be made a library call,
+though I suspect that including it in XCloseDisplay is sufficient.
+
+void XFreeQ()
+{
+  register _XQEvent *qelt, *qlast;
+  
+  for(qlast=qelt=_qfree; qelt&&(qelt=qelt->next); qlast=qelt)
+    Xfree(qlast);
+
+  if(qlast) Xfree(qlast);
+}
+
+			     Mark Eichin
+		       <eichin@athena.mit.edu>
+	      Project Athena ``Watchmaker'', ZephyrTeam
+

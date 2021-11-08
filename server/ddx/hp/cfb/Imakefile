@@ -1,0 +1,40 @@
+SRCS =	 cfbgc.c cfbwindow.c cfbmisc.c \
+	 cfbpntwin.c cfbmskbits.c cfbpixmap.c cfbbitblt.c \
+	 cfbfillsp.c cfbsetsp.c cfbscrinit.c \
+	 cfbgetsp.c cfbutils.c \
+	 cfbcmap.c cfboldmfb.c hpbuf.c hpfb.c cfbbstore.c
+
+OBJS =   cfbgc.o cfbwindow.o cfbmisc.o \
+	 cfbgetsp.o cfbutils.o \
+	 cfbfillsp.o cfbsetsp.o cfbscrinit.o \
+	 cfbpntwin.o cfbmskbits.o cfbpixmap.o cfbbitblt.o \
+	 cfbcmap.o cfboldmfb.o hpbuf.o hpfb.o  cfbbstore.o
+
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+   INCLUDES = -I. -I../hp -I../../../include -I$(INCLUDESRC) -I../mfb \
+	      -I../../../../extensions/include
+   LINTLIBS = ../../../dix/llib-ldix.ln ../../../os/4.2bsd/llib-los.ln \
+	     ../mfb/llib-lmfb.ln ../../mi/llib-lmi.ln
+
+NormalLibraryObjectRule()
+NormalLibraryTarget(cfb,$(OBJS))
+
+#ifdef hp9000s300
+cfbbitblt.o: cfbbitblt.c
+	$(RM) $@
+	$(CC) -c -Wa,-O $(CFLAGS) $*.c
+#else
+# Note that the ServerCDebug flags are *not* used on this file
+# This is to keep the optimizer from being invoked on it....
+cfbbitblt.o: cfbbitblt.c
+	$(RM) $@
+	$(CC) -c $(INCLUDES) $(STD_DEFINES) $(DEFINES) $*.c
+#endif
+
+
+LintLibraryTarget(cfb,$(SRCS))
+
+NormalLintTarget($(SRCS))
+
+DependTarget()

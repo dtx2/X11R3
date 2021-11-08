@@ -1,0 +1,17 @@
+      XDMCONFIG = xdm-config
+   XDMRESOURCES = Xresources
+     XDMSERVERS = Xservers
+     XDMSESSION = Xsession
+     XDMSTARTUP = Xstartup
+       XDMRESET = Xreset
+
+all::
+
+depend::
+
+InstallNonExec($(XDMCONFIG), $(XDMDIR))
+InstallNonExec($(XDMRESOURCES), $(XDMDIR))
+InstallNonExec($(XDMSERVERS), $(XDMDIR))
+InstallNonExec($(XDMSESSION), $(XDMDIR))
+InstallNonExec($(XDMSTARTUP), $(XDMDIR))
+InstallNonExec($(XDMRESET), $(XDMDIR))

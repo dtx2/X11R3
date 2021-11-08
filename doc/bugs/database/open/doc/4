@@ -1,0 +1,46 @@
+Return-Path: phil@brl.arpa 
+Received: from BRL-SPARK.ARPA ([192.5.23.4]) by EXPO.LCS.MIT.EDU; Sun, 6 Mar 88 23:35:14 EST
+Date:     Sun, 6 Mar 88 23:24:24 EST
+From: Phil Dykstra <phil@brl.arpa>
+To: xbugs@expo.lcs.mit.edu
+Subject:  Missing Hardcopy files?
+Message-Id:  <8803062324.aa04899@SPARK.BRL.ARPA>
+
+### bug number:   42
+### area:         documentation
+### severity:     
+### assigned to:  Jim
+### status:       rejected, user misunderstood what documentation meant
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	Sun
+
+SYNOPSIS:
+	Missing Hardcopy files?
+
+DESCRIPTION:
+	The release notes say that the hardcopy distribution contains
+	PostScript, dvi, runoff, and plain text.  This would be nice
+	but in fact only PostScript is included.
+
+REPEAT-BY:
+	Look at core.hc
+
+FIX:
+	Include the other forms of hardcopy (or else change the
+	release notes).
+
+[Three more "bugs" follow all related to Makefile issues.  I am
+honoring your one-per-message request.  In all, this was a very
+clean easy to install release.  Thanks a bunch.]
+- Phil
+<phil@brl.arpa>

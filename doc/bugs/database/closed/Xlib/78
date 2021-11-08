@@ -1,0 +1,183 @@
+Return-Path: swick
+Received: by expo.lcs.mit.edu; Fri, 9 Sep 88 08:41:05 EDT
+From: swick@expo.lcs.mit.edu (Ralph Swick)
+Message-Id: <8809091241.AA05560@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: lib/X/GetPRoot.c won't compile
+Date: Fri, 09 Sep 88 08:41:04 EDT
+
+### bug number:   954
+### area:         Xlib
+### severity:     low
+### comments:     4.3 tahoe compiler is fixed.
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    4.3bsd/VAX
+
+
+DISPLAY:
+    any
+
+
+WINDOW MANAGER:
+    any
+
+
+AREA:
+    Xlib
+
+
+SYNOPSIS:
+    4.3 compiler gives 'schain botch' errors when compiling lib/X/GetPRoot.c
+
+
+DESCRIPTION:
+    ...
+
+
+REPEAT BY:
+    cd lib/X; make GetPRoot.o
+
+
+SAMPLE FIX:
+*** /tmp/,RCSt1a05531	Fri Sep  9 08:37:39 1988
+--- GetPRoot.c	Fri Sep  9 08:37:28 1988
+***************
+*** 1,5 ****
+  /*
+!  * $XConsortium: GetPRoot.c,v 1.5 88/09/06 14:24:00 jim Exp $
+   *
+   * Copyright 1988 Massachusetts Institute of Technology
+   *
+--- 1,5 ----
+  /*
+!  * $XConsortium: GetPRoot.c,v 1.6 88/09/09 08:36:57 swick Exp $
+   *
+   * Copyright 1988 Massachusetts Institute of Technology
+   *
+***************
+*** 420,425 ****
+--- 420,441 ----
+      int nd;				/* count of depths */
+      Depth *d;				/* temp variable */
+  
++ #define   FREE_RETURN(/*retval,newDepths,depths,ndepths,visualsList*/)	\
++     {									\
++ 	if (newDepths) {						\
++ 	    Depth *d;							\
++ 									\
++ 	    for (i = 0, d = newDepths; i < ndepths; i++, d++) {		\
++ 		if (d->visuals) free ((char *) d->visuals);		\
++ 	    }								\
++ 	    free ((char *) newDepths);					\
++ 	}								\
++ 	if (depths) free ((char *) depths);				\
++ 	if (visualsList) free ((char *) visualsList);			\
++ 	return retval;							\
++     }
++ /*enddef*/
++ 
+      /*
+       * This implementation builds shadow versions of the Depths and Visuals
+       * data structures so that it can always back out and fail gracefully.
+***************
+*** 468,474 ****
+  			d->visuals = (Visual *) Xmalloc (d->nvisuals *
+  							 sizeof(Visual));
+  			if (!d->visuals) 
+! 			  goto free_return;
+  			bcopy ((char *) realD->visuals,
+  			       (char *) d->visuals,
+  			       d->nvisuals * sizeof(Visual));
+--- 484,490 ----
+  			d->visuals = (Visual *) Xmalloc (d->nvisuals *
+  							 sizeof(Visual));
+  			if (!d->visuals) 
+! 			    FREE_RETURN();
+  			bcopy ((char *) realD->visuals,
+  			       (char *) d->visuals,
+  			       d->nvisuals * sizeof(Visual));
+***************
+*** 484,490 ****
+  		 */
+  		d->visuals = (Visual *) Xmalloc (d->nvisuals * sizeof(Visual));
+  		if (!d->visuals) 
+! 		  goto free_return;
+  		for (j = 0; j < d->nvisuals; j++) {
+  		    Visual *v = d->visuals + j;
+  		    PseudoVisual *pv = visualsList[i] + j;
+--- 500,506 ----
+  		 */
+  		d->visuals = (Visual *) Xmalloc (d->nvisuals * sizeof(Visual));
+  		if (!d->visuals) 
+! 		    FREE_RETURN();
+  		for (j = 0; j < d->nvisuals; j++) {
+  		    Visual *v = d->visuals + j;
+  		    PseudoVisual *pv = visualsList[i] + j;
+***************
+*** 524,536 ****
+  		if (v[j].visualid == pscreen.root_visual) {
+  		    root_depth = d->depth;
+  		    root_visual = &v[j];
+! 		    goto got_depth;	/* C sucks */
+  		}
+  	    }
+  	}
+-       got_depth:
+  	if (root_depth == 0) {
+! 	    goto free_return;
+  	}
+      }
+  
+--- 540,552 ----
+  		if (v[j].visualid == pscreen.root_visual) {
+  		    root_depth = d->depth;
+  		    root_visual = &v[j];
+! 		    i = nd;	/* break */
+! 		    break;
+  		}
+  	    }
+  	}
+  	if (root_depth == 0) {
+! 	    FREE_RETURN();
+  	}
+      }
+  
+***************
+*** 596,611 ****
+  
+      retval = True;
+  
+!   free_return:
+!     if (newDepths) {
+! 	Depth *d;
+  
+! 	for (i = 0, d = newDepths; i < ndepths; i++, d++) {
+! 	    if (d->visuals) free ((char *) d->visuals);
+! 	}
+! 	free ((char *) newDepths);
+!     }
+!     if (depths) free ((char *) depths);
+!     if (visualsList) free ((char *) visualsList);
+!     return retval;
+  }
+--- 612,618 ----
+  
+      retval = True;
+  
+!     FREE_RETURN();
+  
+! #undef FREE_RETURN
+  }
+
+

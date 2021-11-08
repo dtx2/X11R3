@@ -1,0 +1,212 @@
+Return-Path: Richard.Draves@rpd.camelot.cs.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 22 Aug 88 03:31:08 EDT
+Received: from RPD.CAMELOT.CS.CMU.EDU by RPD.CAMELOT.CS.CMU.EDU; 22 Aug 88 02:08:32 EDT
+To: xbugs@expo.lcs.mit.edu
+Cc: zs01+@andrew.cmu.edu
+Subject: font bugs with AEDs
+Date: Mon, 22 Aug 88 02:04:34 EDT
+Message-Id: <9481.588233074@RPD.CAMELOT.CS.CMU.EDU>
+From: Richard.Draves@rpd.camelot.cs.cmu.edu
+
+### bug number:   897
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	Viking/AED
+
+SYNOPSIS:
+	spurious warning messages; problems with some strange characters
+
+DESCRIPTION:
+	This is two separate problems.  First, when a client tries to
+	use an undefined character, the server writes
+		char fault on unknown character
+	when it should just completely ignore the character.  (At least
+	that's my understanding.)
+
+	Second, the server doesn't properly draw the space character
+	in the andy8bi font from the ITC.  The server doesn't draw a gap,
+	and successive characters are shifted down 2 pixels.
+
+FIX:
+	This fixes the first problem by correctly telling the AED display
+	which characters actually exist, so the display doesn't fault on
+	nonexistent characters.  It solves the second problem by giving
+	the display a simplified subroutine for characters without glyphs.
+	I'm not sure why the existing code doesn't work, though.  Might
+	be a bug in the AED microcode, although my documentation for it
+	isn't very good.
+
+*** /afs/cs/archive/X.V11R2-source/server/ddx/ibm/aed/aedfont.c	Wed Jan 21 19:40:41 1987
+--- server/ddx/ibm/aed/aedfont.c	Sat Aug 20 17:16:19 1988
+***************
+*** 170,175 ****
+--- 170,211 ----
+      return(TRUE);
+  }
+  
++ /* This code is derived from the Linear8Bit case in GetGlyphs. */
++ 
++ static void
++ aedFontFault(font, vikptr)
++     FontPtr font;
++     register volatile unsigned short *vikptr;
++ {
++     CharInfoPtr		pCI = font->pCI;
++     FontInfoPtr		pFI = font->pFI;
++     unsigned int	firstCol = pFI->firstCol;
++     unsigned int	numCols = pFI->lastCol - firstCol + 1;
++     unsigned int	chDefault = pFI->chDefault;
++     unsigned int	cDef = chDefault - firstCol;
++     register unsigned int	i;
++ 
++     if (pFI->allExist && (cDef < numCols))
++     {
++         for (i = 0; i < 256; i++)
++ 	    *vikptr++ = 0;
++     }
++     else
++     {
++ 	for (i = 0; i < 256; i++)
++ 	{
++ 	    register unsigned int c = i - firstCol;
++ 	    
++ 	    if ((c < numCols) && pCI[c].exists)
++ 		*vikptr++ = 0;
++ 	    else if ((cDef < numCols) && pCI[cDef].exists)
++ 		*vikptr++ = 0;
++ 	    else
++ 		*vikptr++ = 1;
++ 	} 
++     }
++ }
++ 
+  #define vikcmd ((volatile unsigned short *)(VIKROOT + 0x4002))
+  aedCheckFault()
+  {
+***************
+*** 196,208 ****
+  	{
+  	    case 1:
+  		fontid = *(pvikcmd+1);
+! 		if ( aedRealizedFonts[fontid] != 0 )
+  		{
+  		    TRACE(("Font fault on font #%d\n",fontid));
+  		    *(pvikcmd) = 1;	/* font available */
+! 		    vikptr = pvikcmd+1;
+! 		    for ( i=0; i<256; i++ )
+! 			*vikptr++ = 0;
+  		    *semaphore = 0x0101;
+  		}
+  		else
+--- 232,242 ----
+  	{
+  	    case 1:
+  		fontid = *(pvikcmd+1);
+! 		if ( (pFont = aedRealizedFonts[fontid]) != 0 )
+  		{
+  		    TRACE(("Font fault on font #%d\n",fontid));
+  		    *(pvikcmd) = 1;	/* font available */
+! 		    aedFontFault(pFont, pvikcmd+1);
+  		    *semaphore = 0x0101;
+  		}
+  		else
+***************
+*** 224,259 ****
+  		    {
+  			pglyph = ((char *)pFont->pGlyphs)+ci->byteOffset;
+  			vikptr = pvikcmd;
+! 			w = GLYPHWIDTHPIXELS((ci));
+! 			h = GLYPHHEIGHTPIXELS((ci));
+! 			widthGlyph = GLYPHWIDTHBYTESPADDED((ci));
+! 			widthShorts = widthGlyph >> 1;
+! 			oddWidth = widthGlyph != ( widthShorts << 1 );
+! 			len = h*((w+15)/16) + 9;
+! 			*vikptr++ = 1;	/* char available */
+! 			*vikptr++ = len;
+! 			*vikptr++ = 6;	/* move relative order */
+! 			*vikptr++ = ci->metrics.leftSideBearing;
+! 			*vikptr++ = -ci->metrics.ascent;
+! 			*vikptr++ = 9;	/* draw image */
+! 			*vikptr++ = w;
+! 			*vikptr++ = h;
+! 			pdst = vikptr;	 
+! 			for ( i=0; i<h; i++ )
+  			{
+! 			    for( j=0; j < widthGlyph; j++ )
+! 				*pdst++ = *pglyph++;
+! 			    vikptr = vikptr + widthShorts;
+! 			    if ( oddWidth )
+  			    {
+! 				vikptr++;
+! 				*pdst++ = (char)0;
+  			    }
+  			}
+- 			*vikptr++ = 6;	/* move relative */
+- 			*vikptr++ = ci->metrics.characterWidth - ci->metrics.leftSideBearing;
+- 			*vikptr++ = ci->metrics.ascent;
+- 			*semaphore = 0x0101;
+  		    }
+  		    else
+  		    {
+--- 258,305 ----
+  		    {
+  			pglyph = ((char *)pFont->pGlyphs)+ci->byteOffset;
+  			vikptr = pvikcmd;
+! 			if (((w = GLYPHWIDTHPIXELS(ci)) == 0) ||
+! 			    ((h = GLYPHHEIGHTPIXELS(ci)) == 0))
+  			{
+! 			    /* no glyph, so just move right */
+! 			    *vikptr++ = 1;	/* char available */
+! 			    *vikptr++ = 3;
+! 			    *vikptr++ = 6;	/* move relative order */
+! 			    *vikptr++ = ci->metrics.characterWidth;
+! 			    *vikptr++ = 0;
+! 			    *semaphore = 0x0101;
+! 			}
+! 			else
+! 			{
+! 			    widthGlyph = GLYPHWIDTHBYTESPADDED((ci));
+! 			    widthShorts = widthGlyph >> 1;
+! 			    oddWidth = widthGlyph != ( widthShorts << 1 );
+! 			    len = h*((w+15)/16) + 9;
+! 			    *vikptr++ = 1;	/* char available */
+! 			    *vikptr++ = len;
+! 			    *vikptr++ = 6;	/* move relative order */
+! 			    *vikptr++ = ci->metrics.leftSideBearing;
+! 			    *vikptr++ = -ci->metrics.ascent;
+! 			    *vikptr++ = 9;	/* draw image */
+! 			    *vikptr++ = w;
+! 			    *vikptr++ = h;
+! 			    pdst = vikptr;	 
+! 			    for ( i=0; i<h; i++ )
+  			    {
+! 				for( j=0; j < widthGlyph; j++ )
+! 				    *pdst++ = *pglyph++;
+! 				vikptr = vikptr + widthShorts;
+! 				if ( oddWidth )
+! 				{
+! 				    vikptr++;
+! 				    *pdst++ = (char)0;
+! 				}
+  			    }
++ 			    *vikptr++ = 6;	/* move relative */
++ 			    *vikptr++ = ci->metrics.characterWidth - ci->metrics.leftSideBearing;
++ 			    *vikptr++ = ci->metrics.ascent;
++ 			    *semaphore = 0x0101;
+  			}
+  		    }
+  		    else
+  		    {
+

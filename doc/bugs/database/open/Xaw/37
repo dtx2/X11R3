@@ -1,0 +1,41 @@
+Return-Path: keith
+Received: by expo.lcs.mit.edu; Sat, 8 Oct 88 10:15:50 EDT
+From: keith@expo.lcs.mit.edu (Keith Packard)
+Message-Id: <8810081415.AA20113@EXPO.LCS.MIT.EDU>
+To: xbugs, swick@athena.mit.edu
+Subject: text widget very slow
+Date: Sat, 08 Oct 88 10:15:49 EDT
+
+### bug number:   1062
+### area:         Xaw
+### severity:     high
+### comments:     
+
+
+VERSION:
+    R3beta
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    Sun
+
+DISPLAY:
+    Visual X terminal, Tektronix 4317
+
+AREA:
+    Xaw
+
+SYNOPSIS:
+    Text widget echos typed text very slowly in xmh.
+
+DESCRIPTION:
+    The text widget cannot keep up with my typing sometimes,
+drawing characters about 4 per second.  At other times, it
+works just fine (more than twice as fast).  It this caused because
+the scrollbar is redrawn (apparantly) for each character typed?  The
+speed is proportional to the width of the window and to the
+length of the document.
+
+REPEAT BY:
+    Compose messages in xmh, notice wide variation in speed.
+
+

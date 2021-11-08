@@ -1,0 +1,59 @@
+Return-Path: reilly@atari.dec.com
+Received: from atari.dec.com ([128.45.31.121]) by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 19:10:59 EST
+Received: by atari.dec.com (1.2/Ultrix2.0-B)
+	id AA15845; Mon, 14 Mar 88 19:11:01 est
+Date: Mon, 14 Mar 88 19:11:01 est
+From: reilly@atari.dec.com (Michael Reilly)
+Message-Id: <8803150011.AA15845@atari.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: xman causes X server core dump when creating directory screen of man3
+
+### bug number:   114
+### area:         server
+### severity:     fairly high
+### assigned to:  rws
+### status:       closed
+
+
+VERSION:
+	X11 release 2
+ 
+CLIENT MACHINE:
+	microVAX 3500 GPX
+ 
+CLIENT OPERATING SYSTEM:
+	Ultrix V2.0 and V2.2
+ 
+DISPLAY:
+	qdss (color) the server is Xqdss
+ 
+SYNOPSIS:
+	The X server core dumps when a directory screen of section
+	3 of the online man pages is requested.
+ 
+DESCRIPTION:
+	xman starts up showing a directory screen of section 1 of
+	the man pages.  If change directory and section 3 are
+	choosen nothing happens for many seconds (15 or so) and then the X
+	server crashes.  init restarts the server but all active windows
+	are lost.  There are 477 files in /usr/man/man3.
+
+	Although xman is contributed software I beleive that it shouldn't
+	be able to cause the server to dump core.
+
+	REPEAT-BY:
+		See above
+
+Note:   I am using the Xqdss server from the X.V11R2 distribution with the
+following updated module.  I received the patch for this module from rws.
+
+/* $Header: dispatch.c,v 1.44 88/03/09 10:41:11 rws Exp $ */
+
+ 
+Michael Reilly @ Digital Equipment Corporation
+		 Networks and Communications Group
+	reilly@atari.dec.com (or reilly%atari.dec.com@decwrl.dec.com)
+	...{allegra,decvax,ucbvax}!decwrl!atari.dec.com!reilly
+
+
+

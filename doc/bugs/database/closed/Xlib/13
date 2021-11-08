@@ -1,0 +1,40 @@
+Return-Path: hania@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Mon, 18 Apr 88 23:58:59 EDT
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA27760; Mon, 18 Apr 88 20:57:48 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA20144; Mon, 18 Apr 88 20:57:45 PDT
+Message-Id: <8804190357.AA20144@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu, orgovan%star.DEC@decwrl.dec.com,
+        bglover%smurf.DEC@decwrl.dec.com
+Cc: hania@decwrl.dec.com, guarino@decwrl.dec.com
+Subject: bugs in Xlib region code
+Date: Mon, 18 Apr 88 20:57:44 -0700
+From: hania@decwrl.dec.com
+
+### bug number:   385
+### area:         Xlib
+### severity:     fairly high
+### assigned to:  
+### status:       closed
+### comments:     
+
+XEqualRegion and XEmptyRegion are bogus (I didn't look at the source
+for the other region routines).  I believe that XEmptyRegion will
+always return FALSE; at least it will return FALSE on a newly created
+(and thus empty) region, as well as on regions whose clip box has width
+0 and height 0 (although x or y different from 0).
+
+The first line in XEqualRegion:
+
+    if ( r1->size != r2->size ) return( FALSE );
+
+is probably wrong.  I believe that the size field has to do with the
+amount of space allocated to hold this region, and not necessarily with
+what the region actually contains.  Moreover, it should first check
+whether the regions it is given are both empty; as it is now, it has
+the same bug as XEmptyRegion in that it will assert that two empty
+regions which differ only in their extent fields are unequal.
+
+   Hania
+

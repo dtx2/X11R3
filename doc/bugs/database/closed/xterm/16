@@ -1,0 +1,108 @@
+Return-Path: beorn%banzai.Berkeley.EDU@ucbvax.berkeley.edu
+Received: from ucbvax.Berkeley.EDU by EXPO.LCS.MIT.EDU; Sun, 27 Mar 88 14:08:45 EST
+Received: from banzai.Berkeley.EDU by ucbvax.Berkeley.EDU (5.58/1.26)
+	id AA03956; Thu, 24 Mar 88 02:07:28 PST
+Received: by banzai (5.50/5.17)
+	id AA05046; Thu, 24 Mar 88 00:54:50 PST
+Date: Thu, 24 Mar 88 00:54:50 PST
+From: beorn%banzai.Berkeley.EDU@ucbvax.berkeley.edu (Beorn Johnson)
+Message-Id: <8803240854.AA05046@banzai>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in xterm
+
+### bug number:   231
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     fix supplied, but needs work in configuration
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50, other vendors affected
+
+CLIENT OPERATING SYSTEM:
+	Sun OS 3.3 and before, possibly later versions also
+	(at least)
+
+DISPLAY:
+	n/a
+
+SYNOPSIS:
+	 xterm does not pass window size change information
+	 to the operating system correctly
+
+DESCRIPTION:
+	 'ioctl( pty , TIOCSWINSZ, &xxx)' _normally_ sends a SIGWINCH
+	 to the appropriate process.  This is not the case on some
+	 releases of Sun OS (3.3 and before at least).
+
+	 xterm attempts to alleviate this by sending SIGWINCH
+	 explicity.  Two problems: xterm misses the right
+	 process to SIGWINCH, and on other systems a process 
+	 can recieve two SIGWINCH's (under ultrix, this can
+	 cause vi to change text unpredictably)
+
+REPEAT-BY:
+	xterm on the machine specified:
+		enter 'vi',
+		change the size of the window (larger),
+		note 'vi' does not reconfigure
+
+FIX:
+	The following fix has been tested under X11,
+	and is essentially a fix that has been in place for
+	several months under X10.
+
+*** screen.c	Wed Mar 23 18:07:10 1988
+--- screen.c.old	Thu Feb 25 21:13:09 1988
+***************
+*** 479,489 ****
+  	ts.ts_cols = cols;
+  	ioctl (screen->respond, TIOCSSIZE, &ts);
+  #ifdef SIGWINCH
+! 	{
+! 		int	pgrp;
+! 		if(ioctl(screen->respond, TIOCGPGRP, &pgrp) >= 0)
+! 			killpg(pgrp, SIGWINCH);
+! 	}
+  #endif	/* SIGWINCH */
+  #endif	/* TIOCSSIZE */
+  #else	/* sun */
+--- 479,486 ----
+  	ts.ts_cols = cols;
+  	ioctl (screen->respond, TIOCSSIZE, &ts);
+  #ifdef SIGWINCH
+! 	if(screen->pid > 1)
+! 		killpg(getpgrp(screen->pid), SIGWINCH);
+  #endif	/* SIGWINCH */
+  #endif	/* TIOCSSIZE */
+  #else	/* sun */
+***************
+*** 494,504 ****
+  	ws.ws_xpixel = width;
+  	ws.ws_ypixel = height;
+  	ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+! #ifdef notdef /* change to #ifdef SIGWINCH if ioctl doesn't do this for you */
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+! #endif	/* notdef SIGWINCH */
+  #endif	/* TIOCSWINSZ */
+  #endif	/* sun */
+  	return (0);
+  }
+--- 491,503 ----
+  	ws.ws_xpixel = width;
+  	ws.ws_ypixel = height;
+  	ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+! #ifdef SIGWINCH
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+! #endif	/* SIGWINCH */
+  #endif	/* TIOCSWINSZ */
+  #endif	/* sun */
+  	return (0);
+  }
+

@@ -1,0 +1,94 @@
+Return-Path: schwartz@psusun03.psu.edu
+Received: from psuvax1.cs.psu.edu by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 01:58:24 EST
+Received: by psuvax1.cs.psu.edu (5.54/Psu2.1)
+	id AA25604; Fri, 25 Mar 88 01:57:45 EST
+Received: by psusun03.psu.edu (3.2/Psu1.0)
+	id AA01264; Fri, 25 Mar 88 01:54:13 EST
+Date: Fri, 25 Mar 88 01:54:13 EST
+From: schwartz@psusun03.psu.edu (Scott Schwartz)
+Message-Id: <8803250654.AA01264@psusun03.psu.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Lint vs X11  (not really a bug report)
+
+### bug number:   213
+### area:         server
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     massive mis-typing of variables
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	CG2
+
+SYNOPSIS:
+	Lint complains about many many assignments of unsigned ints to
+	longs.  
+
+DESCRIPTION:
+	Run lint on the X library.  Notice the voluminous output.
+	A typical occurance is in XPutImage.c
+
+       static int
+       SwapBitsAndWords (src, dest, srclen, srcinc, destinc, height)
+	   register unsigned char *src, *dest;
+	   long srclen, srcinc, destinc;
+	   unsigned int height;
+       {
+	   long length = ROUNDUP(srclen, 4);
+	   register long h, n;
+	   register unsigned char *rev = _reverse_byte;
+
+	   srcinc -= length;
+	   destinc -= length;
+>>>>>    for (h = height; --h >= 0; src += srcinc, dest += destinc) {
+	  if ((h == 0) && (srclen != length)) {
+	      length -= 4;
+	      if ((srclen - length) == 3)
+	     *(dest + length) = rev[*(src + length + 2)];
+	      if (srclen & 2)
+	     *(dest + length + 3) = rev[*(src + length + 1)];
+	      *(dest + length + 2) = rev[*(src + length)];
+	  }
+	  for (n = length; n > 0; n -= 4, src += 2) {
+	      *dest++ = rev[*(src + 2)];
+	      *dest++ = rev[*(src + 3)];
+	      *dest++ = rev[*src++];
+	      *dest++ = rev[*src++];
+	  }
+	   }
+       }
+
+	Where h, a long, gets the value of an unsigned, height.  
+	Usually this is fine, except when height is big.  Then, as
+	in the following test, the loop will fail.
+
+	main()
+	{
+	    long l;
+	    unsigned int u = 1L << 32 - 1;
+
+	    printf("%u\n", u);
+	    for (l = u; --l >= 0;) {  /* Oops! */
+		printf("%u\n", (unsigned int)l);
+	    }
+	}
+
+
+REPEAT-BY:
+	running lint, to see the problem.  I didn't actually run 
+	any of the X distribution to see if this makes a difference,
+	but lint sure cares about it.
+
+FIX:
+	change long to unsigned where needed.
+

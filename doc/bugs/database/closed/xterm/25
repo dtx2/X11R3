@@ -1,0 +1,42 @@
+Return-Path: jtkohl@athena.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 21 Jun 88 10:23:06 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA01298; Tue, 21 Jun 88 10:21:34 EDT
+Received: by ARILINN.MIT.EDU (5.45/4.7) id AA05996; Tue, 21 Jun 88 10:21:30 EDT
+Date: Tue, 21 Jun 88 10:21:30 EDT
+From: John T Kohl <jtkohl@athena.mit.edu>
+Message-Id: <8806211421.AA05996@ARILINN.MIT.EDU>
+To: bugs@athena.mit.edu, xbugs@athena.mit.edu
+Subject: xterm (X11R2) has no documented option to disable utmp munging
+Us-Snail: 64 Dudley St., Brookline, MA
+Zip-Code: 02146
+
+### bug number:   623
+### area:         xterm
+### severity:     enhancement
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	vax
+
+DISPLAY:
+	qdss
+
+AREA:
+	xterm
+
+SYNOPSIS:
+	xterm always mangles /etc/utmp
+
+DESCRIPTION:
+
+	X11R2 xterm does not allow the user to specify that it should not
+	futz with /etc/utmp.  I don't want it putting entries into my
+	/etc/utmp, and I currently need to use a setuid program to get rid
+	of the entries it fabricates.
+
+	xterm should have a command-line option and a resource flag to
+	prevent it from adding entries into /etc/utmp.
+

@@ -1,0 +1,40 @@
+Return-Path: mcvax!latlog!payne@uunet.uu.net
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Mon, 11 Apr 88 15:20:32 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA19782; Mon, 11 Apr 88 14:19:37 EST
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA22371; Mon, 11 Apr 88 15:19:18 EDT
+Received: by mcvax.cwi.nl; Mon, 11 Apr 88 14:32:40 +0200 (MET)
+Received: from edee.ed.ac.uk by kestrel.Ukc.AC.UK   via Janet (UKC CAMEL FTP)
+           id aa00887; 11 Apr 88 11:56 BST
+Date: Mon, 11 Apr 88 11:46:03 -0100
+Message-Id: <337.8804111046@latlog.co.uk>
+From: mcvax!latlog!PAYNE@uunet.uu.net
+Subject: Xt bug
+To: xbugs@athena.mit.edu
+
+### bug number:   356
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     
+### see also:     338, 410, 413
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Core dump in lib/Xt/Shell.c
+DESCRIPTION:
+	line 867:
+
+	if (parent == NULL | parent->core.being_destroyed) return;
+
+	This condition core dumps on a SUN if parent is NULL.
+REPEAT-BY:
+	Try destroying a shell widget.
+FIX:
+	replace the | by ||
+
+Julian Payne, European Silicon Structures (ES2)
+(payne@latlog.uucp)
+

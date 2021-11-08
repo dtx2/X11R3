@@ -1,0 +1,31 @@
+Return-Path: hrp%rothko.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Fri, 15 Jul 88 19:09:14 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA14898; Fri, 15 Jul 88 18:08:14 CDT
+Received: from rothko.cray.com by hall.cray.com
+	id AA07022; 3.2/CRI-2.9; Fri, 15 Jul 88 18:12:55 CDT
+Received: by rothko.cray.com
+	id AA09049; 3.2/CRI-2.9; Fri, 15 Jul 88 18:12:16 CDT
+Date: Fri, 15 Jul 88 18:12:16 CDT
+From: hrp%rothko.CRAY.COM@uc.msc.umn.edu (Hal Peterson)
+Message-Id: <8807152312.AA09049@rothko.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: bobo@rothko.cray.com, jlf@rothko.cray.com
+Subject: what IS a region, anyway?
+
+### bug number:   746
+### area:         doc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	The manual (section 10.5) should explain whether the points
+	bounding a region (e.g., those specified in XPolygonRegion)
+	are part of the region.
+
+REPEAT-BY:
+	Read the manual.
+

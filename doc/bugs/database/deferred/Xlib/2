@@ -1,0 +1,227 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 21 Apr 88 15:48:30 EDT
+Return-Path: <@EXPO.LCS.MIT.EDU:bzs%bu-cs.bu.edu@buita.bu.edu>
+Received: from EXPO.LCS.MIT.EDU (EXPO.LCS.MIT.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 138624; 6 Apr 88 20:27:51 EDT
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Wed, 6 Apr 88 20:28:08 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA14934; Wed, 6 Apr 88 19:15:09 EST
+Received: from bu-it.bu.edu by buita.BU.EDU (4.0/4.7)
+	id AA17440; Wed, 6 Apr 88 20:14:11 EDT
+Received: from bu-cs.bu.edu by bu-it.bu.edu (3.2/4.7)
+	id AA01576; Wed, 6 Apr 88 20:13:53 EDT
+Return-Path: <bzs@bu-cs.bu.edu>
+Received: by bu-cs.bu.edu (5.31/4.7)
+	id AA04781; Wed, 6 Apr 88 19:12:09 EST
+Date: Wed, 6 Apr 88 19:12:09 EST
+From: bzs%bu-cs.bu.edu@buita.bu.edu (Barry Shein)
+Message-Id: <8804070012.AA04781@bu-cs.bu.edu>
+To: xpert@athena.mit.edu
+Subject: Keysyms ... The Saga Continues ...
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 21 Apr 88 15:48 EDT
+Resent-Message-Id: <880421154805.6.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   403
+### area:         Xlib
+### severity:     enhancement
+### comments:     Replacement XStrKeysym
+
+
+Obviously I'm fooling around with the whole key map thing, now from
+a client's point of view.
+
+Appended is a rewrite of XStrKeysym.c using a binary search, what the
+heck, it's straightforward enough. NOTE: Nothing official about this
+(I don't know anymore if xpert stuff goes out automatically or not.)
+
+What immediately hit me when playing with it is that a keysym->string
+is not one-one, there can be more than one name with the same keysym
+value. Is this a problem? I'm not sure, but XKeysymToStr() can only
+return one answer the way it's specified in the Xlib doc.
+
+The next (and more important) question is: Has anything been spec'd
+regarding where a client's keymaps might be stored? The obvious
+choices seem to me:
+
+	1. Do it all as entries in .Xdefaults, seems unmanageable
+	but plausible:
+
+	xterm*F11	"\E[FOO"
+	xterm*L2	"Hello World"
+
+	Biggest problem is over-riding on a per-client basis.
+
+	2. Store a file name to read in:
+
+	xterm*KeyMap	mykeymapfile
+
+	Ah, but where does that file live? On the client? I guess.
+
+
+Anyhow, suggestions or previous thoughts welcome.
+
+	-Barry Shein, Boston University
+
+#include "Xlibint.h"
+
+/*
+ * Rewrite XStrKeysym.c to use a binary search - Barry Shein, 4/6/88
+ *
+ * I just create two copies of the table, it occurred to
+ * me that we could sort pointer arrays into the table but
+ * that wouldn't save any memory given the current two-word
+ * per element size of the table.
+ */
+
+static struct ks_info {
+  char	 *ks_name;
+  KeySym ks_val;
+} keyStrInfo[] = {		/* will be sorted by string */
+#include "ks_names.h"
+},keySymInfo[] = {		/* will be sorted by KeySym */
+#include "ks_names.h"
+};
+
+#define NKEYSTR (sizeof(keyStrInfo)/sizeof(keyStrInfo[0]))
+#define NKEYSYM (sizeof(keySymInfo)/sizeof(keySymInfo[0]))
+
+/*
+ * Define this if there isn't a SYSV style bsearch() library routine in libc,
+ * completely compatible with the SYSV routine which exists on SunOS and
+ * other 4.x and SYSV variants.
+ *
+ * Maybe this belongs in libos.a?
+ */
+#define NEEDBSEARCH
+/*
+ * Define _MAIN_ to create a standalone program for testing
+ */
+#define _MAIN_
+
+#ifdef NEEDBSEARCH
+
+static char *
+bsearch(key,base,nel,size,compar)
+char *key, *base;
+int nel, size;
+int (*compar)();
+{
+  register int mid;
+  char *p;
+  register int i;
+  register int beg, end;
+
+  beg = 0;
+  end = nel-1;
+  while(beg <= end) {
+    mid = (beg+end)/2;
+    i = (*compar)(p = &base[mid*size],key);
+    if(i == 0)
+      return(p);
+    if(i > 0)
+      end = mid - 1;
+    else
+      beg = mid + 1;
+  }
+  return(NULL);
+}
+#endif NEEDBSEARCH
+
+/*
+ * Compare routines for sort and search
+ */
+
+static
+XKeyStrCmp(k1,k2) struct ks_info *k1, *k2;
+{
+  return(strcmp(k1->ks_name,k2->ks_name));
+}
+
+static
+XKeySymCmp(k1,k2) struct ks_info *k1, *k2;
+{
+  /* Test has to be signed */
+  return(((long)k1->ks_val)-((long)k2->ks_val));
+}
+
+/*
+ * Sort routines, called once on first entry to appropriate routine
+ */
+
+static
+XKeyStrInit()
+{
+  qsort((char *)keyStrInfo,NKEYSTR,sizeof(struct ks_info),XKeyStrCmp);
+}
+
+static
+XKeySymInit()
+{
+  qsort((char *)keySymInfo,NKEYSYM,sizeof(struct ks_info),XKeySymCmp);
+}
+
+/*
+ * User visible routines
+ */
+KeySym
+XStringToKeysym(s) char *s;
+{
+  struct ks_info *kp, key;
+  static int init = False;
+
+  if(init == False) {
+    XKeyStrInit();
+    init = True;
+  }
+
+  key.ks_name = s;
+  kp = (struct ks_info *)bsearch((char *)&key,
+				 (char *)keyStrInfo,NKEYSTR,
+				 sizeof(struct ks_info),
+				 XKeyStrCmp);
+
+  return(kp == NULL ? NoSymbol : kp->ks_val);
+}
+
+char *
+XKeysymToString(ks) KeySym ks;
+{
+  struct ks_info *kp, key;
+  static int init = False;
+
+  if(init == False) {
+    XKeySymInit();
+    init = True;
+  }
+
+  key.ks_val = ks;
+  kp = (struct ks_info *)bsearch((char *)&key,
+				 (char *)keySymInfo,NKEYSYM,
+				 sizeof(struct ks_info),
+				 XKeySymCmp);
+
+  return(kp == NULL ? NULL : kp->ks_name);
+}
+
+#ifdef _MAIN_
+#include <stdio.h>
+main(argc,argv) int argc; char **argv;
+{
+  KeySym ks;
+
+  if(argc < 2) {
+    fprintf(stderr,"Usage: %s keyname\n",*argv);
+    exit(1);
+  }
+  --argc; ++argv;
+  while(argc-- > 0) {
+    printf("%s:\t0x%04x\n",*argv,ks = XStringToKeysym(*argv));
+    printf("Translate back: %s\n",XKeysymToString(ks));
+    ++argv;
+  }
+  exit(0);
+}
+#endif _MAIN_
+
+
+

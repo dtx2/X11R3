@@ -1,0 +1,48 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Wed, 7 Sep 88 16:47:25 EDT
+Date: Wed, 7 Sep 88 16:47:25 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8809072047.AA00589@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: xman split window sometimes updates improperly
+
+### bug number:   949
+### area:         xman
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    Sun 3/280 running SunOS 3.4
+
+
+DISPLAY:
+    HP topcat
+
+
+WINDOW MANAGER:
+    uwm
+
+
+AREA:
+    xman
+
+
+SYNOPSIS:
+    Split manual page/index windows sometimes don't update properly.
+
+
+DESCRIPTION:
+    When you split a manual page window so that both the manual page and the
+    current section index are visible, the index page sometimes updates 
+    incorrectly if you change its size by moving the grip of the viewport.
+

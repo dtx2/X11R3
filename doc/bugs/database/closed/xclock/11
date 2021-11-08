@@ -1,0 +1,128 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Tue, 22 Mar 88 19:33:17 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA03942; Tue, 22 Mar 88 19:32:24 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 22 Mar 88 16:30:33 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA04209; Tue, 22 Mar 88 16:34:23 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 22 Mar 88 16:34:44 pst
+Message-Id: <8803230034.AA01981@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: clock update problem
+X-Mailer: mh6.5
+Date: Tue, 22 Mar 88 16:34:37 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   199
+### area:         xclock
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	When an update time of less than or equal to zero is specified
+	for 'xclock', the clock updates the second hand several times.
+DESCRIPTION:
+	An negative update time is passed on to XtAddTimeOut which causes
+	several interupts per second. Since a negative or zero update time
+	is nonsense (and the widget variable 'update' is cast as a signed
+	integer) simply test for an update time of less than or equal to zero
+	in the 'Initialize' routine of the clock widget and set it to a default.
+REPEAT-BY:
+	xclock -update -1
+FIX:
+*** lib/Xaw/Clock.c.old	Fri Mar 18 09:47:54 1988
+--- lib/Xaw/Clock.c	Fri Mar 18 10:36:30 1988
+***************
+*** 49,54
+  #define HAND_WIDTH_FRACT	7
+  #define SECOND_WIDTH_FRACT	5
+  #define SECOND_HAND_TIME	30
+  
+  #define max(a, b) ((a) > (b) ? (a) : (b))
+  #define min(a, b) ((a) < (b) ? (a) : (b))
+
+--- 49,55 -----
+  #define HAND_WIDTH_FRACT	7
+  #define SECOND_WIDTH_FRACT	5
+  #define SECOND_HAND_TIME	30
++ #define	DEFAULT_UPDATE_TIME	60
+  
+  #define	DEFAULT_UPDATE_STR	"60"
+  
+***************
+*** 50,55
+  #define SECOND_WIDTH_FRACT	5
+  #define SECOND_HAND_TIME	30
+  
+  #define max(a, b) ((a) > (b) ? (a) : (b))
+  #define min(a, b) ((a) < (b) ? (a) : (b))
+  #define abs(a) ((a) < 0 ? -(a) : (a))
+
+--- 51,58 -----
+  #define SECOND_HAND_TIME	30
+  #define	DEFAULT_UPDATE_TIME	60
+  
++ #define	DEFAULT_UPDATE_STR	"60"
++ 
+  #define max(a, b) ((a) > (b) ? (a) : (b))
+  #define min(a, b) ((a) < (b) ? (a) : (b))
+  #define abs(a) ((a) < 0 ? -(a) : (a))
+***************
+*** 66,72
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+  	goffset(height), XtRString, "164"},
+      {XtNupdate, XtCInterval, XtRInt, sizeof(int), 
+!         offset(update), XtRString, "60" },
+      {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+          offset(fgpixel), XtRString, "Black"},
+      {XtNhand, XtCForeground, XtRPixel, sizeof(Pixel),
+
+--- 69,75 -----
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+  	goffset(height), XtRString, "164"},
+      {XtNupdate, XtCInterval, XtRInt, sizeof(int), 
+!         offset(update), XtRString, DEFAULT_UPDATE_STR },
+      {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+          offset(fgpixel), XtRString, "Black"},
+      {XtNhand, XtCForeground, XtRPixel, sizeof(Pixel),
+***************
+*** 212,217
+      myXGCV.foreground = w->clock.Hdpixel;
+      w->clock.HandGC = XtGetGC((Widget)w, valuemask, &myXGCV);
+  
+      w->clock.show_second_hand = (w->clock.update <= SECOND_HAND_TIME);
+  }
+  
+
+--- 215,222 -----
+      myXGCV.foreground = w->clock.Hdpixel;
+      w->clock.HandGC = XtGetGC((Widget)w, valuemask, &myXGCV);
+  
++     if (w->clock.update <= 0)
++ 	w->clock.update = DEFAULT_UPDATE_TIME;
+      w->clock.show_second_hand = (w->clock.update <= SECOND_HAND_TIME);
+  }
+  
+***************
+*** 700,705
+  
+        /* first check for changes to clock-specific resources.  We'll accept all
+           the changes, but may need to do some computations first. */
+  
+        if (new->clock.update != current->clock.update) {
+  	    XtRemoveTimeOut (current->clock.interval_id);
+
+--- 705,713 -----
+  
+        /* first check for changes to clock-specific resources.  We'll accept all
+           the changes, but may need to do some computations first. */
++ 
++       if (new->clock.update <= 0)
++ 	  new->clock.update = DEFAULT_UPDATE_TIME;
+  
+        if (new->clock.update != current->clock.update) {
+  	    XtRemoveTimeOut (current->clock.interval_id);
+

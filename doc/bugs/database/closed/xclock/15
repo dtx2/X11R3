@@ -1,0 +1,85 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by EXPO.LCS.MIT.EDU; Wed, 4 May 88 16:52:23 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08287; Wed, 4 May 88 15:51:05 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 4 May 88 12:50:39 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA09284; Wed, 4 May 88 13:21:07 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 4 May 88 13:22:25 pdt
+Message-Id: <8805042022.AA05709@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: Clock widget bug
+X-Mailer: mh6.5
+Date: Wed, 04 May 88 13:22:21 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   455
+### area:         xclock
+### severity:     low
+### comments:     too gross a fix and not important enough
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	When an analog clock is of an even value height/width, the padding
+	pixel count on the right/lower border is one less than on the
+	left/upper border.
+DESCRIPTION:
+	By using a low padding count (i.e. one) it is easier to see that the
+	distance between the tic marks on the right and bottom side of the
+	clock is less than on the left and upper. If the width and height
+	specified is an odd number (i.e. 165 rather than the default 164) the
+	problem does not occur.
+
+	The problem occurs because the center x,y coordinate 'occupies' a pixel,
+	therefore pushing the right and lower portions of the clock over one
+	pixel if the height/width is an even valued number.
+
+	An example may best illustrate the problem.
+		An 164x164 clock with a padding of 1.
+		Therefore the minimum x,y is 0,0 and the maximum is 163,163.
+
+		radius = (min(width, height) - 2 * padding) / 2 = 81
+		center x,y = (width,height) / 2 = 82,82
+
+		The left and upper tic marks start at
+			center - radius = 1
+		which with a padding of 1 is correct.
+
+		The right and lower tic marks end at
+			center + radius = 163.
+		which with a padding of 1 is incorrect, since the maximum
+		is 163. The value should be 162.
+
+	Again, with an odd valued height/width the problem does not occur.
+
+REPEAT-BY:
+	ran 'xclock -padding 1'
+SUGGESTED FIX:
+	This is an UGLY fix. It causes overhead every time the tic marks are
+	calculated. I don't like it and am hoping someone else finds something
+	better.
+*** lib/Xaw/Clock.c.old	Wed May  4 10:48:50 1988
+--- lib/Xaw/Clock.c	Wed May  4 10:49:25 1988
+***************
+*** 521,528
+  	SetSeg(w, 
+  	       w->clock.centerX + (int)(blank_length * sinangle),
+  	       w->clock.centerY - (int)(blank_length * cosangle),
+! 	       w->clock.centerX + (int)(length * sinangle),
+! 	       w->clock.centerY - (int)(length * cosangle));
+  }
+  
+  /*
+
+--- 521,530 -----
+  	SetSeg(w, 
+  	       w->clock.centerX + (int)(blank_length * sinangle),
+  	       w->clock.centerY - (int)(blank_length * cosangle),
+! 	       w->clock.centerX + (int)(length * sinangle)
+! 			- (sinangle > 0.9999 && !(w->core.width%2) ? 1 : 0),
+! 	       w->clock.centerY - (int)(length * cosangle)
+! 			- (cosangle < -0.9999 && !(w->core.height%2) ? 1 : 0));
+  }
+  
+  /*
+

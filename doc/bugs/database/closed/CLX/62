@@ -1,0 +1,40 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: by expo.lcs.mit.edu; Fri, 26 Aug 88 11:39:59 EDT
+Received: from MACKENZIE.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 216788; Fri 26-Aug-88 10:59:14 EDT
+Date: Fri, 26 Aug 88 10:59 EDT
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CLX: Symbolics-3600 feature
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880826145926.4.HORNIG@MACKENZIE.SCRC.Symbolics.COM>
+
+### bug number:   909
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	The Symbolics-3600 feature defined in depdefs.lisp will not
+allow CLX to be used on the MacIvory system.
+
+DESCRIPTION:
+	The 3600 feature is not present on MacIvory.
+
+FIX:
+	The fix is to remove the code which defines the Symbolics-3600
+feature from depdefs.lisp and replace all uses of it in depdefs.lisp and
+dependent.lisp with the Genera feature, which is present on all
+Symbolics systems which run Genera.
+

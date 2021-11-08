@@ -1,0 +1,58 @@
+Return-Path: mit-erl!apollo!reber@eddie.mit.edu
+Received: from EDDIE.MIT.EDU by expo.lcs.mit.edu; Mon, 11 Apr 88 18:10:48 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA06238@EDDIE.MIT.EDU>; Mon, 11 Apr 88 18:07:55 EDT
+From: mit-erl!apollo!reber@eddie.mit.edu
+Received: from apollo by erl id AA07576g; Mon, 11 Apr 88 17:55:30 EST
+Received: by apollo.UUCP id AA02268; Mon, 11 Apr 88 13:27:54 edt
+Message-Id: <8804111727.AA02268@apollo.UUCP>
+Date: Mon, 11 Apr 88 12:47:23 EDT 
+Subject:  getimage bug
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   360
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Apollo - any
+
+CLIENT OPERATING SYSTEM:
+	4.2bsd
+
+DISPLAY:
+	Apollo - any
+
+SYNOPSIS:
+	Getimage returning a zero filled bitmap.
+
+DESCRIPTION:
+	The source bits passed to putbits macro in apcmskbits.h were
+        being shifted to the bit bucket.
+
+REPEAT-BY:
+	Any attempt to use XGetImage
+
+FIX:
+*** apcmskbits.h	Thu Apr  7 09:58:50 1988
+--- server/ddx/apollo/apc/apcmskbits.h	Tue Apr  5 10:06:14 1988
+***************
+*** 328,334 ****
+  { \
+      unsigned char mask = 1<<(depth); \
+      int width = w; \
+-     src <<=(32-width);\
+      while (width--) { \
+          *pdst = ((src&0x80000000)?(*pdst | mask):(*pdst & (!mask))); \
+          pdst++; \
+--- 328,333 ----
+
+
+Steve Reber
+decvax!apollo!reber
+

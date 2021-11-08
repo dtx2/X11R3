@@ -1,0 +1,69 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:29 EST
+Date: Fri, 4 Mar 88 16:13:29 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA05024@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: lib/Xt/Intrinsic.h documentation bug
+
+### bug number:   17
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Return-Path: dshr@sun.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 16:09:17 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA27503; Thu, 3 Mar 88 16:08:47 EST
+Received: from snail.sun.com by Sun.COM (4.0/SMI-4.0)
+	id AA08403; Thu, 3 Mar 88 13:06:40 PST
+Received: from brie.sun.com by snail.sun.com (4.0/SMI-3.2)
+	id AA29956; Thu, 3 Mar 88 13:07:47 PST
+Received: from devnull.sun.com by brie.sun.com (3.2/SMI-3.2)
+	id AA09072; Thu, 3 Mar 88 13:07:43 PST
+Received: by devnull.sun.com (4.0/SMI-4.0Beta)
+	id AA09118; Thu, 3 Mar 88 13:00:10 PST
+Message-Id: <8803032100.AA09118@devnull.sun.com>
+Date: Thu 3 Mar 1988 12:57:21 EST
+From: David Rosenthal <dshr@sun.com>
+Subject: lib/Xt/Intrinsic.h documentation bug
+To: x11bugs%brie@sun.com
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 4.0
+
+DISPLAY:
+	CG2
+
+SYNOPSIS:
+	 Declaration and documentation of XtCallbackRec don't
+	 match.
+
+DESCRIPTION:
+	Declaration:
+
+typedef struct _XtCallbackRec {
+    XtCallbackProc  callback;
+    caddr_t	    closure;
+} XtCallbackRec;
+
+	Documentation:
+
+typedef struct _XtCallbackRec {
+    XtCallbackProc  callback;
+    caddr_t	    client_data;
+} XtCallbackRec;
+	
+
+REPEAT-BY:
+	Believe the documentation
+
+FIX:
+	Proofread.
+

@@ -1,0 +1,96 @@
+Return-Path: rusty%velveeta.Berkeley.EDU@berkeley.edu
+Received: from velveeta.Berkeley.EDU by EXPO.LCS.MIT.EDU; Fri, 18 Mar 88 02:26:33 EST
+Received: by velveeta.Berkeley.EDU (5.57/1.26)
+	id AA04382; Thu, 17 Mar 88 22:11:10 PST
+Date: Thu, 17 Mar 88 22:11:10 PST
+From: rusty%velveeta.Berkeley.EDU@berkeley.edu (rusty wright)
+Message-Id: <8803180611.AA04382@velveeta.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: X Toolkit bug
+
+### bug number:   171
+### area:         Xt
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     user error; Form has no default width or height;
+                  running pgm with -xrm '*width:10' -xrm '*height:10' works fine.
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	sun 3/50
+
+SYNOPSIS:
+	using XtManage and XtUnmanage doesn't work
+
+DESCRIPTION:
+	 See the REPEAT-BY section
+
+REPEAT-BY:
+
+/*
+ * Run the following program; watch it bomb right after it prints
+ * "switching to confirm buffer".
+ */
+
+# include <X11/Intrinsic.h>
+# include <X11/StringDefs.h>
+# include <X11/Command.h>
+# include <X11/Shell.h>
+# include <X11/Form.h>
+# include <stdio.h>
+
+main(argc, argv)
+	char	**argv;
+{
+	Widget	top_shell;
+	Widget	top_form;
+	Widget	home_form;
+	Widget	confirm_form;
+	Arg	args[1];
+
+	top_shell = XtInitialize("topshell", "XTools", NULL, 0, &argc, argv );
+	if (argc != 1) {
+		printf("bad args\n");
+		exit(1);
+	}
+
+	XtSetArg(args[0], XtNallowShellResize, True);
+	XtSetValues(top_shell, args, 1);
+
+	top_form = XtCreateManagedWidget("topform", formWidgetClass, top_shell,
+					 NULL, 0);
+
+	home_form = XtCreateWidget("home", formWidgetClass, top_form,
+				   NULL, 0);
+
+	confirm_form = XtCreateWidget("confirmForm", formWidgetClass,
+				      top_form, NULL, 0);
+
+	printf("realizing top shell\n");
+	XtManageChild(home_form);
+	XtRealizeWidget(top_shell);
+
+	printf("top shell realized\n");
+	sleep(2);
+
+	printf("switching to confirm form\n");
+	XtUnmanageChild(home_form);
+	XtManageChild(confirm_form);
+
+	printf("confirm form managed\n");
+	sleep(2);
+}
+
+
+FIX:
+	(Preferred, but not necessary)
+

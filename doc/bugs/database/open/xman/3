@@ -1,0 +1,49 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Wed, 7 Sep 88 16:48:59 EDT
+Date: Wed, 7 Sep 88 16:48:59 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8809072048.AA00621@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: xman brings up confirm box in strange places
+
+### bug number:   950
+### area:         xman
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    Sun 3/280 running SunOS 3.4
+
+
+DISPLAY:
+    HP topcat
+
+
+WINDOW MANAGER:
+    uwm
+
+
+AREA:
+    xman
+
+
+SYNOPSIS:
+    xman brings up the confirm box in strange places.
+
+
+DESCRIPTION:
+    The confirm box that xman displays after formatting a page sometimes 
+    comes up in the lower right hand corner of the screen.  Other times, 
+    it somes up in the middle of the manual page window.
+
+

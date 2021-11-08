@@ -1,0 +1,157 @@
+Return-Path: jlf%sierra.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Mon, 1 Aug 88 15:29:13 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA04506; Mon, 1 Aug 88 14:26:55 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA11770; 3.2/CRI-3.1; Mon, 1 Aug 88 14:32:52 CDT
+Received: by jlf.cray.com
+	id AA12615; 3.2/CRI-3.1; Mon, 1 Aug 88 14:32:53 CDT
+Date: Mon, 1 Aug 88 14:32:53 CDT
+From: jlf%sierra.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8808011932.AA12615@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: XListFontsWithInfo bug report
+Cc: joel@uf.msc.umn.edu
+
+### bug number:   804
+### area:         Xlib
+### severity:     low
+### comments:     [done -- jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	XListFontsWithInfo fails test
+DESCRIPTION:
+	The code does not unpack the data or the correct number of bytes
+	of data.
+
+REPEAT-BY:
+	Running the Xlib test tlstfntinf
+
+FIX:
+	Use SIZEOF(xListFontsWithInfoReply) instead of sizeof (reply).
+	Unpack FontStruct data one field at a time.
+	Use XRead32 to unpack and calculate correct number of 
+	bytes to unpack.
+
+*** XFontInfo.c	Mon Aug  1 14:13:59 1988
+--- ../sunXlib/XFontInfo.c	Fri Jun 10 14:35:29 1988
+***************
+*** 20,26 ****
+      char **flist = NULL;
+      xListFontsWithInfoReply reply;
+      register xListFontsReq *req;
+-     xCharInfo *xcip;
+  
+      LockDisplay(dpy);
+      GetReq(ListFontsWithInfo, req);
+--- 20,25 ----
+***************
+*** 32,42 ****
+  
+      for (i = 0; ; i++) {
+  	if (!_XReply (dpy, (xReply *) &reply,
+- #ifdef CRAY
+- 	   ((SIZEOF(xListFontsWithInfoReply) - SIZEOF(xReply)) >> 2), xFalse))
+- #else
+  	   ((sizeof (reply) - sizeof (xGenericReply)) >> 2), xFalse))
+- #endif
+  		return (NULL);
+  	if (reply.nameLength == 0)
+  	    break;
+--- 31,37 ----
+***************
+*** 44,55 ****
+  	    size = i + reply.nReplies + 1;
+  	    if (finfo) {
+  		finfo = (XFontStruct *) Xrealloc ((char *) finfo,
+! 						  sizeof(XFontStruct) * size);
+  		flist = (char **) Xrealloc ((char *) flist,
+! 					    sizeof(char *) * size);
+  	    } else {
+! 		finfo = (XFontStruct *) Xmalloc (sizeof(XFontStruct) * size);
+! 		flist = (char **) Xmalloc (sizeof(char *) * size);
+  	    }
+  	}
+  	fs = &finfo[i];
+--- 39,50 ----
+  	    size = i + reply.nReplies + 1;
+  	    if (finfo) {
+  		finfo = (XFontStruct *) Xrealloc ((char *) finfo,
+! 						  sizeof (XFontStruct) * size);
+  		flist = (char **) Xrealloc ((char *) flist,
+! 					    sizeof (char *) * size);
+  	    } else {
+! 		finfo = (XFontStruct *) Xmalloc (sizeof (XFontStruct) * size);
+! 		flist = (char **) Xmalloc (sizeof (char *) * size);
+  	    }
+  	}
+  	fs = &finfo[i];
+***************
+*** 69,107 ****
+      
+  	/* XXX the next two statements won't work if short isn't 16 bits */
+  
+- #ifdef CRAY
+- 	xcip = (xCharInfo *) &reply.minBounds;
+- 	fs->min_bounds.lbearing = xcip->leftSideBearing;
+- 	fs->min_bounds.rbearing = xcip->rightSideBearing;
+- 	fs->min_bounds.width = xcip->characterWidth;
+- 	fs->min_bounds.ascent = xcip->ascent;
+- 	fs->min_bounds.descent = xcip->descent;
+- 	fs->min_bounds.attributes = xcip->attributes;
+- 
+- 	xcip = (xCharInfo *) &reply.maxBounds;
+- 	fs->max_bounds.lbearing = xcip->leftSideBearing;
+- 	fs->max_bounds.rbearing = xcip->rightSideBearing;
+- 	fs->max_bounds.width = xcip->characterWidth;
+- 	fs->max_bounds.ascent = xcip->ascent;
+- 	fs->max_bounds.descent = xcip->descent;
+- 	fs->max_bounds.attributes = xcip->attributes;
+- #else
+  	fs->min_bounds = * (XCharStruct *) &reply.minBounds;
+  	fs->max_bounds = * (XCharStruct *) &reply.maxBounds;
+- #endif
+  
+  	fs->n_properties = reply.nFontProps;
+  	if (fs->n_properties > 0) {
+! #ifdef CRAY
+! 	    nbytes = reply.nFontProps * sizeof(XFontProp);
+! 	    fs->properties = (XFontProp *) Xmalloc (nbytes);
+! 	    nbytes = reply.nFontProps * sizeof(xFontProp);
+! 	    _XRead32 (dpy, (char *)fs->properties, nbytes);
+! #else
+! 	    nbytes = reply.nFontProps * sizeof(XFontProp);
+  	    fs->properties = (XFontProp *) Xmalloc ((unsigned int) nbytes);
+  	    _XRead (dpy, (char *)fs->properties, nbytes);
+- #endif
+  	} else
+  	    fs->properties = NULL;
+  	flist[i] = (char *) Xmalloc ((unsigned int) (reply.nameLength + 1));
+--- 64,77 ----
+      
+  	/* XXX the next two statements won't work if short isn't 16 bits */
+  
+  	fs->min_bounds = * (XCharStruct *) &reply.minBounds;
+  	fs->max_bounds = * (XCharStruct *) &reply.maxBounds;
+  
+  	fs->n_properties = reply.nFontProps;
+  	if (fs->n_properties > 0) {
+! 	    nbytes = reply.nFontProps * sizeof (XFontProp);
+  	    fs->properties = (XFontProp *) Xmalloc ((unsigned int) nbytes);
+  	    _XRead (dpy, (char *)fs->properties, nbytes);
+  	} else
+  	    fs->properties = NULL;
+  	flist[i] = (char *) Xmalloc ((unsigned int) (reply.nameLength + 1));
+

@@ -1,0 +1,5 @@
+The following changes have been made to this directory since R2:
+
+     o  =geom is no longer supported.
+     o  many nits have been cleaned up.
+     o  now encourage use of -fn.

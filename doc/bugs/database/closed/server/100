@@ -1,0 +1,39 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 15:25:21 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 181674; Mon 28-Mar-88 15:24:14 EST
+Date: Mon, 28 Mar 88 15:24 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: cfbUnmapWindow
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880328202418.1.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   269
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	cfmUnmapWindow has the wrong arguments.
+
+DESCRIPTION:
+	It is defined with three arguments but it is only called with
+one.
+
+REPEAT-BY:
+	Unmap a window.
+

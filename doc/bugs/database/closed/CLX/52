@@ -1,0 +1,50 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 09:08:52 EDT
+Date: Tue, 5 Jul 88 09:09 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: CLX should always write-through resources in gcontexts
+To: xbugs@expo.lcs.mit.edu, bug-clx@expo.lcs.mit.edu
+Message-Id: <19880705130911.3.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   680
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+WINDOW MANAGER:
+	any
+
+AREA:
+	CLX
+
+SYNOPSIS:
+	CLX should always write-through resources in gcontexts
+
+DESCRIPTION:
+	CLX optimizes out (re)setting a tile, stipple, or clip-mask
+	to an identical resource id.  This is a bug (that has been
+	fixed in the C Xlib).  The problem is that the client may
+	have written into the pixmap in the interim, and may be
+	re-storing into the gcontext to have the new contents take effect,
+	because the protocol allows the server to copy the pixmap contents
+	at the time of the store, rather than continuing to share with the
+	pixmap.
+
+REPEAT-BY:
+	eyeball
+
+FILES:
+	lib/CLX/gcontext.l
+
+FIX:
+	???
+

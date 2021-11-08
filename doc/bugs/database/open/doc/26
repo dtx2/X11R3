@@ -1,0 +1,192 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:davidsc@shark.gwd.tek.com
+Received: by expo.lcs.mit.edu; Thu, 28 Apr 88 00:19:58 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Thu 28 Apr 88 00:21:30-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ae29225; 27 Apr 88 20:48 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id ag02964; 27 Apr 88 20:41 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA23648; Wed, 27 Apr 88 16:18:14 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA04144; Wed, 27 Apr 88 16:18:14 PDT
+From: David Schiferl <davidsc@shark.gwd.tek.com>
+Message-Id: <8804272318.AA04144@shark.GWD.TEK.COM>
+Date: Wed, 27 Apr 88 16:18:11 PDT
+Date: Wed, 27 Apr 88 15:24:48 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com, bobmi@hp-pcd.uucp
+Fcc: bugsub_mit
+Subject: X11 R2 bug report: Xt documentation errors
+
+### bug number:   433
+### area:         doc
+### severity:     low
+### comments:     
+
+
+David Schiferl
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2482
+davidsc@shark.tek.com
+...tektronix!shark!davidsc
+
+--------------------
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	all
+
+CLIENT OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+SYNOPSIS:
+	Various documentation errors.
+
+DESCRIPTION:
+	Area: Xt
+	Files: doc/Toolkit/Xtk.intrinsics
+
+	1) 'core.class' field fixed to 'core_class'
+	2) 'InsertChild(w)' fixed to 'InsertChild(w, args, num_args)'
+	3) XtSuperclass() incorrectly used with widget class argument fixed
+	4) 'delete_children' fixed to 'delete_child'
+
+REPEAT-BY:
+
+FIX:
+
+*** 1459,1465
+  	WidgetClass widgetClass;
+  {
+  	register CompositeWidgetClass wc = (CompositeWidgetClass) widgetClass;
+! 	CompositeWidgetClass super = (CompositeWidgetClass) wc->core.class.superclass
+  
+  	if (wc->composite_class.geometry_manager == XtInheritGeometryManager) {
+  	    wc->composite_class.geometry_manager = super->composite_class.geometry_manager;
+
+--- 1459,1465 -----
+  	WidgetClass widgetClass;
+  {
+  	register CompositeWidgetClass wc = (CompositeWidgetClass) widgetClass;
+! 	CompositeWidgetClass super = (CompositeWidgetClass) wc->core_class.superclass
+  
+  	if (wc->composite_class.geometry_manager == XtInheritGeometryManager) {
+  	    wc->composite_class.geometry_manager = super->composite_class.geometry_manager;
+***************
+*** 1528,1534
+  .Ds 0
+  .TA .5i 1i 3i
+  .ta .5i 1i 3i
+! static void InsertChild(w)
+  	Widget w;
+  {
+  	(*(((CompositeWidgetClass)XtSuperclass(shellWidgetClass))
+
+--- 1528,1534 -----
+  .Ds 0
+  .TA .5i 1i 3i
+  .ta .5i 1i 3i
+! static void InsertChild(w, args, num_args)
+  	Widget w;
+      ArgList args;
+      Cardinal *num_args;
+***************
+*** 1530,1535
+  .ta .5i 1i 3i
+  static void InsertChild(w)
+  	Widget w;
+  {
+  	(*(((CompositeWidgetClass)XtSuperclass(shellWidgetClass))
+  		->composite_class.insert_child)) (w);
+
+--- 1530,1537 -----
+  .ta .5i 1i 3i
+  static void InsertChild(w, args, num_args)
+  	Widget w;
++     ArgList args;
++     Cardinal *num_args;
+  {
+  	(*(((CompositeWidgetClass)shellWidgetClass->core_class.superclass)
+  		->composite_class.insert_child)) (w, args, num_args);
+***************
+*** 1531,1538
+  static void InsertChild(w)
+  	Widget w;
+  {
+! 	(*(((CompositeWidgetClass)XtSuperclass(shellWidgetClass))
+! 		->composite_class.insert_child)) (w);
+  	XtManageChild(w);		/* Add to managed set now */
+  }
+  .De
+
+--- 1533,1540 -----
+      ArgList args;
+      Cardinal *num_args;
+  {
+! 	(*(((CompositeWidgetClass)shellWidgetClass->core_class.superclass)
+! 		->composite_class.insert_child)) (w, args, num_args);
+  	XtManageChild(w);		/* Add to managed set now */
+  }
+  .De
+***************
+*** 3373,3379
+  .PN XtCreateWidget
+  calls the parent's class routine insert_child.
+  The insert_child procedure for a composite widget is of type 
+! .PN XtWidgetProc .
+  An insert_child procedure takes the widget to insert and the argument list used
+  to create the widget.
+  .LP
+
+--- 3375,3381 -----
+  .PN XtCreateWidget
+  calls the parent's class routine insert_child.
+  The insert_child procedure for a composite widget is of type 
+! .PN XtArgsProc .
+  An insert_child procedure takes the widget to insert and the argument list used
+  to create the widget.
+  .LP
+***************
+*** 3448,3454
+  .PN XtWidgetProc ,
+  and it takes the widget being deleted.
+  .LP
+! Most widgets just inherit delete_children from their superclass.
+  Composite widgets that create companion widgets define their own 
+  delete_children routine to remove these companion widgets.
+  .NH 2
+
+--- 3450,3456 -----
+  .PN XtWidgetProc ,
+  and it takes the widget being deleted.
+  .LP
+! Most widgets just inherit delete_child from their superclass.
+  Composite widgets that create companion widgets define their own 
+  delete_child routine to remove these companion widgets.
+  .NH 2
+***************
+*** 3450,3456
+  .LP
+  Most widgets just inherit delete_children from their superclass.
+  Composite widgets that create companion widgets define their own 
+! delete_children routine to remove these companion widgets.
+  .NH 2
+  Adding and Removing Children from the Managed Set
+  .XS
+
+--- 3452,3458 -----
+  .LP
+  Most widgets just inherit delete_child from their superclass.
+  Composite widgets that create companion widgets define their own 
+! delete_child routine to remove these companion widgets.
+  .NH 2
+  Adding and Removing Children from the Managed Set
+  .XS
+

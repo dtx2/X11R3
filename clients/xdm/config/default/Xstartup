@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# Xstartup
+#
+# This program is run as root after the user is verified
+#

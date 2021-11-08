@@ -1,0 +1,153 @@
+Return-Path: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu
+Received: by expo.lcs.mit.edu; Tue, 7 Jun 88 16:20:29 EDT
+Received: by nutmeg.Berkeley.EDU (5.57/1.25)
+	id AA27080; Sat, 4 Jun 88 19:43:49 PDT
+Date: Sat, 4 Jun 88 19:43:49 PDT
+From: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu (Adam R de Boor)
+Message-Id: <8806050243.AA27080@nutmeg.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: more problems with alternate input sources
+
+### bug number:   572
+### area:         Xt
+### severity:     low
+### comments:     see also 554
+### status:       closed
+                  the alternate input callbacks any longer, so 2nd fix
+                  no longer applies.
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	 Similar problems in XtPending as were in XtNextEvent.
+
+DESCRIPTION:
+	 Again, not only is the ie_oq pointer being nulled before it can
+	 be used, but the queue pointer isn't being advanced before the
+	 handler is called (the loop is also vulnerable to having the
+	 XtInputId yanked out from under it, but that's another issue).
+	 The combined differences follow.
+
+REPEAT-BY:
+	Try to call XtPending from within an XtNextEvent. Unhappy.
+
+FIX:
+	these fixes are to both XtNextEvent and XtPending, since my fix
+	for XtNextEvent had a syntax error in it (sorry, but...)
+
+*** /tmp/,RCSt1a27074	Sat Jun  4 19:42:12 1988
+--- NextEvent.c	Sat Jun  4 19:35:39 1988
+***************
+*** 1,5
+  #ifndef lint
+! static char rcsid[] = "$Header: NextEvent.c,v 1.1 88/05/29 20:20:49 deboor Exp $";
+  #endif lint
+  
+  /***********************************************************
+
+--- 1,5 -----
+  #ifndef lint
+! static char rcsid[] = "$Header: NextEvent.c,v 1.2 88/05/29 20:30:03 deboor Exp $";
+  #endif lint
+  
+  /***********************************************************
+***************
+*** 449,458
+  		XNextEvent (toplevelDisplay, event);
+  		return;
+  	}
+! 	for (ie_ptr = outstanding_queue ; ie_ptr != NULL;
+! 	     outstanding_queue = ie_ptr = ie_ptr->ie_oq ) {
+! 		ie_ptr ->ie_oq = NULL;
+! 		IeCallProc(ie_ptr);
+  	}
+  	(void) gettimeofday (&cur_time, &cur_timezone);
+  	if (TimerQueue!= NULL) {	/* check timeout queue */
+
+--- 449,465 -----
+  		XNextEvent (toplevelDisplay, event);
+  		return;
+  	}
+! 	ie_ptr = outstanding_queue;
+! 	while (ie_ptr != NULL) {
+! 	    /*
+! 	     * Advance outstanding_queue before calling the handler
+! 	     */
+! 	    struct InputEvent *next = ie_ptr->ie_oq;
+! 
+! 	    outstanding_queue = next;
+! 	    ie_ptr ->ie_oq = NULL;
+! 	    IeCallProc(ie_ptr);
+! 	    ie_ptr = next;
+  	}
+  	(void) gettimeofday (&cur_time, &cur_timezone);
+  	if (TimerQueue!= NULL) {	/* check timeout queue */
+***************
+*** 478,483
+  	TimerEventRec *te_ptr;
+  
+  	for(;;) {
+  		if(XPending(toplevelDisplay) != 0) {
+  			return TRUE;
+  		}
+
+--- 485,492 -----
+  	TimerEventRec *te_ptr;
+  
+  	for(;;) {
++ 		struct InputEvent *ie_next;
++ 
+  		if(XPending(toplevelDisplay) != 0) {
+  			return TRUE;
+  		}
+***************
+*** 482,488
+  			return TRUE;
+  		}
+  		for (ie_ptr = outstanding_queue ; ie_ptr != NULL;
+! 		     outstanding_queue = ie_ptr->ie_oq ) {
+  			ie_ptr ->ie_oq = NULL;
+  			IeCallProc(ie_ptr);
+  		}
+
+--- 491,499 -----
+  			return TRUE;
+  		}
+  		for (ie_ptr = outstanding_queue ; ie_ptr != NULL;
+! 		     ie_ptr = ie_next) {
+! 			ie_next = ie_ptr->ie_oq;
+! 			outstanding_queue = ie_next;
+  			ie_ptr ->ie_oq = NULL;
+  			IeCallProc(ie_ptr);
+  		}
+***************
+*** 501,507
+  			TRUE, FALSE, FALSE, (unsigned long *)NULL))
+  		  continue;
+  		for (ie_ptr = outstanding_queue ; ie_ptr != NULL;
+! 		     outstanding_queue = ie_ptr->ie_oq ) {
+  			ie_ptr ->ie_oq = NULL;
+  			IeCallProc(ie_ptr);
+  		}
+
+--- 512,520 -----
+  			TRUE, FALSE, FALSE, (unsigned long *)NULL))
+  		  continue;
+  		for (ie_ptr = outstanding_queue ; ie_ptr != NULL;
+! 		     ie_ptr = ie_next) {
+! 			ie_next = ie_ptr->ie_oq;
+! 			outstanding_queue = ie_next;
+  			ie_ptr ->ie_oq = NULL;
+  			IeCallProc(ie_ptr);
+  		}
+

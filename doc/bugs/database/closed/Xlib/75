@@ -1,0 +1,71 @@
+Return-Path: JARMOLOWSKI%ESDSDF.decnet@ge-crd.arpa
+Received: by expo.lcs.mit.edu; Fri, 9 Sep 88 09:53:40 EDT
+Message-Id: <8809091353.AA05758@EXPO.LCS.MIT.EDU>
+Date:  9 Sep 88 09:50 EST
+From: JARMOLOWSKI%ESDSDF.decnet@ge-crd.arpa
+Subject: XLIB bug in X11R2
+To: XBUGS@expo.lcs.mit.edu
+
+### bug number:   955
+### area:         Xlib
+### severity:     ehhancement
+### comments:     rather bogus....
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/260
+	Sun 3/60
+	Sun 4/110
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	CG4
+
+SYNOPSIS:
+	Connection to X server should have "close on exec" mode
+	set.
+
+
+DESCRIPTION:
+
+	Client A creates a window and maps it.
+	Client A forks, creating client B.
+	Client B exec's a new application.
+	Client B creates a window and maps it.
+	Client A exits.
+
+	Problem: Client A's window is still displayed.
+
+	NOTE: These problems were observed from applications
+	built using the toolkit. They do not appear to be
+	toolkit related.
+
+REPEAT-BY:
+
+	Sequence described above.
+
+FIX:
+	Have XOpenDisplay() issue:
+		fcntl(dpy->fd, F_SETFD, 1)
+
+	to force the connection to the display to
+	be closed on exec.  The solution for process that
+	fork but do not exec is less clear. Perhaps XOpenDisplay
+	should check to see if a connection has already been
+	established, and if so close it.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	Tom Jarmolowski
+	Electronic Systems Dept.
+	General Electric Company
+	Moorestown, NJ
+
+
+

@@ -1,0 +1,135 @@
+Return-Path: @apple.com:davep@ginsu.apple.com
+Received: by expo.lcs.mit.edu; Tue, 11 Oct 88 18:12:32 EDT
+Received:  by apple.com (5.59/25-eef)
+	id AA11092; Tue, 11 Oct 88 15:08:32 PDT
+From: davep@ginsu.apple.com
+Received: by ginsu.apple (5.51/SMI-3.2) id AA06652; Tue, 11 Oct 88 14:39:12 PDT
+Message-Id: <8810112139.AA06652@ginsu.apple>
+To: xbugs@expo.lcs.mit.edu
+Cc: davep@apple.com
+Subject: backing store bug with window resizing
+Date: Tue, 11 Oct 88 14:39:10 -0700
+
+### bug number:   1069
+### area:         server
+### severity:     high
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	Mac II, A/UX 1.1
+
+DISPLAY:
+	Mac II mono
+
+WINDOW MANAGER:
+	any;  twm demos the problem
+
+AREA:
+	server
+
+SYNOPSIS:
+	backing store ignores window bit-gravity when resizing unmapped window
+
+DESCRIPTION:
+	If you have a unmapped window with backing_store set to Always,
+	calling XConfigureWindow to make it larger ignores the bit gravity
+	(always seems to use NorthEast).  
+
+REPEAT BY:
+	Run twm under R3 and bring up a menu.  twm calls 
+	XChangeWindowAttributes to turn on backing store for each menu
+	item's window, but isn't ready to handle the ensuing expose event,
+	so it draws text at the wrong x position. Just before mapping the
+	window for the first time, it calls XConfigureWindow for each window,
+	generating another expose;  with ForgetGravity, the server should have
+	erased the backing store.  The backing store isn't getting erased, so
+	the text shows up twice in the window with two different x positions.
+
+	Here's a shorter program which demos this also.  Just puts up a
+	window, draws lines 5 pixels in from right and bottom borders.
+	At any time, only one set of lines should be displayed, but that's
+	not the case as the window grows.  Click left button to shrink window,
+	right button to grow.
+
+#include <stdio.h>
+#include <X11/Xlib.h>
+
+main()
+{
+  Display *dpy;
+  Window w;
+  XSetWindowAttributes attr;
+  XEvent event;
+  int width, height;
+  int x1, y1, x2, y2;
+
+  if (! (dpy = XOpenDisplay (NULL))) {
+    fprintf (stderr, "Couldn't open display.\n");
+    exit (1);
+  }
+
+  width = height = 50;
+  w = XCreateSimpleWindow (dpy, DefaultRootWindow (dpy), 100, 100, 
+			   width, height, 0, BlackPixel (dpy, 0),
+			   WhitePixel (dpy, 0));
+  XSelectInput (dpy, w, ExposureMask | ButtonPressMask);
+
+  attr.backing_store = Always;
+  XChangeWindowAttributes (dpy, w, CWBackingStore, &attr);
+
+  XMapWindow (dpy, w);
+
+  while (1) {
+    XNextEvent (dpy, &event);
+    switch (event.type) {
+    case Expose:
+      x1 = event.xexpose.x;
+      y1 = event.xexpose.y;
+      x2 = x1 + event.xexpose.width;
+      y2 = y1 + event.xexpose.height;
+      printf ("Expose event received, (%d,%d) to (%d,%d).\n", x1, y1, x2, y2);
+      XDrawLine (dpy, w, DefaultGC (dpy, 0),
+		 width - 5, 0, width - 5, height - 5);
+      XDrawLine (dpy, w, DefaultGC (dpy, 0),
+		 0, height - 5, width - 5, height - 5);
+      break;
+    case ButtonPress:
+      printf ("ButtonPress event received.\n");
+      if (event.xbutton.button == Button1) {
+	if (width > 0 && height > 0) {
+	  width -= 10;
+	  height -= 10;
+	  XUnmapWindow (dpy, w);
+	  XResizeWindow (dpy, w, width, height);
+	  XMapWindow (dpy, w);
+	  printf ("Shrank window.\n");
+	}
+      } else if (event.xbutton.button == Button3) {
+	width += 10;
+	height += 10;
+	XUnmapWindow (dpy, w);
+	XResizeWindow (dpy, w, width, height);
+	XMapWindow (dpy, w);
+	printf ("Enlarged window.\n");
+      }
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+
+SAMPLE FIX:
+    [preferred, but not necessary.  Please send context diffs (diff -c -b)]
+

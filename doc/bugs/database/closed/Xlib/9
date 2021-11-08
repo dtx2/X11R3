@@ -1,0 +1,42 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Mon, 4 Apr 88 17:36:50 EDT
+Return-Path: <@UCBVAX.BERKELEY.EDU:attunix!sfrod!jmb@UCBVAX.BERKELEY.EDU>
+Received: from ucbvax.Berkeley.EDU (UCBVAX.BERKELEY.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 135223; 24 Mar 88 21:06:13 EST
+Received: by ucbvax.Berkeley.EDU (5.58/1.26)
+	id AA13683; Thu, 24 Mar 88 13:48:21 PST
+Date: Thu, 24 Mar 88 13:48:21 PST
+From: attunix!sfrod!jmb@ucbvax.berkeley.edu
+Message-Id: <8803242148.AA13683@ucbvax.Berkeley.EDU>
+To: attunix!ZERMATT.LCS.MIT.EDU!RWS
+Subject: quick question about MAXSOCKS
+Cc: ali@ucbvax.berkeley.edu, richs@ucbvax.berkeley.edu,
+        ross@ucbvax.berkeley.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Mon, 4 Apr 88 17:36 EDT
+Resent-Message-Id: <880404173616.4.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   261
+### area:         Xlib
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+Why in both the server and Xlib is MAXSOCKS defined to be (NOFILE - 1)?
+I can see that in the server you may want to save a file descriptor for
+fonts or something, and that mechanism seems to be in place, but in Xlib,
+it looks like there's potential for problems.  Suppose that NOFILE is 33.
+Then MAXSOCKS in Xlib will be 32, and MSKCNT will be ((MAXSOCKS + 31) / 32),
+which is 1 -- not enough bits for 33 file descriptors.  No place in Xlib
+is the number of FDs allowed open actually restricted by MAXSOCKS, so would
+there be trouble?
+
+Jim Bash
+AT&T Bell Labs
+Room G-211, 190 River Road, Summit, NJ 07901
+(201) 522-6649
+[...|ucbvax|ihnp4|bellcore|allegra]!attunix!jmb
+
+
+

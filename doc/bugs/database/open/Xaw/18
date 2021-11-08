@@ -1,0 +1,60 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Fri, 8 Jul 88 10:25:39 EDT
+Date: Fri, 8 Jul 88 10:25:39 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8807081425.AA04068@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: Load widget didn't clear window when rescaling
+
+### bug number:   758
+### area:         Xaw
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+VERSION:
+	X Window System, Version 11, Release 3
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+WINDOW MANAGER:
+	all
+
+AREA:
+	Xaw Load widget
+
+SYNOPSIS:
+	When rescaling, the Load widget didn't clear the window, causing the
+	scale lines not to be erased.
+
+DESCRIPTION:
+	When handling an exposure that caused a rescale, the Load widget didn't
+	clear the window before redrawing.
+
+REPEAT BY:
+	cause an expose event on an xload whose average was below the scale
+
+FIX:
+*** /tmp/,RCSt1a03895	Fri Jul  8 10:15:26 1988
+--- ./lib/Xaw/Load.c	Fri Jul  8 10:09:41 1988
+***************
+*** 319,324 ****
+--- 319,327 ----
+        w->load.scale = scale;
+        left = 0;
+        width = next;
++       if (XtIsRealized ((Widget) w)) {
++ 	XClearWindow (XtDisplay (w), XtWindow (w));
++       }
+      }
+  
+      if (XtIsRealized((Widget)w)) {
+
+

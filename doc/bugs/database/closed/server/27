@@ -1,0 +1,48 @@
+Return-Path: apollo!bowbeer@eddie.mit.edu
+Received: from EDDIE.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 18:20:05 EST
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA14158@EDDIE.MIT.EDU>; Thu, 10 Mar 88 18:17:36 EST
+Received: by apollo.UUCP id AB00093; Thu, 10 Mar 88 01:51:42 est
+From: Joe Bowbeer <apollo!bowbeer@eddie.mit.edu>
+Message-Id: <8803100651.AB00093@apollo.UUCP>
+Date: Thu, 10 Mar 88 01:40:54 EST
+Subject: ReparentWindow sets clientWinSize wrong
+To: xbugs@expo.lcs.mit.edu (X bugs)
+
+### bug number:   87
+### area:         server
+### severity:     
+### assigned to:  bob
+### status:       
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+
+ReparentWindow ignores the borderwidth when it reparents a window at (x,y)
+
+DESCRIPTION:
+
+The actual placement of the window is OK, but clientWinSize, the record of
+where the window is placed, is wrong. It should include the borderwidth,
+but it doesn't.
+
+REPEAT-BY:
+
+XReparentWindow( dpy, w, p, x1, y1 );
+XGetGeometry( dpy, w, ... x2, y2 ... );
+
+If w has borderwidth != 0, then x2 == x1 - borderwidth and  y2 == y1 - borderwidth.
+
+FIX:
+
+Change the assignments in [dix/window.c] ReparentWindow to:
+
+    pWin->clientWinSize.x = x + bw;
+    pWin->clientWinSize.y = y + bw;
+
+
+Joe
+
+-------
+

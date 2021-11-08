@@ -1,0 +1,42 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 10:04:06 EST
+Return-Path: <@ATHENA.MIT.EDU:franz!sparky!jdi@UCBARPA.BERKELEY.EDU>
+Received: from ATHENA.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 132089; 13 Mar 88 15:57:27 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05524; Sun, 13 Mar 88 15:56:12 EST
+Received: by ORPHEUS.MIT.EDU (5.45/4.7) id AA02931; Sun, 13 Mar 88 15:56:05 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05513; Sun, 13 Mar 88 15:55:53 EST
+Received: by ucbarpa.Berkeley.EDU (5.58/1.26)
+	id AA16851; Sun, 13 Mar 88 12:56:19 PST
+Received: from sparky by franz (5.5/3.14)
+	id AA03560; Fri, 11 Mar 88 15:55:39 PST
+Received: by sparky (3.2/3.14)
+	id AA04331; Fri, 11 Mar 88 15:55:32 PST
+Return-Path: <sparky!jdi>
+Message-Id: <8803112355.AA04331@sparky>
+To: bug-clx@zermatt.lcs.mit.edu
+Cc: rws@athena.mit.edu
+Subject: documentation for event-case incorrect
+Date: Fri, 11 Mar 88 15:55:31 PST
+From: John Irwin <franz!sparky!jdi@ucbarpa.berkeley.edu>
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Mon, 14 Mar 88 10:04 EST
+Resent-Message-Id: <880314100423.4.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   105
+### area:         CLX
+### severity:     
+### assigned to:  rws
+### status:       closed
+
+
+
+The documentation for event-case states that the default value of
+force-output-p is t.  However, looking at the source the default value
+is nil.  (It *is* t for process-event, however)
+
+I submit that the default should be t.
+
+	-- John
+
+

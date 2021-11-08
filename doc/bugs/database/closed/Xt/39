@@ -1,0 +1,85 @@
+Return-Path: DCOOPER%ESDSDF.decnet@ge-crd.arpa
+Received: by expo.lcs.mit.edu; Fri, 29 Jul 88 19:21:24 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA25585; Fri, 29 Jul 88 19:21:28 EDT
+Message-Id: <8807292321.AA25585@ATHENA.MIT.EDU>
+Date: 29 Jul 88 19:18 EST
+From: DCOOPER%ESDSDF.decnet@ge-crd.arpa
+Subject: toolkit intrinsics bug on sun 4
+To: XBUGS@athena.mit.edu
+
+### bug number:   800
+### area:         Xt
+### severity:     low
+### comments:     
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 4/110
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4-2
+
+DISPLAY:
+	CG4
+
+SYNOPSIS:
+	Alignment faults in toolkit intrinsics
+
+
+DESCRIPTION:
+
+/*
+* $Header: IntrinsicI.h,v 1.20 88/02/26 12:41:21 swick Exp $
+*/
+
+The macros XtBCmp and XtBZero did not check alignment like
+XtBCmp.  This caused problems when we tried creating more than
+one popup menu on a sun 4.  
+
+Are the optimizations in these macros even necessary or worthwhile?
+
+
+extern void bcopy();
+#define XtBCopy(src, dst, size)				    \
+    if (size == sizeof(int) &&				    \
+	!((unsigned int) src & 0x3) &&			    \
+	!((unsigned int) dst & 0x3))			    \
+	*((int *) (dst)) = *((int *) (src));		    \
+    else if (size == sizeof(char))			    \
+	*((char *) (dst)) = *((char *) (src));		    \
+    else						    \
+	bcopy((char *) (src), (char *) (dst), (int) (size));
+
+extern void bzero();
+#define XtBZero(dst, size)				    \
+    if (size == sizeof(int) &&				    \
+	!((unsigned int) dst & 0x3))			    \
+	*((int *) (dst)) = 0;				    \
+    else						    \
+	bzero((char *) (dst), (int) (size));
+
+extern int bcmp();
+#define XtBCmp(b1, b2, size)				    \
+    ((size == sizeof(int) && 				    \
+	!((unsigned int) b1 & 0x3) && 			    \
+	!((unsigned int) b2 & 0x3)) ?			    \
+	*((int *) (b1)) != *((int *) (b2))		    \
+    :   bcmp((char *) (b1), (char *) (b2), (int) (size))    \
+    )
+
+
+----------------------------------------------------------------
+
+	Dwight Cooper
+	Tom Jarmolowski
+	Electronic Systems Dept.
+	General Electric Company
+	Moorestown, NJ
+
+
+

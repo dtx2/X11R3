@@ -1,0 +1,151 @@
+Return-Path: kwh@sei.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 25 Apr 88 16:55:20 EDT
+Received: by di.sei.cmu.edu (5.54/2.1)
+        id AA03481; Mon, 25 Apr 88 16:50:44 EDT
+Message-Id: <8804252050.AA03481@di.sei.cmu.edu>
+To: xbugs@expo.lcs.mit.edu
+Cc: kwh@sei.cmu.edu, info-andrew@andrew.cmu.edu
+Subject: uVax II qdss text bug
+Date: Mon, 25 Apr 88 16:50:41 EDT
+From: Kurt Hoyt <kwh@sei.cmu.edu>
+
+### bug number:   417
+### area:         server
+### severity:     medium
+### comments:     workaround: mangle plane_mask
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE: Microvax II
+
+CLIENT OPERATING SYSTEM: Ultrix 2.0
+
+DISPLAY: 8-plane GPX (qdss)
+
+SYNOPSIS:
+When drawing text (XDrawString, XDrawImageString), the text will not appear
+unless the plane_mask in the GC is >= 0x100.
+
+DESCRIPTION:
+In the file server/ddx/dec/qdss/libtl/tlimagetext.c, we find the following
+code:
+
+/*
+ * SETVIPER does not yet initialize LU_R4, upon which INITTEXT* depends,
+ * so we do the following hacks:                                XX
+ */
+#if NPLANES==8
+#undef NPLANES
+#define NPLANES 24
+#define GETGREENBYTE( p)        ((p)<<8)
+#else
+#define GETGREENBYTE( p)        (p)
+#endif
+
+which seems to force this code to treat all qdss's as 24 plane. Usually, the
+plane masks formed by the clients I have seen which do not use AllPlanes do
+not create plane masks whose values are > 0xff. The routine in this file uses
+the macros RED, GREEN and BLUE to determine plane mask info. Well,
+tlimagetext.c includes ../qd.h AFTER the redefinition of NPLANES, which
+causes RED, GREEN and BLUE to look like this:
+
+#if NPLANES==24
+#define RED(p)          (p & 0xff)
+#define GREEN(p)        (p>>8 & 0xff)
+#define BLUE(p)         (p>>16 & 0xff)
+
+The only one of these three to produces any value besides 0 is RED. The
+result of all this is that text does not appear in the window in which it is
+drawn unless the plane mask is >= 0x100.
+
+REPEAT-BY:
+
+cc -o window_fun window_fun.c -lX11 ; window_fun
+
+	* Press any key with pointer in the window to increment plane mask
+by one.
+	* Press any mouse button with pointer in the window to let the
+program loop through all possible plane mask values.
+	* Use ^C to exit.
+
+Where window_fun.c is:
+
+#include <X11/Xlib.h>
+#include <stdio.h>
+
+main ()
+{
+    Display *d;
+    Window  w;
+    GC      gc;
+    XColor  white, black, dummy;
+    XEvent  event;
+    unsigned long plane_mask = 0x0;
+    char    line[80];
+
+    d = XOpenDisplay ("");
+    w = XCreateSimpleWindow (d, RootWindow(d, DefaultScreen(d)),
+                                100, 100, 200, 100, 2,
+                                BlackPixel(d, DefaultScreen(d)),
+                                WhitePixel(d, DefaultScreen(d)));
+
+    XAllocNamedColor (d, DefaultColormap (d, DefaultScreen(d)), "black",
+                      &black, &dummy);
+    XAllocNamedColor (d, DefaultColormap (d, DefaultScreen(d)), "white",
+                      &white, &dummy);
+
+    gc = XCreateGC (d, w, 0L, NULL);
+
+    XSetFunction (d, gc, GXcopy);
+    XSetPlaneMask (d, gc, plane_mask);
+    XSetForeground (d, gc, black.pixel);
+    XSetBackground (d, gc, white.pixel);
+
+    XSelectInput (d, w, KeyPressMask | ButtonPressMask | ExposureMask);
+    XMapWindow (d, w);
+
+    while (1) {
+        if (XPending (d)) {
+            XWindowEvent (d, w, KeyPressMask | ButtonPress | ExposureMask, &event);
+            switch (event.type) {
+                case GraphicsExpose:
+                case Expose:
+                    XDrawString (d, w, gc, 5, 50, "[/usr/kwh] ", 11);
+                    XFlush (d);
+                    break;
+                case ButtonPress:
+                /* Will start a loop through all possible plane mask values */
+                    for (plane_mask = plane_mask; plane_mask <= 0xffff; plane_mask++) {
+		       XClearWindow (d, w);
+                       sprintf (line, "Current plane mask is %x\n", plane_mask);
+                       XSetPlaneMask (d, gc, plane_mask);
+                       XDrawImageString (d, w, gc, 5, 50, line, strlen(line) - 1);
+                       XFlush (d);
+                    }
+                    plane_mask = 0L;
+                    break;
+                case KeyPress:
+                /* Increment plane_mask by one - finer control */
+                    plane_mask++;
+                    sprintf (line, "Current plane mask is %x\n", plane_mask);
+		       XClearWindow (d, w);
+                    XSetPlaneMask (d, gc, plane_mask);
+                    XDrawImageString (d, w, gc, 5, 50, line, strlen(line) - 1);
+                    XFlush (d);
+                    break;
+                default:
+                    break;
+	    }
+	}
+    }
+}
+
+
+FIX:
+I really don't know. I will assume that you are smarter than me and that the
+changing of the number of planes is there for a reason. If so, then the code
+in tlimagetext.c should fix the plane mask so that this hack is invisible to
+me.
+

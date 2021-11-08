@@ -1,0 +1,14 @@
+The following changes have been made to this directory since R2:
+
+     o  many nits have been cleaned up.
+     o  now supports .xinitrc as default client to run if no client command
+	line arguments are given.
+     o  set the DISPLAY environment variable for the client program.
+     o  prints more informative messages.
+     o  if it can't find the server, it prints a verbose help message
+	describing which servers might be usable on this machine.
+     o  if the user has a .xserverrc, it will be treated as a Bourne shell
+	script to be run as the default server.
+     o  added a sample startx script that has conditionals for the appropriate
+	systems.
+     o  added sample xinitrc, which is NOT installed by default.

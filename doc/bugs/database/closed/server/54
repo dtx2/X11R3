@@ -1,0 +1,170 @@
+Return-Path: mcvax!cwi.nl!guido@uunet.uu.net
+Received: by EXPO.LCS.MIT.EDU; Mon, 16 May 88 11:21:59 EDT
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA02416; Mon, 16 May 88 11:20:50 EDT
+Received: by mcvax.cwi.nl; Mon, 16 May 88 14:37:02 +0200 (MET)
+Received: by piring.cwi.nl; Mon, 16 May 88 14:36:51 +0200 (MET)
+Message-Id: <8805161236.AA18368@piring.cwi.nl>
+To: xbugs@expo.lcs.mit.edu
+Cc: mcvax!cwi.nl!guido@uunet.uu.net
+Subject: XFillRectangle coordinate wrap error crashes X server and Ultrix
+From: Guido van Rossum <mcvax!cwi.nl!guido@uunet.uu.net>
+Organization: CWI (Centre for Mathematics and Computer Science), Amsterdam
+Phone: +31 20 5924138 (work), +31 20 225521 (home), +31 20 5924199 (fax)
+Date: Mon, 16 May 88 14:36:49 +0100
+Sender: mcvax!cwi.nl!guido@uunet.uu.net
+
+### bug number:   496
+### area:         server
+### severity:     very high
+### comments:     
+
+Guido van Rossum, Centre for Mathematics and Computer Science (CWI), Amsterdam
+guido@cwi.nl or mcvax!guido or (from ARPAnet) guido%cwi.nl@uunet.uu.net
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VaxStation 2000
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.0
+
+DISPLAY:
+	QVSS
+
+WINDOW MANANGER:
+	twm 2.7 with local changes
+
+SYNOPSIS:
+	XFillRectangle coordinate wrap error crashes X server and Ultrix
+
+DESCRIPTION:
+	When width and height of the rectangle specified to
+	XFillRectangle are "negative" (really very big positive),
+	such that the computed end point, after (short) integer
+	overflow, still lies within the window, the server crashes.
+	ON ULTRIX 2.0 THE KERNEL ALSO CRASHES!
+
+REPEAT-BY:
+	Run this program:
+	
+	#include <X11/Xlib.h>
+	main()
+	{
+		Display *dpy= XOpenDisplay((char*)0);
+		int scr= DefaultScreen(dpy);
+		Window w= XCreateSimpleWindow(dpy, DefaultRootWindow(dpy),
+			0, 0, 100, 100,
+			2, BlackPixel(dpy, scr),
+			WhitePixel(dpy, scr));
+		XSelectInput(dpy, w, ExposureMask);
+		XMapWindow(dpy, w);
+		for (;;) {
+			XEvent e;
+			XNextEvent(dpy, &e);
+			if (e.type == Expose && e.xexpose.count == 0) {
+				XFillRectangle(dpy, w, DefaultGC(dpy, scr),
+					100, 100, -95, -95);
+			}
+		}
+	}
+
+FIX:
+
+*** /tmp/,RCSt1a08995	Wed May 18 15:47:24 1988
+--- mfbfillrct.c	Wed May 18 15:25:51 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbfillrct.c,v 1.34 88/05/18 14:51:24 keith Exp $ */
+  #include "X.h"
+  #include "Xprotostr.h"
+  #include "pixmapstr.h"
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: mfbfillrct.c,v 1.32 87/09/08 15:32:46 drewry Locked $ */
+  #include "X.h"
+  #include "Xprotostr.h"
+  #include "pixmapstr.h"
+***************
+*** 57,62 ****
+--- 57,63 ----
+      register BoxPtr pbox;	/* used to clip with */
+      register BoxPtr pboxClipped;
+      BoxPtr pboxClippedBase;
++     BoxPtr pextent;
+  
+      int alu;
+      void (* pfn) ();
+***************
+*** 89,107 ****
+      }
+  
+      prect = prectInit;
+      while (nrectFill--)
+      {
+  	BoxRec box;
+  
+! 	if (prect->width <= 0 || prect->height <= 0)
+  	{
+  	    prect++;
+  	    continue;
+  	}
+  	box.x1 = prect->x;
+  	box.y1 = prect->y;
+! 	box.x2 = box.x1 + prect->width;
+! 	box.y2 = box.y1 + prect->height;
+  	prect++;
+  
+  	switch((*pGC->pScreen->RectIn)(prgnClip, &box))
+--- 90,133 ----
+      }
+  
+      prect = prectInit;
++ 
++     pextent = (*pGC->pScreen->RegionExtents)(prgnClip);
++ 
+      while (nrectFill--)
+      {
+  	BoxRec box;
++ 	int	x2, y2;
+  
+! 	if (prect->width == 0 || prect->height == 0)
+  	{
+  	    prect++;
+  	    continue;
+  	}
++ 
++ 	/*
++ 	 * clip the box to the extent of the region --
++ 	 * avoids overflowing shorts and minimizes other
++ 	 * computations
++ 	 */
++ 
+  	box.x1 = prect->x;
++ 	if (prect->x > box.x1)
++ 		box.x1 = prect->x;
++ 
+  	box.y1 = prect->y;
+! 	if (prect->y > box.y1)
+! 		box.y1 = prect->y;
+! 
+! 	x2 = (int) box.x1 + (int) prect->width;
+! 	if (x2 > pextent->x2)
+! 		x2 = pextent->x2;
+! 	box.x2 = x2;
+! 
+! 	y2 = (int) box.y1 + (int) prect->height;
+! 	if (y2 > pextent->y2)
+! 		y2 = pextent->y2;
+! 	box.y2 = y2;
+! 
+  	prect++;
+  
+  	switch((*pGC->pScreen->RectIn)(prgnClip, &box))

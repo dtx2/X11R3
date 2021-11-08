@@ -1,0 +1,21 @@
+The following changes have been made to this directory since R2:
+
+     o  lint support has been changed so that lint libraries are not installed
+	by default;  people who are interested in creating lint libraries
+	should create and install them once so that non-interface changes
+	do not force regeneration (very slow).
+     o  support for client-only builds has been added.
+     o  support for BOOTSTRAPCFLAGS has been added for systems that do not
+	define platform-specific C preprocessor symbols.
+     o  added endmarkers for makedepend.
+     o  added definitions for new directories and libraries.
+     o  untested support for Mips computers has been contributed.
+     o  hooks for putting in ugly hacks in systems that have broken compilers
+	have reluctantly been added.
+     o  the MakeContributed configuration parameter has been removed from all
+	macros files since the user-contributed section won't completely build
+	on any single platform.
+     o  new flags SystemV, InstallxinitConfig, and InstallxdmConfig.
+     o  Imake.tmpl has been reorganized to be easier to understand.
+     o  support has been added for non-SunOS sun platforms.
+     o  support has been added for building on SunOS 3.2 and SunOS 4.0.

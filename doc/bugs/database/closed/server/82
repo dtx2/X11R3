@@ -1,0 +1,42 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by expo.lcs.mit.edu; Thu, 7 Apr 88 16:46:04 EDT
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 183985; Thu 7-Apr-88 16:44:51 EDT
+Date: Thu, 7 Apr 88 16:45 EDT
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: cfbQuickBlt
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880407204500.5.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   336
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	cfbQuickBlt references out of bounds when given zero width.
+
+DESCRIPTION:
+	It reads and writes the next word after the end of the pixmap
+data.
+
+REPEAT-BY:
+	Displaying stuff.
+
+FIX:
+	Just quietly return for zero width.
+

@@ -1,0 +1,298 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Fri, 12 Aug 88 14:53:13 EDT
+Date: Fri, 12 Aug 88 14:53 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: bad type declarations in CLX
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880812185336.3.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   860
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+AREA:
+	CLX
+
+SYNOPSIS:
+	type mis-declarations and non-declarations
+
+DESCRIPTION:
+	ditto
+
+REPEAT BY:
+	run under a Lisp that cares
+
+FIX:
+
+*** /tmp/,RCSt1a00234	Fri Aug 12 14:52:19 1988
+--- lib/CLX/requests.l	Thu Aug 11 20:26:35 1988
+***************
+*** 161,166 ****
+--- 161,171 ----
+  	 (wid (allocate-resource-id display window 'window))
+  	 back-pixmap back-pixel
+  	 border-pixmap border-pixel)
++     (declare (type display display)
++ 	     (type window window)
++ 	     (type resource-id wid)
++ 	     (type (or null resource-id) back-pixmap border-pixmap)
++ 	     (type (or null pixel) back-pixel border-pixel))
+      (setf (window-id window) wid)
+      (case background
+        ((nil) nil)
+***************
+*** 374,387 ****
+  	   (type (or null array-index) end)
+  	   (type t transform))			;(or null (function (t) integer))
+    (unless end (setq end (length data)))
+!   (let ((display (window-display window))
+! 	(length (- end start)))
+!     (setq property (intern-atom display property)
+! 	  type (intern-atom display type))
+      (with-buffer-request (display *x-changeproperty*)
+        ((data (member :replace :prepend :append)) mode)
+        (window window)
+!       (resource-id property type)
+        (card8 format)
+        (card32 length)
+        (progn
+--- 379,395 ----
+  	   (type (or null array-index) end)
+  	   (type t transform))			;(or null (function (t) integer))
+    (unless end (setq end (length data)))
+!   (let* ((display (window-display window))
+! 	 (length (- end start))
+! 	 (property-id (intern-atom display property))
+! 	 (type-id (intern-atom display type)))
+!     (declare (type display display)
+! 	     (type array-index length)
+! 	     (type resource-id property-id type-id))
+      (with-buffer-request (display *x-changeproperty*)
+        ((data (member :replace :prepend :append)) mode)
+        (window window)
+!       (resource-id property-id type-id)
+        (card8 format)
+        (card32 length)
+        (progn
+***************
+*** 396,406 ****
+  (defun delete-property (window property)
+    (declare (type window window)
+  	   (type xatom property))
+!   (let ((display (window-display window)))
+!     (setq property (intern-atom display property))
+      (with-buffer-request (display *x-deleteproperty*)
+        (window window)
+!       (resource-id property))))
+  
+  (defun get-property (window property
+  		     &key type (start 0) end delete-p (result-type 'list) transform)
+--- 404,416 ----
+  (defun delete-property (window property)
+    (declare (type window window)
+  	   (type xatom property))
+!   (let* ((display (window-display window))
+! 	 (property-id (intern-atom display property)))
+!     (declare (type display display)
+! 	     (type resource-id property-id))
+      (with-buffer-request (display *x-deleteproperty*)
+        (window window)
+!       (resource-id property-id))))
+  
+  (defun get-property (window property
+  		     &key type (start 0) end delete-p (result-type 'list) transform)
+***************
+*** 414,430 ****
+  	   (type t result-type)			;a sequence type
+  	   (type t transform))			;(or null (function (integer) t))
+    (declare-values data (or null type) format bytes-after)
+!   (let ((display (window-display window))
+! 	(data nil)
+! 	reply-type reply-format bytes-after)
+!     (setq property (intern-atom display property))
+!     (when type (setq type (intern-atom display type)))
+      (with-display (display)
+        (with-buffer-request (display *x-getproperty* :no-after)
+  	((data boolean) delete-p)
+  	(window window)
+! 	(resource-id property)
+! 	((or null resource-id) type)
+  	(card32 start)
+  	(card32 (- (or end 64000) start)))
+        (with-buffer-reply (display nil :sizes (8 32))
+--- 424,443 ----
+  	   (type t result-type)			;a sequence type
+  	   (type t transform))			;(or null (function (integer) t))
+    (declare-values data (or null type) format bytes-after)
+!   (let* ((display (window-display window))
+! 	 (data nil)
+! 	 (property-id (intern-atom display property))
+! 	 (type-id (and type (intern-atom display type)))
+! 	 reply-type reply-format bytes-after)
+!     (declare (type display display)
+! 	     (type resource-id property-id)
+! 	     (type (or null resource-id) type-id))
+      (with-display (display)
+        (with-buffer-request (display *x-getproperty* :no-after)
+  	((data boolean) delete-p)
+  	(window window)
+! 	(resource-id property-id)
+! 	((or null resource-id) type-id)
+  	(card32 start)
+  	(card32 (- (or end 64000) start)))
+        (with-buffer-reply (display nil :sizes (8 32))
+***************
+*** 456,472 ****
+    (let* ((display (window-display window))
+  	 (length (length properties))
+  	 (sequence (make-array length)))
+!     (with-display (display)
+!       ;; Atoms must be interned before the RotateProperties request
+!       ;; is started to allow InternAtom requests to be made.
+!       (dotimes (i length)
+! 	(setf (aref sequence i) (intern-atom display (elt properties i))))
+!       (with-buffer-request (display *x-rotateproperties*)
+! 	(window window)
+! 	(card16 length)
+! 	(int16 (- delta))
+! 	((sequence :end length) sequence))
+!       nil)))
+  
+  (defun list-properties (window &key (result-type 'list))
+    (declare (type window window)
+--- 469,488 ----
+    (let* ((display (window-display window))
+  	 (length (length properties))
+  	 (sequence (make-array length)))
+!     (declare (type display display)
+! 	     (type array-index length))
+!     (with-vector (sequence vector)
+!       (with-display (display)
+! 	;; Atoms must be interned before the RotateProperties request
+! 	;; is started to allow InternAtom requests to be made.
+! 	(dotimes (i length)
+! 	  (setf (aref sequence i) (intern-atom display (elt properties i))))
+! 	(with-buffer-request (display *x-rotateproperties*)
+! 	  (window window)
+! 	  (card16 length)
+! 	  (int16 (- delta))
+! 	  ((sequence :end length) sequence))
+! 	nil))))
+  
+  (defun list-properties (window &key (result-type 'list))
+    (declare (type window window)
+***************
+*** 493,503 ****
+    (declare (type display display)
+  	   (type xatom selection))
+    (declare-values (or null window))
+!   (let (window)
+!     (setq selection (intern-atom display selection))
+      (with-display (display)
+        (with-buffer-request (display *x-getselectionowner* :no-after)
+! 	(resource-id selection))
+        (with-buffer-reply (display 12 :sizes 32)
+  	(setq window (resource-id-or-nil-get 8)))
+        (when window
+--- 509,520 ----
+    (declare (type display display)
+  	   (type xatom selection))
+    (declare-values (or null window))
+!   (let ((selection-id (intern-atom display selection))
+! 	window)
+!     (declare (type resource-id selection-id))
+      (with-display (display)
+        (with-buffer-request (display *x-getselectionowner* :no-after)
+! 	(resource-id selection-id))
+        (with-buffer-reply (display 12 :sizes 32)
+  	(setq window (resource-id-or-nil-get 8)))
+        (when window
+***************
+*** 510,521 ****
+  	   (type xatom selection)
+  	   (type (or null window) owner)
+  	   (type timestamp time))
+!   (setq selection (intern-atom display selection))
+!   (with-buffer-request (display *x-setselectionowner*)
+!     ((or null window) owner)
+!     (resource-id selection)
+!     ((or null card32) time))
+!   owner)
+  
+  (defsetf selection-owner (display selection &optional time) (owner)
+    ;; A bit strange, but retains setf form.
+--- 527,539 ----
+  	   (type xatom selection)
+  	   (type (or null window) owner)
+  	   (type timestamp time))
+!   (let ((selection-id (intern-atom display selection)))
+!     (declare (type resource-id selection-id))
+!     (with-buffer-request (display *x-setselectionowner*)
+!       ((or null window) owner)
+!       (resource-id selection-id)
+!       ((or null card32) time))
+!     owner))
+  
+  (defsetf selection-owner (display selection &optional time) (owner)
+    ;; A bit strange, but retains setf form.
+***************
+*** 526,539 ****
+  	   (type window requestor)
+  	   (type (or null xatom) property)
+  	   (type timestamp time))
+!   (let ((display (window-display requestor)))
+!     (setq selection (intern-atom display selection)
+! 	  type (intern-atom display type))
+!     (when property (setq property (intern-atom display property)))
+      (with-buffer-request (display *x-convertselection*)
+        (window requestor)
+!       (resource-id selection type)
+!       ((or null resource-id) property)
+        ((or null card32) time))))
+  
+  (defun send-event (window event-key event-mask &rest args
+--- 544,560 ----
+  	   (type window requestor)
+  	   (type (or null xatom) property)
+  	   (type timestamp time))
+!   (let* ((display (window-display requestor))
+! 	 (selection-id (intern-atom display selection))
+! 	 (type-id (intern-atom display type))
+! 	 (property-id (and property (intern-atom display property))))
+!     (declare (type display display)
+! 	     (type resource-id selection-id type-id)
+! 	     (type (or null resource-id) property-id))
+      (with-buffer-request (display *x-convertselection*)
+        (window requestor)
+!       (resource-id selection-id type-id)
+!       ((or null resource-id) property-id)
+        ((or null card32) time))))
+  
+  (defun send-event (window event-key event-mask &rest args
+***************
+*** 1125,1130 ****
+--- 1146,1153 ----
+  	   (type boolean red-p green-p blue-p))
+    (let ((display (colormap-display colormap))
+  	(flags 0))
++     (declare (type display display)
++ 	     (type card8 flags))
+      (when red-p (setq flags 1))
+      (when green-p (incf flags 2))
+      (when blue-p (incf flags 4))
+***************
+*** 1497,1502 ****
+--- 1520,1527 ----
+  	  (threshold-p 1)
+  	  (numerator 0)
+  	  (denominator 1))
++       (declare (type card8 acceleration-p threshold-p)
++ 	       (type int16 numerator denominator))
+        (cond ((eq acceleration :default) (setq numerator -1))
+  	    (acceleration (multiple-value-setq (numerator denominator)
+  			    (rationalize16 acceleration)))
+

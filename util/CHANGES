@@ -1,0 +1,19 @@
+The following changes have been made to this directory since R2:
+
+     o  lndir.sh has been changed slightly so that it doesn't cause some
+	Bourne shells to dump core.
+     o  a new utility, checkfn, has been added for checking filenames for
+	portability; it is generally only used to create distribution kits
+	and is not built by default.
+     o  a new install script, lninst.sh, has been added to do fake
+	installs by creating symlinks; this is useful for development
+	organizations.
+     o  a copy of the public domain C preprocessor written by Martin Minow
+	has been included for systems that can't handle abusive numbers of
+	compiler variables and huge macros.
+     o  a emulation of the soelim program has been provided for machines that
+        need have it.
+     o  the rgb database and program has been into a top-level directory.
+     o  mkdirhier.sh script added for creating directory trees.
+     o  various scripts moved into a scripts directory.
+     o  sources to (un)compress included courtesy of UC Berkeley.

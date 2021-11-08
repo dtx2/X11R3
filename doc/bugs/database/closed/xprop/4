@@ -1,0 +1,63 @@
+Return-Path: vixie@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Thu, 11 Aug 88 21:36:10 EDT
+Received: from volition.pa.dec.com by sonora.dec.com (5.54.5/4.7.34)
+	id AA02168; Thu, 11 Aug 88 18:36:13 PDT
+Received: from localhost by volition.dec.com (5.54.5/4.7.34)
+	id AA03698; Thu, 11 Aug 88 18:36:15 PDT
+Message-Id: <8808120136.AA03698@volition.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: kent@decwrl.dec.com, vixie@decwrl.dec.com, ardent!kmw@decwrl.dec.com
+Subject: another picky compiler bug, in xprop.c this time
+Date: Thu, 11 Aug 88 18:35:46 PDT
+From: Paul A Vixie <vixie@decwrl.dec.com>
+
+### bug number:   853
+### area:         xprop
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	MicroVax-II-GPX
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.4
+
+DISPLAY:
+	QDSS
+
+SYNOPSIS:
+	coding error in clients/xprop/xprop.c
+
+DESCRIPTION:
+	our titan c compiler is very picky
+
+REPEAT-BY:
+	see the code
+
+FIX:
+	apply this patch:
+
+*** xprop.c.orig	Thu Feb 25 21:08:49 1988
+--- xprop.c	Wed Jun 15 15:04:01 1988
+***************
+*** 194,200
+   * 
+   */
+  
+! typedef struct { Atom atom; char *format; char *dformat } _default_mapping;
+  _default_mapping _default_mappings[] = {
+  
+  	/*
+
+--- 194,200 -----
+   * 
+   */
+  
+! typedef struct { Atom atom; char *format; char *dformat; } _default_mapping;
+  _default_mapping _default_mappings[] = {
+  
+  	/*
+

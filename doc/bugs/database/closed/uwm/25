@@ -1,0 +1,189 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 23 Jun 88 23:35:16 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23911; Thu, 23 Jun 88 23:33:50 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 23 Jun 88 19:33:48 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA08683; Thu, 23 Jun 88 20:33:28 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 23 Jun 88 20:35:15 pdt
+Message-Id: <8806240335.AA06806@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm secondary menus
+X-Mailer: mh6.5
+Date: Thu, 23 Jun 88 20:35:12 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   635
+### area:         uwm
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Trouble bringing up secondary menu.
+DESCRIPTION:
+	If the secondary menu is smaller in width than the primary menu,
+	the menu may appear and disappear. Menu calls itself if a secondary
+	menu is to be brought up. If the cursor is moved out of the primary
+	before the button is pressed again to bring up the second menu, the
+	XLeaveNotify event is gobbled up while menu waits for a button press.
+	If the cursor is simply moved toward the edge of the primary menu
+	without leaving it, when the unmap of the primary menu is done,
+	a XLeaveNotify event is generated, which the menu code looks for.
+	At this point, it thinks that the XLeaveNotify event was caused
+	for the second menu and tests to see if the XLeaveNotify x,y is outside
+	its boundaries, which if the second menu is smaller in width than the
+	primary menu, it will be. The second menu therefore gets unmapped
+	and the user is unable to use his/her second menu.
+REPEAT-BY:
+	Have one menu called by another in your .uwmrc file. Also make
+	sure the second menu will be smaller in width than the primary menu.
+	When selecting the second menu in the first menu, move the cursor
+	towards the edge of the menu, but not outside its borders.
+
+###########################################################################
+# Global variables
+###########################################################################
+resetbindings;resetvariables;resetmenus
+noautoselect
+delta=2
+grid
+nofreeze
+hiconpad=2
+viconpad=2
+hmenupad=3
+vmenupad=3
+# menufont=timrom12b
+# iconfont=timrom12b
+# resizefont=timrom12b
+menufont=6x10
+iconfont=6x10
+resizefont=6x10
+push=16
+
+###########################################################################
+# Mouse button/key maps
+###########################################################################
+
+# FUNCTION     KEYS  CONTEXT  BUTTON        MENU(if any)
+# ========     ====  =======  ======        ============
+
+f.raise =      meta  : w    :left down
+f.iconify =    meta  : i    :left down
+f.circleup =   meta  : r    :left down
+f.move =       meta  : w|i  :left delta
+f.newiconify = ctrl  : w|i    :middle down
+f.iconify =    meta  : w|i    :middle down
+f.menu =       meta  : w|i|r  :right down  :"Window Manager"
+f.menu =             : r    :right down  :"Window Manager"
+
+f.move = c : w|i  : left down
+f.iconify = c : w|i    : left down
+
+f.raise =         : r      :left down
+f.focus =         : r      :left up
+f.refresh =  ctrl : r      :  middle down
+
+f.circledown = l|s : r      :left down
+f.menu =       shift  : r      :right down  :"allfunc"
+f.menu =       ctrl   : r      :right down  :"allfunc"
+
+###########################################################################
+# Menu specifications
+###########################################################################
+menu = "allfunc" (white: violet: white: violet) {
+Beep:			(violet: white):		f.beep
+circledown:		(violet: white):		f.circledown
+circleup:		(violet: white):		f.circleup
+focus:			(violet: white):		f.focus
+iconify:		(violet: white):		f.iconify
+lower:			(violet: white):		f.lower
+Move:			(violet: white):		f.move
+moveopaque:		(violet: white):		f.moveopaque
+newiconify:		(violet: white):		f.newiconify
+pushdown:		(violet: white):		f.pushdown
+pushleft:		(violet: white):		f.pushleft
+pushright:		(violet: white):		f.pushright
+pushup:			(violet: white):		f.pushup
+raise:			(violet: white):		f.raise
+refresh:		(violet: white):		f.refresh
+resize:			(violet: white):		f.resize
+restart:		(violet: white):		f.restart
+----------:		(violet: white):		!"echo >/dev/null"
+pause:			(violet: white):		f.pause
+continue:		(violet: white):		f.continue
+}
+
+menu = "Window Manager" (white: violet: white: violet) {
+Move:			(violet: white):		f.move
+Size:			(violet: white):		f.resize
+Raise:			(violet: white):		f.raise
+Lower:			(violet: white):		f.lower
+Iconify:		(violet: white):		f.iconify
+-------------:		(violet: white):		!"echo >/dev/null"
+Connect To ->:		(violet: white):		f.menu: "Connect To"
+}
+
+menu = "Connect To" (white: violet: white: violet) {
+gms:	(NavyBlue: white): !"hpterm -n gms -cr yellow -ms red -fn 9x15 -bg NavyBlue -fg Wheat -bd goldenrod -e rlogin hpcvxgs &"
+DQ:	(NavyBlue: white): !"hpterm -n DQ -cr yellow -ms red -bd SkyBlue -fn 9x15 -bg NavyBlue -fg Wheat -e rlogin hpfcdq &"
+}
+
+
+SUGGESTED FIX:
+*** clients/uwm/Menu.c.old	Thu Jun 23 19:13:23 1988
+--- clients/uwm/Menu.c	Thu Jun 23 19:09:47 1988
+***************
+*** 156,161
+  	        /*
+  	         * If the mouse has moved out of the menu sideways, abort
+  	         * the menu operation. Reset the cursor and unmap the menu.
+  	         */
+  	        event_x = ((XLeaveWindowEvent * )&button_event)->x;
+  	        event_y = ((XLeaveWindowEvent * )&button_event)->y;
+
+--- 156,166 -----
+  	        /*
+  	         * If the mouse has moved out of the menu sideways, abort
+  	         * the menu operation. Reset the cursor and unmap the menu.
++ 		 * An extraneous LeaveNotify can come through if you are
++ 		 * popping up menu from a menu. If you moved the cursor toward
++ 		 * the edge of the original menu without going outside and
++ 		 * the new menu is smaller in width than the old menu, the
++ 		 * new menu will pop up and then disappear.
+  	         */
+  		if (((XAnyEvent *)&button_event)->window == menu->w) {
+  			event_x = ((XLeaveWindowEvent * )&button_event)->x;
+***************
+*** 157,169
+  	         * If the mouse has moved out of the menu sideways, abort
+  	         * the menu operation. Reset the cursor and unmap the menu.
+  	         */
+! 	        event_x = ((XLeaveWindowEvent * )&button_event)->x;
+! 	        event_y = ((XLeaveWindowEvent * )&button_event)->y;
+! 		if (event_x < 0 || event_x > menu->width) {
+!             	   ResetCursor(button);
+! 		   UnmapMenu(menu);
+!             	   return(FALSE);
+!         	}
+  		goto hilite;
+  
+              case EnterNotify:
+
+--- 162,176 -----
+  		 * the new menu is smaller in width than the old menu, the
+  		 * new menu will pop up and then disappear.
+  	         */
+! 		if (((XAnyEvent *)&button_event)->window == menu->w) {
+! 			event_x = ((XLeaveWindowEvent * )&button_event)->x;
+! 	       		event_y = ((XLeaveWindowEvent * )&button_event)->y;
+! 			if (event_x < 0 || event_x > menu->width) {
+!             		   ResetCursor(button);
+! 			   UnmapMenu(menu);
+!           	  	   return(FALSE);
+!         		}
+! 		}
+  		goto hilite;
+  
+              case EnterNotify:
+

@@ -1,0 +1,57 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Wed, 6 Apr 88 15:50:56 EDT
+Return-Path: <@TI.COM:Oren@Home.csc.ti.com>
+Received: from ti.com (TI.COM) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 138485; 6 Apr 88 15:47:05 EDT
+Received: by ti.com id AA16655; Wed, 6 Apr 88 14:43:51 CDT
+Received: from SI by tilde id AA06481; Wed, 6 Apr 88 14:42:36 CDT
+Message-Id: <2785347681-693853@SI>
+Sender: OREN@si.csc.ti.com
+Date: Wed, 6 Apr 88  14:41:21 CDT
+From: LaMott Oren <Oren@home.csc.ti.com>
+To: bug-clx@zermatt.lcs.mit.edu
+Subject: Type error in Draw-Glyphs
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Wed, 6 Apr 88 15:50 EDT
+Resent-Message-Id: <880406155035.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   320
+### area:         CLX
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+Both draw-glyphs8 and draw-glyphs16 have the following declaration:
+  (declare-funarg translation-function translate)
+
+Even though the translate argument may be NIL.  The Explorer release 4
+compiler (finally) correctly handles the deftype for
+translation-function and optimizes (or translate #'translate-default)
+into just a reference to translate [since its declared as never being NIL].
+
+To fix this, stick the OR in draw-glyphs:  [in the CLX/text.l file]
+
+(defun draw-glyphs (drawable gcontext x y sequence
+		    &key (start 0) end translate width (size :default))
+  ;; First result is new start, if end was not reached.  Second result is
+  ;; overall width, if known.
+  (declare (type drawable drawable)
+	   (type gcontext gcontext)
+	   (type int16 x y)
+	   (type array-index start)
+	   (type sequence sequence)
+	   (type (or null array-index) end)
+	   (type (or null translation-function) translate) 
+	   (type (or null int32) width)
+	   (type index-size size))
+  (declare-values (or null array-index) (or null int32))
+  (unless end (setq end (length sequence)))
+  (ecase size
+    ((:default 8) (draw-glyphs8 drawable gcontext x y sequence start end (OR translate #'translate-default) width))
+    (16 (draw-glyphs16 drawable gcontext x y sequence start end (OR translate #'translate-default) width)))) 
+
+The "(or translate #'translate-default)" in draw-glyphs8 and
+draw-glyphs16 should be changed to be just "translate".
+
+

@@ -1,0 +1,44 @@
+Return-Path: @XX.LCS.MIT.EDU:spaf@purdue.edu
+Received: by expo.lcs.mit.edu; Fri, 12 Aug 88 14:01:58 EDT
+Received: from arthur.cs.purdue.edu by XX.LCS.MIT.EDU with TCP/SMTP; Fri 12 Aug 88 13:32:54-EDT
+Received: from localhost by arthur.cs.purdue.edu; (5.54/3.16)
+	id AA01984; Fri, 12 Aug 88 12:26:19 EST
+Message-Id: <8808121726.AA01984@arthur.cs.purdue.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: fix for gcc read-only strings in uwm & xterm
+Organization: SERC, Department of Computer Sciences, Purdue Univ.
+Date: Fri, 12 Aug 88 12:26:18 EST
+From: Gene Spafford <spaf@purdue.edu>
+
+### bug number:   858
+### area:         uwm
+### severity:     low
+### comments:     
+
+
+If you use "gcc" or another compiler that puts character strings
+in read-only memory, you'll find a number of the X11 clients
+do nasty things with string constants.
+
+Here's a fix for two of them.
+clients/uwm/uwm.c :
+
+632c627
+<     char *tempfile;		/* Temporary filename. */
+---
+>     char *tempfile = TEMPFILE;	/* Temporary filename. */
+639,640d633
+<     tempfile = malloc(strlen(TEMPFILE)+1);
+<     strcpy (tempfile, TEMPFILE);
+
+
+in clients/xterm/data.c :
+
+106,107c106,108
+< char *ptydev = PTYDEV;
+< char *ttydev = TTYDEV;
+---
+> char ptydev_[] = PTYDEV;
+> char ttydev_[] = TTYDEV;
+> char *ptydev = ptydev_, *ttydev = ttydev_;
+

@@ -1,0 +1,1628 @@
+Return-Path: hill@ydalir.cs.cornell.edu
+Received: by EXPO.LCS.MIT.EDU; Fri, 13 May 88 10:34:50 EDT
+Received: from ydalir.cs.cornell.edu by cu-arpa.cs.cornell.edu (5.54/4.30)
+	id AA08182; Fri, 13 May 88 10:32:33 EDT
+Date: Fri, 13 May 88 10:32:26 EDT
+From: hill@cs.cornell.edu (Ralph Hill)
+Message-Id: <8805131432.AA00739@ydalir.cs.cornell.edu>
+Received: by ydalir.cs.cornell.edu (3.2/4.30)
+	id AA00739; Fri, 13 May 88 10:32:26 EDT
+To: xbugs@expo.lcs.mit.edu
+Subject: button-pressed events data returned in incorrect fields
+
+### bug number:   490
+### area:         Xlib
+### severity:     low
+### comments:     
+
+
+ Bug report from hill@gvax.cs.cornell.edu
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50, server 3/280
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	bwtwo
+
+SYNOPSIS:
+	A window is opened to receive button-pressed events. When a 
+	button is pressed, a button-pressed event is indeed received,
+	but the button detail information appears to be returned 
+	in the y_root field. Several other fields appear to be 
+	incorrect as well.
+
+DESCRIPTION:
+	The simple program following is abstracted from a larger
+	application. Both fail the same way. The X library is used;
+	the files Xlib.h and Xutil.h included with X.V11R2 are 
+	packed in the shar file. They are used unmodified from the
+	distribution.
+
+        A routine to print out the fields returned by the event 
+	structure is included. I would expect button information
+	to be returned in XBEptr.button. It seems instead to 
+        occur in XBEptr.y_root.
+
+REPEAT-BY:
+	Unshar the following files.
+	make
+	btest. (The messages are directed to stderr)
+
+
+
+shar file follows
+
+#--------------------------------CUT HERE-------------------------------------
+#! /bin/sh
+#
+# This is a shell archive.  Save this into a file, edit it
+# and delete all lines above this comment.  Then give this
+# file to sh by executing the command "sh file".  The files
+# will be extracted into the current directory owned by
+# you with default permissions.
+#
+# The files contained herein are:
+#
+# -rw-r--r--  1 hill          205 May 13 07:50 Makefile
+# -rw-r--r--  1 hill         5592 May 13 09:30 btest.c
+# -r--r--r--  1 hill        37450 May 12 12:24 Xlib.h
+# -r--r--r--  1 hill         8372 May 12 12:24 Xutil.h
+#
+echo 'x - Makefile'
+if test -f Makefile; then echo 'shar: not overwriting Makefile'; else
+sed 's/^X//' << '________This_Is_The_END________' > Makefile
+X#
+X# Makefile for btest
+X#
+XCC=cc
+XXLIB = -lX
+XCFLAGS = -O
+X
+X
+Xbtest:	btest.c
+X	${CC} ${CFLAGS} -o btest btest.c  ${XLIB}
+X
+Xshar:	Makefile btest.c Xlib.h Xutil.h 
+X	rm shar ; mkshar Makefile btest.c Xlib.h Xutil.h
+X
+________This_Is_The_END________
+if test `wc -l < Makefile` -ne 14; then
+	echo 'shar: Makefile was damaged during transit (should have been 14 bytes)'
+fi
+fi		; : end of overwriting check
+echo 'x - btest.c'
+if test -f btest.c; then echo 'shar: not overwriting btest.c'; else
+sed 's/^X//' << '________This_Is_The_END________' > btest.c
+X#include <stdio.h>
+X#include "Xlib.h"
+X#include "Xutil.h"
+X
+X/* Static variable storage                                                  */
+X
+Xstatic Display *display;		/* display variable                 */
+Xstatic Screen   scrn;			/* screen variable(yawn)            */
+Xstatic XSetWindowAttributes  attributes;
+Xstatic XSizeHints            xsizehints;
+Xstatic XGCValues             gcvalues;
+Xstatic XWMHints              xwmhints;
+X
+X
+X/* Window size and gray characteristics are described here                 */
+X
+X#define ACROSSPIXELS 150
+X#define DOWNPIXELS 150
+X
+X#define gray_width 16
+X#define gray_height 16
+X
+Xstatic char gray_bits[] = {
+X  0xaa, 0xaa, 0x55, 0x55, 0xaa, 0xaa, 0x55, 0x55, 0xaa, 0xaa, 0x55, 0x55,
+X  0xaa, 0xaa, 0x55, 0x55, 0xaa, 0xaa, 0x55, 0x55, 0xaa, 0xaa, 0x55, 0x55,
+X  0xaa, 0xaa, 0x55, 0x55, 0xaa, 0xaa, 0x55, 0x55
+X  };
+X
+X/* Main routine. This creates and maps a square gray window. The events
+X   that the window cares about are exposure and button pressed events.
+X   
+X   On a buttonpress event, the client program prints out the event
+X   structure by passing it to a routine, printbytes.                       */
+X
+X
+Xmain(argc, argv)
+Xint argc;
+Xchar **argv;
+X{
+X  Window window;
+X  GC gc;
+X
+X  
+X  if(!(display = XOpenDisplay(NULL)))
+X    {
+X      fprintf(stderr,"%s: Unable to open display\n",argv[0]);
+X      exit(1);
+X    }
+X
+X/* Create a window with background and border attributes             */
+X
+X  attributes.background_pixmap = XCreateBitmapFromData(display,
+X					       DefaultRootWindow(display),
+X					       gray_bits,
+X					       gray_width,
+X					       gray_height);
+X  attributes.border_pixel = BlackPixel(display,DefaultScreen(display));
+X  window = XCreateWindow(display,XDefaultRootWindow(display),
+X			100,100,ACROSSPIXELS,DOWNPIXELS,2,0,
+X			CopyFromParent,CopyFromParent,
+X			(CWBorderPixel|CWBackPixmap),
+X			&attributes);
+X
+X/* Set standard properties                                          */
+X
+X  xsizehints.x = xsizehints.y = 100;
+X  xsizehints.width = ACROSSPIXELS;
+X  xsizehints.height = DOWNPIXELS;
+X  xsizehints.flags = (PPosition|PSize);
+X  XSetStandardProperties(display,
+X			 window,
+X			 "btest",
+X			 "btest",
+X			 None,
+X			 (char *)0,
+X			 0,&xsizehints);
+X
+X/* Set Window manager hints                                        */
+X
+X  xwmhints.flags = (InputHint|StateHint);
+X  xwmhints.input = True;
+X  xwmhints.initial_state = NormalState;
+X  XSetWMHints(display,window,&xwmhints);
+X
+X/* Set a graphics context                                          */
+X
+X  gcvalues.background = WhitePixel(display,DefaultScreen(display));
+X  gcvalues.foreground = BlackPixel(display,DefaultScreen(display));
+X  gc = XCreateGC(display,window,GCBackground|GCForeground,&gcvalues);
+X
+X/* Interested in exposure and button pressed events                */
+X
+X  XSelectInput(display,window, ExposureMask|ButtonPressMask);
+X
+X/* Map it.                                                         */
+X
+X  XMapWindow(display,window);
+X
+X/* Loop waiting for an exposure or a button press                  */
+X/* Ignore all others                                               */
+X
+X  for(;;)
+X    {
+X      XEvent event;
+X      XNextEvent(display,&event);
+X      if(event.type == Expose)
+X	{
+X	  XClearWindow(display,window);
+X	}
+X      else if(event.type == ButtonPress)
+X	{
+X
+X/*	  printbytes((XButtonEvent *) &event); */
+X	  fprintf(stderr,"y_root = %d\n",((XButtonEvent *) &event)->y_root);
+X	  fprintf(stderr,"button = %d\n",((XButtonEvent *) &event)->button);
+X	}
+X    }
+X}
+X
+X
+X#define COUNT sizeof(XButtonEvent)
+X
+Xstatic XButtonEvent XBEptr;
+X
+Xint *pointers[] = {
+X  (int *) &XBEptr.type,
+X  (int *) &XBEptr.serial,
+X  (int *) &XBEptr.send_event,
+X  (int *) &XBEptr.display,
+X  (int *) &XBEptr.window,
+X  (int *) &XBEptr.root,
+X  (int *) &XBEptr.subwindow,
+X  (int *) &XBEptr.time,
+X  (int *) &XBEptr.x,
+X  (int *) &XBEptr.y,
+X  (int *) &XBEptr.x_root,
+X  (int *) &XBEptr.y_root,
+X  (int *) &XBEptr.state,
+X  (int *) &XBEptr.button,
+X  (int *) &XBEptr.same_screen
+X  };
+X
+Xchar *types[] = {
+X  "type = %d\n",
+X  "serial = %d\n",
+X  "send_event = %d\n",
+X  "display = %d\n",
+X  "window = %d\n",
+X  "root = %d\n",
+X  "subwindow = %d\n",
+X  "time = %d\n",
+X  "x = %d\n",
+X  "y = %d\n",
+X  "x_root = %d\n",
+X  "y_root = %d\n",
+X  "state = %d\n",
+X  "button = %d\n",
+X  "same_screen = %d\n"
+X  };
+X
+X#define NUMBEROFFIELDS (sizeof(types)/sizeof(char *))
+X
+X/*********************************************************************
+X*                                                                    *
+X*    Routine to print out values in a XButtonEvent structure         *
+X*                                                                    *
+X*    This assumes that each field is the width of an int. From the   *
+X*    definitions of the types in Xlib.h, this appears to be a        *
+X*    reasonable assumption.                                          *
+X*                                                                    *
+X*********************************************************************/
+X
+X
+Xprintbytes(BEptr)
+XXButtonEvent *BEptr;
+X{
+X  register char *pc = (char *) BEptr;
+X  register char *tp = (char *) &XBEptr;
+X  register int i;
+X/* This prints the numbers of bytes and fields in an XButtonEvent   
+X   structure.                                                      */
+X  fprintf(stderr,"\n\nBytes in structure = %d\n",sizeof(XButtonEvent));
+X
+X/* Copy the bytes from the structure passed in BEptr to a local
+X   static structure.                                                */
+X  for(i = 0; i < COUNT; i++)
+X    *tp++ = *pc++;
+X
+X/* Now display the fields one by one                                */
+X  for(i = 0; i < NUMBEROFFIELDS; i++)
+X    fprintf(stderr,types[i],*pointers[i]);
+X}
+________This_Is_The_END________
+if test `wc -l < btest.c` -ne 192; then
+	echo 'shar: btest.c was damaged during transit (should have been 192 bytes)'
+fi
+fi		; : end of overwriting check
+echo 'x - Xlib.h'
+if test -f Xlib.h; then echo 'shar: not overwriting Xlib.h'; else
+sed 's/^X//' << '________This_Is_The_END________' > Xlib.h
+X/* $Header: Xlib.h,v 11.139 88/02/20 20:19:23 rws Exp $ */
+X/* 
+X * Copyright 1985, 1986, 1987 by the Massachusetts Institute of Technology
+X *
+X * Permission to use, copy, modify, and distribute this software and its
+X * documentation for any purpose and without fee is hereby granted, provided 
+X * that the above copyright notice appear in all copies and that both that 
+X * copyright notice and this permission notice appear in supporting 
+X * documentation, and that the name of M.I.T. not be used in advertising
+X * or publicity pertaining to distribution of the software without specific, 
+X * written prior permission. M.I.T. makes no representations about the 
+X * suitability of this software for any purpose.  It is provided "as is"
+X * without express or implied warranty.
+X *
+X * The X Window System is a Trademark of MIT.
+X *
+X */
+X
+X
+X/*
+X *	Xlib.h - Header definition and support file for the C subroutine
+X *	interface library (Xlib) to the X Window System Protocol (V11).
+X *	Structures and symbols starting with "_" are private to the library.
+X */
+X#ifndef _XLIB_H_
+X#define _XLIB_H_
+X
+X#include <sys/types.h>
+X#include <X11/X.h>
+X
+X#define Bool int
+X#define Status int
+X#define True 1
+X#define False 0
+X
+X#define QueuedAlready 0
+X#define QueuedAfterReading 1
+X#define QueuedAfterFlush 2
+X
+X#define ConnectionNumber(dpy) 	((dpy)->fd)
+X#define RootWindow(dpy, scr) 	(((dpy)->screens[(scr)]).root)
+X#define DefaultScreen(dpy) 	((dpy)->default_screen)
+X#define DefaultRootWindow(dpy) 	(((dpy)->screens[(dpy)->default_screen]).root)
+X#define DefaultVisual(dpy, scr) (((dpy)->screens[(scr)]).root_visual)
+X#define DefaultGC(dpy, scr) 	(((dpy)->screens[(scr)]).default_gc)
+X#define BlackPixel(dpy, scr) 	(((dpy)->screens[(scr)]).black_pixel)
+X#define WhitePixel(dpy, scr) 	(((dpy)->screens[(scr)]).white_pixel)
+X#define AllPlanes 		(~0)
+X#define QLength(dpy) 		((dpy)->qlen)
+X#define DisplayWidth(dpy, scr) 	(((dpy)->screens[(scr)]).width)
+X#define DisplayHeight(dpy, scr) (((dpy)->screens[(scr)]).height)
+X#define DisplayWidthMM(dpy, scr)(((dpy)->screens[(scr)]).mwidth)
+X#define DisplayHeightMM(dpy, scr)(((dpy)->screens[(scr)]).mheight)
+X#define DisplayPlanes(dpy, scr) (((dpy)->screens[(scr)]).root_depth)
+X#define DisplayCells(dpy, scr) 	(DefaultVisual((dpy), (scr))->map_entries)
+X#define ScreenCount(dpy) 	((dpy)->nscreens)
+X#define ServerVendor(dpy) 	((dpy)->vendor)
+X#define ProtocolVersion(dpy) 	((dpy)->proto_major_version)
+X#define ProtocolRevision(dpy) 	((dpy)->proto_minor_version)
+X#define VendorRelease(dpy) 	((dpy)->release)
+X#define DisplayString(dpy) 	((dpy)->display_name)
+X#define DefaultDepth(dpy, scr) 	(((dpy)->screens[(scr)]).root_depth)
+X#define DefaultColormap(dpy, scr)(((dpy)->screens[(scr)]).cmap)
+X#define BitmapUnit(dpy) 	((dpy)->bitmap_unit)
+X#define BitmapBitOrder(dpy) 	((dpy)->bitmap_bit_order)
+X#define BitmapPad(dpy) 		((dpy)->bitmap_pad)
+X#define ImageByteOrder(dpy) 	((dpy)->byte_order)
+X#define NextRequest(dpy)	((dpy)->request + 1)
+X#define LastKnownRequestProcessed(dpy)	((dpy)->last_request_read)
+X
+X/* macros for screen oriented applications (toolkit) */
+X#define ScreenOfDisplay(dpy, scr)(&((dpy)->screens[(scr)]))
+X#define DefaultScreenOfDisplay(dpy) (&((dpy)->screens[(dpy)->default_screen]))
+X#define DisplayOfScreen(s)	((s)->display)
+X#define RootWindowOfScreen(s)	((s)->root)
+X#define BlackPixelOfScreen(s)	((s)->black_pixel)
+X#define WhitePixelOfScreen(s)	((s)->white_pixel)
+X#define DefaultColormapOfScreen(s)((s)->cmap)
+X#define DefaultDepthOfScreen(s)	((s)->root_depth)
+X#define DefaultGCOfScreen(s)	((s)->default_gc)
+X#define DefaultVisualOfScreen(s)((s)->root_visual)
+X#define WidthOfScreen(s)	((s)->width)
+X#define HeightOfScreen(s)	((s)->height)
+X#define WidthMMOfScreen(s)	((s)->mwidth)
+X#define HeightMMOfScreen(s)	((s)->mheight)
+X#define PlanesOfScreen(s)	((s)->root_depth)
+X#define CellsOfScreen(s)	(DefaultVisualOfScreen((s))->map_entries)
+X#define MinCmapsOfScreen(s)	((s)->min_maps)
+X#define MaxCmapsOfScreen(s)	((s)->max_maps)
+X#define DoesSaveUnders(s)	((s)->save_unders)
+X#define DoesBackingStore(s)	((s)->backing_store)
+X#define EventMaskOfScreen(s)	((s)->root_input_mask)
+X
+X/*
+X * Extensions need a way to hang private data on some structures.
+X */
+Xtypedef struct _XExtData {
+X	int number;		/* number returned by XRegisterExtension */
+X	struct _XExtData *next;	/* next item on list of data for structure */
+X	int (*free_private)();	/* called to free private storage */
+X	char *private_data;	/* data private to this extension. */
+X} XExtData;
+X
+X/*
+X * This file contains structures used by the extension mechanism.
+X */
+Xtypedef struct {		/* public to extension, cannot be changed */
+X	int extension;		/* extension number */
+X	int major_opcode;	/* major op-code assigned by server */
+X	int first_event;	/* first event number for the extension */
+X	int first_error;	/* first error number for the extension */
+X} XExtCodes;
+X
+X/*
+X * This structure is private to the library.
+X */
+Xtypedef struct _XExten {	/* private to extension mechanism */
+X	struct _XExten *next;	/* next in list */
+X	XExtCodes codes;	/* public information, all extension told */
+X	int (*create_GC)();	/* routine to call when GC created */
+X	int (*copy_GC)();	/* routine to call when GC copied */
+X	int (*flush_GC)();	/* routine to call when GC flushed */
+X	int (*free_GC)();	/* routine to call when GC freed */
+X	int (*create_Font)();	/* routine to call when Font created */
+X	int (*free_Font)();	/* routine to call when Font freed */
+X	int (*close_display)();	/* routine to call when connection closed */
+X	int (*error)();		/* who to call when an error occurs */
+X	int (*error_string)();  /* routine to supply error string */
+X} _XExtension;
+X
+X/*
+X * Data structure for setting graphics context.
+X */
+Xtypedef struct {
+X	int function;		/* logical operation */
+X	unsigned long plane_mask;/* plane mask */
+X	unsigned long foreground;/* foreground pixel */
+X	unsigned long background;/* background pixel */
+X	int line_width;		/* line width */
+X	int line_style;	 	/* LineSolid, LineOnOffDash, LineDoubleDash */
+X	int cap_style;	  	/* CapNotLast, CapButt, 
+X				   CapRound, CapProjecting */
+X	int join_style;	 	/* JoinMiter, JoinRound, JoinBevel */
+X	int fill_style;	 	/* FillSolid, FillTiled, 
+X				   FillStippled, FillOpaeueStippled */
+X	int fill_rule;	  	/* EvenOddRule, WindingRule */
+X	int arc_mode;		/* ArcChord, ArcPieSlice */
+X	Pixmap tile;		/* tile pixmap for tiling operations */
+X	Pixmap stipple;		/* stipple 1 plane pixmap for stipping */
+X	int ts_x_origin;	/* offset for tile or stipple operations */
+X	int ts_y_origin;
+X        Font font;	        /* default text font for text operations */
+X	int subwindow_mode;     /* ClipByChildren, IncludeInferiors */
+X	Bool graphics_exposures;/* boolean, should exposures be generated */
+X	int clip_x_origin;	/* origin for clipping */
+X	int clip_y_origin;
+X	Pixmap clip_mask;	/* bitmap clipping; other calls for rects */
+X	int dash_offset;	/* patterned/dashed line information */
+X	char dashes;
+X} XGCValues;
+X
+X/*
+X * Graphics context.  All Xlib routines deal in this rather than
+X * in raw protocol GContext ID's.  This is so that the library can keep
+X * a "shadow" set of values, and thus avoid passing values over the
+X * wire which are not in fact changing. 
+X */
+X
+Xtypedef struct _XGC {
+X    XExtData *ext_data;	/* hook for extension to hang data */
+X    GContext gid;	/* protocol ID for graphics context */
+X    Bool rects;		/* boolean: TRUE if clipmask is list of rectangles */
+X    Bool dashes;	/* boolean: TRUE if dash-list is really a list */
+X    unsigned long dirty;/* cache dirty bits */
+X    XGCValues values;	/* shadow structure of values */
+X} *GC;
+X
+X
+X/*
+X * Visual structure; contains information about colormapping possible.
+X */
+Xtypedef struct {
+X	XExtData *ext_data;	/* hook for extension to hang data */
+X	VisualID visualid;	/* visual id of this visual */
+X	int class;		/* class of screen (monochrome, etc.) */
+X	unsigned long red_mask, green_mask, blue_mask;	/* mask values */
+X	int bits_per_rgb;	/* log base 2 of distinct color values */
+X	int map_entries;	/* color map entries */
+X} Visual;
+X
+X/*
+X * Depth structure; contains information for each possible depth.
+X */	
+Xtypedef struct {
+X	int depth;		/* this depth (Z) of the depth */
+X	int nvisuals;		/* number of Visual types at this depth */
+X	Visual *visuals;	/* list of visuals possible at this depth */
+X} Depth;
+X
+X/*
+X * Information about the screen.
+X */
+Xtypedef struct {
+X	XExtData *ext_data;	/* hook for extension to hang data */
+X	struct _XDisplay *display;/* back pointer to display structure */
+X	Window root;		/* Root window id. */
+X	int width, height;	/* width and height of screen */
+X	int mwidth, mheight;	/* width and height of  in millimeters */
+X	int ndepths;		/* number of depths possible */
+X	Depth *depths;		/* list of allowable depths on the screen */
+X	int root_depth;		/* bits per pixel */
+X	Visual *root_visual;	/* root visual */
+X	GC default_gc;		/* GC for the root root visual */
+X	Colormap cmap;		/* default color map */
+X	unsigned long white_pixel;
+X	unsigned long black_pixel;	/* White and Black pixel values */
+X	int max_maps, min_maps;	/* max and min color maps */
+X	int backing_store;	/* Never, WhenMapped, Always */
+X	Bool save_unders;	
+X	long root_input_mask;	/* initial root input mask */
+X} Screen;
+X
+X/*
+X * Format structure; describes ZFormat data the screen will understand.
+X */
+Xtypedef struct {
+X	XExtData *ext_data;	/* hook for extension to hang data */
+X	int depth;		/* depth of this image format */
+X	int bits_per_pixel;	/* bits/pixel at this depth */
+X	int scanline_pad;	/* scanline must padded to this multiple */
+X} ScreenFormat;
+X
+X#ifndef _XSTRUCT_	/* hack to reduce symbol load in Xlib routines */
+X/*
+X * Data structure for setting window attributes.
+X */
+Xtypedef struct {
+X    Pixmap background_pixmap;	/* background or None or ParentRelative */
+X    unsigned long background_pixel;	/* background pixel */
+X    Pixmap border_pixmap;	/* border of the window */
+X    unsigned long border_pixel;	/* border pixel value */
+X    int bit_gravity;		/* one of bit gravity values */
+X    int win_gravity;		/* one of the window gravity values */
+X    int backing_store;		/* NotUseful, WhenMapped, Always */
+X    unsigned long backing_planes;/* planes to be preseved if possible */
+X    unsigned long backing_pixel;/* value to use in restoring planes */
+X    Bool save_under;		/* should bits under be saved? (popups) */
+X    long event_mask;		/* set of events that should be saved */
+X    long do_not_propagate_mask;	/* set of events that should not propagate */
+X    Bool override_redirect;	/* boolean value for override-redirect */
+X    Colormap colormap;		/* color map to be associated with window */
+X    Cursor cursor;		/* cursor to be displayed (or None) */
+X} XSetWindowAttributes;
+X
+Xtypedef struct {
+X    int x, y;			/* location of window */
+X    int width, height;		/* width and height of window */
+X    int border_width;		/* border width of window */
+X    int depth;          	/* depth of window */
+X    Visual *visual;		/* the associated visual structure */
+X    Window root;        	/* root of screen containing window */
+X    int class;			/* InputOutput, InputOnly*/
+X    int bit_gravity;		/* one of bit gravity values */
+X    int win_gravity;		/* one of the window gravity values */
+X    int backing_store;		/* NotUseful, WhenMapped, Always */
+X    unsigned long backing_planes;/* planes to be preserved if possible */
+X    unsigned long backing_pixel;/* value to be used when restoring planes */
+X    Bool save_under;		/* boolean, should bits under be saved? */
+X    Colormap colormap;		/* color map to be associated with window */
+X    Bool map_installed;		/* boolean, is color map currently installed*/
+X    int map_state;		/* IsUnmapped, IsUnviewable, IsViewable */
+X    long all_event_masks;	/* set of events all people have interest in*/
+X    long your_event_mask;	/* my event mask */
+X    long do_not_propagate_mask; /* set of events that should not propagate */
+X    Bool override_redirect;	/* boolean value for override-redirect */
+X    Screen *screen;		/* back pointer to correct screen */
+X} XWindowAttributes;
+X
+X/*
+X * Data structure for host setting; getting routines.
+X *
+X */
+X
+Xtypedef struct {
+X	int family;		/* for example AF_DNET */
+X	int length;		/* length of address, in bytes */
+X	char *address;		/* pointer to where to find the bytes */
+X} XHostAddress;
+X
+X/*
+X * Data structure for "image" data, used by image manipulation routines.
+X */
+Xtypedef struct _XImage {
+X    int width, height;		/* size of image */
+X    int xoffset;		/* number of pixels offset in X direction */
+X    int format;			/* XYBitmap, XYPixmap, ZPixmap */
+X    char *data;			/* pointer to image data */
+X    int byte_order;		/* data byte order, LSBFirst, MSBFirst */
+X    int bitmap_unit;		/* quant. of scanline 8, 16, 32 */
+X    int bitmap_bit_order;	/* LSBFirst, MSBFirst */
+X    int bitmap_pad;		/* 8, 16, 32 either XY or ZPixmap */
+X    int depth;			/* depth of image */
+X    int bytes_per_line;		/* accelarator to next line */
+X    int bits_per_pixel;		/* bits per pixel (ZPixmap) */
+X    unsigned long red_mask;	/* bits in z arrangment */
+X    unsigned long green_mask;
+X    unsigned long blue_mask;
+X    char *obdata;		/* hook for the object routines to hang on */
+X    struct funcs {		/* image manipulation routines */
+X	struct _XImage *(*create_image)();
+X	int (*destroy_image)();
+X	unsigned long (*get_pixel)();
+X	int (*put_pixel)();
+X	struct _XImage *(*sub_image)();
+X	int (*add_pixel)();
+X	} f;
+X} XImage;
+X
+X/* 
+X * Data structure for XReconfigureWindow
+X */
+Xtypedef struct {
+X    int x, y;
+X    int width, height;
+X    int border_width;
+X    Window sibling;
+X    int stack_mode;
+X} XWindowChanges;
+X
+X/*
+X * Data structure used by color operations
+X */
+Xtypedef struct {
+X	unsigned long pixel;
+X	unsigned short red, green, blue;
+X	char flags;  /* do_red, do_green, do_blue */
+X	char pad;
+X} XColor;
+X
+X/* 
+X * Data structures for graphics operations.  On most machines, these are
+X * congruent with the wire protocol structures, so reformatting the data
+X * can be avoided on these architectures.
+X */
+Xtypedef struct {
+X    short x1, y1, x2, y2;
+X} XSegment;
+X
+Xtypedef struct {
+X    short x, y;
+X} XPoint;
+X    
+Xtypedef struct {
+X    short x, y;
+X    unsigned short width, height;
+X} XRectangle;
+X    
+Xtypedef struct {
+X    short x, y;
+X    unsigned short width, height;
+X    short angle1, angle2;
+X} XArc;
+X
+X
+X/* Data structure for XChangeKeyboardControl */
+X
+Xtypedef struct {
+X        int key_click_percent;
+X        int bell_percent;
+X        int bell_pitch;
+X        int bell_duration;
+X        int led;
+X        int led_mode;
+X        int key;
+X        int auto_repeat_mode;   /* On, Off, Default */
+X} XKeyboardControl;
+X
+X/* Data structure for XGetKeyboardControl */
+X
+Xtypedef struct {
+X        int key_click_percent;
+X	int bell_percent;
+X	unsigned int bell_pitch, bell_duration;
+X	unsigned long led_mask;
+X	int global_auto_repeat;
+X	char auto_repeats[32];
+X} XKeyboardState;
+X
+X/* Data structure for XGetMotionEvents.  */
+X
+Xtypedef struct {
+X        Time time;
+X	unsigned short x, y;
+X} XTimeCoord;
+X
+X/* Data structure for X{Set,Get}ModifierMapping */
+X
+Xtypedef struct {
+X 	int max_keypermod;	/* The server's max # of keys per modifier */
+X 	KeyCode *modifiermap;	/* An 8 by max_keypermod array of modifiers */
+X} XModifierKeymap;
+X
+XXModifierKeymap *XNewModifiermap(),
+X		*XGetModifierMapping(),
+X		*XDeleteModifiermapEntry(),
+X		*XInsertModifiermapEntry();
+X#endif /* _XSTRUCT_ */
+X
+X/*
+X * Display datatype maintaining display specific data.
+X */
+Xtypedef struct _XDisplay {
+X	XExtData *ext_data;	/* hook for extension to hang data */
+X	struct _XDisplay *next; /* next open Display on list */
+X	int fd;			/* Network socket. */
+X	int lock;		/* is someone in critical section? */
+X	int proto_major_version;/* maj. version of server's X protocol */
+X	int proto_minor_version;/* minor version of servers X protocol */
+X	char *vendor;		/* vendor of the server hardware */
+X        long resource_base;	/* resource ID base */
+X	long resource_mask;	/* resource ID mask bits */
+X	long resource_id;	/* allocator current ID */
+X	int resource_shift;	/* allocator shift to correct bits */
+X	XID (*resource_alloc)(); /* allocator function */
+X	int byte_order;		/* screen byte order, LSBFirst, MSBFirst */
+X	int bitmap_unit;	/* padding and data requirements */
+X	int bitmap_pad;		/* padding requirements on bitmaps */
+X	int bitmap_bit_order;	/* LeastSignificant or MostSignificant */
+X	int nformats;		/* number of pixmap formats in list */
+X	ScreenFormat *pixmap_format;	/* pixmap format list */
+X	int vnumber;		/* Xlib's X protocol version number. */
+X	int release;		/* release of the server */
+X	struct _XSQEvent *head, *tail;	/* Input event queue. */
+X	int qlen;		/* Length of input event queue */
+X	unsigned long last_request_read; /* seq number of last event read */
+X	unsigned long request;	/* sequence number of last request. */
+X	char *last_req;		/* beginning of last request, or dummy */
+X	char *buffer;		/* Output buffer starting address. */
+X	char *bufptr;		/* Output buffer index pointer. */
+X	char *bufmax;		/* Output buffer maximum+1 address. */
+X	unsigned max_request_size; /* maximum number 32 bit words in request*/
+X	struct _XrmHashBucketRec *db;
+X	int (*synchandler)();	/* Synchronization handler */
+X	char *display_name;	/* "host:display" string used on this connect*/
+X	int default_screen;	/* default screen for operations */
+X	int nscreens;		/* number of screens on this server*/
+X	Screen *screens;	/* pointer to list of screens */
+X	int motion_buffer;	/* size of motion buffer */
+X	Window current;		/* for use internally for Keymap notify */
+X	int min_keycode;	/* minimum defined keycode */
+X	int max_keycode;	/* maximum defined keycode */
+X	KeySym *keysyms;	/* This server's keysyms */
+X	XModifierKeymap *modifiermap;	/* This server's modifier keymap */
+X	int keysyms_per_keycode;/* number of rows */
+X	char *xdefaults;	/* contents of defaults from server */
+X	char *scratch_buffer;	/* place to hang scratch buffer */
+X	unsigned long scratch_length;	/* length of scratch buffer */
+X	int ext_number;		/* extension number on this display */
+X	_XExtension *ext_procs;	/* extensions initialized on this display */
+X	/*
+X	 * the following can be fixed size, as the protocol defines how
+X	 * much address space is available. 
+X	 * While this could be done using the extension vector, there
+X	 * may be MANY events processed, so a search through the extension
+X	 * list to find the right procedure for each event might be
+X	 * expensive if many extensions are being used.
+X	 */
+X	Bool (*event_vec[128])();  /* vector for wire to event */
+X	Status (*wire_vec[128])(); /* vector for event to wire */
+X} Display;
+X
+X#ifndef _XEVENT_
+X/*
+X * A "XEvent" structure always  has type as the first entry.  This 
+X * uniquely identifies what  kind of event it is.  The second entry
+X * is always a pointer to the display the event was read from.
+X * The third entry is always a window of one type or another,
+X * carefully selected to be useful to toolkit dispatchers.  (Except
+X * for keymap events, which have no window.) You
+X * must not change the order of the three elements or toolkits will
+X * break! The pointer to the generic event must be cast before use to 
+X * access any other information in the structure.
+X */
+X
+X/*
+X * Definitions of specific events.
+X */
+Xtypedef struct {
+X	int type;		/* of event */
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;	        /* "event" window it is reported relative to */
+X	Window root;	        /* root window that the event occured on */
+X	Window subwindow;	/* child window */
+X	Time time;		/* milliseconds */
+X	int x, y;		/* pointer x, y coordinates in event window */
+X	int x_root, y_root;	/* coordinates relative to root */
+X	unsigned int state;	/* key or button mask */
+X	unsigned int keycode;	/* detail */
+X	Bool same_screen;	/* same screen flag */
+X} XKeyEvent;
+Xtypedef XKeyEvent XKeyPressedEvent;
+Xtypedef XKeyEvent XKeyReleasedEvent;
+X
+Xtypedef struct {
+X	int type;		/* of event */
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;	        /* "event" window it is reported relative to */
+X	Window root;	        /* root window that the event occured on */
+X	Window subwindow;	/* child window */
+X	Time time;		/* milliseconds */
+X	int x, y;		/* pointer x, y coordinates in event window */
+X	int x_root, y_root;	/* coordinates relative to root */
+X	unsigned int state;	/* key or button mask */
+X	unsigned int button;	/* detail */
+X	Bool same_screen;	/* same screen flag */
+X} XButtonEvent;
+Xtypedef XButtonEvent XButtonPressedEvent;
+Xtypedef XButtonEvent XButtonReleasedEvent;
+X
+Xtypedef struct {
+X	int type;		/* of event */
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;	        /* "event" window reported relative to */
+X	Window root;	        /* root window that the event occured on */
+X	Window subwindow;	/* child window */
+X	Time time;		/* milliseconds */
+X	int x, y;		/* pointer x, y coordinates in event window */
+X	int x_root, y_root;	/* coordinates relative to root */
+X	unsigned int state;	/* key or button mask */
+X	char is_hint;		/* detail */
+X	Bool same_screen;	/* same screen flag */
+X} XMotionEvent;
+Xtypedef XMotionEvent XPointerMovedEvent;
+X
+Xtypedef struct {
+X	int type;		/* of event */
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;	        /* "event" window reported relative to */
+X	Window root;	        /* root window that the event occured on */
+X	Window subwindow;	/* child window */
+X	Time time;		/* milliseconds */
+X	int x, y;		/* pointer x, y coordinates in event window */
+X	int x_root, y_root;	/* coordinates relative to root */
+X	int mode;		/* NotifyNormal, NotifyGrab, NotifyUngrab */
+X	int detail;
+X	/*
+X	 * NotifyAncestor, NotifyVirtual, NotifyInferior, 
+X	 * NotifyNonLinear,NotifyNonLinearVirtual
+X	 */
+X	Bool same_screen;	/* same screen flag */
+X	Bool focus;		/* boolean focus */
+X	unsigned int state;	/* key or button mask */
+X} XCrossingEvent;
+Xtypedef XCrossingEvent XEnterWindowEvent;
+Xtypedef XCrossingEvent XLeaveWindowEvent;
+X
+Xtypedef struct {
+X	int type;		/* FocusIn or FocusOut */
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;		/* window of event */
+X	int mode;		/* NotifyNormal, NotifyGrab, NotifyUngrab */
+X	int detail;
+X	/*
+X	 * NotifyAncestor, NotifyVirtual, NotifyInferior, 
+X	 * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
+X	 * NotifyPointerRoot, NotifyDetailNone 
+X	 */
+X} XFocusChangeEvent;
+Xtypedef XFocusChangeEvent XFocusInEvent;
+Xtypedef XFocusChangeEvent XFocusOutEvent;
+X
+X/* generated on EnterWindow and FocusIn  when KeyMapState selected */
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	char key_vector[32];
+X} XKeymapEvent;	
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	int x, y;
+X	int width, height;
+X	int count;		/* if non-zero, at least this many more */
+X} XExposeEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Drawable drawable;
+X	int x, y;
+X	int width, height;
+X	int count;		/* if non-zero, at least this many more */
+X	int major_code;		/* core is CopyArea or CopyPlane */
+X	int minor_code;		/* not defined in the core */
+X} XGraphicsExposeEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Drawable drawable;
+X	int major_code;		/* core is CopyArea or CopyPlane */
+X	int minor_code;		/* not defined in the core */
+X} XNoExposeEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	int state;		/* either Obscured or UnObscured */
+X} XVisibilityEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window parent;		/* parent of the window */
+X	Window window;		/* window id of window created */
+X	int x, y;		/* window location */
+X	int width, height;	/* size of window */
+X	int border_width;	/* border width */
+X	Bool override_redirect;	/* creation should be overridden */
+X} XCreateWindowEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window event;
+X	Window window;
+X} XDestroyWindowEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window event;
+X	Window window;
+X	Bool from_configure;
+X} XUnmapEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window event;
+X	Window window;
+X	Bool override_redirect;	/* boolean, is override set... */
+X} XMapEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window parent;
+X	Window window;
+X} XMapRequestEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window event;
+X	Window window;
+X	Window parent;
+X	int x, y;
+X	Bool override_redirect;
+X} XReparentEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window event;
+X	Window window;
+X	int x, y;
+X	int width, height;
+X	int border_width;
+X	Window above;
+X	Bool override_redirect;
+X} XConfigureEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window event;
+X	Window window;
+X	int x, y;
+X} XGravityEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	int width, height;
+X} XResizeRequestEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window parent;
+X	Window window;
+X	int x, y;
+X	int width, height;
+X	int border_width;
+X	Window above;
+X	int detail;		/* Above, Below, TopIf, BottomIf, Opposite */
+X	unsigned long value_mask;
+X} XConfigureRequestEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window event;
+X	Window window;
+X	int place;		/* PlaceOnTop, PlaceOnBottom */
+X} XCirculateEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window parent;
+X	Window window;
+X	int place;		/* PlaceOnTop, PlaceOnBottom */
+X} XCirculateRequestEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	Atom atom;
+X	Time time;
+X	int state;		/* NewValue, Deleted */
+X} XPropertyEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	Atom selection;
+X	Time time;
+X} XSelectionClearEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window owner;		/* must be next after type */
+X	Window requestor;
+X	Atom selection;
+X	Atom target;
+X	Atom property;
+X	Time time;
+X} XSelectionRequestEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window requestor;	/* must be next after type */
+X	Atom selection;
+X	Atom target;
+X	Atom property;		/* ATOM or None */
+X	Time time;
+X} XSelectionEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	Colormap colormap;	/* COLORMAP or None */
+X	Bool new;
+X	int state;		/* ColormapInstalled, ColormapUninstalled */
+X} XColormapEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;
+X	Atom message_type;
+X	int format;
+X	union {
+X		char b[20];
+X		short s[10];
+X		int l[5];
+X		} data;
+X} XClientMessageEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;	/* Display the event was read from */
+X	Window window;		/* unused */
+X	int request;		/* one of MappingModifier, MappingKeyboard,
+X				   MappingPointer */
+X	int first_keycode;	/* first keycode */
+X	int count;		/* defines range of change w. first_keycode*/
+X} XMappingEvent;
+X
+Xtypedef struct {
+X	int type;
+X	Display *display;	/* Display the event was read from */
+X	XID resourceid;		/* resource id */
+X	unsigned long serial;	/* serial number of failed request */
+X	char error_code;	/* error code of failed request */
+X	char request_code;	/* Major op-code of failed request */
+X	char minor_code;	/* Minor op-code of failed request */
+X} XErrorEvent;
+X
+Xtypedef struct {
+X	int type;
+X	unsigned long serial;	/* # of last request processed by server */
+X	Bool send_event;	/* true if this came from a SendEvent request */
+X	Display *display;/* Display the event was read from */
+X	Window window;	/* window on which event was requested in event mask */
+X} XAnyEvent;
+X
+X/*
+X * this union is defined so Xlib can always use the same sized
+X * event structure internally, to avoid memory fragmentation.
+X */
+Xtypedef union _XEvent {
+X        int type;		/* must not be changed; first element */
+X	XAnyEvent xany;
+X	XKeyEvent xkey;
+X	XButtonEvent xbutton;
+X	XMotionEvent xmotion;
+X	XCrossingEvent xcrossing;
+X	XFocusChangeEvent xfocus;
+X	XExposeEvent xexpose;
+X	XGraphicsExposeEvent xgraphicsexpose;
+X	XNoExposeEvent xnoexpose;
+X	XVisibilityEvent xvisibility;
+X	XCreateWindowEvent xcreatewindow;
+X	XDestroyWindowEvent xdestroywindow;
+X	XUnmapEvent xunmap;
+X	XMapEvent xmap;
+X	XMapRequestEvent xmaprequest;
+X	XReparentEvent xreparent;
+X	XConfigureEvent xconfigure;
+X	XGravityEvent xgravity;
+X	XResizeRequestEvent xresizerequest;
+X	XConfigureRequestEvent xconfigurerequest;
+X	XCirculateEvent xcirculate;
+X	XCirculateRequestEvent xcirculaterequest;
+X	XPropertyEvent xproperty;
+X	XSelectionClearEvent xselectionclear;
+X	XSelectionRequestEvent xselectionrequest;
+X	XSelectionEvent xselection;
+X	XColormapEvent xcolormap;
+X	XClientMessageEvent xclient;
+X	XMappingEvent xmapping;
+X	XErrorEvent xerror;
+X	XKeymapEvent xkeymap;
+X	long pad[24];
+X} XEvent;
+X/*
+X * _QEvent datatype for use in input queueing.
+X */
+Xtypedef struct _XSQEvent {
+X    struct _XSQEvent *next;
+X    XEvent event;
+X} _XQEvent;
+X#endif
+X#define XAllocID(dpy) ((*(dpy)->resource_alloc)((dpy)))
+X#ifndef _XSTRUCT_
+X
+X/*
+X * per character font metric information.
+X */
+Xtypedef struct {
+X    short	lbearing;	/* origin to left edge of raster */
+X    short	rbearing;	/* origin to right edge of raster */
+X    short	width;		/* advance to next char's origin */
+X    short	ascent;		/* baseline to top edge of raster */
+X    short	descent;	/* baseline to bottom edge of raster */
+X    unsigned short attributes;	/* per char flags (not predefined) */
+X} XCharStruct;
+X
+X/*
+X * To allow arbitrary information with fonts, there are additional properties
+X * returned.
+X */
+Xtypedef struct {
+X    Atom name;
+X    unsigned long card32;
+X} XFontProp;
+X
+Xtypedef struct {
+X    XExtData	*ext_data;	/* hook for extension to hang data */
+X    Font        fid;            /* Font id for this font */
+X    unsigned	direction;	/* hint about direction the font is painted */
+X    unsigned	min_char_or_byte2;/* first character */
+X    unsigned	max_char_or_byte2;/* last character */
+X    unsigned	min_byte1;	/* first row that exists */
+X    unsigned	max_byte1;	/* last row that exists */
+X    Bool	all_chars_exist;/* flag if all characters have non-zero size*/
+X    unsigned	default_char;	/* char to print for undefined character */
+X    int         n_properties;   /* how many properties there are */
+X    XFontProp	*properties;	/* pointer to array of additional properties*/
+X    XCharStruct	min_bounds;	/* minimum bounds over all existing char*/
+X    XCharStruct	max_bounds;	/* minimum bounds over all existing char*/
+X    XCharStruct	*per_char;	/* first_char to last_char information */
+X    int		ascent;		/* log. extent above baseline for spacing */
+X    int		descent;	/* log. descent below baseline for spacing */
+X} XFontStruct;
+X
+X/*
+X * PolyText routines take these as arguments.
+X */
+Xtypedef struct {
+X    char *chars;		/* pointer to string */
+X    int nchars;			/* number of characters */
+X    int delta;			/* delta between strings */
+X    Font font;			/* font to print it in, None don't change */
+X} XTextItem;
+X
+Xtypedef struct {		/* normal 16 bit characters are two bytes */
+X    unsigned char byte1;
+X    unsigned char byte2;
+X} XChar2b;
+X
+Xtypedef struct {
+X    XChar2b *chars;		/* two byte characters */
+X    int nchars;			/* number of characters */
+X    int delta;			/* delta between strings */
+X    Font font;			/* font to print it in, None don't change */
+X} XTextItem16;
+X
+X
+XXFontStruct *XLoadQueryFont(), *XQueryFont();
+X
+XXTimeCoord *XGetMotionEvents();
+X#endif
+X/* 
+X * X function declarations.
+X */
+XDisplay *XOpenDisplay();
+X
+Xchar *XFetchBytes();
+Xchar *XFetchBuffer();
+Xchar *XGetAtomName();
+Xchar *XGetDefault();
+Xchar *XDisplayName();
+Xchar *XKeysymToString();
+X
+Xint (*XSynchronize())();
+Xint (*XSetAfterFunction())();
+XAtom XInternAtom();
+XColormap XCopyColormapAndFree(), XCreateColormap();
+XCursor XCreatePixmapCursor(), XCreateGlyphCursor(), XCreateFontCursor();
+XFont XLoadFont();
+XGC XCreateGC();
+XGContext XGContextFromGC();
+XPixmap XCreatePixmap();
+XPixmap XCreateBitmapFromData(), XCreatePixmapFromBitmapData();
+XWindow XCreateSimpleWindow(), XGetSelectionOwner(), XGetIconWindow();
+XWindow XCreateWindow(); 
+XColormap *XListInstalledColormaps();
+Xchar **XListFonts(), **XListFontsWithInfo(), **XGetFontPath();
+Xchar **XListExtensions();
+XAtom *XListProperties();
+XXImage *XCreateImage(), *XGetImage(), *XGetSubImage();
+XXHostAddress *XListHosts();
+XKeySym XKeycodeToKeysym(), XLookupKeysym(), *XGetKeyboardMapping();
+XKeySym XStringToKeysym();
+X
+X/* routines for dealing with extensions */
+XXExtCodes *XInitExtension();
+Xint (*XESetCreateGC())(), (*XESetCopyGC())(), (*XESetFlushGC())(),
+X    (*XESetFreeGC())(), (*XESetCreateFont())(), (*XESetFreeFont())(), 
+X    (*XESetCloseDisplay())(),
+X    (*XESetError())(), (*XESetErrorString())();
+XBool (*XESetWireToEvent())();
+XStatus (*XESetEventToWire())();
+X
+X/* these are routines for which there are also macros */
+XWindow XRootWindow(), XDefaultRootWindow(), XRootWindowOfScreen();
+XVisual *XDefaultVisual(), *XDefaultVisualOfScreen();
+XGC XDefaultGC(), XDefaultGCofScreen();
+Xunsigned long XBlackPixel(), XWhitePixel(), XAllPlanes();
+Xunsigned long XBlackPixelOfScreen(), XWhitePixelOfScreen();
+Xunsigned long XNextRequest(), XLastKnownRequestProcessed();
+Xchar *XServerVendor(), *XDisplayString();
+XColormap XDefaultColormap(), XDefaultColormapOfScreen();
+XDisplay *XDisplayOfScreen();
+XScreen *XScreenOfDisplay(), *XDefaultScreenOfDisplay();
+Xlong XEventMaskOfScreen();
+X#endif /* _XLIB_H_ */
+________This_Is_The_END________
+if test `wc -l < Xlib.h` -ne 1039; then
+	echo 'shar: Xlib.h was damaged during transit (should have been 1039 bytes)'
+fi
+fi		; : end of overwriting check
+echo 'x - Xutil.h'
+if test -f Xutil.h; then echo 'shar: not overwriting Xutil.h'; else
+sed 's/^X//' << '________This_Is_The_END________' > Xutil.h
+X/* $Header: Xutil.h,v 11.41 88/02/14 11:55:28 rws Exp $ */
+X
+X/***********************************************************
+XCopyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+Xand the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+X
+X                        All Rights Reserved
+X
+XPermission to use, copy, modify, and distribute this software and its 
+Xdocumentation for any purpose and without fee is hereby granted, 
+Xprovided that the above copyright notice appear in all copies and that
+Xboth that copyright notice and this permission notice appear in 
+Xsupporting documentation, and that the names of Digital or MIT not be
+Xused in advertising or publicity pertaining to distribution of the
+Xsoftware without specific, written prior permission.  
+X
+XDIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+XALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+XDIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+XANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+XWHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+XARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+XSOFTWARE.
+X
+X******************************************************************/
+X
+X#ifndef _XUTIL_H_
+X#define _XUTIL_H_
+X
+X/* 
+X * Bitmask returned by XParseGeometry().  Each bit tells if the corresponding
+X * value (x, y, width, height) was found in the parsed string.
+X */
+X#define NoValue		0x0000
+X#define XValue  	0x0001
+X#define YValue		0x0002
+X#define WidthValue  	0x0004
+X#define HeightValue  	0x0008
+X#define AllValues 	0x000F
+X#define XNegative 	0x0010
+X#define YNegative 	0x0020
+X
+Xtypedef struct {
+X    	long flags;	/* marks which fields in this structure are defined */
+X	int x, y;
+X	int width, height;
+X	int min_width, min_height;
+X	int max_width, max_height;
+X    	int width_inc, height_inc;
+X	struct {
+X		int x;	/* numerator */
+X		int y;	/* denominator */
+X	} min_aspect, max_aspect;
+X} XSizeHints;
+X
+X/*
+X * The next block of definitions are for window manager properties that
+X * clients and applications use for communication.
+X */
+X
+X/* flags argument in size hints */
+X#define USPosition	(1L << 0) /* user specified x, y */
+X#define USSize		(1L << 1) /* user specified width, height */
+X
+X#define PPosition	(1L << 2) /* program specified position */
+X#define PSize		(1L << 3) /* program specified size */
+X#define PMinSize	(1L << 4) /* program specified minimum size */
+X#define PMaxSize	(1L << 5) /* program specified maximum size */
+X#define PResizeInc	(1L << 6) /* program specified resize increments */
+X#define PAspect		(1L << 7) /* program specified min and max aspect ratios */
+X#define PAllHints (PPosition|PSize|PMinSize|PMaxSize|PResizeInc|PAspect)
+X
+Xtypedef struct {
+X	long flags;	/* marks which fields in this structure are defined */
+X	Bool input;	/* does this application rely on the window manager to
+X			get keyboard input? */
+X	int initial_state;	/* see below */
+X	Pixmap icon_pixmap;	/* pixmap to be used as icon */
+X	Window icon_window; 	/* window to be used as icon */
+X	int icon_x, icon_y; 	/* initial position of icon */
+X	Pixmap icon_mask;	/* icon mask bitmap */
+X	XID window_group;	/* id of related window group */
+X	/* this structure may be extended in the future */
+X} XWMHints;
+X
+X/* definition for flags of XWMHints */
+X
+X#define InputHint 		(1L << 0)
+X#define StateHint 		(1L << 1)
+X#define IconPixmapHint		(1L << 2)
+X#define IconWindowHint		(1L << 3)
+X#define IconPositionHint 	(1L << 4)
+X#define IconMaskHint		(1L << 5)
+X#define WindowGroupHint		(1L << 6)
+X#define AllHints (InputHint|StateHint|IconPixmapHint|IconWindowHint| \
+XIconPositionHint|IconMaskHint|WindowGroupHint)
+X
+X/* definitions for initial window state */
+X
+X#define DontCareState 0	/* don't know or care */
+X#define NormalState 1	/* most applications want to start this way */
+X#define ZoomState 2	/* application wants to start zoomed */
+X#define IconicState 3	/* application wants to start as an icon */
+X#define InactiveState 4	/* application believes it is seldom used; some
+X    			   wm's may put it on inactive menu */
+X
+X
+Xtypedef struct {
+X	int min_width, min_height;
+X	int max_width, max_height;
+X	int width_inc, height_inc;
+X} XIconSize;
+X
+Xtypedef struct {
+X	char *res_name;
+X	char *res_class;
+X} XClassHint;
+X
+X/*
+X * These macros are used to give some sugar to the image routines so that
+X * naive people are more comfortable with them.
+X */
+X#define XDestroyImage(ximage) \
+X	((*((ximage)->f.destroy_image))((ximage)))
+X#define XGetPixel(ximage, x, y) \
+X	((*((ximage)->f.get_pixel))((ximage), (x), (y)))
+X#define XPutPixel(ximage, x, y, pixel) \
+X	((*((ximage)->f.put_pixel))((ximage), (x), (y), (pixel)))
+X#define XSubImage(ximage, x, y, width, height)  \
+X	((*((ximage)->f.sub_image))((ximage), (x), (y), (width), (height)))
+X#define XAddPixel(ximage, value) \
+X	((*((ximage)->f.add_pixel))((ximage), (value)))
+X
+X/*
+X * Compose sequence status structure, used in calling XLookupString.
+X */
+Xtypedef struct _XComposeStatus {
+X    char *compose_ptr;		/* state table pointer */
+X    int chars_matched;		/* match state */
+X} XComposeStatus;
+X
+X/*
+X * Keysym macros, used on Keysyms to test for classes of symbols
+X */
+X#define IsKeypadKey(keysym) \
+X  (((unsigned)(keysym) >= XK_KP_Space) && ((unsigned)(keysym) <= XK_KP_Equal))
+X
+X#define IsCursorKey(keysym) \
+X  (((unsigned)(keysym) >= XK_Home)     && ((unsigned)(keysym) <  XK_Select))
+X
+X#define IsPFKey(keysym) \
+X  (((unsigned)(keysym) >= XK_KP_F1)     && ((unsigned)(keysym) <= XK_KP_F4))
+X
+X#define IsFunctionKey(keysym) \
+X  (((unsigned)(keysym) >= XK_F1)       && ((unsigned)(keysym) <= XK_F35))
+X
+X#define IsMiscFunctionKey(keysym) \
+X  (((unsigned)(keysym) >= XK_Select)   && ((unsigned)(keysym) <  XK_KP_Space))
+X
+X#define IsModifierKey(keysym) \
+X  (((unsigned)(keysym) >= XK_Shift_L)  && ((unsigned)(keysym) <= XK_Hyper_R))
+X
+X/*
+X * opaque reference to Region data type 
+X */
+Xtypedef struct _XRegion *Region; 
+X
+X/* Return values from XRectInRegion() */
+X 
+X#define RectangleOut 0
+X#define RectangleIn  1
+X#define RectanglePart 2
+X 
+X
+X/*
+X * Information used by the visual utility routines to find desired visual
+X * type from the many visuals a display may support.
+X */
+X
+Xtypedef struct {
+X  Visual *visual;
+X  VisualID visualid;
+X  int screen;
+X  int depth;
+X  int class;
+X  unsigned long red_mask;
+X  unsigned long green_mask;
+X  unsigned long blue_mask;
+X  int colormap_size;
+X  int bits_per_rgb;
+X} XVisualInfo;
+X
+X#define VisualNoMask		0x0
+X#define VisualIDMask 		0x1
+X#define VisualScreenMask	0x2
+X#define VisualDepthMask		0x4
+X#define VisualClassMask		0x8
+X#define VisualRedMaskMask	0x10
+X#define VisualGreenMaskMask	0x20
+X#define VisualBlueMaskMask	0x40
+X#define VisualColormapSizeMask	0x80
+X#define VisualBitsPerRGBMask	0x100
+X#define VisualAllMask		0x1FF
+X
+X/*
+X * This defines a window manager property that clients may use to
+X * share standard color maps:
+X */
+X
+Xtypedef struct {
+X	Colormap colormap;
+X	unsigned long red_max;
+X	unsigned long red_mult;
+X	unsigned long green_max;
+X	unsigned long green_mult;
+X	unsigned long blue_max;
+X	unsigned long blue_mult;
+X	unsigned long base_pixel;
+X} XStandardColormap;
+X
+X/*
+X * return codes for XReadBitmapFile and XWriteBitmapFile
+X */
+X#define BitmapSuccess		0
+X#define BitmapOpenFailed 	1
+X#define BitmapFileInvalid 	2
+X#define BitmapNoMemory		3
+X/*
+X * Declare the routines that don't return int.
+X */
+X
+X/****************************************************************
+X *
+X * Context Management
+X *
+X ****************************************************************/
+X
+X
+X/* Associative lookup table return codes */
+X
+X#define XCSUCCESS 0	/* No error. */
+X#define XCNOMEM   1    /* Out of memory */
+X#define XCNOENT   2    /* No entry in table */
+X
+Xtypedef int XContext;
+X
+X#define XUniqueContext()       ((XContext) XrmUniqueQuark())
+X#define XStringToContext(string)   ((XContext) XrmStringToQuark(string))
+X
+Xextern int XSaveContext(); /* window, context, data */
+X    /* Window       window;		*/
+X    /* XContext    context;		*/
+X    /* caddr_t      data;		*/
+X
+Xextern int XFindContext(); /* display, window, context, data */
+X    /* Display	    *display;		*/
+X    /* Window       window;		*/
+X    /* XContext    context;		*/
+X    /* caddr_t      *data;  *//* RETURN */
+X
+Xextern int XDeleteContext(); /* window, context */
+X    /* Window       window;		*/
+X    /* XContext    context;		*/
+X
+X
+XXWMHints *XGetWMHints();
+XRegion XCreateRegion(), XPolygonRegion();
+XXImage *XCreateImage();
+X
+XXVisualInfo *XGetVisualInfo();
+X#endif _XUTIL_H_
+________This_Is_The_END________
+if test `wc -l < Xutil.h` -ne 271; then
+	echo 'shar: Xutil.h was damaged during transit (should have been 271 bytes)'
+fi
+fi		; : end of overwriting check
+exit 0
+
+

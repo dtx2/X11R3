@@ -1,0 +1,104 @@
+Return-Path: andreas%hpcvxja@sde.hp.com
+Received: by expo.lcs.mit.edu; Tue, 18 Oct 88 17:04:00 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05323; Tue, 18 Oct 88 17:04:31 EDT
+Received: from hp-pcd.HP.COM by hp-sde ; Tue, 18 Oct 88 14:06:11 pdt
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA06413; Tue, 18 Oct 88 13:45:24 PDT
+Received: by hpcvxja.HP.COM; Tue, 18 Oct 88 13:44:51 pdt
+Date: Tue, 18 Oct 88 13:44:51 pdt
+From: Jim Andreas <andreas%hpcvxja@sde.hp.com>
+Message-Id: <8810182044.AA06003@hpcvxja.HP.COM>
+To: xbugs%hpcvxja@sde.hp.com
+Subject: XShrinkRegion bug (release 3) ************************
+Cc: andreas%hpcvxja@sde.hp.com
+
+### bug number:   1084
+### area:         Xlib
+### severity:     medium
+### comments:     
+
+VERSION:
+	X11 release 3
+SYNOPSIS:
+	TShrinkRegion does not shrink region correctly
+DESCRIPTION:
+	TShrinkRegion in release 2 appears to interpret the 
+	sign of the operation backwards (positive values should
+	shrink the region, negative values should expand the
+	region according to the Xlib manual).
+
+	TShrinkRegion in release 3 appears to change the region
+	size by twice as much as specified.
+REPEAT-BY:
+	Run attached program to verify that the problem exists.
+SUGGESTED FIX:
+	In release 2 a simple sign change works.
+
+/** ------- test program to give go/no go on XShrinkRegion ----------- */
+/*
+ * this code extracted from xlib test tshkregion.c Rel 5
+ *
+ * test of XShrinkRegion
+ */
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+static  XPoint InitialPoints[] =
+{
+    {
+	2, 2
+    },
+    {
+	8, 2
+    },
+    {
+	8, 8
+    },
+    {
+	2, 8
+    }
+};
+static  XPoint ResultingPoints[] =
+{
+    {
+	1, 1
+    },
+    {
+	9, 1
+    },
+    {
+	9, 9
+    },
+    {
+	1, 9
+    }
+};
+
+
+main() {
+    Region InitialRegion, ResultingRegion;
+
+    InitialRegion   = XPolygonRegion ( InitialPoints, 4, EvenOddRule);
+    ResultingRegion = XPolygonRegion ( ResultingPoints, 4, EvenOddRule);
+    XShrinkRegion (  InitialRegion, -2, -2);
+
+    if ( XEqualRegion( InitialRegion, ResultingRegion) == 0 )
+    {
+	    printf("The region did not shrink correctly.\n");
+	    exit(1);
+    }
+    printf("The region shrunk correctly.\n");
+    exit(0);
+}
+/*  eof */
+
+submitted by:
+Jim Andreas
+Corvallis Workstation Operation
+Hewlett-Packard 
+1000 NE Circle Blvd.
+Corvallis OR
+(503) 750-2860
+andreas%hpcvxja@hplabs.hp.com
+

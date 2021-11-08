@@ -1,0 +1,52 @@
+Return-Path: jtkohl@athena.mit.edu
+Received: by expo.lcs.mit.edu; Wed, 13 Jul 88 14:29:15 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23011; Wed, 13 Jul 88 09:47:35 EDT
+Received: by LYCUS.MIT.EDU (5.45/4.7) id AA05903; Wed, 13 Jul 88 09:46:27 EDT
+Date: Wed, 13 Jul 88 09:46:27 EDT
+From: John T Kohl <jtkohl@athena.mit.edu>
+Message-Id: <8807131346.AA05903@LYCUS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: Bug in X toolkit (XV11R2)
+Us-Snail: 64 Dudley St., Brookline, MA
+Zip-Code: 02146
+
+### bug number:   767
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	VAXstation II/GPX running 4.3BSD + NFS
+
+DISPLAY:
+	Digital QDSS, 8 plane
+
+AREA:
+	X toolkit
+
+SYNOPSIS:
+	When resizing widgets using Grips (?), the dividing line is
+	redrawn in the foreground color, not the border color.  When the
+	dividing line is re-exposed via some kind of exposure event, it is
+	correctly drawn in the border color.
+
+DESCRIPTION:
+	This appears in xman.
+
+REPEAT-BY:
+	Bring up an Xman on a color display with foreground color !=
+	border color.  Select "Both Shown" mode.
+	Resize the manual page display area by dragging the grip box up
+	or down.  Notice the wrong color.
+	Pop up a menu by moving the mouse into the "Directory of: ..."
+	box.  Move out of the window, and note the correctly colored refresh.
+
+FILES:
+	???
+
+FIX:
+	???
+

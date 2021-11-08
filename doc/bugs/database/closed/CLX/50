@@ -1,0 +1,97 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 09:14:55 EDT
+Date: Tue, 5 Jul 88 09:15 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: CLX selection-owner and setf
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880705131514.8.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   684
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+WINDOW MANAGER:
+	any
+
+AREA:
+	CLX
+
+SYNOPSIS:
+	selection-owner setf returns wrong value
+	can't setf selection-owner to nil
+	selection-owner returns window instead of nil when no owner
+
+DESCRIPTION:
+	The selection-owner setf should return the owner, but
+	returns the selection instead.
+
+	Setf'ing selection-owner to nil causes an error, but shouldn't.
+
+	Selection-owner returns a window with id zero instead of nil
+	when there is no owner.
+
+REPEAT-BY:
+	(setf (xlib:selection-owner dpy :primary) <some-window>)
+	(setf (xlib:selection-owner dpy :primary) nil)
+	(xlib:selection-owner dpy :random-selection)
+
+FILES:
+	lib/CLX/requests.l
+
+FIX:
+
+*** /tmp/,RCSt1a01150	Mon Jul  4 15:00:04 1988
+--- lib/CLX/requests.l	Mon Jul  4 15:00:12 1988
+***************
+*** 499,505 ****
+        (with-buffer-request (display *x-getselectionowner* :no-after)
+  	(resource-id selection))
+        (with-buffer-reply (display 12 :sizes 32)
+! 	(setq window (window-get 8))))
+      (display-invoke-after-function display)
+      window))
+  
+--- 499,507 ----
+        (with-buffer-request (display *x-getselectionowner* :no-after)
+  	(resource-id selection))
+        (with-buffer-reply (display 12 :sizes 32)
+! 	(setq window (resource-id-or-nil-get 8)))
+!       (when window
+! 	(setq window (lookup-window display window))))
+      (display-invoke-after-function display)
+      window))
+  
+***************
+*** 510,519 ****
+  	   (type timestamp time))
+    (setq selection (intern-atom display selection))
+    (with-buffer-request (display *x-setselectionowner*)
+!     (window owner)
+      (resource-id selection)
+      ((or null card32) time))
+!   selection)
+  
+  (defsetf selection-owner (display selection &optional time) (owner)
+    ;; A bit strange, but retains setf form.
+--- 512,521 ----
+  	   (type timestamp time))
+    (setq selection (intern-atom display selection))
+    (with-buffer-request (display *x-setselectionowner*)
+!     ((or null window) owner)
+      (resource-id selection)
+      ((or null card32) time))
+!   owner)
+  
+  (defsetf selection-owner (display selection &optional time) (owner)
+    ;; A bit strange, but retains setf form.
+

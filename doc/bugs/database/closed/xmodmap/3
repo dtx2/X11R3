@@ -1,0 +1,58 @@
+Return-Path: elsie!ado@ncifcrf.gov
+Received: by EXPO.LCS.MIT.EDU; Thu, 21 Jul 88 16:50:38 EDT
+Received: by fcs280s.ncifcrf.gov (4.0/NCIFCRF-1.0)
+	id AA07875; Thu, 21 Jul 88 16:50:41 EDT
+Received: by elsie.UUCP (5.51/4.7)
+	id AA06469; Thu, 21 Jul 88 16:48:27 EDT
+Date: Thu, 21 Jul 88 16:48:27 EDT
+From: elsie!ado@ncifcrf.gov (Arthur David Olson)
+Message-Id: <8807212048.AA06469@elsie.UUCP>
+Apparently-To: xbugs@expo.lcs.mit.edu
+
+### bug number:   766
+### area:         xmodmap
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	Sun UNIX 4.2 Release 3.5
+
+DISPLAY:
+	Sun B&W
+
+SYNOPSIS:
+	xmodmap has an erroneous printf statement.
+
+REPEAT-BY:
+	Inspection.
+
+FIX:
+*** 1.1/clients/xmodmap/handle.c	Thu Jul 21 16:41:09 1988
+--- 1.2/clients/xmodmap/handle.c	Thu Jul 21 16:41:14 1988
+***************
+*** 994,1000 ****
+  	    else update_map = True;
+  	    break;
+  	  default:
+! 	    fprintf (stderr, "%s:  unknown opcode %d\n", op->generic.type);
+  	    break;
+  	}
+  	lastop = op->generic.type;
+--- 994,1001 ----
+  	    else update_map = True;
+  	    break;
+  	  default:
+! 	    fprintf (stderr, "%s:  unknown opcode %d\n",
+! 		ProgramName, op->generic.type);
+  	    break;
+  	}
+  	lastop = op->generic.type;
+-- 
+	ado@ncifcrf.gov			ADO is a trademark of Ampex.
+

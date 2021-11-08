@@ -1,0 +1,93 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Mon, 13 Jun 88 12:48:17 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA06850; Mon, 13 Jun 88 12:46:54 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Mon, 13 Jun 88 08:46:54 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA25682; Mon, 13 Jun 88 09:46:23 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Mon, 13 Jun 88 09:48:21 pdt
+Message-Id: <8806131648.AA02690@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: tiny clock
+X-Mailer: mh6.5
+Date: Mon, 13 Jun 88 09:48:17 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   594
+### area:         xclock
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Very small analog clocks eat cpu time.
+DESCRIPTION:
+	With an analog clock that is too small to really see, and an
+	update time of one second, the calculations for the clock hand
+	sizes 'roll over' into incredably huge numbers since they are
+	declared to be unsigned integers. This takes a large amount of
+	time to calculate the vectors (which when drawn won't be used
+	because the window is too small) and a large amount of time for
+	the server to draw. With an update time of one second, the
+	interrupts are happening a little faster (on our machines) than
+	the previous calculations take. Therefore, eventually the system
+	becomes 'locked' because xclock is receiving all the server's
+	attention.
+REPEAT-BY:
+	run 'xclock -geometry =2x2 -update 1'
+SUGGESTED FIX:
+	The idea is to not calculate or draw the hands if the clock is
+	to small to use.
+*** lib/Xaw/Clock.c.old	Mon Jun  6 21:01:25 1988
+--- lib/Xaw/Clock.c	Wed Jun  8 18:53:56 1988
+***************
+*** 273,278
+      Region region;		/* unused */
+  {
+      ClockWidget w = (ClockWidget) gw;
+      if (w->clock.analog) {
+  	if (w->clock.numseg != 0)
+  	    erase_hands (w, (struct tm *) 0);
+
+--- 273,279 -----
+      Region region;		/* unused */
+  {
+      ClockWidget w = (ClockWidget) gw;
++ 
+      if (w->clock.analog) {
+  	/*
+  	 * Don't bother to draw the analog clock if it's too small. Too small
+***************
+*** 274,279
+  {
+      ClockWidget w = (ClockWidget) gw;
+      if (w->clock.analog) {
+  	if (w->clock.numseg != 0)
+  	    erase_hands (w, (struct tm *) 0);
+          DrawClockFace(w);
+
+--- 275,297 -----
+      ClockWidget w = (ClockWidget) gw;
+  
+      if (w->clock.analog) {
++ 	/*
++ 	 * Don't bother to draw the analog clock if it's too small. Too small
++ 	 * is defined as when the unsigned int 'radius' has  rolled over to a
++ 	 * huge positive number ( greater than the  width or height) or if the
++ 	 * hour hand is zero pixels long or if the second is to be used and is
++ 	 * less than 3 pixels in length ( a 2 is subtracted from
++ 	 * second_hand_length before doing the DrawSecond routine).
++ 	 */
++         if (w->clock.radius > min(w->core.width, w->core.height) ||
++ 		w->clock.hour_hand_length == 0 ||
++ 		(w->clock.show_second_hand &&
++ 			w->clock.second_hand_length < 3)) {
++             if (w->clock.interval_id)
++ 		XtRemoveTimeOut (w->clock.interval_id);
++ 	    w->clock.interval_id = 0;
++ 	    return;
++ 	}
+  	if (w->clock.numseg != 0)
+  	    erase_hands (w, (struct tm *) 0);
+          DrawClockFace(w);
+

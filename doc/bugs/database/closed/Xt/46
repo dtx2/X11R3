@@ -1,0 +1,53 @@
+Return-Path: fred%hpcvxrm@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 31 May 88 18:53:58 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05815; Tue, 31 May 88 17:52:38 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 31 May 88 14:52:04 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA16822; Tue, 31 May 88 15:52:43 PDT
+Received: from hpcvxrm by hpcvxrm.HP.COM; Tue, 31 May 88 15:52:38 pdt
+Message-Id: <8805312252.AA15264@hpcvxrm.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Cc: fred%hpcvxft@hplabs.hp.com
+Subject: A widget's Destroy() handler cannot destroy another widget.
+X-Mailer: mh6.5
+Date: Tue, 31 May 88 15:52:34 PDT
+From: Fred Taft <fred%hpcvxrm@hplabs.hp.com>
+
+### bug number:   549
+### area:         Xt
+### severity:     low
+### comments:     
+
+
+VERSION:
+	Xtk Release 2
+
+SYNOPSIS:
+	Xtk will not allow a widget (during its phase 2 destroy) to destroy
+      another, unrelated, widget.
+
+DESCRIPTION:
+	As XtNextEvent() currently implements the second phase of the destory
+      process, it is not possible for a widget being destroyed to in turn
+      initiate a destroy on another, unrelated widget (using XtDestroyWidget()).
+
+      The problem arises because XtNextEvent() takes the current DestroyList,
+      performs all of the callbacks, and then NULLs out the DestroyList; any
+      new entries on the DestroyList are lost.
+
+REPEAT-BY:
+      Destroy a widget whose Destroy routine then attempts to destroy another
+      widget.
+	
+FIX:
+      Changing XtNextEvent() to perform the following, will fix the bug:
+
+       while (DestroyList != NULL)
+       {
+          CallbackList currentList = DestroyList;
+
+          DestroyList = NULL;
+          _XtCallCallbacks (&currentList, (caddr_t), NULL);
+          _XtRemoveAllCallbacks (&currentList);
+       }
+

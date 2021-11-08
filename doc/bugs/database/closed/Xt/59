@@ -1,0 +1,46 @@
+Return-Path: rusty%velveeta.Berkeley.EDU@berkeley.edu
+Received: from velveeta.Berkeley.EDU by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 08:04:40 EST
+Received: by velveeta.Berkeley.EDU (5.57/1.26)
+	id AA01568; Sun, 13 Mar 88 03:46:19 PST
+Date: Sun, 13 Mar 88 03:46:19 PST
+From: rusty%velveeta.Berkeley.EDU@berkeley.edu (rusty wright)
+Message-Id: <8803131146.AA01568@velveeta.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: x toolkit documentation deficient
+
+### bug number:   96
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	(e.g. Sun 3/280, Microvax II, HP 9000, IBM PC/RT, etc.)
+
+CLIENT OPERATING SYSTEM:
+	(e.g. Ultrix 2.0, SunOS 3.4, 4.3bsd, etc.)
+
+DISPLAY:
+	(e.g. QVSS, GPX, CG4, HP TOPCAT, etc.)
+
+SYNOPSIS:
+	x toolkit documentation is VERY weak.
+
+DESCRIPTION:
+
+	It does not adequately explain how to add additional resources
+	nor does it explain how to retrieve those resources via
+	command-line options.  My program will normally use a
+	particular file in the user's home directory, but I want them
+	to be able to specify another file via the command-line option
+	"-file".
+
+REPEAT-BY:
+	(What you did to get the error; include test program if appropriate)
+
+FIX:
+	(Preferred, but not necessary)
+

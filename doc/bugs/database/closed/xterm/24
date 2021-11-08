@@ -1,0 +1,88 @@
+Return-Path: karynk@spray.calcomp.com
+Received: by expo.lcs.mit.edu; Tue, 14 Jun 88 01:32:45 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA12960@EDDIE.MIT.EDU>; Tue, 14 Jun 88 01:30:34 EDT
+Received: by atrp.media.mit.edu (5.59/4.8)  id AA04233; Fri, 10 Jun 88 12:32:21 EDT
+Received: by dspvax.MIT.EDU (5.51/5.18)  id AA07813; Wed, 8 Jun 88 14:30:33 EDT
+Received: by savax.Sanders.COM (1.2/4.7)
+	id AA06752; Wed, 8 Jun 88 14:26:08 edt
+Received: from spray.CalComp.COM (spray.ARPA) 
+	by elrond.CalComp.COM (1.2/smail2.5/01-15-88)
+	id AA09794; Wed, 8 Jun 88 14:22:35 edt
+Received: by spray.CalComp.COM (5.52/UUCP-Proj/rel1.0/14-Jan-87)
+	id AA04409; Wed, 8 Jun 88 14:25:41 EDT
+Date: Wed, 8 Jun 88 14:25:41 EDT
+From: karynk@spray.calcomp.com (Karyn M. Kachinski)
+Message-Id: <8806081825.AA04409@spray.CalComp.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm bug (in bcopy call)
+Cc: karynk@spray.calcomp.com
+
+### bug number:   601
+### area:         xterm
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Our port, but could effect other hosts
+
+CLIENT OPERATING SYSTEM:
+	UMIPS-BSD V2.1  (Possibly and non-sun or Ultrix OS)
+
+DISPLAY:
+	Color
+
+SYNOPSIS:
+	Running xterm, then editing a file with vi would cause the characters
+under the cursor to be incorrect, and sometimes the last line would be
+duplicated.
+
+DESCRIPTION:
+	Vi-ing a file while running xterm caused weird things to happen to
+the screen when scrolling occurred.  The problem was traced to a bcopy
+call in screen.c in which the source and destination are part of the same
+array.  (ScrnInsertLine is where the problem occurred...ScrnDeleteLine
+could possibly have a problem as well.)  On our machine, the bcopy had no
+stipulation that overlapping copies are handled correctly, and just
+copied from source to destination.  One call caused the copied lines to be
+duplicated.  (The call that failed was copying 184 bytes from a source
+of array location 0, to a destination of array location 2).  The MIPS machine
+moves 4 long words at a time.  (An example of what happended is:
+   original array (of longwords):		result after first 4 copied:
+    source ->	a -					a
+		b  | - 4 long words 			b
+    dest   ->	c  |	copied				a
+		d -					b
+		e					c
+		f					d
+		g					g
+		h					h
+
+ When the second 4 words are copied it gets c-d-g-h instead of e-f-g-h.  Working
+this through fails even if it copies a byte at a time like bcopy implies.
+	
+I was told to send this as an application bug, as bcopy does not guarantee that 
+overlapping copies can be done on ALL machines...it is just supposed to copy 
+from source to destination.  I have tried this on an Ultrix machine and a Sun 
+and the copy will take care of the overlap, but not all machines will.
+
+REPEAT-BY:
+	Will happen on a mips machine, but since I've looked through the 
+bugs reported in bug-trackers, this doesn't seem to be a problem for anyone.
+
+FIX:
+	In the ScrnInsertLine routine, have the bcopy call:
+
+	/* move down lines */
+	bcopy ((char *) &sb [2 * where], (char *) &sb [2 * (where + n)],
+		2 * sizeof (char *) * (last - where));
+
+copy to a tmp variable first, then copy to the destination in the same array.
+(Or write a local bcopy routine that would work for all machines.)
+
+Note that ScrnDeleteLine may have the same problem, but it worked correctly
+on our machine (with the destination BEFORE the source location in the same
+array.)
+

@@ -1,0 +1,51 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:45 EST
+Date: Fri, 4 Mar 88 16:13:45 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA05058@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: XLIB:CARD32->INT32
+
+### bug number:   20
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 16:58:16 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 175914; Thu 3-Mar-88 16:57:29 EST
+Date: Thu, 3 Mar 88 16:57 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: XLIB:CARD32->INT32
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com
+Message-Id: <19880303215723.7.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	CARD32->INT32 is making the wrong test.
+
+DESCRIPTION:
+	The supplied version of this code checks to see if the CARD32 is
+negative.  CARD32's are never negative.
+
+REPEAT-BY:
+	Doing anything with a CARD32.
+
+FIX:
+	The best code for this routine on a 3600 is:
+
+(defun card32->int32 (x)
+  (sys:%logldb (byte 32 0) x))

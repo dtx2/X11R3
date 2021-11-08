@@ -1,0 +1,41 @@
+Return-Path: swick@athena.mit.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 16:13:09 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA01609; Thu, 17 Mar 88 16:12:04 EST
+Received: by LYRE.MIT.EDU (5.45/4.7) id AA11922; Thu, 17 Mar 88 16:12:18 EST
+Message-Id: <8803172112.AA11922@LYRE.MIT.EDU>
+To: Ken Raeburn <raeburn@athena.mit.edu>
+Cc: jim@athena.mit.edu, xbugs@athena.mit.edu
+Subject: Re: Using and Specifying X Resources 
+In-Reply-To: Your message of Thu, 17 Mar 88 15:04:14 -0500.
+             <8803172004.AA05182@STEVE-DALLAS.MIT.EDU> 
+Date: Thu, 17 Mar 88 16:12:13 EST
+From: Ralph R. Swick <swick@athena.mit.edu>
+
+### bug number:   162
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       
+### comments:     it should mention the screen on which the property is listed
+###               since that is part of the resource manager "protocol", but it
+###               explain why there is only one.
+
+    Date: Thu, 17 Mar 88 15:04:14 EST
+    From: Ken Raeburn <raeburn@ATHENA.MIT.EDU>
+
+    The man page for xrdb(1) indicates that it works on screen 0.  What
+    happens with multiple screens?  I know uwm only works on one at a
+    time; should users try to figure out, in their .login scripts, how
+    many screens their machine has, and handle each separately?
+
+The fact that xrdb only 'works' on screen 0 is intentional:
+>From the user's point of view there should only be one server
+resource database.   The definition of the server resource database
+is a pre-defined property of a pre-defined window of a pre-defined
+screen on the display.  The fact that the xrdb man page exposes
+this implementation detail (in it's first sentence, no less) is
+a bug.
+
+That uwm is not able to manage multiple screens is considered an
+implementation bug.
+

@@ -1,0 +1,83 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 21:32:27 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08599; Wed, 16 Mar 88 21:31:36 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 12:10:10 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA07799; Wed, 16 Mar 88 11:20:20 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 11:20:56 pst
+Message-Id: <8803161920.AA24552@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 11:20:51 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   152
+### area:         uwm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	push=0, pushrelative. Floating pt. exception.
+DESCRIPTION:
+	With 'push=0', 'pushrelative' and an 'f.push' function tied to a
+	key combination; whenever I did a push, 'uwm' gave the message
+	'Floating pt. exception' usually followed by a core dump
+	or segmentation fault.
+REPEAT-BY:
+	Put the above variables in your startup file.
+FIX:
+*** uwm.c.old	Tue Mar 15 15:45:46 1988
+--- uwm.c	Tue Mar 15 15:48:28 1988
+***************
+*** 198,203
+      if (Startup_File_Error)
+          Error("Bad startup file...aborting");
+  
+      /* 
+       * Open the display.
+       */
+
+--- 198,208 -----
+      if (Startup_File_Error)
+          Error("Bad startup file...aborting");
+  
++     /*
++      * Verify the menu variables.
++      */
++     VerifyMenuVars();
++ 
+      /* 
+       * Open the display.
+       */
+***************
+*** 880,883
+      Volume = DEF_VOLUME;
+      Pushval = DEF_PUSH;
+      FocusSetByUser = FALSE;
+  }
+
+--- 885,902 -----
+      Volume = DEF_VOLUME;
+      Pushval = DEF_PUSH;
+      FocusSetByUser = FALSE;
++ }
++ 
++ /*
++  * verify that the menu variables are reasonable,
++  * otherwise use the default.
++  */
++ VerifyMenuVars()
++ {
++     /* If we pushrelative, we divide the window size by
++      * the push variable. If it's zero, we die a sad death.
++      * So lets use the default push value in this case.
++      */
++     if (!Pushval && Push)
++ 	Pushval = DEF_PUSH;
+  }
+

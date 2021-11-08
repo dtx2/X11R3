@@ -1,0 +1,95 @@
+Return-Path: jupiter!bob@cad.berkeley.edu
+Received: by expo.lcs.mit.edu; Tue, 26 Jul 88 21:15:02 EDT
+Received: by cad.Berkeley.EDU (5.58/1.28)
+	id AA22200; Tue, 26 Jul 88 18:13:52 PST
+Received: by jupiter.IS (4.12/6.0.GT)
+	id AA04104; Tue, 26 Jul 88 18:13:57 pdt
+Date: Tue, 26 Jul 88 18:13:57 pdt
+From: Bob Schulman <jupiter!bob%jupiter@cad.berkeley.edu>
+Posted-Date: Tue, 26 Jul 88 18:13:57 pdt
+Message-Id: <8807270113.AA04104@jupiter.IS>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in FindColor()...causes server crash
+Cc: bob@cad.berkeley.edu
+
+### bug number:   788
+### area:         server
+### severity:     very hign
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Jupiter Systems' Sun Satellite
+
+SYNOPSIS:
+	 Server crashes becuaes a very large value is placed in a colormap's
+	 clientPixelsBlue[client] array.
+
+DESCRIPTION:
+	 Function FindColor(), as distributed, has a serious bug. The value
+	 it places in the array indicated by pmap->clientPixelsBlue[client]
+	 is the pixel value SHIFTED LEFT by visual's offsetBlue. The value
+	 that should be placed in the array is the unshifted value of the pixel.
+
+REPEAT-BY:
+	In testing a RGB24 Direct version of our server, I encountered
+	this problem. The problem came up when I was tearing down the
+	resources associated with an xterm window (i.e. when xterm
+	was exiting). The problem reared its head
+	in FreeClientPixels(). That's where the very large value bit us.
+
+FIX:
+*** colormap.c.coreX	Tue Jul 26 18:10:15 1988
+--- colormap.c.fixed	Tue Jul 26 17:45:58 1988
+***************
+*** 712,731 ****
+      	    if ((*comp) (pent, prgb))
+  	    {
+      	        pent->refcnt++;
+  		switch(channel)
+  		{
+  		  case REDMAP:
+! 		    pixel  <<= pmap->pVisual->offsetRed;
+  		  case PSEUDOMAP:
+  		    break;
+  		  case GREENMAP:
+! 		    pixel  <<= pmap->pVisual->offsetGreen;
+  		    break;
+  		  case BLUEMAP:
+! 		    pixel  <<= pmap->pVisual->offsetBlue;
+  		    break;
+  		}
+- 		*pPixel = pixel;
+  		goto gotit;
+      	    }
+          }
+--- 712,731 ----
+      	    if ((*comp) (pent, prgb))
+  	    {
+      	        pent->refcnt++;
++ 		*pPixel = pixel;
+  		switch(channel)
+  		{
+  		  case REDMAP:
+! 		    *pPixel  <<= pmap->pVisual->offsetRed;
+  		  case PSEUDOMAP:
+  		    break;
+  		  case GREENMAP:
+! 		    *pPixel  <<= pmap->pVisual->offsetGreen;
+  		    break;
+  		  case BLUEMAP:
+! 		    *pPixel  <<= pmap->pVisual->offsetBlue;
+  		    break;
+  		}
+  		goto gotit;
+      	    }
+          }
+

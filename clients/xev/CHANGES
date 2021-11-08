@@ -1,0 +1,6 @@
+The following changes have been made to this directory since R2:
+
+     o  this application was moved from the examples tree.
+     o  it now selects for all events.
+     o  it has a subwindow for watching crossing and event propagation.
+     o  can optionally turn on backing store and save-unders.

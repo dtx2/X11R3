@@ -1,0 +1,58 @@
+Return-Path: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu
+Received: by expo.lcs.mit.edu; Sun, 24 Apr 88 16:33:18 EDT
+Received: by nutmeg.Berkeley.EDU (5.57/1.25)
+	id AA09958; Sat, 23 Apr 88 17:39:58 PDT
+Date: Sat, 23 Apr 88 17:39:58 PDT
+From: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu (Adam R de Boor)
+Message-Id: <8804240039.AA09958@nutmeg.Berkeley.EDU>
+To: x11%brie@sun.com, xbugs@expo.lcs.mit.edu
+Subject: ShellDestroy broken
+
+### bug number:   410
+### area:         Xt
+### severity:     high
+### comments:     
+### see also:     338, 356, 413
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	 When destroying an application shell, ShellDestroy (Xt/Shell.c)
+	 will dereference a null parent pointer because a | is in a conditional
+	 instead of an ||.
+
+REPEAT-BY:
+	Destroy an application shell on a sun
+
+FIX:
+*** /tmp/,RCSt1a09947	Sat Apr 23 16:38:10 1988
+--- Shell.c	Sat Apr 23 16:40:50 1988
+***************
+*** 864,870
+      Boolean found = FALSE;
+      register Widget parent;
+      parent = widget->core.parent;
+!     if (parent == NULL | parent->core.being_destroyed) return;
+      for (i=0;i<=parent->core.num_popups-1;i++)
+          if (parent->core.popup_list[i] == widget){
+              found = TRUE; break;
+
+--- 864,870 -----
+      Boolean found = FALSE;
+      register Widget parent;
+      parent = widget->core.parent;
+!     if (parent == NULL || parent->core.being_destroyed) return;
+      for (i=0;i<=parent->core.num_popups-1;i++)
+          if (parent->core.popup_list[i] == widget){
+              found = TRUE; break;
+

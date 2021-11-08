@@ -1,0 +1,33 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 09:20:12 EST
+Received: by harvard.harvard.edu; Wed, 16 Mar 88 09:21:59 EST
+From: ksr!benson@harvard.harvard.edu
+Received: from phantom.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA14597; Wed, 16 Mar 88 09:03:16 EST
+Received: by phantom.ksr.com (3.2/SMI-3.2)
+	id AA00205; Wed, 16 Mar 88 09:03:14 EST
+Date: Wed, 16 Mar 88 09:03:14 EST
+Message-Id: <8803161403.AA00205@phantom.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: xmh catatonia
+
+### bug number:   129
+### area:         xmh
+### severity:     
+### assigned to:  swick
+### status:       closed
+### see also:     60, 85, 97, 206
+
+
+Running X11R2, on a sun3/140, under Sunos3.5.
+
+xmh pops up a tall skinny window with an amusing variety of
+rectangles connected by lines, all with no text. It fails to respond
+to anything I can think of to send it.
+
+I'm definitely running mh6.5.
+
+any help gladly accepted.
+
+--benson
+

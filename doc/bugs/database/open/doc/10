@@ -1,0 +1,73 @@
+Return-Path: ndd@sunbar.mc.duke.edu
+Received: from duke.cs.duke.edu ([128.109.140.1]) by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 15:41:26 EST
+Received: from sunbar (sunbar.mc.duke.edu) by duke.cs.duke.edu (5.54/DUKE/10-20-87)
+	id AA00642; Thu, 17 Mar 88 15:39:39 EST
+Received: by sunbar (3.2/4.7)
+	id AA12474; Thu, 17 Mar 88 15:39:45 EST
+Date: Thu, 17 Mar 88 15:39:45 EST
+From: Ned Danieley <ndd@sunbar.mc.duke.edu>
+Message-Id: <8803172039.AA12474@sunbar>
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm bug
+
+### bug number:   160
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       
+### comments:     user misunderstood man page, should have had \fIgeom\fP
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/280
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	bw2
+
+SYNOPSIS:
+	 The xterm manual page seems to have an error in the icon geometry
+	 description.
+
+DESCRIPTION:
+	 The man entry for xterm states that the icon geometry can
+	 be specified on the command line by
+
+	 #geom
+
+	 but the program actually seems to expect only #. Looking at
+	 xterm/main.c confirms this.
+
+REPEAT-BY:
+	Try
+
+	xterm #+110+100 &
+
+	and iconify the window; it ends up at 100, 100. Try
+
+	xterm #geom+110+100 &
+
+	and iconify the window; it ends up at 0, 0. Try
+
+	xterm #geom +110+100 &
+
+	and xterm says
+
+	Unknown option "+100+100".
+
+FIX:
+	Decide which way you want it and fix the manual or the program.
+
+
+Ned Danieley (ndd@sunbar.mc.duke.edu)
+Basic Arrhythmia Laboratory
+Duke University Medical Center
+Durham, NC  27710
+(919) 684-6807 or 684-6942
+
+

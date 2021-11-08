@@ -1,0 +1,74 @@
+Return-Path: dschmidt
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:06:07 EDT
+Date: Tue, 5 Jul 88 14:06:07 EDT
+From: dschmidt@expo.lcs.mit.edu (Dan Schmidt)
+Message-Id: <8807051806.AA13546@EXPO.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: line width 1 equived rectangle troubles in MFB
+
+### bug number:   686
+### area:         server
+### severity:     low
+### comments:     
+
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	VS2000 running BSD 4.3
+
+DISPLAY:
+	I haven't the least idea.  It's a normal Athena machine.
+
+AREA:
+	Xlib
+
+SYNOPSIS:
+	Sometimes, drawing an equived rectangle with line width 1 causes
+	a 32 bit wide filled equived rectangle to be displayed directly
+ 	to its right.
+
+DESCRIPTION:
+	That's about it.  The line width must be 1.  I'm not sure if the
+	function must be equiv, but clear doesn't do it.
+
+REPEAT-BY:
+	Run the following program (link with -lX11).
+
+FILES:
+
+#include <X11/Xlib.h>
+
+#define Black BlackPixel(dpy,scr)
+#define White WhitePixel(dpy,scr)
+#define NULL 0
+
+Display *dpy;
+Window   win;
+int      scr;
+GC       gc;
+XEvent   event;
+  
+main()
+{
+  dpy = XOpenDisplay(NULL);
+  scr = DefaultScreen(dpy);
+
+  win = XCreateSimpleWindow(dpy,RootWindow(dpy,scr),0,0,100,100,1,Black,White);
+  XSelectInput(dpy,win,ExposureMask|ButtonPressMask|KeyPressMask);
+  XMapWindow(dpy,win);
+
+  gc = XCreateGC(dpy,win,0,(XGCValues *)NULL);
+  XSetFunction(dpy,gc,GXequiv);
+  XSetLineAttributes(dpy,gc,1,LineSolid,CapButt,JoinMiter);
+
+  XWindowEvent(dpy,win,ExposureMask,&event);
+  XDrawRectangle(dpy,win,gc,5,5,30,80);
+  XWindowEvent(dpy,win,ButtonPressMask|KeyPressMask,&event);
+}
+
+FIX:
+	Sorry.
+

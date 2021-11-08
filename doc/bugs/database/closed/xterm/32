@@ -1,0 +1,164 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 09:57:20 EST
+Date: Thu, 10 Mar 88 09:57:20 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101457.AA00241@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: xterm: window changes to rlogin commands
+
+### bug number:   63
+### area:         xterm
+### severity:     
+### assigned to:  
+### comments:     previous fixes have taken care of the problem (verified by
+###               Phil Dykstra as well)
+
+(Message inbox:29)
+Return-Path: phil@brl.arpa
+Received: from BRL-SPARK.ARPA by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 03:59:42 EST
+Date:     Thu, 10 Mar 88 3:45:20 EST
+From: Phil Dykstra <phil@brl.arpa>
+To: xbugs@expo.lcs.mit.edu
+Subject:  xterm: window changes to rlogin commands
+Message-Id:  <8803100345.aa05383@SPARK.BRL.ARPA>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	Sun
+
+SYNOPSIS:
+	xterm: window resizes don't make it to rlogins
+
+DESCRIPTION:
+	When running a program such as rlogin under a shell in an
+	xterm window, a window resize will not get picked up by the
+	rlogin process.  Xterm sends a SIGWINCH to the process group
+	of the process id of the command it is running.  Any commands
+	started by say a csh will not be in this same process group
+	and thus don't see this signal.
+
+	However, a TIOCSWINSZ ioctl will send a SIGWINCH to all processes
+	with the same contolling tty and thus rlogin processes do see
+	such a change.  The problem stems from Suns TIOCSSIZE ioctl.
+	This ioctl sets the size WITHOUT generating a SIGWINCH.
+
+REPEAT-BY:
+	xterm &
+	rlogin machine
+	(change the window size)
+	(see what stty has to say about it!)
+
+FIX:
+	The code in xterm/screen.c is ifdef'd sun in order to use
+	TIOCSSIZE rather than TIOCSWINSZ.  Since Sun now supports
+	TIOCSWINSZ (on at least 3.4), and since this ioctl does what
+	we want (sends SIGWINCH to processes controlled by that tty),
+	I reorganized the ifdefs so that TIOCSWINSZ is used if it
+	exists.  Only lacking that does it ifdef sun for TIOCSSIZE.
+	I believe that this is a backward compatible fix, but I don't
+	have an old SunOS to test it on.
+
+./clients/xterm:
+
+*** screen.c.orig	Fri Feb 26 00:13:09 1988
+--- screen.c	Thu Mar 10 02:40:24 1988
+***************
+*** 348,362 ****
+  	register int x;
+  	register int border = 2 * screen->border;
+  	register int i, j, k;
+  #ifdef sun
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+- #else	/* sun */
+- #ifdef TIOCSWINSZ
+- 	struct winsize ws;
+- #endif	/* TIOCSWINSZ */
+  #endif	/* sun */
+  
+  	/* round so that it is unlikely the screen will change size on  */
+  	/* small mouse movements.					*/
+--- 348,362 ----
+  	register int x;
+  	register int border = 2 * screen->border;
+  	register int i, j, k;
++ #ifdef TIOCSWINSZ
++ 	struct winsize ws;
++ #else	/* TIOCSWINSZ */
+  #ifdef sun
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+  #endif	/* sun */
++ #endif	/* TIOCSWINSZ */
+  
+  	/* round so that it is unlikely the screen will change size on  */
+  	/* small mouse movements.					*/
+***************
+*** 472,489 ****
+  	
+  	screen->fullVwin.fullheight = height;
+  	screen->fullVwin.fullwidth = width;
+! #ifdef sun
+! #ifdef TIOCSSIZE
+! 	/* Set tty's idea of window size */
+! 	ts.ts_lines = rows;
+! 	ts.ts_cols = cols;
+! 	ioctl (screen->respond, TIOCSSIZE, &ts);
+! #ifdef SIGWINCH
+! 	if(screen->pid > 1)
+! 		killpg(getpgrp(screen->pid), SIGWINCH);
+! #endif	/* SIGWINCH */
+! #endif	/* TIOCSSIZE */
+! #else	/* sun */
+  #ifdef TIOCSWINSZ
+  	/* Set tty's idea of window size */
+  	ws.ws_row = rows;
+--- 472,478 ----
+  	
+  	screen->fullVwin.fullheight = height;
+  	screen->fullVwin.fullwidth = width;
+! 
+  #ifdef TIOCSWINSZ
+  	/* Set tty's idea of window size */
+  	ws.ws_row = rows;
+***************
+*** 495,502 ****
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+  #endif	/* SIGWINCH */
+! #endif	/* TIOCSWINSZ */
+  #endif	/* sun */
+  	return (0);
+  }
+  
+--- 484,503 ----
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+  #endif	/* SIGWINCH */
+! #else	/* TIOCSWINSZ */
+! #ifdef sun
+! #ifdef TIOCSSIZE
+! 	/* Set tty's idea of window size */
+! 	ts.ts_lines = rows;
+! 	ts.ts_cols = cols;
+! 	ioctl (screen->respond, TIOCSSIZE, &ts);
+! #ifdef SIGWINCH
+! 	if(screen->pid > 1)
+! 		killpg(getpgrp(screen->pid), SIGWINCH);
+! #endif	/* SIGWINCH */
+! #endif	/* TIOCSSIZE */
+  #endif	/* sun */
++ #endif	/* TIOCSWINSZ */
+  	return (0);
+  }
+  

@@ -1,0 +1,120 @@
+#define IHaveSubdirs
+#define PassCDebugFlags /* as nothing */
+
+SUBDIRS = bitmaps
+
+EXPORTS = \
+	X.h \
+	XWDFile.h \
+	Xatom.h \
+	Xmd.h \
+	Xos.h \
+	Xproto.h \
+	Xprotostr.h \
+	copyright.h \
+	keysym.h \
+	keysymdef.h \
+	DECkeysym.h \
+	JUSkeysym.h
+
+IMPORTS1 = \
+	$(OLDXLIBSRC)/X10.h \
+	$(XLIBSRC)/Xlib.h \
+	$(XLIBSRC)/Xresource.h \
+	$(XLIBSRC)/Xutil.h \
+	$(XLIBSRC)/cursorfont.h \
+	$(XMUSRC)/Xmu.h \
+	$(TOOLKITSRC)/Composite.h \
+	$(TOOLKITSRC)/CompositeP.h \
+	$(TOOLKITSRC)/Constraint.h \
+	$(TOOLKITSRC)/ConstrainP.h \
+	$(TOOLKITSRC)/Core.h \
+	$(TOOLKITSRC)/CoreP.h \
+	$(TOOLKITSRC)/Intrinsic.h \
+	$(TOOLKITSRC)/IntrinsicP.h \
+	$(TOOLKITSRC)/Quarks.h \
+	$(TOOLKITSRC)/Selection.h \
+	$(TOOLKITSRC)/Shell.h \
+	$(TOOLKITSRC)/ShellP.h \
+	$(TOOLKITSRC)/StringDefs.h \
+	$(TOOLKITSRC)/Vendor.h \
+	$(TOOLKITSRC)/VendorP.h
+
+IMPORTS2 = \
+	$(AWIDGETSRC)/AsciiText.h \
+	$(AWIDGETSRC)/AsciiTextP.h \
+	$(AWIDGETSRC)/Box.h \
+	$(AWIDGETSRC)/BoxP.h \
+	$(AWIDGETSRC)/Cardinals.h \
+	$(AWIDGETSRC)/Clock.h \
+	$(AWIDGETSRC)/ClockP.h \
+	$(AWIDGETSRC)/Command.h \
+	$(AWIDGETSRC)/CommandP.h \
+	$(AWIDGETSRC)/Dialog.h \
+	$(AWIDGETSRC)/DialogP.h \
+	$(AWIDGETSRC)/Form.h \
+	$(AWIDGETSRC)/FormP.h \
+	$(AWIDGETSRC)/Grip.h \
+	$(AWIDGETSRC)/GripP.h \
+	$(AWIDGETSRC)/Label.h \
+	$(AWIDGETSRC)/LabelP.h \
+	$(AWIDGETSRC)/List.h \
+	$(AWIDGETSRC)/ListP.h \
+	$(AWIDGETSRC)/Load.h \
+	$(AWIDGETSRC)/LoadP.h \
+	$(AWIDGETSRC)/Logo.h \
+	$(AWIDGETSRC)/LogoP.h \
+	$(AWIDGETSRC)/Mailbox.h \
+	$(AWIDGETSRC)/MailboxP.h \
+	$(AWIDGETSRC)/Scroll.h \
+	$(AWIDGETSRC)/ScrollP.h \
+	$(AWIDGETSRC)/Simple.h \
+	$(AWIDGETSRC)/SimpleP.h \
+	$(AWIDGETSRC)/Text.h \
+	$(AWIDGETSRC)/TextP.h \
+	$(AWIDGETSRC)/TextSrcP.h \
+	$(AWIDGETSRC)/VPaned.h \
+	$(AWIDGETSRC)/VPanedP.h \
+	$(AWIDGETSRC)/Viewport.h \
+	$(AWIDGETSRC)/ViewportP.h \
+	$(AWIDGETSRC)/XawMisc.h
+
+IMPORTS = $(IMPORTS1) $(IMPORTS2)
+
+SUBIMPORTS = \
+	$(EXTENSIONSRC)/include/zoid.h \
+	$(EXTENSIONSRC)/include/bezier.h \
+	$(EXTENSIONSRC)/include/plxvideo.h \
+	$(EXTENSIONSRC)/include/xtestext1.h
+   
+INSTALLFLAGS = $(INSTINCFLAGS)
+
+all:: $(IMPORTS1) $(IMPORTS2) $(SUBIMPORTS) extensions
+	@-(list=`echo $(IMPORTS1) | sed -e 's/[^ ]*\///g'`; set -x; $(RM) $$list)
+	$(LN) $(IMPORTS1) .
+	@-(list=`echo $(IMPORTS2) | sed -e 's/[^ ]*\///g'`; set -x; $(RM) $$list)
+	$(LN) $(IMPORTS2) .
+	@-(list=`echo $(SUBIMPORTS) | sed -e 's/[^ ]*\///g'`; \
+		set -x; cd extensions; $(RM) $$list)
+	@for i in $(SUBIMPORTS); do \
+		(set -x; cd extensions; $(LN) ../$$i .); \
+	done
+
+
+MakeDirectories(extensions,extensions)
+
+MakeDirectories(install, $(INCDIR))
+
+MakeSubdirs($(SUBDIRS))
+
+InstallMultiple($(EXPORTS),$(INCDIR))
+
+clean::
+	@-(list=`echo $(IMPORTS1) | sed -e 's/[^ ]*\///g'`; set -x; $(RM) $$list)
+	@-(list=`echo $(IMPORTS2) | sed -e 's/[^ ]*\///g'`; set -x; $(RM) $$list)
+	@-(if [ -d extensions ]; then \
+		list=`echo $(SUBIMPORTS) | sed -e 's/[^ ]*\///g'`; \
+		set -x; cd extensions; $(RM) $$list; else exit 0; fi)
+
+depend:
+	@echo "skipping make depend in ./X11"

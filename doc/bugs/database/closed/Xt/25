@@ -1,0 +1,41 @@
+Return-Path: rusty%velveeta.Berkeley.EDU@berkeley.edu
+Received: from velveeta.Berkeley.EDU ([128.32.183.24]) by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 08:04:29 EST
+Received: by velveeta.Berkeley.EDU (5.57/1.26)
+	id AA01574; Sun, 13 Mar 88 03:49:40 PST
+Date: Sun, 13 Mar 88 03:49:40 PST
+From: rusty%velveeta.Berkeley.EDU@berkeley.edu (rusty wright)
+Message-Id: <8803131149.AA01574@velveeta.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: x toolkit, missing type?
+
+### bug number:   95
+### area:         Xt
+### severity:     
+### assigned to:  
+### status:       closed
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	(e.g. Sun 3/280, Microvax II, HP 9000, IBM PC/RT, etc.)
+
+CLIENT OPERATING SYSTEM:
+	(e.g. Ultrix 2.0, SunOS 3.4, 4.3bsd, etc.)
+
+DISPLAY:
+	(e.g. QVSS, GPX, CG4, HP TOPCAT, etc.)
+
+SYNOPSIS:
+	Why is there an XtRInt but no Int type?
+
+DESCRIPTION:
+	If I specify a resource type of XtRInt then I don't have the
+	type Int to use with it.
+
+REPEAT-BY:
+	(What you did to get the error; include test program if appropriate)
+
+FIX:
+	(Preferred, but not necessary)
+

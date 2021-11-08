@@ -1,0 +1,82 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Tue, 20 Sep 88 10:06:35 EDT
+Date: Tue, 20 Sep 88 10:06:35 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8809201406.AA12857@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: SunOS 4.0 problems
+
+### bug number:   981
+### area:         config
+### severity:     
+### comments:     various problems with SunOS 4.0 have been fixed in R3 and
+###               can be sent out if people desire
+
+(Message inbox:37)
+Return-Path: fai!hadar!charlesb@uunet.uu.net
+Received: by expo.lcs.mit.edu; Mon, 19 Sep 88 21:36:23 EDT
+Received: from fai.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA22561; Mon, 19 Sep 88 21:36:20 EDT
+Received: by fai.fai.com; id AA26282; Mon, 19 Sep 88 18:35:38-1795
+Received: by hadar.tdd.fai.com (4.0/SMI-4.0)
+	id AA17376; Mon, 19 Sep 88 18:33:29 PDT
+Date: Mon, 19 Sep 88 18:33:29 PDT
+From: charlesb@hadar (Charles Brauer)
+Message-Id: <8809200133.AA17376@hadar.tdd.fai.com>
+To: uunet!expo.lcs.mit.edu!jim@uunet.uu.net
+Subject: Re:  R3beta experiences
+
+  Jim:
+
+  I sent the enclosed message to Keith Packard, and I have not 
+  had any response yet...  With the expection of minor
+  problems, (see below), R3 came up fine on my Sun 3/60C 
+  (SunOS 3.5, and SunOS 4.0).  When I tried to bring up R3 
+  on a Sun 4/110 (SunOS 4.0) I found that "xterm" dumps
+  core.  I am working on this now.
+
+
+------------------------------- cut --------------------------
+
+  Keith:
+
+  Thank you for your very prompt delivery of the R3 tape.  I am 
+  trying to bring R3 up on Sun 3/60C (SunOS3.5) and Sun 4/110 
+  (SunOS4.0) machines.
+
+  I am confused about the change to "server/os/4.2bsd/utils.c".
+  This new version of "utils.c" will not allow the old option:
+
+                     -dev /dev/cgfour0
+
+  to get passed to the X server (line 352 calls UseMsg), and 
+  therefore, I cannot run on the color frame buffer.  In R2, I 
+  started the X server with: 
+
+                     xinit -- -dev /dev/cgfour0
+
+  but this no longer works.  Is there a new method of starting
+  X on a color Sun 3/60C?
+
+  Also, please consider changing "server/include/os.h".  On line
+  60 there is a statement:
+
+                     #if defined(vax) || defined(sun)
+
+  This should be changed to:
+
+                     #if defined(vax)
+
+  because the Sun X server dosn't use "alloca" and on SunOS4.0
+  the "alloca" routine comes up as a unpatched external.
+
+
+  Charles Brauer
+  uunet!fai!charlesb
+  Fujitsu America, Inc.
+  Mail Stop: B2-8
+  3055 Orchard Drive
+  San Jose, California 95134
+  (408) 432-1300 Ext: 5226
+
+

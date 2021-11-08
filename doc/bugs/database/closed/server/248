@@ -1,0 +1,35 @@
+Return-Path: joel@wsl.dec.com
+Received: by expo.lcs.mit.edu; Mon, 10 Oct 88 22:19:29 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA21597; Mon, 10 Oct 88 19:18:43 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA23272; Mon, 10 Oct 88 19:19:17 PDT
+Message-Id: <8810110219.AA23272@gilroy.pa.dec.com>
+To: bugs@expo.lcs.mit.edu, <RWS@zermatt.lcs.mit.edu>
+Cc: joel@wsl.dec.com
+Subject: What does backingStoreSupport in the screen data structure mean?
+Date: Mon, 10 Oct 88 19:19:16 -0700
+From: joel@wsl.dec.com
+
+### bug number:   1068
+### area:         server
+### severity:     high
+### comments:     
+
+
+It seems to me that a window should never get any more support for backing
+store than min(request, screen support).  The window.c code to set backing
+store doesn't do this, but always honor's the user's request. This makes it
+impossible for me to turn off backing store by declaring NotUseful in the
+screen data structure
+
+Further, window.c sets backingStore in the ChangeWindowAttributes call AFTER the
+custom (*pScreen->CreateWindow)(pWin) call.  This makes it impossible for me
+to turn off backing store by smashing in NotUseful in my screen-specific
+CreateWindow routine.
+
+The only place left is window.c.  This seems like a bad place to do it.  Any
+suggestions?
+
+- Joel McCormack
+

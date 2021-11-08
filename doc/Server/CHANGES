@@ -1,0 +1,12 @@
+The following changes have been made to this directory since R2:
+
+     o  CloseDownWellKnownSockets() added
+     o  ddxProcessArgument() and ddxUseMsg() added
+     o  AbortDDX() and ddxGiveUp() added
+     o  FlushAllOutput(), FlushIfCriticalOutputPending(), and
+        SetCriticalOutputPending() added
+     o  ErrorF(), FatalError(), and Error() documented
+     o  pScreen->SendGraphicsExpose() added
+     o  format arg removed from pScreen->CreatePixmap()
+     o  return val added to pBackingStore->RestoreAreas()
+     o  return val added to pGC->CopyArea() and pGC->CopyPlane()

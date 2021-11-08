@@ -1,0 +1,72 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 9 Jun 88 12:32:26 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA29216; Thu, 9 Jun 88 12:30:58 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 9 Jun 88 08:30:46 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA07687; Thu, 9 Jun 88 09:29:34 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 9 Jun 88 09:31:40 pdt
+Message-Id: <8806091631.AA07460@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: bitmap neg bw
+X-Mailer: mh6.5
+Date: Thu, 09 Jun 88 09:31:36 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   581
+### area:         bitmap
+### severity:     very low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Negative border widths make no sense and cause problems.
+DESCRIPTION:
+	Negative border widths are currently accepted and
+	processed as unsigned int in the create window calls.
+	This can cause unexpected results and is rather confusing
+	to the user. Better to catch the negative values, and
+	default to zero.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/bitmap/bitmap.c.old	Tue Jun  7 12:01:12 1988
+--- clients/bitmap/bitmap.c	Tue Jun  7 13:47:51 1988
+***************
+*** 540,546
+  
+    /* set attributes */
+  
+!   if ((option = attributes[bm_attr_borderwidth].value) != NULL)
+      borderwidth = atoi (option);
+  
+    option = attributes[bm_attr_bodyfont].value;
+
+--- 540,546 -----
+  
+    /* set attributes */
+  
+!   if ((option = attributes[bm_attr_borderwidth].value) != NULL) {
+      borderwidth = atoi (option);
+      if (borderwidth < 0)
+  	borderwidth = 0;
+***************
+*** 542,547
+  
+    if ((option = attributes[bm_attr_borderwidth].value) != NULL)
+      borderwidth = atoi (option);
+  
+    option = attributes[bm_attr_bodyfont].value;
+    font = option ? XLoadQueryFont (d, option) : NULL;
+
+--- 542,550 -----
+  
+    if ((option = attributes[bm_attr_borderwidth].value) != NULL) {
+      borderwidth = atoi (option);
++     if (borderwidth < 0)
++ 	borderwidth = 0;
++   }
+  
+    option = attributes[bm_attr_bodyfont].value;
+    font = option ? XLoadQueryFont (d, option) : NULL;
+

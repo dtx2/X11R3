@@ -1,0 +1,237 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Mon, 13 Jun 88 12:55:52 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA06990; Mon, 13 Jun 88 12:54:27 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Mon, 13 Jun 88 08:54:27 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA25893; Mon, 13 Jun 88 09:53:55 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Mon, 13 Jun 88 09:55:51 pdt
+Message-Id: <8806131655.AA02825@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: icon padding
+X-Mailer: mh6.5
+Date: Mon, 13 Jun 88 09:55:47 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   598
+### area:         uwm
+### severity:     enhancement
+### comments:     this is an unnecessary limit to functionality; uwm used to
+###               limit you to resizing on the screen, but not to moving.  if
+###               someone really wants this sort of thing, they should be able
+###               to do it.
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	No bounds on icon padding causes 'disappearing' icons.
+DESCRIPTION:
+	If an iconpad is large enough, when a window is iconified,
+	the icon is not on the screen. Since uwm limits windows to
+	the size of the screen, it is suggested that icons be clipped
+	to this size accordingly. If the padding is too large to
+	accomidate this, shrink it to fit.
+REPEAT-BY:
+	on our machine 'viconpad=999' worked fine to make it happen.
+SUGGESTED FIX:
+*** clients/uwm/Icons.c.orig	Sun Jun 12 18:23:30 1988
+--- clients/uwm/Icons.c	Sun Jun 12 18:40:45 1988
+***************
+*** 213,220
+        * Fix up sizes by padding.
+        */ 
+      if (!wmhints || !(wmhints->flags&(IconPixmapHint|IconWindowHint))) {
+!       icon_w += (HIconPad << 1);
+!       icon_h += (VIconPad << 1);
+      }
+  
+       /*
+
+--- 213,230 -----
+        * Fix up sizes by padding.
+        */ 
+      if (!wmhints || !(wmhints->flags&(IconPixmapHint|IconWindowHint))) {
+!       int hpad = VIconPad;
+!       int wpad = HIconPad;
+!       if (icon_h + (hpad << 1) > ScreenHeight) {
+! 	 hpad = (ScreenHeight - icon_h) / 2;
+! 	 if (hpad < 0) hpad = 0;
+!       }
+!       if (icon_w + (wpad << 1) > ScreenWidth) {
+! 	 wpad = (ScreenWidth - icon_w) / 2;
+! 	 if (wpad < 0) wpad = 0;
+!       }
+!       icon_w += (wpad << 1);
+!       icon_h += (hpad << 1);
+      }
+  
+       /*
+*** clients/uwm/GetButton.c.orig	Sun Jun 12 18:23:41 1988
+--- clients/uwm/GetButton.c	Sun Jun 12 18:24:00 1988
+***************
+*** 212,222
+       * and return FALSE.
+       */
+      if (button_event->type == Expose && (!Freeze || Frozen == 0)) {
+!         if (icon_info.width != 
+! 	  XTextWidth(IFontInfo, ICONSTR, strlen(ICONSTR))+(HIconPad << 1)) {
+! 	  XResizeWindow(dpy, icon, 
+! 	    XTextWidth(IFontInfo, ICONSTR, strlen(ICONSTR))+(HIconPad << 1),
+! 	    IFontInfo->ascent + IFontInfo->descent + (VIconPad << 1));
+  	}
+  	XClearWindow(dpy, icon);
+          if (icon_str_len != 0) {
+
+--- 212,227 -----
+       * and return FALSE.
+       */
+      if (button_event->type == Expose && (!Freeze || Frozen == 0)) {
+! 	int hpad = HIconPad;
+! 	int vpad = VIconPad;
+! 	int text_h = IFontInfo->ascent + IFontInfo->descent;
+! 	int text_len = XTextWidth(IFontInfo, ICONSTR, strlen(ICONSTR));
+! 
+! 	if (text_len + (hpad << 1) > ScreenWidth)
+! 	   hpad = (ScreenWidth - text_len) / 2;
+! 	if (text_h + (vpad << 1) > ScreenHeight) {
+! 	   vpad = (ScreenHeight - text_h) / 2;
+! 	   if (vpad < 0) vpad = 0;
+  	}
+          if (icon_info.width != text_len + (hpad << 1)) {
+  	  XResizeWindow(dpy, icon, text_len + (hpad << 1),
+***************
+*** 218,223
+  	    XTextWidth(IFontInfo, ICONSTR, strlen(ICONSTR))+(HIconPad << 1),
+  	    IFontInfo->ascent + IFontInfo->descent + (VIconPad << 1));
+  	}
+  	XClearWindow(dpy, icon);
+          if (icon_str_len != 0) {
+              XDrawImageString(dpy, icon,
+
+--- 223,232 -----
+  	   vpad = (ScreenHeight - text_h) / 2;
+  	   if (vpad < 0) vpad = 0;
+  	}
++         if (icon_info.width != text_len + (hpad << 1)) {
++ 	  XResizeWindow(dpy, icon, text_len + (hpad << 1),
++ 	    text_h + (vpad << 1));
++ 	}
+  	XClearWindow(dpy, icon);
+          if (icon_str_len != 0) {
+              XDrawImageString(dpy, icon, IconGC, hpad, vpad+IFontInfo->ascent,
+***************
+*** 220,227
+  	}
+  	XClearWindow(dpy, icon);
+          if (icon_str_len != 0) {
+!             XDrawImageString(dpy, icon,
+!                      IconGC, HIconPad, VIconPad+IFontInfo->ascent,
+                       icon_str, icon_str_len);
+  	    /*
+  	     * Remember to free the icon name string.
+
+--- 229,235 -----
+  	}
+  	XClearWindow(dpy, icon);
+          if (icon_str_len != 0) {
+!             XDrawImageString(dpy, icon, IconGC, hpad, vpad+IFontInfo->ascent,
+                       icon_str, icon_str_len);
+  	    /*
+  	     * Remember to free the icon name string.
+***************
+*** 312,317
+       */
+  
+      /*
+       * Set the window name to the new string.
+       */
+      XSetIconName(dpy, appl, ICONSTR);
+
+--- 320,337 -----
+       */
+  
+      /*
++      * Determine the new icon window configuration.
++      */
++     {
++     int vpad = VIconPad;
++     int hpad = HIconPad;
++     icon_h = IFontInfo->ascent + IFontInfo->descent;
++     if (icon_h + (vpad << 1) > ScreenHeight)
++ 	vpad = (ScreenHeight - icon_h) / 2;
++     icon_h = icon_h + (vpad << 1);
++     while((icon_w = XTextWidth(IFontInfo, ICONSTR, strlen(ICONSTR))) > ScreenWidth)
++ 	icon_str[strlen(icon_str) - 1] = '\0';;
++     /*
+       * Set the window name to the new string.
+       */
+      XSetIconName(dpy, appl, ICONSTR);
+***************
+*** 316,326
+       */
+      XSetIconName(dpy, appl, ICONSTR);
+  
+-     /*
+-      * Determine the new icon window configuration.
+-      */
+-     icon_h = IFontInfo->ascent + IFontInfo->descent + (VIconPad << 1);
+-     icon_w = XTextWidth(IFontInfo, ICONSTR, strlen(ICONSTR));
+      if (icon_w == 0) {
+          icon_w = icon_h;
+      }
+
+--- 336,341 -----
+       */
+      XSetIconName(dpy, appl, ICONSTR);
+  
+      if (icon_w == 0) {
+          icon_w = icon_h;
+      }
+***************
+*** 325,331
+          icon_w = icon_h;
+      }
+      else {
+! 	icon_w += (HIconPad << 1);
+      }
+  
+      if (icon_x < 0) icon_x = 0;
+
+--- 340,348 -----
+          icon_w = icon_h;
+      }
+      else {
+! 	if (icon_w + (hpad << 1) > ScreenWidth)
+! 	    hpad = (ScreenWidth -icon_w) / 2;
+! 	icon_w += (hpad << 1);
+      }
+  
+      if (icon_x < 0) icon_x = 0;
+***************
+*** 337,343
+  	icon_y = ScreenHeight - icon_h - (IBorderWidth << 1) + 1;
+      }
+  
+!     XMoveResizeWindow(dpy, icon, icon_x, icon_y, icon_w, icon_h);
+      XWarpPointer(dpy, None, icon, 
+      	0, 0, 0, 0, (icon_w >> 1), (icon_h >> 1));
+  
+
+--- 354,370 -----
+  	icon_y = ScreenHeight - icon_h - (IBorderWidth << 1) + 1;
+      }
+  
+!     if (icon_x != icon_info.x || icon_y != icon_info.y ||
+! 	   icon_h != icon_info.height || icon_w != icon_info.width)
+! 		XMoveResizeWindow(dpy, icon, icon_x, icon_y, icon_w, icon_h);
+!     else {
+! 	XClearWindow(dpy, icon);
+!         if (icon_str_len != 0) {
+!             XDrawImageString(dpy, icon, IconGC, hpad, vpad+IFontInfo->ascent,
+!                      icon_str, icon_str_len);
+! 	}
+!     }
+!     }
+      XWarpPointer(dpy, None, icon, 
+      	0, 0, 0, 0, (icon_w >> 1), (icon_h >> 1));
+  
+

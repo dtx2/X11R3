@@ -1,0 +1,70 @@
+SRCS =	\
+	plxBitblt.c \
+	plxBstore.c \
+	plxClip.c \
+	plxColor.c \
+	plxEvents.c \
+	plxFill.c \
+	plxFont.c \
+	plxGC.c \
+	plxImage.c \
+	plxGetsp.c \
+	plxGlyph.c \
+	plxInit.c \
+	plxKb.c \
+	plxMisc.c \
+	plxMouse.c \
+	plxPaint.c \
+	plxPixmap.c \
+	plxPoint.c \
+	plxPolygon.c \
+	plxPushpix.c \
+	plxScreen.c \
+	plxSetsp.c \
+	plxVideo.c \
+	plxWindow.c \
+	plxZeroln.c
+
+OFILES = plxInit.o plxEvents.o
+
+OBJS = \
+	plxBitblt.o \
+	plxBstore.o \
+	plxClip.o \
+	plxColor.o \
+	plxFill.o \
+	plxFont.o \
+	plxGC.o \
+	plxImage.o \
+	plxGetsp.o \
+	plxGlyph.o \
+	plxKb.o \
+	plxMisc.o \
+	plxMouse.o \
+	plxPaint.o \
+	plxPixmap.o \
+	plxPoint.o \
+	plxPolygon.o \
+	plxPushpix.o \
+	plxScreen.o \
+	plxSetsp.o \
+	plxVideo.o \
+	plxWindow.o \
+	plxZeroln.o
+
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+   INCLUDES = -I. -I../../include -I../mfb -I../../dix -I$(INCLUDESRC) -I../../../extensions/include 
+   LINTLIBS = ../../dix/llib-ldix.ln ../../os/4.2bsd/llib-los.ln \
+	      ../mfb/llib-lmfb.ln ../mi/llib-lmi.ln
+
+NormalLibraryObjectRule()
+
+all:: $(OFILES)
+
+lintlib:
+
+NormalLibraryTarget(plx,$(OBJS))
+NormalLintTarget($(SRCS))
+DependTarget()
+InstallManPage(Xplx,$(MANDIR))

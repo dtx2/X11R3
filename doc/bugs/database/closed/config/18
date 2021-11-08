@@ -1,0 +1,43 @@
+Return-Path: X%pupthy2.Princeton.EDU@princeton.edu
+Received: by expo.lcs.mit.edu; Wed, 15 Jun 88 21:04:40 EDT
+Received: from pupthy2.Princeton.EDU by Princeton.EDU (5.58+++/1.64)
+	id AA10922; Wed, 15 Jun 88 21:02:32 EDT
+Message-Id: <8806160102.AA10922@Princeton.EDU>
+Date: Wed, 15 Jun 88 21:02:50 edt
+From: X%pupthy2.Princeton.EDU@princeton.edu
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   606
+### area:         config
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Ridge 32-C
+
+CLIENT OPERATING SYSTEM:
+	ROS (= SysV with BSD extensions)
+
+DISPLAY:
+	none.
+
+SYNOPSIS:
+	Installation problems occur for client-only installations.
+
+DESCRIPTION:
+	When installing the X11 distribution with no servers defined,
+	the top-level "make World" executes "make depend" in the ./server
+	directory.  However, the make variable $(ALL) in ./server/Makefile
+	is empty, and this causes a shell syntax error in the loops
+	"for i in $(ALL); ...".
+
+FIX:
+	I simply commented out the "$(SERVERSRC)" entry in the definition
+	of DIRSTOMAKE in the top-level Imakefile.
+	There must be a cleaner way to accomplish this...
+
+

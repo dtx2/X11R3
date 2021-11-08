@@ -1,0 +1,45 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Thu, 22 Sep 88 08:11:14 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8809221211.AA21090@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: R3beta and the Input Synthesis Extension
+Organization: X Consortium, MIT Laboratory for Computer Science
+Date: Thu, 22 Sep 88 08:11:13 EDT
+
+### bug number:   995
+### area:         server
+### severity:     low
+### comments:     
+
+
+
+------- Forwarded Message
+
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:scotthe%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Wed, 21 Sep 88 23:04:35 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Wed 21 Sep 88 23:04:38-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ac03963; 21 Sep 88 19:26 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa04919; 21 Sep 88 19:11 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA09120; Wed, 21 Sep 88 15:10:27 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA03787; Wed, 21 Sep 88 15:10:30 PDT
+From: Scott Hennes <scotthe@shark.gwd.tek.com>
+Message-Id: <8809212210.AA03787@shark.GWD.TEK.COM>
+Date: Wed, 21 Sep 88 15:10:27 PDT
+To: Jim Fulton <jim@expo.lcs.mit.edu>
+Subject: Input Synthesis Extension Initialization
+
+Should this be in miinitext.c?
+
+#ifdef XTESTEXT1
+XTestExtension1Init();
+#endif XTESTEXT1
+
+It was in the original HP documentation on the extension and I don't see
+it anywhere in pre-R3.
+
+------- End of Forwarded Message
+
+

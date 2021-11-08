@@ -1,0 +1,202 @@
+echo BlkPScrn.3X11 now BlackPixelOfScreen.3X11
+mv BlkPScrn.3X11 BlackPixelOfScreen.3X11
+echo ImageOrd.3X11 now ImageByteOrder.3X11
+mv ImageOrd.3X11 ImageByteOrder.3X11
+echo IsCKey.3X11 now IsCursorKey.3X11
+mv IsCKey.3X11 IsCursorKey.3X11
+echo XAllColor.3X11 now XAllocColor.3X11
+mv XAllColor.3X11 XAllocColor.3X11
+echo XAllEvnt.3X11 now XAllowEvents.3X11
+mv XAllEvnt.3X11 XAllowEvents.3X11
+echo XCKCntrl.3X11 now XChangeKeyboardControl.3X11
+mv XCKCntrl.3X11 XChangeKeyboardControl.3X11
+echo XCKMping.3X11 now XChangeKeyboardMapping.3X11
+mv XCKMping.3X11 XChangeKeyboardMapping.3X11
+echo XCPCntrl.3X11 now XChangePointerControl.3X11
+mv XCPCntrl.3X11 XChangePointerControl.3X11
+echo XCSSet.3X11 now XChangeSaveSet.3X11
+mv XCSSet.3X11 XChangeSaveSet.3X11
+echo XCWAttrib.3X11 now XChangeWindowAttributes.3X11
+mv XCWAttrib.3X11 XChangeWindowAttributes.3X11
+echo XClrArea.3X11 now XClearArea.3X11
+mv XClrArea.3X11 XClearArea.3X11
+echo XConfWin.3X11 now XConfigureWindow.3X11
+mv XConfWin.3X11 XConfigureWindow.3X11
+echo XCreCmap.3X11 now XCreateColormap.3X11
+mv XCreCmap.3X11 XCreateColormap.3X11
+echo XCreFCur.3X11 now XCreateFontCursor.3X11
+mv XCreFCur.3X11 XCreateFontCursor.3X11
+echo XCreGC.3X11 now XCreateGC.3X11
+mv XCreGC.3X11 XCreateGC.3X11
+echo XCreImage.3X11 now XCreateImage.3X11
+mv XCreImage.3X11 XCreateImage.3X11
+echo XCrePmap.3X11 now XCreatePixmap.3X11
+mv XCrePmap.3X11 XCreatePixmap.3X11
+echo XCreReg.3X11 now XCreateRegion.3X11
+mv XCreReg.3X11 XCreateRegion.3X11
+echo XCreWin.3X11 now XCreateWindow.3X11
+mv XCreWin.3X11 XCreateWindow.3X11
+echo XDefCur.3X11 now XDefineCursor.3X11
+mv XDefCur.3X11 XDefineCursor.3X11
+echo XDesWin.3X11 now XDestroyWindow.3X11
+mv XDesWin.3X11 XDestroyWindow.3X11
+echo XDrArc.3X11 now XDrawArc.3X11
+mv XDrArc.3X11 XDrawArc.3X11
+echo XDrIStr.3X11 now XDrawImageString.3X11
+mv XDrIStr.3X11 XDrawImageString.3X11
+echo XDrLine.3X11 now XDrawLine.3X11
+mv XDrLine.3X11 XDrawLine.3X11
+echo XDrPoint.3X11 now XDrawPoint.3X11
+mv XDrPoint.3X11 XDrawPoint.3X11
+echo XDrRect.3X11 now XDrawRectangle.3X11
+mv XDrRect.3X11 XDrawRectangle.3X11
+echo XDrString.3X11 now XDrawString.3X11
+mv XDrString.3X11 XDrawString.3X11
+echo XDrText.3X11 now XDrawText.3X11
+mv XDrText.3X11 XDrawText.3X11
+echo XERegion.3X11 now XEmptyRegion.3X11
+mv XERegion.3X11 XEmptyRegion.3X11
+echo XFillRect.3X11 now XFillRectangle.3X11
+mv XFillRect.3X11 XFillRectangle.3X11
+echo XGetDef.3X11 now XGetDefault.3X11
+mv XGetDef.3X11 XGetDefault.3X11
+echo XGetRes.3X11 now XrmGetResource.3X11
+mv XGetRes.3X11 XrmGetResource.3X11
+echo XGetVInfo.3X11 now XGetVisualInfo.3X11
+mv XGetVInfo.3X11 XGetVisualInfo.3X11
+echo XGetWAttr.3X11 now XGetWindowAttribute.3X11
+mv XGetWAttr.3X11 XGetWindowAttribute.3X11
+echo XGetWProp.3X11 now XGetWindowProperty.3X11
+mv XGetWProp.3X11 XGetWindowProperty.3X11
+echo XGrButton.3X11 now XGrabButton.3X11
+mv XGrButton.3X11 XGrabButton.3X11
+echo XGrKey.3X11 now XGrabKey.3X11
+mv XGrKey.3X11 XGrabKey.3X11
+echo XGrKeybrd.3X11 now XGrabKeyboard.3X11
+mv XGrKeybrd.3X11 XGrabKeyboard.3X11
+echo XGrPntr.3X11 now XGrabPointer.3X11
+mv XGrPntr.3X11 XGrabPointer.3X11
+echo XGrServer.3X11 now XGrabServer.3X11
+mv XGrServer.3X11 XGrabServer.3X11
+echo XInitial.3X11 now XrmInitialize.3X11
+mv XInitial.3X11 XrmInitialize.3X11
+echo XInstCmap.3X11 now XInstallColormap.3X11
+mv XInstCmap.3X11 XInstallColormap.3X11
+echo XInterReg.3X11 now XIntersectRegion.3X11
+mv XInterReg.3X11 XIntersectRegion.3X11
+echo XInternA.3X11 now XInternAtom.3X11
+mv XInternA.3X11 XInternAtom.3X11
+echo XListFont.3X11 now XListFonts.3X11
+mv XListFont.3X11 XListFonts.3X11
+echo XLookKsym.3X11 now XLookupKeysym.3X11
+mv XLookKsym.3X11 XLookupKeysym.3X11
+echo XMDBases.3X11 now XrmMergeDatabases.3X11
+mv XMDBases.3X11 XrmMergeDatabases.3X11
+echo XMapWin.3X11 now XMapWindow.3X11
+mv XMapWin.3X11 XMapWindow.3X11
+echo XNEvent.3X11 now XNextEvent.3X11
+mv XNEvent.3X11 XNextEvent.3X11
+echo XOpDsply.3X11 now XOpenDisplay.3X11
+mv XOpDsply.3X11 XOpenDisplay.3X11
+echo XParGeom.3X11 now XParseGeometry.3X11
+mv XParGeom.3X11 XParseGeometry.3X11
+echo XPolyReg.3X11 now XPolygonRegion.3X11
+mv XPolyReg.3X11 XPolygonRegion.3X11
+echo XPutBEvnt.3X11 now XPutBackEvent.3X11
+mv XPutBEvnt.3X11 XPutBackEvent.3X11
+echo XPutRes.3X11 now XrmPutResource.3X11
+mv XPutRes.3X11 XrmPutResource.3X11
+echo XQBSize.3X11 now XQueryBestSize.3X11
+mv XQBSize.3X11 XQueryBestSize.3X11
+echo XQColor.3X11 now XQueryColor.3X11
+mv XQColor.3X11 XQueryColor.3X11
+echo XQPointer.3X11 now XQueryPointer.3X11
+mv XQPointer.3X11 XQueryPointer.3X11
+echo XQTree.3X11 now XQueryTree.3X11
+mv XQTree.3X11 XQueryTree.3X11
+echo XRaiseWin.3X11 now XRaiseWindow.3X11
+mv XRaiseWin.3X11 XRaiseWindow.3X11
+echo XReadBF.3X11 now XReadBitmapFile.3X11
+mv XReadBF.3X11 XReadBitmapFile.3X11
+echo XRecCur.3X11 now XRecolorCursor.3X11
+mv XRecCur.3X11 XRecolorCursor.3X11
+echo XReparWin.3X11 now XReparentWindow.3X11
+mv XReparWin.3X11 XReparentWindow.3X11
+echo XSContext.3X11 now XSaveContext.3X11
+mv XSContext.3X11 XSaveContext.3X11
+echo XSInput.3X11 now XSelectInput.3X11
+mv XSInput.3X11 XSelectInput.3X11
+echo XSeArcMod.3X11 now XSetArcMode.3X11
+mv XSeArcMod.3X11 XSetArcMode.3X11
+echo XSeClassH.3X11 now XSetClassHint.3X11
+mv XSeClassH.3X11 XSetClassHint.3X11
+echo XSeClipO.3X11 now XSetClipOrigin.3X11
+mv XSeClipO.3X11 XSetClipOrigin.3X11
+echo XSeClosDM.3X11 now XSetCloseDownMode.3X11
+mv XSeClosDM.3X11 XSetCloseDownMode.3X11
+echo XSeCommnd.3X11 now XSetCommand.3X11
+mv XSeCommnd.3X11 XSetCommand.3X11
+echo XSeErrHan.3X11 now XSetErrorHandler.3X11
+mv XSeErrHan.3X11 XSetErrorHandler.3X11
+echo XSeEvent.3X11 now XSendEvent.3X11
+mv XSeEvent.3X11 XSendEvent.3X11
+echo XSeFillS.3X11 now XSetFillStyle.3X11
+mv XSeFillS.3X11 XSetFillStyle.3X11
+echo XSeFont.3X11 now XSetFont.3X11
+mv XSeFont.3X11 XSetFont.3X11
+echo XSeFontP.3X11 now XSetFontPath.3X11
+mv XSeFontP.3X11 XSetFontPath.3X11
+echo XSeIcName.3X11 now XSetIconName.3X11
+mv XSeIcName.3X11 XSetIconName.3X11
+echo XSeIcSH.3X11 now XSetIconSizes.3X11
+mv XSeIcSH.3X11 XSetIconSizes.3X11
+echo XSeInFoc.3X11 now XSetInputFocus.3X11
+mv XSeInFoc.3X11 XSetInputFocus.3X11
+echo XSeLAttr.3X11 now XSetLineAttribute.3X11
+mv XSeLAttr.3X11 XSetLineAttribute.3X11
+echo XSeNormH.3X11 now XSetNormalHints.3X11
+mv XSeNormH.3X11 XSetNormalHints.3X11
+echo XSePMap.3X11 now XSetPointerMapping.3X11
+mv XSePMap.3X11 XSetPointerMapping.3X11
+echo XSeScSav.3X11 now XSetScreenSaver.3X11
+mv XSeScSav.3X11 XSetScreenSaver.3X11
+echo XSeSelOwn.3X11 now XSetSelectionOwner.3X11
+mv XSeSelOwn.3X11 XSetSelectionOwner.3X11
+echo XSeSizeH.3X11 now XSetSizeHints.3X11
+mv XSeSizeH.3X11 XSetSizeHints.3X11
+echo XSeStandC.3X11 now XSetStandardColormap.3X11
+mv XSeStandC.3X11 XSetStandardColormap.3X11
+echo XSeStandP.3X11 now XSetStandardProperties.3X11
+mv XSeStandP.3X11 XSetStandardProperties.3X11
+echo XSeState.3X11 now XSetState.3X11
+mv XSeState.3X11 XSetState.3X11
+echo XSeTile.3X11 now XSetTile.3X11
+mv XSeTile.3X11 XSetTile.3X11
+echo XSeTransH.3X11 now XSetTransientForHint.3X11
+mv XSeTransH.3X11 XSetTransientForHint.3X11
+echo XSeWMH.3X11 now XSetWMHints.3X11
+mv XSeWMH.3X11 XSetWMHints.3X11
+echo XSeZoomH.3X11 now XSetZoomHints.3X11
+mv XSeZoomH.3X11 XSetZoomHints.3X11
+echo XStBytes.3X11 now XStoreBytes.3X11
+mv XStBytes.3X11 XStoreBytes.3X11
+echo XStColors.3X11 now XStoreColors.3X11
+mv XStColors.3X11 XStoreColors.3X11
+echo XStName.3X11 now XStoreName.3X11
+mv XStName.3X11 XStoreName.3X11
+echo XStTKsym.3X11 now XStringToKeysym.3X11
+mv XStTKsym.3X11 XStringToKeysym.3X11
+echo XSync.3X11 now XSynchronize.3X11
+mv XSync.3X11 XSynchronize.3X11
+echo XTextExt.3X11 now XTextExtents.3X11
+mv XTextExt.3X11 XTextExtents.3X11
+echo XTextWid.3X11 now XTextWidth.3X11
+mv XTextWid.3X11 XTextWidth.3X11
+echo XTranWCo.3X11 now XTranslateCoordinates.3X11
+mv XTranWCo.3X11 XTranslateCoordinates.3X11
+echo XUQuark.3X11 now XrmUniqueQuark.3X11
+mv XUQuark.3X11 XrmUniqueQuark.3X11
+echo XUnmapWin.3X11 now XUnmapWindow.3X11
+mv XUnmapWin.3X11 XUnmapWindow.3X11
+echo XWarpPntr.3X11 now XWarpPointer.3X11
+mv XWarpPntr.3X11 XWarpPointer.3X11

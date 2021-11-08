@@ -1,0 +1,67 @@
+Return-Path: rusty%cartan.Berkeley.EDU@berkeley.edu
+Received: from cartan.Berkeley.EDU by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 18:03:29 EST
+Received: by cartan.Berkeley.EDU (5.58/1.26)
+	id AA06317; Thu, 17 Mar 88 15:02:32 PST
+Date: Thu, 17 Mar 88 15:02:32 PST
+From: rusty%cartan.Berkeley.EDU@berkeley.edu (Rusty Wright)
+Message-Id: <8803172302.AA06317@cartan.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: makefile bug when no servers are defined
+
+### bug number:   165
+### area:         config
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+
+	X11 release 2
+
+CLIENT MACHINE:
+
+	VAX 11/750
+
+CLIENT OPERATING SYSTEM:
+
+	4.3bsd
+
+DISPLAY:
+
+	>>>NONE<<<
+
+SYNOPSIS:
+
+	imake.rules generates a bad makefile when no servers are defined
+
+DESCRIPTION:
+
+	The 1st line of "make -n" yields:
+
+	case '-n' in *[i]*) set +e;; esac;  for i in ; do  (set -x; install -c  $i /usr/local/x11/bin);  done
+
+	Notice that the line contains a shell for loop which says
+
+		for i in ; do (set -x; ...
+
+	The shell barfs on "for i in ;" complaining
+
+		"syntax error at line 1: ';' unexpected
+
+REPEAT-BY:
+
+	My Vax.macros file contains:
+
+	/* These define the server(s) you want */
+	/*#define XqvssServer Xqvss */
+	/*#define XqdssServer Xqdss */
+
+FIX:
+
+	I dunno; delete the for loop when no servers are defined?
+	Easier perhaps would be to make a "null" server which is
+	always there (in the for loop, and in the servers directory)
+	whose Makefile just echos something appropriate.
+
+

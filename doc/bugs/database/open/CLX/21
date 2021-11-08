@@ -1,0 +1,43 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 16 Aug 88 08:27:18 EDT
+Return-Path: <harrisr@turing.cs.rpi.edu>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 184734; 15 Aug 88 18:59:01 EDT
+Received: by expo.lcs.mit.edu; Mon, 15 Aug 88 18:58:32 EDT
+Received: by fs3.cs.rpi.edu (5.54/1.2-RPI-CS-Dept)
+	id AA02407; Mon, 15 Aug 88 18:57:40 EDT
+Date: Mon, 15 Aug 88 18:57:38 EDT
+From: harrisr@turing.cs.rpi.edu (Richard Harris)
+Received: by turing.cs.rpi.edu (4.0/1.2-RPI-CS-Dept)
+	id AA18141; Mon, 15 Aug 88 18:57:38 EDT
+Message-Id: <8808152257.AA18141@turing.cs.rpi.edu>
+To: RWS@zermatt.lcs.mit.edu
+Subject: Re: CLX bugs
+Cc: bug-clx@expo.lcs.mit.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Tue, 16 Aug 88 08:28 EDT
+Resent-Message-Id: <19880816122808.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   878
+### area:         CLX
+### severity:     low
+### comments:     
+
+
+
+I have looked through the CLX files, and I can't find the functions to use
+to get the sequence number of replys and events.
+
+On another subject, the definition of pixarray (and possibly other deftypes 
+used in typep or typecase) needs to be changed to be made portable.
+According to CLtL p. 46, just because an array is created with :element-type '(unsigned-byte 4)
+(for example)  does not guarantee that (typep array '(array (unsigned-byte 4)))
+will return non-NIL (in fact, there is no guarantee that (typep array 'pixarray)
+will return non-NIL, either).
+The current definition of pixarray is fine for declarations, but something like
+(deftype pixarray () '(array * (* *)))
+is needed in order to portably use pixarray in typep, typecase, and etypecase.
+  
+Rick Harris
+
+

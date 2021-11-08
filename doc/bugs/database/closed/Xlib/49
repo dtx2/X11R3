@@ -1,0 +1,68 @@
+Return-Path: jlf%sierra.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Thu, 11 Aug 88 16:22:41 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA08973; Thu, 11 Aug 88 15:22:36 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA06320; 3.2/CRI-3.1; Thu, 11 Aug 88 15:26:36 CDT
+Received: by jlf.cray.com
+	id AA03216; 3.2/CRI-3.1; Thu, 11 Aug 88 15:26:30 CDT
+Date: Thu, 11 Aug 88 15:26:30 CDT
+From: jlf%sierra.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8808112026.AA03216@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xatomtype.h NumWMPropHints incorrect
+Cc: bobo@sierra.cray.com, hrp@sierra.cray.com, joel@uf.msc.umn.edu,
+        wtg@sierra.cray.com
+
+### bug number:   850
+### area:         Xlib
+### severity:     low
+### comments:     [already fixed by rws]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+
+	XSetWMHints failed test suite
+
+DESCRIPTION:
+
+	XSetWMHints was only sending 8 of 9 elements of the
+	xPropSizeHints structure.
+
+REPEAT-BY:
+
+	Run test for XSetWMHints
+
+FIX:
+	NumPropWMHintsElements should be 9, not 8.
+
+Xlib/Xatomtype.h	Thu Aug 11 14:53:06 1988
+***************
+*** 54,60 ****
+      BITS32 iconMask;
+      CARD32 windowGroup;
+    } xPropWMHints;
+! #define NumPropWMHintsElements 8 /* number of elements in this structure */
+  
+  /* this structure defines the icon size hints information */
+  typedef struct {
+--- 54,60 ----
+      BITS32 iconMask;
+      CARD32 windowGroup;
+    } xPropWMHints;
+! #define NumPropWMHintsElements 9 /* number of elements in this structure */
+  
+  /* this structure defines the icon size hints information */
+  typedef struct {
+

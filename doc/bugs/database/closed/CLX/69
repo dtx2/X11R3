@@ -1,0 +1,70 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Fri, 30 Sep 88 10:41:40 EDT
+Return-Path: <Oren@home.csc.ti.com>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 196089; 22 Sep 88 09:21:13 EDT
+Received: by expo.lcs.mit.edu; Thu, 22 Sep 88 09:18:23 EDT
+Received: by ti.com id AA10286; Thu, 22 Sep 88 08:17:56 CDT
+Received: from SI by tilde id AA13648; Thu, 22 Sep 88 08:09:18 CDT
+Message-Id: <2799925750-8470894@SI>
+Sender: OREN@si.csc.ti.com
+Date: Thu, 22 Sep 88  08:09:10 CDT
+From: LaMott Oren <Oren@home.csc.ti.com>
+To: bug-clx@expo.lcs.mit.edu
+Cc: newton@csvax.caltech.edu (Mike Newton)
+Subject: CLX and AKCL
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Fri, 30 Sep 88 10:45 EDT
+Resent-Message-Id: <19880930144526.1.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   1028
+### area:         CLX
+### severity:     medium
+### comments:     
+
+------- Forwarded Message
+
+Date: Thu, 22 Sep 88 03:41:32 PDT
+From: newton@csvax.caltech.edu (Mike Newton)
+Subject: CLX and AKCL
+To:   Oren@Home.csc.ti.com
+
+
+Hi -- I'm not sure if you are the right person to send this to or not.  Please
+tell me who it is if not.  Enclosed are two bug fixes for the version
+of CLX that is sitting on your machine (csc.ti.com).  These are both
+really necessary to get CLX running under AKCL (1-61).
+
+Also, in one of your postings to lispx, you mentioned the patches to 
+KCL that harrisr@turing.cs.rpi.edu made.  My attempts to get in touch
+w/ him have failed, would you have copies of these?
+
+Feel free to forward this message:
+
+
+Hi -- two bugs w/ CLX as it is on csc.ti.com now:
+
+[1] Support for KCL is a little wrong.  The 'defsystem' and the
+3 lines of code in tcpinit should agree.  I suggest a directory
+'tcp'.  This is minor and easy to fix.
+
+[2] In dependent.lsp, open-x-stream is special cased for KCL, but has a bug:
+The new version should be:
+
+;;; Following function changed by me -- MON
+;;; to replace (+ *x-tcp-port* display) w/ display
+;;; this was done since tcp/socket.c adds in X_TCP_PORT if 
+;;; it cant do it through a socket connection.
+
+#+kcl
+(defun open-x-stream (host display protocol)
+  protocol ;; unused
+  (let ((stream (tcp:open-tcp-stream host display)))
+    (if (streamp stream)
+	stream
+      (error "Cannot connect to server: ~A:~D" host display))))
+
+------- End of Forwarded Message
+
+P.S. I know very little about AKCL, and have no patches for it.
+

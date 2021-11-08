@@ -1,0 +1,173 @@
+Return-Path: erin@austin.lockheed.com
+Received: by EXPO.LCS.MIT.EDU; Wed, 4 May 88 15:19:07 EDT
+Received: by shrike.Austin.Lockheed.COM (4.0/1.25); Wed, 4 May 88 11:51:05 CDT
+Date: Wed, 4 May 88 11:51:05 CDT
+From: Erin Green <erin@austin.lockheed.com>
+Message-Id: <8805041651.AA14766@shrike.Austin.Lockheed.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: Bug Report
+Cc: erin@austin.lockheed.com
+
+### bug number:   452
+### area:         server
+### severity:     medium high
+### comments:     was a GPX problem that has been solved
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VAXstation II
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.0
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+        An image which was obtained using XGetImage and then restored 
+	to the screen using XPutImage is often skewed horizontally.
+	Also, occasionally get the error "XIO: bad address" when
+	using XPutImage.
+
+DESCRIPTION:
+	When using XGetImage to save the image of a window and then
+	restoring the window image using XPutImage, portions of the
+	restored image are often skewed horizontally.  This problem
+	seems to occur when the total image block size (width X height)
+	is greater than 8192 bytes AND the image width is not evenly
+	divisible by 4.  We are using the same values for width and
+	height in the Get and Put calls.  If the image width is divis-
+	by 4, then the restore works fine.  Also, the XPutImage routine
+	bombed several times when the total image size was less 8192,
+	specificially this happened with image sizes: 81x100, 81x101, 
+	127x64.  The error was:  "XIO: bad address".
+
+REPEAT-BY:
+        TEST PROGRAM:
+
+/*
+ DESCRIPTION: This routine tests the saving and restoring of the
+	      contents of a window.
+
+ NAME:    Marianna Clark, Lockheed, Austin, TX, 512-448-5285
+ DATE:    5/4/88
+ ACTION:  Created.
+
+ NOTE: This routine uses the default colormap.  Pixels values 3 
+       and 2 need to be different colors from the window background
+       color (pixel 0).
+ */
+ 
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+main()
+{
+   Display
+      *display;
+   Window
+      window, root;
+   GC
+      gc;
+   XImage
+      *ximage;
+   unsigned int
+      screen,
+      width, height, border, depth;
+   XSizeHints
+      sizehints;
+   XEvent
+      event;
+   Status
+      status;
+   int 
+      xo, yo;
+   char **argv, *sms="SMS";
+
+   argv = &sms;
+
+/*
+ *  CREATE AN X WINDOW
+ */
+
+   display = XOpenDisplay("");
+   if (display == 0)
+   {
+      printf("error: can't open display\n");
+      exit(1);
+   }
+
+   printf(" Enter window origin (e.g. 100 50): ");
+   scanf("%d %d", &sizehints.x, &sizehints.y);
+   printf(" Enter window width: ");
+   scanf("%d", &sizehints.width);
+   printf(" Enter window height: ");
+   scanf("%d", &sizehints.height);
+   screen = DefaultScreen( display );
+/*
+   sizehints.x = sizehints.y = 0;
+   sizehints.width = DisplayWidth( display, screen );
+   sizehints.height = DisplayHeight( display, screen );
+ */
+   sizehints.flags = USPosition;
+
+   window = XCreateSimpleWindow( display,
+		      DefaultRootWindow(display), sizehints.x,
+		      sizehints.y, sizehints.width, sizehints.height,
+		      0, 0, 0);
+
+   XSetStandardProperties( display, window, sms,
+		      sms, None, &argv, 1, &sizehints );
+
+   XMapWindow( display, window );
+
+   XSelectInput( display, window, ExposureMask );
+   XNextEvent( display, &event );
+
+   status = XGetGeometry( display, window, &root, 
+			  &xo, &yo, &width, &height, &border, &depth );
+
+   printf("\n window origin: %d, %d, window size: %dx%d, depth: %d\n",
+	   xo, yo, width, height, depth );
+
+/*
+ *  DRAW SOME STUFF
+ */
+   
+    gc =  XCreateGC( display, window, 0, 0 );
+    XSetForeground( display, gc, 2 );
+
+    XDrawRectangle( display, window, gc, 0,0, width, height );
+    XDrawRectangle( display, window, gc, 10,10, width-20, height-20 );
+    XDrawRectangle( display, window, gc, 20,20, width-40, height-40 );
+    XSync( display, 0 );
+    sleep(5);
+
+    printf(" getting the image ...\n");
+    ximage = XGetImage( display, window, 0,0,   /* origin */
+	       width, height,
+	       XAllPlanes(),
+	       ZPixmap );
+
+    printf(" draw something else, then put the image back\n");
+    XSetForeground( display, gc, 3 );
+    XDrawRectangle( display, window, gc, 30,30, width-60, height-60 );
+    XDrawRectangle( display, window, gc, 40,40, width-80, height-80 );
+    XSync( display, 0 );
+    sleep(5);
+
+    printf(" saved width and height are: %dx%d\n", ximage->width,
+	       ximage->height);
+    XPutImage( display, window, gc, ximage,
+	       0, 0,
+	       0, 0,
+	       ximage->width, ximage->height );
+    XSync( display, 0 );
+    sleep(5);
+}
+
+FIX:
+	(Preferred, but not necessary)
+

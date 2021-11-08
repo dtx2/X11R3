@@ -1,0 +1,13 @@
+STD_DEFINES = ServerDefines
+       SRCS = zoid.c bezier.c plxvideo.c xtest1di.c xtest1dd.c
+       OBJS = zoid.o bezier.o plxvideo.o xtest1di.o xtest1dd.o
+CDEBUGFLAGS = ServerCDebugFlags
+   INCLUDES = -I../include -I$(INCLUDESRC) -I$(SERVERSRC)/include
+   LINTLIBS = ../../server/dix/llib-ldix.ln ../../server/os/4.2bsd/llib-los.ln
+
+NormalLibraryObjectRule()
+NormalLibraryTarget(ext,$(OBJS))
+LintLibraryTarget(ext,$(SRCS))
+NormalLintTarget($(SRCS))
+
+DependTarget()

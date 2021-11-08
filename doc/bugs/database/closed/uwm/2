@@ -1,0 +1,56 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 21:20:54 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08272; Wed, 16 Mar 88 21:19:53 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 11:07:12 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA07657; Wed, 16 Mar 88 11:10:51 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 11:11:31 pst
+Message-Id: <8803161911.AA24479@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 11:11:23 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   142
+### area:         uwm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	uwm variable 'autoselect' does not work.
+DESCRIPTION:
+	Documentation states that with 'autoselect' in a uwm file,
+	when a menu is activated, the cursor will be placed on the
+	first entry below the header. This was not working. It did
+	not matter whether or not 'autoselect' or 'noautoselect' was
+	in the startup file. The cursor was always placed on the header
+	when a menu was activated.
+REPEAT-BY:
+	Placed 'autoselect' in my startup file.
+FIX:
+*** clients/uwm/Menu.c.R2	Fri Mar 11 15:14:25 1988
+--- clients/uwm/Menu.c	Fri Mar 11 15:17:25 1988
+***************
+*** 130,136
+      MapMenu(menu, x, y);
+      if (Autoselect) {
+          event_x = (menu->width >> 2) * 3;
+!         event_y = (menu->iheight >> 1);
+          XWarpPointer(dpy, None, menu->w, 0, 0, 0, 0, event_x, event_y);
+  	goto hilite;
+      }
+
+--- 130,136 -----
+      MapMenu(menu, x, y);
+      if (Autoselect) {
+          event_x = (menu->width >> 2) * 3;
+!         event_y = (menu->iheight >> 1) * 3;
+          XWarpPointer(dpy, None, menu->w, 0, 0, 0, 0, event_x, event_y);
+  	goto hilite;
+      }
+

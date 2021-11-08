@@ -1,0 +1,98 @@
+Return-Path: jg@src.dec.com
+Received: by expo.lcs.mit.edu; Thu, 6 Oct 88 19:33:22 EDT
+Received: from jumbo.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA15382; Thu, 6 Oct 88 13:51:38 PDT
+Received: from localhost by jumbo.pa.dec.com (5.54.4/4.7.34)
+	id AA19993; Thu, 6 Oct 88 13:51:32 PDT
+Message-Id: <8810062051.AA19993@jumbo.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: Bug in connection setup information.
+Date: Thu, 06 Oct 88 13:51:29 -0700
+From: jg@src.dec.com
+
+### bug number:   1061
+### area:         server
+### severity:     medium high
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    Shouldn't matter, I'd expect it to occor on anyone's system or OS.
+    Machine is running Ultrix 3.0, for the record.
+
+
+DISPLAY:
+    Shouldn't matter.  Monochrome frame buffer
+
+
+WINDOW MANAGER:
+    Shouldn't matter
+
+
+AREA:
+    server.
+
+
+SYNOPSIS:
+    Wrong information reported in the connection setup information.
+
+
+DESCRIPTION:
+    If you compile a server with backing store disabled, the server
+    still reports that you have backing store and save-unders enabled.
+
+
+REPEAT BY:
+    Compile a server with backing store disabled.  Use xdpyinfo to look
+    at the result...
+
+name of display:    :0.0
+version number:    11.0
+vendor string:    MIT X Consortium, Mary's hack
+vendor release number:    3
+maximum request size:  16384 longwords (65536 bytes)
+motion buffer size:  100
+bitmap unit, bit order, padding:    32, LSBFirst, 32
+image byte order:    LSBFirst
+keycode range:    minimum 86, maximum 251
+default screen number:    0
+number of screens:    1
+
+screen #0:
+  dimensions:    1024x864 pixels (260x219 millimeters)
+  root window id:    0x8006b
+  depth of root window:    1 plane
+  number of colormaps:    minimum 1, maximum 1
+  default colormap:    0x80065
+  default number of colormap cells:    2
+  preallocated pixels:    black 0, white 1
+  options:    backing-store YES, save-unders YES
+  current input event mask:    0xb80000
+    SubstructureNotifyMask   SubstructureRedirectMask FocusChangeMask          
+    ColormapChangeMask       
+  number of visuals:    1
+  default visual id:  0x80064
+  visual:
+    visual id:    0x80064
+    class:    StaticGray
+    depth:    1 plane
+    size of colormap:    2 entries
+    red, green, blue masks:    0x0, 0x0, 0x0
+    significant bits in color specification:    1 bits
+
+
+SAMPLE FIX:
+   As time is very short, I thought it was better to file this immediately
+   rather than wait until I have time to go do what ought to be a trivial
+   fix sometime next week....
+    
+

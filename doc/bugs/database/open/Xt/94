@@ -1,0 +1,150 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:glennw%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Thu, 15 Sep 88 23:06:42 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Thu 15 Sep 88 23:03:49-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id aa05391; 15 Sep 88 21:51 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa13003; 15 Sep 88 21:13 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA02475; Thu, 15 Sep 88 18:16:52 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA22640; Thu, 15 Sep 88 18:16:37 PDT
+From: Glenn Widener <glennw@shark.gwd.tek.com>
+Message-Id: <8809160116.AA22640@shark.GWD.TEK.COM>
+Date: Thu, 15 Sep 88 18:16:33 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com
+Fcc: //shark/bd/X11/doc/bugtracking/xbugs_mail
+Fcc: buglog
+Subject: X11 R3 bug report: client cannot get VisibilityNotify events
+
+### bug number:   976
+### area:         Xt
+### severity:     low
+### comments:     
+
+
+Glenn Widener
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2494
+glennw@shark.GWD.TEK.COM
+
+--------------------
+VERSION:
+	X11 release 3
+
+CLIENT MACHINE:
+	Tektronix 4317 (actually any)
+
+CLIENT OPERATING SYSTEM:
+	UTEK 3.0 (~=4.2bsd kernel + some 4.3 utilities)
+	(actually any)
+
+DISPLAY:
+	Tektronix 4317 (actually any)
+
+SYNOPSIS:
+	The toolkit will toss all visibility events unless 
+	core.visible_interest is TRUE.
+	Also, manual is not clear whether PartiallyVisible results in 
+	core.visible = TRUE.
+
+DESCRIPTION:
+	Area: Xtk
+	Files: lib/Xt/Event.c
+	       doc/Xtk/CH07
+
+
+REPEAT-BY:
+	XtAddEventHandler with an event_mask of VisibilityNotify has no 
+	effect.
+
+FIX:
+RCS file: RCS/Event.c,v
+Retrieving revision 1.6
+diff  -c -r1.6 Event.c
+*** /tmp/,RCSt1016247	Thu Sep 15 18:04:42 1988
+--- Event.c	Tue Sep 13 13:36:20 1988
+***************
+*** 424,432
+  	}
+      }
+  
+-     if (mask == VisibilityChangeMask &&
+-             ! widget->core.widget_class->core_class.visible_interest) return;
+- 
+      /* Have to copy the procs into an array, because calling one of them */
+      /* might call XtRemoveEventHandler, which would break our linked list.*/
+  
+
+--- 424,429 -----
+  	}
+      }
+  
+      /* Have to copy the procs into an array, because calling one of them */
+      /* might call XtRemoveEventHandler, which would break our linked list.*/
+  
+RCS file: RCS/CH07,v
+Retrieving revision 1.1
+diff  -c -r1.1 CH07
+*** /tmp/,RCSt1016222	Thu Sep 15 17:59:56 1988
+--- CH07	Thu Sep 15 17:58:04 1988
+***************
+*** 1110,1116
+  .LP
+  Some widgets may use substantial computing resources to display data.
+  However, this effort is wasted if the widget is not actually visible
+! on the screen, that is, if the widget is obscured by another application 
+  or is iconified.
+  .LP
+  .IN "Visibility"
+
+--- 1110,1116 -----
+  .LP
+  Some widgets may use substantial computing resources to display data.
+  However, this effort is wasted if the widget is not actually visible
+! on the screen, that is, if the widget is completely obscured by another application 
+  or is iconified.
+  .LP
+  .IN "Visibility"
+***************
+*** 1122,1128
+  .PN True
+  by the time an
+  .PN Expose
+! event is processed if the widget is visible
+  but is usually 
+  .PN False 
+  if the widget is not visible.
+
+--- 1122,1128 -----
+  .PN True
+  by the time an
+  .PN Expose
+! event is processed if the widget is even partially visible, 
+  but is usually 
+  .PN False 
+  if no part of the widget is visible.
+***************
+*** 1125,1131
+  event is processed if the widget is visible
+  but is usually 
+  .PN False 
+! if the widget is not visible.
+  .LP
+  Widgets can use or ignore the visible hint.
+  If they ignore it,
+
+--- 1125,1131 -----
+  event is processed if the widget is even partially visible, 
+  but is usually 
+  .PN False 
+! if no part of the widget is visible.
+  .LP
+  Widgets can use or ignore the visible hint.
+  If they ignore it,
+
+

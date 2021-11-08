@@ -1,0 +1,127 @@
+
+			README
+         Hewlett Packard Server Sample Implementation
+
+******************************************************************************
+*   Copyright (c) 1986, 1987 by Hewlett-Packard Company
+*   Copyright (c) 1986, 1987 by the Massachusetts Institute of Technology
+*   
+*   Permission to use, copy, modify, and distribute this
+*   software and its documentation for any purpose and without
+*   fee is hereby granted, provided that the above copyright
+*   notice appear in all copies and that both that copyright
+*   notice and this permission notice appear in supporting
+*   documentation, and that the name of M.I.T. not be used in
+*   advertising or publicity pertaining to distribution of the
+*   software without specific, written prior permission.
+*   
+*   HEWLETT-PACKARD MAKES NO WARRANTY OF ANY KIND WITH REGARD
+*   TO THIS SOFWARE, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+*   WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
+*   PURPOSE.  Hewlett-Packard shall not be liable for errors 
+*   contained herein or direct, indirect, special, incidental or 
+*   consequential damages in connection with the furnishing, 
+*   performance, or use of this material.
+*   
+*   This software is not subject to any license of the American
+*   Telephone and Telegraph Company or of the Regents of the
+*   University of California.
+*   
+******************************************************************************
+
+	==================
+	HP Product Numbers
+	==================
+	Please refer to the HP catalog or to the apropriate data sheets
+	for the displays.  The following data relates the use of the 
+	product names with their official HP product numbers:
+
+	98542A	TOPCAT Med Res Mono Display Controller
+			512x400 pixels
+	98543A	TOPCAT Med Res Color Display Controller
+			512x400 pixels, 16 colors
+	98544B	TOPCAT Hi Res Mono Display Controller
+			1024x768 pixels
+	98547A	TOPCAT Hi Res Color Display Controller
+			1024x768 pixels, six planes
+	98550A  CATSEYE Hi Res Color Display Controller
+			1280x1024 pixels, 10 planes, 
+			  configurable as 8 image planes
+			  + 2 overlay planes
+	98720A	RENAISSANCE Solids Rendering Graphics Subsystem
+			1280x1024 pixels, configurable with 4 to 24
+			   image planes + 4 overlay planes
+
+	=======================
+	MULTIPLE SCREEN SUPPORT
+	=======================
+
+	The HP X11 sample server supports multiple physical screens
+	connected to a single server program.  The file
+	/usr/lib/X11/X?screens is read by the X11 server to determine
+	information about the system screen configuration.
+
+	The "?"  in X?screens is a digit for the screen group that the
+	screens are part of.  For example, if want your first screen to be
+	"system-name:0.0" then use X0screens.  For "system-name:3.0" use
+	X3screens.
+
+	Each screen is specified by a line in the file.  A line looks
+	like:
+		<screen device name>
+	Where <screen device name> might be /dev/crt.
+
+	The main pointing device starts out in screen 0.  It is assumed
+	that the screens are physically placed from left to right in the
+	order they appear in the file.  The main pointing device roams
+	between the screens as if they were connected together in a ring
+	by their left & right edges.  Moving left from the left- most
+	screen will place the pointing device on the right-most screen
+	and and moving right from the right-most screen will place the
+	pointing device on the left-most screen.
+
+	Example X0screens files:
+
+	Here is the X0screens file for a one-screen Topcat-based X11 system:
+		/dev/crt
+
+	Here is the X0screens file for a two screen system where the
+	Renaissance is on the left (system-name:0.0) and the Topcat is on
+	the right (system-name:0.1):
+		/dev/crtren
+		/dev/crt
+
+	Notes:
+
+	There can't be more than MAXSCREENS screens.  MAXSCREENS is a
+	compile time constant defined in server/include/misc.h.  It is
+	set at 3 at the time of this writing.
+
+
+	==========================
+	COMPILATION NOTES for HPUX
+	==========================
+
+	If you are trying to compile an HP server, presumably you are doing
+	so on HPUX.  HPUX is a combination of ATT SYSV and Berkeley
+	versions of UN*X.  It is recommended that as far as the makefiles
+	are concerned, that you treat HPUX as SYSV.  You may run into the
+	following:
+
+	Many programs refer to "rindex()" and "index()" which are not in
+	the HPUX /lib/libc.a library (HPUX provides "strrchr" and
+	"strchr" instead).  The server code is fixed by the Berklib.o
+	file in os/hpux.  The clients are fixed by the Berklib.o in
+	libX.a.
+
+	Many of the .c files include <strings.h>, while the normal
+	hp-ux systems have only "string.h" in the /usr/include directory.
+	Doing a 
+	   ln /usr/include/string.h /usr/include/strings.h
+	fixes the problem.
+
+	Some modules include "sys/time.h".  HP-UX only provides 
+	/usr/include/time.h.  The fix is to
+	   ln  /usr/include/time.h /usr/include/sys/time.h.
+
+

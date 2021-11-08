@@ -1,0 +1,543 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Sat, 30 Apr 88 13:10:57 EDT
+Date: Sat, 30 Apr 88 13:10 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: bad drawable/gc checking in server
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880430171014.1.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   441
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	all
+
+AREA:
+	server
+
+SYNOPSIS:
+	use of 0 for drawable id or gc id can cause server core dump
+	output to InputOnly windows should generate BadMatch, not BadDrawable
+
+DESCRIPTION:
+	A client can pass 0 as a drawable or gc.  This value will match
+	INVALID in the lastDrawableID/lastGCID client cache, so you
+	still have to check for a NULL value afterwards.  Several macros
+	using the cache were not doing this.
+
+	Also, use of an InputOnly window as a drawable should generate
+	BadMatch, not BadDrawable.
+
+	LookupDrawable doesn't need to check whether a cached drawable
+	is InputOnly, since the caching prevents that case.
+
+REPEAT-BY:
+	run the tdrawarc test in the test suite, then stare at code
+
+FILES:
+	server/dix/main.c, dixutils.c, dispatch.c
+	server/include/extension.h
+
+FIX:
+	Various nit fixes are included here.
+
+*** /tmp/,RCSt1a11190	Sat Apr 30 11:59:59 1988
+--- server/dix/main.c	Sat Apr 30 11:59:46 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: main.c,v 1.134 88/03/15 15:20:49 rws Exp $ */
+  
+  #include "X.h"
+  #include "Xproto.h"
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: main.c,v 1.135 88/04/30 11:59:42 rws Exp $ */
+  
+  #include "X.h"
+  #include "Xproto.h"
+***************
+*** 165,172 ****
+              serverClient->lastDrawable = (DrawablePtr)NULL;
+  	    serverClient->lastDrawableID = INVALID;
+              serverClient->lastGC = (GCPtr)NULL;
+! 	    serverClient->lastGCID = None;
+! 	    serverClient->numSaved = None;
+  	    serverClient->saveSet = (pointer *)NULL;
+  	    serverClient->index = 0;
+  	}
+--- 165,172 ----
+              serverClient->lastDrawable = (DrawablePtr)NULL;
+  	    serverClient->lastDrawableID = INVALID;
+              serverClient->lastGC = (GCPtr)NULL;
+! 	    serverClient->lastGCID = INVALID;
+! 	    serverClient->numSaved = 0;
+  	    serverClient->saveSet = (pointer *)NULL;
+  	    serverClient->index = 0;
+  	}
+***************
+*** 254,260 ****
+      xPixmapFormat format;
+      unsigned long vid;
+      int i, j, k,
+!         lenofblock=0,
+          sizesofar = 0;
+      char *pBuf;
+  
+--- 254,260 ----
+      xPixmapFormat format;
+      unsigned long vid;
+      int i, j, k,
+!         lenofblock,
+          sizesofar = 0;
+      char *pBuf;
+  
+*** /tmp/,RCSt1a11245	Sat Apr 30 12:02:53 1988
+--- server/dix/dixutils.c	Sat Apr 30 12:02:41 1988
+***************
+*** 23,29 ****
+  ******************************************************************/
+  
+  
+! /* $Header: dixutils.c,v 1.26 88/03/16 10:12:08 rws Exp $ */
+  
+  #include "X.h"
+  #include "Xmd.h"
+--- 23,29 ----
+  ******************************************************************/
+  
+  
+! /* $Header: dixutils.c,v 1.27 88/04/30 12:01:38 rws Exp $ */
+  
+  #include "X.h"
+  #include "Xmd.h"
+***************
+*** 86,105 ****
+      XID rid;
+      ClientPtr client;
+  {
+-     WindowPtr pWin;
+- 
+      client->errorValue = rid;
+      if(rid == INVALID)
+  	return NULL;
+      if (client->lastDrawableID == rid)
+      {
+!         DrawablePtr pDraw = (DrawablePtr)client->lastDrawable;
+!         if (pDraw->type != DRAWABLE_PIXMAP)
+              return ((WindowPtr) client->lastDrawable);
+          return (WindowPtr) NULL;
+      }
+!     pWin = (WindowPtr)LookupID(rid, RT_WINDOW, RC_CORE);
+!     return pWin;
+  }
+  
+  
+--- 86,101 ----
+      XID rid;
+      ClientPtr client;
+  {
+      client->errorValue = rid;
+      if(rid == INVALID)
+  	return NULL;
+      if (client->lastDrawableID == rid)
+      {
+!         if (client->lastDrawable->type != DRAWABLE_PIXMAP)
+              return ((WindowPtr) client->lastDrawable);
+          return (WindowPtr) NULL;
+      }
+!     return (WindowPtr)LookupID(rid, RT_WINDOW, RC_CORE);
+  }
+  
+  
+***************
+*** 108,131 ****
+      XID rid;
+      ClientPtr client;
+  {
+!     DrawablePtr pDraw;
+  
+      if(rid == INVALID)
+! 	return NULL;
+      if (client->lastDrawableID == rid)
+!     {
+!         DrawablePtr pDrawT = client->lastDrawable;
+!         if (pDrawT->type == DRAWABLE_WINDOW)
+!             return ((pointer) client->lastDrawable);
+!         return ((pointer) NULL);
+!     }
+      pDraw = (DrawablePtr)LookupID(rid, RT_DRAWABLE, RC_CORE);
+!     if (!pDraw)
+!         return ((pointer)pDraw);
+!     if ((pDraw->type == DRAWABLE_WINDOW) || (pDraw->type == DRAWABLE_PIXMAP))
+          return (pointer)pDraw;		
+!     else
+!         return (pointer)NULL;
+  }
+  
+  
+--- 104,119 ----
+      XID rid;
+      ClientPtr client;
+  {
+!     register DrawablePtr pDraw;
+  
+      if(rid == INVALID)
+! 	return (pointer) NULL;
+      if (client->lastDrawableID == rid)
+! 	return ((pointer) client->lastDrawable);
+      pDraw = (DrawablePtr)LookupID(rid, RT_DRAWABLE, RC_CORE);
+!     if (pDraw && (pDraw->type != UNDRAWABLE_WINDOW))
+          return (pointer)pDraw;		
+!     return (pointer)NULL;
+  }
+  
+  
+*** /tmp/,RCSt1a11261	Sat Apr 30 12:04:36 1988
+--- server/dix/dispatch.c	Sat Apr 30 12:04:25 1988
+***************
+*** 1,4 ****
+! /* $Header: dispatch.c,v 1.46 88/04/10 10:53:10 rws Exp $ */
+  /************************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+--- 1,4 ----
+! /* $Header: dispatch.c,v 1.47 88/04/30 12:03:26 rws Exp $ */
+  /************************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+***************
+*** 94,106 ****
+  #define SAME_SCREENS(a, b) (\
+      (a.pScreen == b.pScreen))
+  
+- #define VALIDATE(pGC, pDraw, rt) {\
+-     if (pGC->serialNumber != pDraw->serialNumber)\
+-     {\
+- 	ValidateGC(pDraw, pGC);\
+-     } \
+- }
+- 
+  #define LEGAL_NEW_RESOURCE(id,client)\
+      if ((LookupID(id, RT_ANY, RC_CORE) != 0) || (id & SERVER_BIT) \
+  	|| (client->clientAsMask != CLIENT_BITS(id)))\
+--- 94,99 ----
+***************
+*** 111,131 ****
+  
+  #define LOOKUP_DRAWABLE(did, client)\
+      ((client->lastDrawableID == did) ? \
+!      (DrawablePtr)client->lastDrawable : (DrawablePtr)LookupDrawable(did, client))
+  
+  #define VERIFY_GC(pGC, rid, client)\
+      if (client->lastGCID == rid)\
+!     {\
+!         pGC = (GC *) client->lastGC;\
+!     }\
+      else\
+-     {\
+  	pGC = (GC *)LookupID(rid, RT_GC, RC_CORE);\
+!         if (!pGC)\
+!         {\
+! 	    client->errorValue = rid;\
+! 	    return (BadGC);\
+!         }\
+      }
+  
+  #define VALIDATE_DRAWABLE_AND_GC(drawID, pDraw, pGC, client)\
+--- 104,120 ----
+  
+  #define LOOKUP_DRAWABLE(did, client)\
+      ((client->lastDrawableID == did) ? \
+!      client->lastDrawable : (DrawablePtr)LookupDrawable(did, client))
+  
+  #define VERIFY_GC(pGC, rid, client)\
+      if (client->lastGCID == rid)\
+!         pGC = client->lastGC;\
+      else\
+  	pGC = (GC *)LookupID(rid, RT_GC, RC_CORE);\
+!     if (!pGC)\
+!     {\
+! 	client->errorValue = rid;\
+! 	return (BadGC);\
+      }
+  
+  #define VALIDATE_DRAWABLE_AND_GC(drawID, pDraw, pGC, client)\
+***************
+*** 132,188 ****
+      if ((client->lastDrawableID != drawID) || (client->lastGCID != stuff->gc))\
+      {\
+          if (client->lastDrawableID != drawID)\
+- 	{\
+      	    pDraw = (DrawablePtr)LookupID(drawID, RT_DRAWABLE, RC_CORE);\
+-     	    if (!pDraw)\
+- 	    {\
+- 	        client->errorValue = drawID; \
+-                 return (BadDrawable);\
+- 	    }\
+- 	    if ((pDraw->type == DRAWABLE_WINDOW) || \
+- 		(pDraw->type == DRAWABLE_PIXMAP))\
+-     	    {\
+- 	        client->lastDrawable = (DrawablePtr)pDraw;\
+- 	        client->lastDrawableID = drawID;\
+- 	    }\
+-             else\
+- 	    {\
+- 	        client->errorValue = drawID;\
+-                 return (BadDrawable);\
+- 	    }\
+-         }\
+          else\
+! 	    pDraw = (DrawablePtr)client->lastDrawable;\
+          if (client->lastGCID != stuff->gc)\
+- 	{\
+  	    pGC = (GC *)LookupID(stuff->gc, RT_GC, RC_CORE);\
+-             if (!pGC)\
+-             {\
+- 	        client->errorValue = stuff->gc;\
+- 	        return (BadGC);\
+-             }\
+-             client->lastGC = (GCPtr)pGC;\
+-             client->lastGCID = stuff->gc;\
+-         }\
+          else\
+!             pGC = (GC *) client->lastGC;\
+!         if ((pGC->depth != pDraw->depth) || (pGC->pScreen != pDraw->pScreen))\
+  	{\
+!             client->errorValue = stuff->gc;\
+! 	    client->lastGCID = INVALID;\
+! 	    client->lastGC = (GCPtr)NULL;\
+! 	    return (BadMatch);\
+!          }\
+      }\
+      else\
+      {\
+!         pGC = (GC *) client->lastGC;\
+!         pDraw = (DrawablePtr)client->lastDrawable;\
+      }\
+      if (pGC->serialNumber != pDraw->serialNumber)\
+!     { \
+! 	ValidateGC(pDraw, pGC);\
+!     }
+  
+  void
+  SetInputCheck(c0, c1)
+--- 121,162 ----
+      if ((client->lastDrawableID != drawID) || (client->lastGCID != stuff->gc))\
+      {\
+          if (client->lastDrawableID != drawID)\
+      	    pDraw = (DrawablePtr)LookupID(drawID, RT_DRAWABLE, RC_CORE);\
+          else\
+! 	    pDraw = client->lastDrawable;\
+          if (client->lastGCID != stuff->gc)\
+  	    pGC = (GC *)LookupID(stuff->gc, RT_GC, RC_CORE);\
+          else\
+!             pGC = client->lastGC;\
+! 	if (pDraw && pGC)\
+  	{\
+! 	    if ((pDraw->type == UNDRAWABLE_WINDOW) ||\
+! 		(pGC->depth != pDraw->depth) ||\
+! 		(pGC->pScreen != pDraw->pScreen))\
+! 		return (BadMatch);\
+! 	    client->lastDrawable = pDraw;\
+! 	    client->lastDrawableID = drawID;\
+!             client->lastGC = pGC;\
+!             client->lastGCID = stuff->gc;\
+! 	}\
+      }\
+      else\
+      {\
+!         pGC = client->lastGC;\
+!         pDraw = client->lastDrawable;\
+      }\
++     if (!pDraw)\
++     {\
++         client->errorValue = drawID; \
++ 	return (BadDrawable);\
++     }\
++     if (!pGC)\
++     {\
++         client->errorValue = stuff->gc;\
++         return (BadGC);\
++     }\
+      if (pGC->serialNumber != pDraw->serialNumber)\
+! 	ValidateGC(pDraw, pGC);
+  
+  void
+  SetInputCheck(c0, c1)
+***************
+*** 924,930 ****
+  ProcConvertSelection(client)
+      register ClientPtr client;
+  {
+!     Bool paramsOkay = TRUE;
+      xEvent event;
+      WindowPtr pWin;
+      REQUEST(xConvertSelectionReq);
+--- 898,904 ----
+  ProcConvertSelection(client)
+      register ClientPtr client;
+  {
+!     Bool paramsOkay;
+      xEvent event;
+      WindowPtr pWin;
+      REQUEST(xConvertSelectionReq);
+***************
+*** 3360,3366 ****
+  DeleteWindowFromAnySelections(pWin)
+      WindowPtr pWin;
+  {
+!     int i = 0;
+  
+      for (i = 0; i< NumCurrentSelections; i++)
+          if (CurrentSelections[i].pWin == pWin)
+--- 3334,3340 ----
+  DeleteWindowFromAnySelections(pWin)
+      WindowPtr pWin;
+  {
+!     register int i;
+  
+      for (i = 0; i< NumCurrentSelections; i++)
+          if (CurrentSelections[i].pWin == pWin)
+***************
+*** 3374,3380 ****
+  DeleteClientFromAnySelections(client)
+      ClientPtr client;
+  {
+!     int i = 0;
+  
+      for (i = 0; i< NumCurrentSelections; i++)
+          if (CurrentSelections[i].client == client)
+--- 3348,3354 ----
+  DeleteClientFromAnySelections(client)
+      ClientPtr client;
+  {
+!     register int i;
+  
+      for (i = 0; i< NumCurrentSelections; i++)
+          if (CurrentSelections[i].client == client)
+*** /tmp/,RCSt1a11353	Sat Apr 30 12:10:44 1988
+--- server/include/extension.h	Sat Apr 30 12:05:48 1988
+***************
+*** 1,4 ****
+! /* $Header: extension.h,v 1.2 87/09/08 14:02:46 toddb Exp $ */
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+--- 1,4 ----
+! /* $Header: extension.h,v 1.3 88/04/30 12:05:10 rws Exp $ */
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+***************
+*** 52,106 ****
+  #define GetGCAndDrawableAndValidate(gcID, pGC, drawID, pDraw, client)\
+      if ((client->lastDrawableID != drawID) || (client->lastGCID != gcID))\
+      {\
+! 	if (client->lastDrawableID != drawID)\
+! 	{\
+! 	    pDraw = (DrawablePtr)LookupID(drawID, RT_DRAWABLE, RC_CORE);\
+! 	    if (!pDraw)\
+! 	    {\
+! 		client->errorValue = drawID; \
+! 		return (BadDrawable);\
+! 	    }\
+! 	    if ((pDraw->type == DRAWABLE_WINDOW) || \
+! 		(pDraw->type == DRAWABLE_PIXMAP))\
+! 	    {\
+! 		client->lastDrawable = pDraw;\
+! 		client->lastDrawableID = drawID;\
+! 	    }\
+! 	    else\
+! 	    {\
+! 		client->errorValue = drawID;\
+! 		return (BadDrawable);\
+! 	    }\
+! 	}\
+! 	else\
+! 	    pDraw = (DrawablePtr)client->lastDrawable;\
+! 	if (client->lastGCID != gcID)\
+! 	{\
+  	    pGC = (GC *)LookupID(gcID, RT_GC, RC_CORE);\
+! 	    if (!pGC)\
+! 	    {\
+! 		client->errorValue = gcID;\
+! 		return (BadGC);\
+! 	    }\
+! 	    client->lastGC = pGC;\
+! 	    client->lastGCID = gcID;\
+! 	}\
+! 	else\
+! 	    pGC = (GC *) client->lastGC;\
+! 	if ((pGC->depth != pDraw->depth) || (pGC->pScreen != pDraw->pScreen))\
+  	{\
+! 	    client->errorValue = gcID;\
+! 	    client->lastGCID = 0;\
+! 	    return (BadMatch);\
+! 	 }\
+      }\
+      else\
+      {\
+! 	pGC = (GC *) client->lastGC;\
+! 	pDraw = (DrawablePtr)client->lastDrawable;\
+      }\
+      if (pGC->serialNumber != pDraw->serialNumber)\
+!     { \
+! 	ValidateGC(pDraw, pGC);\
+!     }
+  #endif /* EXTENSION_H */
+--- 52,92 ----
+  #define GetGCAndDrawableAndValidate(gcID, pGC, drawID, pDraw, client)\
+      if ((client->lastDrawableID != drawID) || (client->lastGCID != gcID))\
+      {\
+!         if (client->lastDrawableID != drawID)\
+!     	    pDraw = (DrawablePtr)LookupID(drawID, RT_DRAWABLE, RC_CORE);\
+!         else\
+! 	    pDraw = client->lastDrawable;\
+!         if (client->lastGCID != gcID)\
+  	    pGC = (GC *)LookupID(gcID, RT_GC, RC_CORE);\
+!         else\
+!             pGC = client->lastGC;\
+! 	if (pDraw && pGC)\
+  	{\
+! 	    if ((pDraw->type == UNDRAWABLE_WINDOW) ||\
+! 		(pGC->depth != pDraw->depth) ||\
+! 		(pGC->pScreen != pDraw->pScreen))\
+! 		return (BadMatch);\
+! 	    client->lastDrawable = pDraw;\
+! 	    client->lastDrawableID = drawID;\
+!             client->lastGC = pGC;\
+!             client->lastGCID = gcID;\
+! 	}\
+      }\
+      else\
+      {\
+!         pGC = client->lastGC;\
+!         pDraw = client->lastDrawable;\
+      }\
++     if (!pDraw)\
++     {\
++         client->errorValue = drawID; \
++ 	return (BadDrawable);\
++     }\
++     if (!pGC)\
++     {\
++         client->errorValue = gcID;\
++         return (BadGC);\
++     }\
+      if (pGC->serialNumber != pDraw->serialNumber)\
+! 	ValidateGC(pDraw, pGC);
+  #endif /* EXTENSION_H */
+

@@ -1,0 +1,42 @@
+Return-Path: rick@bilbo.locus
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 23:24:40 EDT
+Received: by devnet (1.0L/0.07) id AA30548; Wed, 29 Jun 88 16:22:31 PDT
+Date: Wed, 29 Jun 88 16:22:31 PDT
+From: Richard Petkiewicz <rick@bilbo.locus>
+Message-Id: <8806292322.AA30548@devnet>
+To: xbugs@expo.lcs.mit.edu
+Subject:        wierd_size (sic)
+
+### bug number:   671
+### area:         doc
+### severity:     very low
+### comments:     is this a bug or a feature?
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Prime EXL
+
+CLIENT OPERATING SYSTEM:
+	System 5 Release 3
+
+DISPLAY:
+	PC Xsight
+
+SYNOPSIS:
+	 The bitmap "wierd_size" is misspelled
+
+DESCRIPTION:
+	 Is there some reason that the bitmap "wierd_size" is
+	 misspelled?  I've noticed that it has kept the same
+	 spelling since we first received the beta release of
+	 X11.  We are preparing to release a product, and the
+	 misspelling of "wierd" offends our documentation staff.
+
+REPEAT-BY:
+	ls X11/bitmaps/wierd_size
+
+FIX:
+	mv wierd_size weird_size
+

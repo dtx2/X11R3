@@ -1,0 +1,97 @@
+Return-Path: sun!tsunami!joe!curly!bruce@ucbvax.berkeley.edu
+Received: from ucbvax.Berkeley.EDU by expo.lcs.mit.edu; Thu, 7 Apr 88 19:52:10 EDT
+Received: from SUN.COM by ucbvax.Berkeley.EDU (5.59/1.26)
+	id AA02040; Thu, 7 Apr 88 16:49:51 PDT
+Received: from snail.sun.com by Sun.COM (4.0/SMI-4.0)
+	id AA12324; Thu, 7 Apr 88 16:27:20 PDT
+Received: from tsunami.West.Sun.COM by snail.sun.com (4.0/SMI-3.2)
+	id AA05629; Thu, 7 Apr 88 16:26:59 PDT
+Received: by tsunami.West.Sun.COM (3.2/SMI-3.2)
+	id AA27291; Thu, 7 Apr 88 16:29:52 PDT
+Received: from curly.ypstuff.com by ypstuff.com (3.2/SMI-3.2)
+	id AA10497; Thu, 7 Apr 88 16:27:06 PDT
+Received: by curly.ypstuff.com (3.2/SMI-3.2)
+	id AA01841; Thu, 7 Apr 88 16:13:21 PDT
+Date: Thu, 7 Apr 88 16:13:21 PDT
+From: sun!tsunami!joe!curly!bruce@ucbvax.berkeley.edu (Bruce Beisel)
+Message-Id: <8804072313.AA01841@curly.ypstuff.com>
+To: tsunami!expo.lcs.mit.edu!xbugs
+
+### bug number:   338
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     
+### see also:     356, 410, 413
+
+To: tsunami!sun!ucbvax!expo.lcs.mit.edu!xbugs
+Cc:
+Subject: Shell destroy bug in Toolkit
+--------
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/110C
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	CG4
+
+SYNOPSIS:
+	Shell widgets are not removed from the parents popup list correctly.
+
+DESCRIPTION:
+Found the following bug in popups.  Application is bringing up a popup-form,
+when the user selects a QUIT button a popup-confirmer asks the user to verify.
+The confirmer is popped-down and destroyed then the form is popped-down and
+destroyed.  The error message:
+     XtWarning("ShellDestroy, widget not on parent popup list");
+appears.
+
+It looks like the ShellDestroy routine is always removing 
+widget->core.popup_list[0], whenever a popup is destroyed.
+
+Also, when you are copying the popups (in the following code)
+    for (i=0;i<parent->core.num_popups-1;i++)
+        parent->core.popup_list[i]= parent->core.popup_list[i+1];
+
+the loop should go from the widget destroyed to (num_popups - 2).
+Otherwise the final widget on the list is garbage (potential core dump to
+follow).
+
+
+REPEAT-BY:
+	Create two overrideShellWidgets, popup first, popup second,
+	popdown second, popdown first.
+
+FIX:
+static void ShellDestroy(widget)
+    Widget  widget;
+{
+    int i;
+    Boolean found = FALSE;
+    register Widget parent;
+    parent = widget->core.parent;
+*   int which;
+
+    if (parent == NULL | parent->core.being_destroyed) return;
+    for (i=0;i<=parent->core.num_popups-1;i++)
+        if (parent->core.popup_list[i] == widget){
+            found = TRUE; 
+	    which = i;
+	     break;
+        }
+    if (found == FALSE) {
+        XtWarning("ShellDestroy, widget not on parent popup list");
+        return;
+    }
+    for (i=which;i<parent->core.num_popups-2;i++)
+        parent->core.popup_list[i]= parent->core.popup_list[i+1];
+    parent->core.num_popups--;
+}
+

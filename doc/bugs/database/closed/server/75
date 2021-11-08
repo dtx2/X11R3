@@ -1,0 +1,559 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Sat, 21 May 88 09:30:45 EDT
+Date: Sat, 21 May 88 09:29 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: server software cursor checks ignoring line-width
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880521132933.4.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   529
+### area:         server
+### severity:     medium
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	Sun and Apollo
+
+AREA:
+	server
+
+SYNOPSIS:
+	software cursor checks should include line-width
+
+DESCRIPTION:
+	The bounding box calculations for software cursors
+	fail to take the width of wide lines into account.
+
+	Also there was some unwanted unsigned arithmetic going on.
+
+REPEAT-BY:
+	draw a very wide line and with the cursor in the right place
+
+FILES:
+	server/ddx/sun/sunGC.c, server/ddx/apollo/ap_gc.c
+
+	[you might think the HP ddx would have similar problems,
+	 but they way they implement software cursors means that
+	 the cursor gets taken down on Spans calls as well]
+
+FIX:
+
+*** /tmp/,RCSt1a01455	Sat May 21 09:23:28 1988
+--- server/ddx/sun/sunGC.c	Sat May 21 09:22:46 1988
+***************
+*** 17,23 ****
+   */
+  #ifndef lint
+  static char rcsid[] =
+! 	"$Header: sunGC.c,v 4.6 88/01/16 12:37:43 rws Exp $ SPRITE (Berkeley)";
+  #endif lint
+  
+  #include    "sun.h"
+--- 17,23 ----
+   */
+  #ifndef lint
+  static char rcsid[] =
+! 	"$Header: sunGC.c,v 4.7 88/05/21 09:22:11 rws Exp $ SPRITE (Berkeley)";
+  #endif lint
+  
+  #include    "sun.h"
+***************
+*** 48,55 ****
+   * Overlap BoxPtr, origins and RectPtr
+   */
+  #define ORGRECT_OVERLAP(pCbox,xorg,yorg,pRect) \
+!     ORG_OVERLAP((pCbox),(xorg),(yorg),(pRect)->x,(pRect)->y,(pRect)->width, \
+! 		(pRect)->height)
+  /*
+   * Overlap BoxPtr and horizontal span
+   */
+--- 48,55 ----
+   * Overlap BoxPtr, origins and RectPtr
+   */
+  #define ORGRECT_OVERLAP(pCbox,xorg,yorg,pRect) \
+!     ORG_OVERLAP((pCbox),(xorg),(yorg),(pRect)->x,(pRect)->y, \
+! 		(int)((pRect)->width), (int)((pRect)->height))
+  /*
+   * Overlap BoxPtr and horizontal span
+   */
+***************
+*** 124,134 ****
+   *-----------------------------------------------------------------------
+   */
+  void
+! sunSaveCursorBox (xorg, yorg, mode, pPts, nPts, pCursorBox)
+      register int  	    xorg;   	    /* X-Origin for points */
+      register int  	    yorg;   	    /* Y-Origin for points */
+      int	    	  	    mode;   	    /* CoordModeOrigin or
+  					     * CoordModePrevious */
+      register DDXPointPtr    pPts;   	    /* Array of points */
+      int	    	  	    nPts;   	    /* Number of points */
+      register BoxPtr 	    pCursorBox;	    /* Bounding box for cursor */
+--- 124,135 ----
+   *-----------------------------------------------------------------------
+   */
+  void
+! sunSaveCursorBox (xorg, yorg, mode, lw, pPts, nPts, pCursorBox)
+      register int  	    xorg;   	    /* X-Origin for points */
+      register int  	    yorg;   	    /* Y-Origin for points */
+      int	    	  	    mode;   	    /* CoordModeOrigin or
+  					     * CoordModePrevious */
++     int			    lw;		    /* line width */
+      register DDXPointPtr    pPts;   	    /* Array of points */
+      int	    	  	    nPts;   	    /* Number of points */
+      register BoxPtr 	    pCursorBox;	    /* Bounding box for cursor */
+***************
+*** 165,171 ****
+  	    pPts++;
+  	}
+      }
+!     if (BOX_OVERLAP(pCursorBox,minx,miny,maxx,maxy)) {
+  	sunRemoveCursor();
+      }
+  }
+--- 166,173 ----
+  	    pPts++;
+  	}
+      }
+!     lw = lw >> 1;
+!     if (BOX_OVERLAP(pCursorBox,minx-lw,miny-lw,maxx+lw,maxy+lw)) {
+  	sunRemoveCursor();
+      }
+  }
+***************
+*** 607,612 ****
+--- 609,615 ----
+  	    sunSaveCursorBox(((WindowPtr)pDrawable)->absCorner.x,
+  			     ((WindowPtr)pDrawable)->absCorner.y,
+  			     mode,
++ 			     pShadowGC->lineWidth,
+  			     pptInit,
+  			     npt,
+  			     &cursorBox);
+***************
+*** 641,675 ****
+      register GCPtr 	pShadowGC = (GCPtr) pGC->devPriv;
+      register xSegment	*pSeg;
+      register int  	nSeg;
+!     register int  	xorg,
+! 			yorg;
+      BoxRec  	  	cursorBox;
+      Bool    	  	nuke = FALSE;
+  
+      if (IsWorthChecking(pDraw) &&
+  	sunCursorLoc (pDraw->pScreen, &cursorBox)) {
+! 	    xorg = ((WindowPtr)pDraw)->absCorner.x;
+! 	    yorg = ((WindowPtr)pDraw)->absCorner.y;
+! 
+  	    for (nSeg = nseg, pSeg = pSegs; nSeg--; pSeg++) {
+  		if (pSeg->x1 < pSeg->x2) {
+  		    if (pSeg->y1 < pSeg->y2) {
+  			nuke = BOX_OVERLAP(&cursorBox,
+! 					   pSeg->x1+xorg,pSeg->y1+yorg,
+! 					   pSeg->x2+xorg,pSeg->y2+yorg);
+  		    } else {
+  			nuke = BOX_OVERLAP(&cursorBox,
+! 					   pSeg->x1+xorg,pSeg->y2+yorg,
+! 					   pSeg->x2+xorg,pSeg->y1+yorg);
+  		    }
+  		} else if (pSeg->y1 < pSeg->y2) {
+  		    nuke = BOX_OVERLAP(&cursorBox,
+! 				       pSeg->x2+xorg,pSeg->y1+yorg,
+! 				       pSeg->x1+xorg,pSeg->y2+yorg);
+  		} else {
+  		    nuke = BOX_OVERLAP(&cursorBox,
+! 				       pSeg->x2+xorg,pSeg->y2+yorg,
+! 				       pSeg->x1+xorg,pSeg->y1+yorg);
+  		}
+  		if (nuke) {
+  		    sunRemoveCursor();
+--- 644,682 ----
+      register GCPtr 	pShadowGC = (GCPtr) pGC->devPriv;
+      register xSegment	*pSeg;
+      register int  	nSeg;
+!     register int  	xmin, xmax, ymin, ymax;
+!     int			lw;
+      BoxRec  	  	cursorBox;
+      Bool    	  	nuke = FALSE;
+  
+      if (IsWorthChecking(pDraw) &&
+  	sunCursorLoc (pDraw->pScreen, &cursorBox)) {
+! 	    xmin = xmax = ((WindowPtr)pDraw)->absCorner.x;
+! 	    ymin = ymax = ((WindowPtr)pDraw)->absCorner.y;
+! 	    lw = pShadowGC->lineWidth >> 1;
+! 	    xmin -= lw;
+! 	    xmax += lw;
+! 	    ymin -= lw;
+! 	    ymax += lw;
+  	    for (nSeg = nseg, pSeg = pSegs; nSeg--; pSeg++) {
+  		if (pSeg->x1 < pSeg->x2) {
+  		    if (pSeg->y1 < pSeg->y2) {
+  			nuke = BOX_OVERLAP(&cursorBox,
+! 					   pSeg->x1+xmin,pSeg->y1+ymin,
+! 					   pSeg->x2+xmax,pSeg->y2+ymax);
+  		    } else {
+  			nuke = BOX_OVERLAP(&cursorBox,
+! 					   pSeg->x1+xmin,pSeg->y2+ymin,
+! 					   pSeg->x2+xmax,pSeg->y1+ymax);
+  		    }
+  		} else if (pSeg->y1 < pSeg->y2) {
+  		    nuke = BOX_OVERLAP(&cursorBox,
+! 				       pSeg->x2+xmin,pSeg->y1+ymin,
+! 				       pSeg->x1+xmax,pSeg->y2+ymax);
+  		} else {
+  		    nuke = BOX_OVERLAP(&cursorBox,
+! 				       pSeg->x2+xmin,pSeg->y2+ymin,
+! 				       pSeg->x1+xmax,pSeg->y1+ymax);
+  		}
+  		if (nuke) {
+  		    sunRemoveCursor();
+***************
+*** 706,712 ****
+      register xRectangle	*pRect;
+      register int  	nRect;
+      register int  	xorg,
+! 			yorg;
+      BoxRec  	  	cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+--- 713,720 ----
+      register xRectangle	*pRect;
+      register int  	nRect;
+      register int  	xorg,
+! 			yorg,
+! 			lw;
+      BoxRec  	  	cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+***************
+*** 713,721 ****
+  	sunCursorLoc (pDraw->pScreen, &cursorBox)) {
+  	    xorg = ((WindowPtr)pDraw)->absCorner.x;
+  	    yorg = ((WindowPtr)pDraw)->absCorner.y;
+  
+  	    for (nRect = nrects, pRect = pRects; nRect--; pRect++) {
+! 		if (ORGRECT_OVERLAP(&cursorBox,xorg,yorg,pRect)){
+  		    sunRemoveCursor();
+  		    break;
+  		}
+--- 721,732 ----
+  	sunCursorLoc (pDraw->pScreen, &cursorBox)) {
+  	    xorg = ((WindowPtr)pDraw)->absCorner.x;
+  	    yorg = ((WindowPtr)pDraw)->absCorner.y;
++ 	    lw = pShadowGC->lineWidth >> 1;
+  
+  	    for (nRect = nrects, pRect = pRects; nRect--; pRect++) {
+! 		if (ORG_OVERLAP(&cursorBox,xorg,yorg,
+! 				pRect->x - lw, pRect->y - lw,
+! 				(int)pRect->width + lw, (int)pRect->height + lw)){
+  		    sunRemoveCursor();
+  		    break;
+  		}
+***************
+*** 749,755 ****
+      register xArc	*pArc;
+      register int  	nArc;
+      register int  	xorg,
+! 			yorg;
+      BoxRec  	  	cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+--- 760,767 ----
+      register xArc	*pArc;
+      register int  	nArc;
+      register int  	xorg,
+! 			yorg,
+! 			lw;
+      BoxRec  	  	cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+***************
+*** 756,764 ****
+  	sunCursorLoc (pDraw->pScreen, &cursorBox)) {
+  	    xorg = ((WindowPtr)pDraw)->absCorner.x;
+  	    yorg = ((WindowPtr)pDraw)->absCorner.y;
+  
+  	    for (nArc = narcs, pArc = parcs; nArc--; pArc++) {
+! 		if (ORGRECT_OVERLAP(&cursorBox,xorg,yorg,pArc)){
+  		    sunRemoveCursor();
+  		    break;
+  		}
+--- 768,779 ----
+  	sunCursorLoc (pDraw->pScreen, &cursorBox)) {
+  	    xorg = ((WindowPtr)pDraw)->absCorner.x;
+  	    yorg = ((WindowPtr)pDraw)->absCorner.y;
++ 	    lw = pShadowGC->lineWidth >> 1;
+  
+  	    for (nArc = narcs, pArc = parcs; nArc--; pArc++) {
+! 		if (ORG_OVERLAP(&cursorBox,xorg,yorg,
+! 				pArc->x - lw, pArc->y - lw,
+! 				(int)pArc->width + lw, (int)pArc->height + lw)){
+  		    sunRemoveCursor();
+  		    break;
+  		}
+***************
+*** 798,803 ****
+--- 813,819 ----
+  	    sunSaveCursorBox(((WindowPtr)pDraw)->absCorner.x,
+  			     ((WindowPtr)pDraw)->absCorner.y,
+  			     mode,
++ 			     0,
+  			     pPts,
+  			     count,
+  			     &cursorBox);
+
+
+*** /tmp/,RCSt1a01460	Sat May 21 09:23:40 1988
+--- server/ddx/apollo/ap_gc.c	Sat May 21 09:23:03 1988
+***************
+*** 44,51 ****
+   * Overlap BoxPtr, origins and RectPtr
+   */
+  #define ORGRECT_OVERLAP(pCbox,xorg,yorg,pRect) \
+!     ORG_OVERLAP((pCbox),(xorg),(yorg),(pRect)->x,(pRect)->y,(pRect)->width, \
+!                 (pRect)->height)
+  /*
+   * Overlap BoxPtr and horizontal span
+   */
+--- 44,51 ----
+   * Overlap BoxPtr, origins and RectPtr
+   */
+  #define ORGRECT_OVERLAP(pCbox,xorg,yorg,pRect) \
+!     ORG_OVERLAP((pCbox),(xorg),(yorg),(pRect)->x,(pRect)->y, \
+! 		((int)(pRect)->width), ((int)(pRect)->height))
+  /*
+   * Overlap BoxPtr and horizontal span
+   */
+***************
+*** 113,123 ****
+   *      series and remove the cursor if it overlaps that box.
+   */
+  static void
+! apSaveCursorBox (xorg, yorg, mode, pPts, nPts, pCursorBox)
+      register int            xorg;           /* X-Origin for points */
+      register int            yorg;           /* Y-Origin for points */
+      int                     mode;           /* CoordModeOrigin or
+                                               * CoordModePrevious */
+      register DDXPointPtr    pPts;           /* Array of points */
+      int                     nPts;           /* Number of points */
+      register BoxPtr         pCursorBox;     /* Bounding box for cursor */
+--- 113,124 ----
+   *      series and remove the cursor if it overlaps that box.
+   */
+  static void
+! apSaveCursorBox (xorg, yorg, mode, lw, pPts, nPts, pCursorBox)
+      register int            xorg;           /* X-Origin for points */
+      register int            yorg;           /* Y-Origin for points */
+      int                     mode;           /* CoordModeOrigin or
+                                               * CoordModePrevious */
++     int			    lw;		    /* line width */
+      register DDXPointPtr    pPts;           /* Array of points */
+      int                     nPts;           /* Number of points */
+      register BoxPtr         pCursorBox;     /* Bounding box for cursor */
+***************
+*** 154,160 ****
+              pPts++;
+          }
+      }
+!     if (BOX_OVERLAP(pCursorBox,minx,miny,maxx,maxy)) {
+          apRemoveCursor();
+      }
+  }
+--- 155,162 ----
+              pPts++;
+          }
+      }
+!     lw = lw >> 1;
+!     if (BOX_OVERLAP(pCursorBox,minx-lw,miny-lw,maxx+lw,maxy+lw)) {
+          apRemoveCursor();
+      }
+  }
+***************
+*** 526,531 ****
+--- 528,534 ----
+              apSaveCursorBox(((WindowPtr)pDrawable)->absCorner.x,
+                               ((WindowPtr)pDrawable)->absCorner.y,
+                               mode,
++ 			     pShadowGC->lineWidth,
+                               pptInit,
+                               npt,
+                               &cursorBox);
+***************
+*** 552,586 ****
+      register GCPtr      pShadowGC = (GCPtr) pGC->devPriv;
+      register xSegment   *pSeg;
+      register int        nSeg;
+!     register int        xorg,
+!                         yorg;
+      BoxRec              cursorBox;
+      Bool                nuke = FALSE;
+  
+      if (IsWorthChecking(pDraw) &&
+          apCursorLoc (pDraw->pScreen, &cursorBox)) {
+!             xorg = ((WindowPtr)pDraw)->absCorner.x;
+!             yorg = ((WindowPtr)pDraw)->absCorner.y;
+  
+              for (nSeg = nseg, pSeg = pSegs; nSeg--; pSeg++) {
+                  if (pSeg->x1 < pSeg->x2) {
+                      if (pSeg->y1 < pSeg->y2) {
+                          nuke = BOX_OVERLAP(&cursorBox,
+!                                            pSeg->x1+xorg,pSeg->y1+yorg,
+!                                            pSeg->x2+xorg,pSeg->y2+yorg);
+                      } else {
+                          nuke = BOX_OVERLAP(&cursorBox,
+!                                            pSeg->x1+xorg,pSeg->y2+yorg,
+!                                            pSeg->x2+xorg,pSeg->y1+yorg);
+                      }
+                  } else if (pSeg->y1 < pSeg->y2) {
+                      nuke = BOX_OVERLAP(&cursorBox,
+!                                        pSeg->x2+xorg,pSeg->y1+yorg,
+!                                        pSeg->x1+xorg,pSeg->y2+yorg);
+                  } else {
+                      nuke = BOX_OVERLAP(&cursorBox,
+!                                        pSeg->x2+xorg,pSeg->y2+yorg,
+!                                        pSeg->x1+xorg,pSeg->y1+yorg);
+                  }
+                  if (nuke) {
+                      apRemoveCursor();
+--- 555,594 ----
+      register GCPtr      pShadowGC = (GCPtr) pGC->devPriv;
+      register xSegment   *pSeg;
+      register int        nSeg;
+!     register int  	xmin, xmax, ymin, ymax;
+!     int			lw;
+      BoxRec              cursorBox;
+      Bool                nuke = FALSE;
+  
+      if (IsWorthChecking(pDraw) &&
+          apCursorLoc (pDraw->pScreen, &cursorBox)) {
+! 	    xmin = xmax = ((WindowPtr)pDraw)->absCorner.x;
+! 	    ymin = ymax = ((WindowPtr)pDraw)->absCorner.y;
+! 	    lw = pShadowGC->lineWidth >> 1;
+! 	    xmin -= lw;
+! 	    xmax += lw;
+! 	    ymin -= lw;
+! 	    ymax += lw;
+  
+              for (nSeg = nseg, pSeg = pSegs; nSeg--; pSeg++) {
+                  if (pSeg->x1 < pSeg->x2) {
+                      if (pSeg->y1 < pSeg->y2) {
+                          nuke = BOX_OVERLAP(&cursorBox,
+!                                            pSeg->x1+xmin,pSeg->y1+ymin,
+!                                            pSeg->x2+xmax,pSeg->y2+ymax);
+                      } else {
+                          nuke = BOX_OVERLAP(&cursorBox,
+!                                            pSeg->x1+xmin,pSeg->y2+ymin,
+!                                            pSeg->x2+xmax,pSeg->y1+ymax);
+                      }
+                  } else if (pSeg->y1 < pSeg->y2) {
+                      nuke = BOX_OVERLAP(&cursorBox,
+!                                        pSeg->x2+xmin,pSeg->y1+ymin,
+!                                        pSeg->x1+xmax,pSeg->y2+ymax);
+                  } else {
+                      nuke = BOX_OVERLAP(&cursorBox,
+!                                        pSeg->x2+xmin,pSeg->y2+ymin,
+!                                        pSeg->x1+xmax,pSeg->y1+ymax);
+                  }
+                  if (nuke) {
+                      apRemoveCursor();
+***************
+*** 609,615 ****
+      register xRectangle *pRect;
+      register int        nRect;
+      register int        xorg,
+!                         yorg;
+      BoxRec              cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+--- 617,624 ----
+      register xRectangle *pRect;
+      register int        nRect;
+      register int        xorg,
+!                         yorg,
+! 			lw;
+      BoxRec              cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+***************
+*** 616,624 ****
+          apCursorLoc (pDraw->pScreen, &cursorBox)) {
+              xorg = ((WindowPtr)pDraw)->absCorner.x;
+              yorg = ((WindowPtr)pDraw)->absCorner.y;
+  
+              for (nRect = nrects, pRect = pRects; nRect--; pRect++) {
+!                 if (ORGRECT_OVERLAP(&cursorBox,xorg,yorg,pRect)){
+                      apRemoveCursor();
+                      break;
+                  }
+--- 625,636 ----
+          apCursorLoc (pDraw->pScreen, &cursorBox)) {
+              xorg = ((WindowPtr)pDraw)->absCorner.x;
+              yorg = ((WindowPtr)pDraw)->absCorner.y;
++ 	    lw = pShadowGC->lineWidth >> 1;
+  
+              for (nRect = nrects, pRect = pRects; nRect--; pRect++) {
+! 		if (ORG_OVERLAP(&cursorBox,xorg,yorg,
+! 				pRect->x - lw, pRect->y - lw,
+! 				(int)pRect->width + lw, (int)pRect->height + lw)){
+                      apRemoveCursor();
+                      break;
+                  }
+***************
+*** 646,652 ****
+      register xArc       *pArc;
+      register int        nArc;
+      register int        xorg,
+!                         yorg;
+      BoxRec              cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+--- 658,665 ----
+      register xArc       *pArc;
+      register int        nArc;
+      register int        xorg,
+!                         yorg,
+! 			lw;
+      BoxRec              cursorBox;
+  
+      if (IsWorthChecking(pDraw) &&
+***************
+*** 653,661 ****
+          apCursorLoc (pDraw->pScreen, &cursorBox)) {
+              xorg = ((WindowPtr)pDraw)->absCorner.x;
+              yorg = ((WindowPtr)pDraw)->absCorner.y;
+  
+              for (nArc = narcs, pArc = parcs; nArc--; pArc++) {
+!                 if (ORGRECT_OVERLAP(&cursorBox,xorg,yorg,pArc)){
+                      apRemoveCursor();
+                      break;
+                  }
+--- 666,677 ----
+          apCursorLoc (pDraw->pScreen, &cursorBox)) {
+              xorg = ((WindowPtr)pDraw)->absCorner.x;
+              yorg = ((WindowPtr)pDraw)->absCorner.y;
++ 	    lw = pShadowGC->lineWidth >> 1;
+  
+              for (nArc = narcs, pArc = parcs; nArc--; pArc++) {
+! 		if (ORG_OVERLAP(&cursorBox,xorg,yorg,
+! 				pArc->x - lw, pArc->y - lw,
+! 				(int)pArc->width + lw, (int)pArc->height + lw)){
+                      apRemoveCursor();
+                      break;
+                  }
+***************
+*** 688,693 ****
+--- 704,710 ----
+              apSaveCursorBox(((WindowPtr)pDraw)->absCorner.x,
+                               ((WindowPtr)pDraw)->absCorner.y,
+                               mode,
++ 			     0,
+                               pPts,
+                               count,
+                               &cursorBox);
+

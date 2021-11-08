@@ -1,0 +1,70 @@
+Return-Path: fred%hpcvxrm@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 26 May 88 18:43:21 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26503; Thu, 26 May 88 17:42:08 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 26 May 88 14:20:47 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA07186; Thu, 26 May 88 15:21:10 PDT
+Received: from hpcvxrm by hpcvxrm.HP.COM; Thu, 26 May 88 15:21:10 pdt
+Message-Id: <8805262221.AA02453@hpcvxrm.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Cc: fred%hpcvxft@hplabs.hp.com
+Subject: Another segmentation fault when destroying a widget with shell children
+X-Mailer: mh6.5
+Date: Thu, 26 May 88 15:21:08 PDT
+From: Fred Taft <fred%hpcvxrm@hplabs.hp.com>
+
+### bug number:   542
+### area:         Xt
+### severity:     medium high
+### comments:     
+### status:       closed
+
+
+VERSION:
+	Xtk release 2
+
+SYNOPSIS:
+	Destroying a widget with shell children STILL dumps core under
+        certain circumstances.
+
+DESCRIPTION:
+	We rolled in the posted fixes to Core.c and Shell.c, which were
+        supposed to take care of the dumping of core when a widget, its
+        children and its popup children were destroyed.  Unfortunately,
+        we still get segmentation faults when destroying certain types
+        of widget.
+
+        The problem occurs because of the way ShellDestroy() uses the
+        popup_list to hold window Ids if the parent widget is also being
+        destroyed.  There are times when the popup_list contains both
+        window Ids and widget Ids, and there is no way for a widget or
+        an application to distinguish the two.  I have destroy callbacks
+        attached to certain widgets; this callback attempts to search its
+        parent's popup list for certain pieces of information.  Unfortunately,
+        the popup list may contain a mixture of window and widget Ids, so
+        this leads to bogus pointer references.
+
+        I would like to suggest that instead of using the popup list to
+        store the window Ids during a destroy, we instead add a new field
+        to core, which is a pointer to an array of window Ids which are to
+        be destroyed; a count would also be needed.  In this way, we could
+        guarantee the integrity of the popup_list.
+
+REPEAT-BY:
+	1) Create a widget
+        2) Create 2 popup children of this widget
+        3) Create a child for each of the popup shells
+        4) Add a destroy callback to the normal children; this function
+           should traverse the popup_children list for its grandparent
+           (the widget created in step 1) and should print out the name
+           of each of the shell widgets.
+        5) Destroy shell1, shell2 and the main widget.
+
+FIX:
+	Add two new fields to the core instance: a pointer to a list of
+        window Ids and a count of the number of entries in this list.
+        Change ShellDestroy() to add entries to this list if the parent
+        is being destroyed; it should also always update the popup_list
+        and count.  Change CoreDestroy() to use this new list, instead of
+        the popup_list.
+

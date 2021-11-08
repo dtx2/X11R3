@@ -1,0 +1,61 @@
+Return-Path: jsh%spectrum@research.att.com
+Received: by expo.lcs.mit.edu; Fri, 17 Jun 88 15:39:16 EDT
+Received: by spectrum.att.com (4.0/SMI-4.0Beta)
+	id AA15668; Fri, 17 Jun 88 12:46:35 EDT
+Date: Fri, 17 Jun 88 12:46:35 EDT
+From: jsh@spectrum.lcs.mit.edu (Juergen Schroeter)
+Message-Id: <8806171646.AA15668@spectrum.att.com>
+To: xbugs%expo.lcs.mit.edu@arpa.lcs.mit.edu
+
+### bug number:   614
+### area:         xpr
+### severity:     low
+### comments:     duplicate of 696
+
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE: Sun 3/110
+
+CLIENT OPERATING SYSTEM:
+	SunOS 4.0
+
+DISPLAY: BW2
+
+SYNOPSIS:
+	trying to get a hardcopy of an X-window which is slightly off screen
+	results in an error.
+
+DESCRIPTION:
+	Using a script like
+	
+	xwd -xy | xpr $* -compact -device ps | ...
+
+	and pointing to a window which is slightly off the screen
+	results in the error message:
+
+X Protocol error detected by server: parameter mismatch
+  Failed request major op code 73 X_GetImage
+  Failed request minor op code 0 (if applicable)
+  ResourceID 0x200061 in failed request (if applicable)
+  Serial number of failed request 13
+  Current serial number in output stream 13
+  xpr: premature end of file
+xpr: file format version missmatch.
+ 
+	... and no hardcopy.
+
+REPEAT-BY:
+	see above
+
+FIX:
+	move window by one pixel.  Permanent fix should grab the portion which
+	is on the screen and just print that.
+

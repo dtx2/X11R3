@@ -1,0 +1,91 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Sat, 2 Apr 88 16:44:17 EST
+Return-Path: <@HPLABS.HP.COM:tom%hpcvxth@hplabs.HP.COM>
+Received: from hplabs.HP.COM (HPLABS.HP.COM) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 136350; 29 Mar 88 16:04:00 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 29 Mar 88 13:03:07 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA22112; Tue, 29 Mar 88 13:04:38 PST
+Received: from hpcvxth.HP.COM by hpcvlx.HP.COM; Tue, 29 Mar 88 13:01:40 pst
+Received: by hpcvxth.HP.COM; Tue, 29 Mar 88 13:00:54 mst
+Date: Tue, 29 Mar 88 13:00:54 mst
+From: tom%hpcvxth@hplabs.hp.com
+Message-Id: <8803292000.AA07267@hpcvxth.HP.COM>
+To: RWS@zermatt.lcs.mit.edu
+Subject: 4 bit pixels
+Cc: harry@hpcvxhp.lcs.mit.edu, hugh%hpcvxby@hplabs.hp.com
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Sat, 2 Apr 88 16:43 EST
+Resent-Message-Id: <880402164330.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   248
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+
+
+Robert,
+
+   I'm attempting to get the sample server to work for 4 bit pixels, and 
+am running into some problems.  We've cleaned up the cfb code and
+this code seems to work reasonable well.  Rather, the problems seem to be 
+emanating from the mi and mfb code.  In particular, things like
+painting pixels to window backgrounds work, but creating the root
+tile does not.  There seems to be problems in dealing with XYBitmap
+and XYPixmap images.  An example of one such bug is the routine
+miGetImage in 'miBitBlt.c'(version R2).  For the XYPixmap case, the smallest
+pixel that will work is 8 bits because of the way the bits are shifted
+off the end of the word.  There is another bug in the same code which
+occurs if the pixmap width is less than the BITMAP_SCANLIBE_UNIT.  Note that
+this is a problem even with 8 bit pixels.  The patch for these two problems is
+included in the end of this message.  I would appreciate confirmation of
+the problems and my fixes as, although I've tried to fix these in a 
+general way, the problem space is so large that I never feel that
+confident about a solution.
+
+   Is the mi and mfb code intended to support 4 bit pixels?  Do you
+know of other instances where the sample server is being used with
+4 bit pixels (without major changes)?  I'm trying to schedule this
+project so would appreciate any information you could offer me on this.
+
+
+Thanks,
+Tom Houser
+Hewlett-Packard
+hplabs!hp-pcd!tom
+503-750-4095
+
+
+< new mibitblt.c
+> old mibitblt.c
+
+280d279
+<     int                 nalign ;
+321d319
+<             nalign = (bitsPerPixel == 4)?4:0 ;
+337c335
+< 		    bit = (unsigned int) ((*pline >> (nalign+planeNum)) & 1);
+---
+> 		    bit = (unsigned int) ((*pline >> planeNum) & 1);
+346,347c344
+< 		    bit = (unsigned int)
+<                         ((shifted_pline >> (nalign+planeNum)) & 1);
+---
+> 		    bit = (unsigned int) ((shifted_pline >> planeNum) & 1);
+354c351
+< 		    if (k == 8 || j==w-1)
+---
+> 		    if (k == 8)
+364c361
+< 		    if (k == 16 || j==w-1)
+---
+> 		    if (k == 16)
+374c371
+< 		    if (k == 32 || j==w-1)
+---
+> 		    if (k == 32)
+
+

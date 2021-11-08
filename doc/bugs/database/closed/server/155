@@ -1,0 +1,68 @@
+Return-Path: jupiter!bob@cad.berkeley.edu
+Received: by expo.lcs.mit.edu; Fri, 3 Jun 88 23:01:00 EDT
+Received: by cad.Berkeley.EDU (5.58/1.28)
+	id AA04066; Fri, 3 Jun 88 19:58:24 PST
+Received: by jupiter.IS (4.12/6.0.GT)
+	id AA11551; Fri, 3 Jun 88 19:58:39 pdt
+Date: Fri, 3 Jun 88 19:58:39 pdt
+From: Bob Schulman <jupiter!bob%jupiter@cad.berkeley.edu>
+Posted-Date: Fri, 3 Jun 88 19:58:39 pdt
+Message-Id: <8806040258.AA11551@jupiter.IS>
+To: xbugs@expo.lcs.mit.edu
+Subject: mfbGetSpans problem
+Cc: bob@cad.berkeley.edu
+
+### bug number:   563
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Jupiter Sun Satellite
+
+SYNOPSIS:
+	 mfbGetSpans() screws up when (x % 32) == 0 && (width % 32) == 0
+
+DESCRIPTION:
+	 mfbGetSpans increments pdst once too often on when getting scan lines
+	 whose x is a multiple of 32 where we're fetching a multiple of 32 bits.
+	 In the code, you'll notice that startmask and endmask will both
+	 be set to zero, and nlMiddle will be set to the appropriate number
+	 of longs. However, after checking endmask, the code gratuitously
+	 increments pdst....this is just once too often under the conditions
+	 specified above.
+
+REPEAT-BY:
+	Call mfbGetSpans() with the above conditions and watch it go bad.
+	On ourt system, miCopyArea() ends up calling mfbGetSpans(),
+	and we get very weird behaviour on poskbitmaps/coke.xbm (a 64x64
+	bitmap).
+
+FIX:
+*** mfbgetsp.c.distributed	Fri Jun  3 19:50:12 1988
+--- mfbgetsp.c.fixed	Fri Jun  3 19:35:11 1988
+***************
+*** 135,144 ****
+--- 135,146 ----
+  	    pdst++; 
+  	    while(pdst < pdstNext)
+  	    {
+  		*pdst++ = 0;
+  	    }
++ 	    /* This shouldn't be needed */
++ 	    pdst = pdstNext;
+  	} 
+          ppt++;
+      }
+      return(pdstStart);
+  }
+

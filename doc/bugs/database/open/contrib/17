@@ -1,0 +1,93 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Mon, 18 Jul 88 17:35:33 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8807182135.AA28902@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: contrib/gfto bugs
+Organization: X Consortium, MIT Laboratory for Computer Science
+Date: Mon, 18 Jul 88 17:35:32 EDT
+
+### bug number:   742
+### area:         contrib
+### severity:     low
+### comments:     
+
+
+
+------- Forwarded Message
+
+Return-Path: xpert-request@athena.mit.edu
+Received: by expo.lcs.mit.edu; Mon, 18 Jul 88 13:42:47 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA29735; Mon, 18 Jul 88 13:43:10 EDT
+Received: by BLOOM-BEACON.MIT.EDU with sendmail-5.59/4.7 
+	id <AA21386@BLOOM-BEACON.MIT.EDU>; Mon, 18 Jul 88 13:27:41 EDT
+Received: from USENET by bloom-beacon.mit.edu with netnews
+	for xpert@athena.mit.edu (xpert@athena.mit.edu)
+	(contact usenet@bloom-beacon.mit.edu if you have questions)
+Date: 18 Jul 88 17:48:46 GMT
+From: dana@bellcore.bellcore.com  (Dana A. Chee)
+Organization: Bellcore, Morristown, NJ  USA
+Subject: patches to gfto
+Message-Id: <DANA.88Jul18124846@dino.bellcore.com>
+Sender: xpert-request@athena.mit.edu
+To: xpert@athena.mit.edu
+
+
+Below are patches to the contributed program gfto (contrib/gfto on the
+X11R2 tape).  These fix a fallthrough error in a case statement and
+cause the ENCODING of the charater to match what metafont thought it
+was.
+
+Enjoy!!
+
+==================== gfto.diffs ====================
+*** bdf.c.orig	Fri Mar  4 15:47:41 1988
+- --- bdf.c	Fri Jul  8 08:57:15 1988
+***************
+*** 42,49 ****
+  
+    for(i=0,pp=pc; i < nchars; i++,pp++) {
+      p = *pp;
+!     printf("STARTCHAR C%03d\n",i);
+!     printf("ENCODING %d\n",i);
+      printf("SWIDTH %d %d\n",
+  	   (p->boc.max_m*72000)/(pts*hpxpi),0);
+      printf("DWIDTH %d %d\n",p->boc.max_m,0);
+- --- 42,49 ----
+  
+    for(i=0,pp=pc; i < nchars; i++,pp++) {
+      p = *pp;
+!     printf("STARTCHAR C%03x\n",i);
+!     printf("ENCODING %d\n",p->boc.c);
+      printf("SWIDTH %d %d\n",
+  	   (p->boc.max_m*72000)/(pts*hpxpi),0);
+      printf("DWIDTH %d %d\n",p->boc.max_m,0);
+*** gf.c.orig	Fri Mar  4 15:47:42 1988
+- --- gf.c	Thu Jul  7 11:51:52 1988
+***************
+*** 433,442 ****
+- --- 433,444 ----
+        while(k--)
+  	if(getc(gfp) == EOF)
+  	  goto bad;
++ 	break;
+  
+      case YYY:
+        if(get4(&k,gfp) < 0)
+  	goto bad;
++ 	break;
+  
+      case BOC:
+        if(get4(&p->boc.c,gfp) < 0)
+- --
++*************************************************************************+
+*  Dana Chee				(201) 829-4488			  *
+*  Bellcore								  *
+*  Room 2Q-250								  *
+*  445 South Street			ARPA: dana@bellcore.com		  *
+*  Morristown,  NJ  07960-1910		UUCP: {gateways}!bellcore!dana	  *
++*************************************************************************+
+
+------- End of Forwarded Message
+
+

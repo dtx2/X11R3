@@ -1,0 +1,45 @@
+Return-Path: karlton@wsl.dec.com
+Received: by expo.lcs.mit.edu; Fri, 9 Sep 88 16:57:30 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA02554; Fri, 9 Sep 88 13:57:23 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA08861; Fri, 9 Sep 88 13:57:17 PDT
+Message-Id: <8809092057.AA08861@gilroy.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: SetModifierMapping reports Busy too often
+Date: Fri, 09 Sep 88 13:57:16 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+
+### bug number:   959
+### area:         server
+### severity:     low
+### comments:     
+
+The protocol spec says that
+
+    If the nonzero keycodes specified for a modifier differ from those
+    currently defined and any (current or new) keys for that modifier
+    are logically in the down state, then the status reply is _Busy_ ...
+
+The implementation in ProcSetModfierMapping has
+
+    /*
+     *  Now enforce the restriction that none of the old or new
+     *  modifier keys may be down while we change the mapping,  and
+     *  that the DDX layer likes the choice.
+     */
+    if (!AllModifierKeysAreUp(modifierKeyMap, 8*(int)maxKeysPerModifier)
+            || !AllModifierKeysAreUp(inputMap, inputMapLen)) {
+        if (debug_modifiers)
+            ErrorF("Busy\n");
+        rep.success = MappingBusy;
+    } else {
+    ...
+
+This is wrong because if keys are down only for modifier bits that are not
+being affected by this request, the request will be denied anyway. This most
+often affects people in that if the LOCK key is down, then other modifier
+cannot be set at session initialization time.
+
+PK
+

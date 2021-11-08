@@ -1,0 +1,67 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 09:59:43 EST
+Return-Path: <@TI.COM:Oren@Home.csc.ti.com>
+Received: from ti.com (TI.COM) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 131743; 11 Mar 88 15:17:19 EST
+Received: by ti.com id AA05072; Fri, 11 Mar 88 14:14:51 CST
+Received: from SI by tilde id AA26930; Fri, 11 Mar 88 14:01:27 CST
+Message-Id: <2783102543-16306605@SI>
+Sender: OREN@si.csc.ti.com
+Date: Fri, 11 Mar 88  14:02:23 CST
+From: LaMott Oren <Oren@home.csc.ti.com>
+To: bug-clx@zermatt.lcs.mit.edu
+Subject: CLX event-case otherwise bug fix
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Mon, 14 Mar 88 09:59 EST
+Resent-Message-Id: <880314095959.9.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   102
+### area:         CLX
+### severity:     
+### assigned to:  rws
+### status:       closed
+
+I must have been sleeping when I wrote the code to find event-keys for
+the OTHERWISE clause of event-case.  Here's a working version:
+
+;; From the INPUT file:
+(defmacro event-dispatch ((display event) &body clauses)
+  ;; Helper macro for event-case
+  (let ((event-key (gensym))
+	(all-events (make-array *max-events* :element-type 'bit :initial-element 0)))
+    `(reading-event (,event)
+       (let ((,event-key (aref *event-key-vector* (event-code ,event))))
+	 (case ,event-key
+	   ,@(mapcar
+	      #'(lambda (clause)
+		  (let* ((events (car clause))
+			 (arglist (cadr clause))
+			 (body (cddr clause)))
+		    (if (member events '(otherwise t))
+			;; code for OTHERWISE clause.  Find all events NOT
+			;; used by other clauses
+			(let ((keys (do ((i 0 (1+ i))
+					 (key nil)
+					 (result nil))
+					((>= i *max-events*) result)
+				      (setq key (aref *event-key-vector* i))
+				      (when (and key (zerop (aref all-events i)))
+					(push key result)))))
+			  `(otherwise (binding-event-values
+					(,display ,event-key ,keys ,@arglist)
+					,@body)))
+		      ;; Code for normal clauses
+		      (let (true-events) ;; canonicalize event-names
+			(if (consp events)
+			    (progn
+			      (setq true-events (mapcar #'canonicalize-event-name events))
+			      (dolist (event all-events)
+				(setf (aref all-events (get-event-code event)) 1)))
+			  (setf true-events (canonicalize-event-name events)
+				(aref all-events (get-event-code true-events)) 1))
+			`(,true-events (binding-event-values
+					 (,display ,event-key ,true-events ,@arglist)
+					 ,@body))))))
+		     clauses))))))
+
+

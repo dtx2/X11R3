@@ -1,0 +1,25 @@
+Return-Path: kubitron@athena.mit.edu
+Received: by expo.lcs.mit.edu; Mon, 3 Oct 88 02:44:43 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA03437; Mon, 3 Oct 88 02:44:45 EDT
+Received: by ALEFNULL.MIT.EDU (5.45/4.7) id AA09182; Mon, 3 Oct 88 02:44:25 EDT
+Message-Id: <8810030644.AA09182@ALEFNULL.MIT.EDU>
+To: xbugs@athena.mit.edu, swick@athena.mit.edu
+Subject: resources
+Date: Mon, 03 Oct 88 02:44:23 EDT
+From: John D. Kubiatowicz <kubitron@athena.mit.edu>
+
+### bug number:   1044
+### area:         Xlib
+### severity:     
+### comments:     this is a problem with the resource manager and would take
+###               an addition to the Xlib spec to fix properly
+
+Are resources not per-Screen???  It appears that they are merely
+per-Display.  THIS IS A BUG! 
+
+I am currently running an Xibm server, with two screens of different
+resolution, one of which is color.  It is important that I have a set 
+of resources for each screen....
+
+--KUBI--
+

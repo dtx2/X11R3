@@ -1,0 +1,69 @@
+Return-Path: bilbo.geoff@seas.ucla.edu
+Received: by expo.lcs.mit.edu; Tue, 17 May 88 20:51:23 EDT
+Message-Id: <8805180051.AA02476@EXPO.LCS.MIT.EDU>
+Date:           Tue, 17 May 88 17:29:43 PDT
+From: Geoff Kuenning <bilbo.geoff@seas.ucla.edu>
+Received:       from BILBO (193.255.1.3) by FRODO
+                id smtp.15689; Tue, 17 May 88 17:28:21 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject:        "make depend" in dix directory doesn't make initatoms.c
+
+### bug number:   507
+### area:         config
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Bell Technologies 386/AT
+
+CLIENT OPERATING SYSTEM:
+	SVR3
+
+DISPLAY:
+	Video 7 VEGA (IBM EGA clone)
+
+SYNOPSIS:
+	"make depend" in dix directory doesn't make initatoms.c
+
+DESCRIPTION:
+	"make depend" doesn't work in a completely clean dix directory,
+	because initatoms.c is not made, but the "makedepend" command
+	requires it.
+
+REPEAT-BY:
+	cd server/dix
+	/bin/rm initatoms.c
+	# (make clean doesn't work because it doesn't remove initatoms.c...)
+	make depend
+
+FIX:
+	Apply the following patch:
+
+Index: server/dix/Imakefile
+
+*** Imakefile.old	Tue May 17 15:09:39 1988
+--- Imakefile	Fri May 13 16:16:04 1988
+***************
+*** 26,31
+  
+  SpecialObjectRule(globals.o, $(IRULESRC)/Imake.tmpl, $(SITE_DEFINES))
+  
+  DependTarget()
+  
+  ../../X11/Xatom.h initatoms.c:	BuiltInAtoms buildatoms
+
+--- 26,33 -----
+  
+  SpecialObjectRule(globals.o, $(IRULESRC)/Imake.tmpl, $(SITE_DEFINES))
+  
++ depend::	initatoms.c
++ 
+  DependTarget()
+  
+  ../../X11/Xatom.h initatoms.c:	BuiltInAtoms buildatoms
+
+	Geoff Kuenning	geoff@lcc.ucla.edu	geoff@ITcorp.com
+

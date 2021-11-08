@@ -1,0 +1,77 @@
+Return-Path: @XX.LCS.MIT.EDU,@neat.ai.toronto.edu:jdd@db.toronto.edu
+Received: by expo.lcs.mit.edu; Wed, 10 Aug 88 16:04:22 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Wed 10 Aug 88 16:02:18-EDT
+Received: from neat.ai.toronto.edu by RELAY.CS.NET id aa19549;
+          10 Aug 88 15:46 EDT
+Received: from soul.db.toronto.edu by neat.ai.toronto.edu with SMTP id 283; Wed, 10 Aug 88 15:27:19 EDT
+Received: from jdd by soul.db.toronto.edu via UNIX id AA15397; Wed, 10 Aug 88 15:30:46 EDT
+Date: 	Wed, 10 Aug 88 15:30:46 EDT
+From: "John D. DiMarco" <jdd@db.toronto.edu>
+Message-Id: <8808101930.AA15397@soul.db.toronto.edu>
+To: moraes@csri.toronto.edu, xbugs@expo.lcs.mit.edu
+
+### bug number:   848
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	BW2
+
+SYNOPSIS:
+	The viewport widget ignores its XtNwidth and XtNheight arguments.
+
+DESCRIPTION:
+	When a viewport widget is created, it resizes itself to the size
+	of its child regardless of the values for the XtNwidth and XtNheight
+	resources specified in its argument list. 
+
+REPEAT-BY:
+	compile the following program as follows:
+		cc viewport.c -o viewport.o -lXaw -lXt -lX11 -g
+	and run.
+
+
+#include <stdio.h>
+#include <X11/StringDefs.h>
+#include <X11/Intrinsic.h>
+#include <X11/Label.h>
+#include <X11/Viewport.h>
+
+main(argc, argv)
+int argc;
+char *argv[];
+{
+	static Arg arg[] = {
+		{XtNallowHoriz, 	(XtArgVal)True},
+		{XtNallowVert,		(XtArgVal)True},
+		{XtNwidth,		(XtArgVal)100},
+		{XtNheight,		(XtArgVal)100},
+	};
+	Widget root, vp;
+	root = XtInitialize(argv[0], "VPbug", NULL, 0, &argc, argv);
+	vp = XtCreateManagedWidget(argv[0], viewportWidgetClass, root,
+					arg, XtNumber(arg));
+	(void) XtCreateManagedWidget("Something to put inside",
+				     labelWidgetClass, vp, NULL, 0);
+	XtRealizeWidget(root);
+	XtMainLoop();
+}
+	
+
+--------------------------------------------------------------------------------
+John DiMarco	* We will live in the light *	jdd%db.toronto.edu@relay.cs.net
+jdd@db.toronto.edu 	jdd@db.utoronto.ca	jdd.db.toronto.cdn
+{uunet!utai,watmath!utai,decvax!utcsri,decwrl!utcsri}!db!jdd	jdd.utcsri.UUCP
+--------------------------------------------------------------------------------
+

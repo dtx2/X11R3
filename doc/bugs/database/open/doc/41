@@ -1,0 +1,43 @@
+Return-Path: @XX.LCS.MIT.EDU,@ai.toronto.edu:moraes@csri.toronto.edu
+Received: by expo.lcs.mit.edu; Sat, 2 Jul 88 19:29:26 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Sat 2 Jul 88 19:26:29-EDT
+Received: from ai.toronto.edu by RELAY.CS.NET id aa27152; 2 Jul 88 19:23 EDT
+Received: from turtle.csri.toronto.edu by neat.ai.toronto.edu with SMTP id 9; Sat, 2 Jul 88 19:15:44 EDT
+Received: from moraes by turtle.csri.toronto.edu via UNIX id AA11805; Sat, 2 Jul 88 19:14:15 EDT
+Date: 	Sat, 2 Jul 88 17:54:15 EDT
+From: Mark Moraes <moraes@csri.toronto.edu>
+Message-Id: <8807022314.AA11805@turtle.csri.toronto.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xt  Intrinsics bug
+Cc: beck@db.toronto.edu
+
+### bug number:   676
+### area:         doc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	Xt documentation refers to a 'client_data' member which is in fact
+	called 'closure'
+
+DESCRIPTION:
+	page 33 of the Xt Intrinsics document says that the XtCallbackrec
+	struct is of the form 
+		typedef struct _XtCallbackRec {
+		    XtCallbackProc  callback;
+		    caddr_t	    client_data;
+		} XtCallbackRec;
+	whereas it is in fact of the form 
+		typedef struct _XtCallbackRec {
+		    XtCallbackProc  callback;
+		    caddr_t	    closure;
+		} XtCallbackRec;
+	
+
+REPEAT-BY:
+	Reading Xt Intrinsics and comparing with <Intrinsics.h>
+
+

@@ -1,0 +1,133 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 10:08:15 EST
+Date: Thu, 10 Mar 88 10:08:15 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101508.AA00491@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: XMoveArea with IncludeInferiors on the root doesn't work.
+
+### bug number:   74
+### area:         server
+### severity:     
+### assigned to:  
+### status:       R1 bug #54 fixed this in generic code, but not all servers 
+
+(Message inbox:48)
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 08:45:27 EST
+Return-Path: <@EXPO.LCS.MIT.EDU:wesommer@ATHENA.MIT.EDU>
+Received: from EXPO.LCS.MIT.EDU (EXPO.LCS.MIT.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 127928; 28 Feb 88 17:01:26 EST
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Sun, 28 Feb 88 16:54:42 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA24617; Sun, 28 Feb 88 16:54:09 EST
+Received: by CHARON.MIT.EDU (5.45/4.7)
+	id AA11897; Sun, 28 Feb 88 16:54:12 EST
+Date: Sun, 28 Feb 88 16:54:12 EST
+From: Bill Sommerfeld <wesommer@athena.mit.edu>
+Message-Id: <8802282154.AA11897@CHARON.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: XMoveArea with IncludeInferiors on the root doesn't work.
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 10 Mar 88 08:45 EST
+Resent-Message-Id: <880310084525.6.RWS@KILLINGTON.LCS.MIT.EDU>
+
+The included source program (a converted version of the Apollo screen
+melt program posted to comp.sys.apollo) demonstrates what appears to
+be a bug in the implementation of the sample server; the problem
+appears to be that the blit is always clipped by the source region.
+
+The V11R1 Xlib document, on page 68, 3rd full paragraph, states that
+
+   For IncludeInferiors, neither source nor destination window is
+   clipped by inferiors.  This will result in drawing through subwindow
+   boundaries.
+
+This has been tried on microvax and RT servers.
+
+(yes, I know this program is unfriendly; that's the whole point of
+it...)
+
+If this has been fixed already, sorry for the duplication.
+
+Feel free to add this program to the distribution if the copyright
+allows it... it would be a neat little hack if it worked OK.
+(according to someone I was talking to at the Apollo recruiting open
+house, they unleash this program without warning on all new hires at
+Apollo; some people confuse it with broken hardware..).
+
+					- Bill
+
+/***********************************************************\
+*                                                           *
+*       melt                                                *
+*                                                           *
+*       Copyright 1987 by Stephen Coy                       *
+*                                                           *
+*       This code may be distributed provided that no       *
+*       money is charged for it and source code is          *
+*       included with any object.                           *
+*                                                           *
+*       Converted to X11 on 2/28/88 by Bill Sommerfeld	    *
+*                                                           *
+\***********************************************************/
+
+#include <X11/Xlib.h>
+
+#define DELTA   1
+#define XRANGE   (DELTA*2+1)
+#define YRANGE   (DELTA*10+1)
+
+Display *dpy;
+XGCValues gcv;
+GC gc;
+
+main()
+{               
+    init();
+    disolve();
+}
+
+init()
+{
+	dpy = XOpenDisplay("");
+	gcv.foreground = WhitePixel(dpy, DefaultScreen(dpy));
+	gcv.background = BlackPixel(dpy, DefaultScreen(dpy));
+	gcv.subwindow_mode = IncludeInferiors;
+	gcv.graphics_exposures = False;
+	
+	gc = XCreateGC (dpy, DefaultRootWindow(dpy),
+			GCBackground|GCForeground|
+			GCSubwindowMode|GCGraphicsExposures,
+			&gcv);
+}
+                       
+disolve()
+{                    
+	int x, y;
+	int max_x, max_y;
+
+	max_x = DisplayWidth (dpy, DefaultScreen (dpy));
+	max_y = DisplayHeight (dpy, DefaultScreen (dpy));
+
+	for(;;) {         
+		int xsize, ysize, destx, desty;
+		xsize = random()%(max_x-XRANGE) + XRANGE;
+		ysize = random()%(max_y-YRANGE) + YRANGE;  
+		x = max_x - x;
+		y = max_y - y;
+		x = random() % x;
+		y = random() % y;
+		destx = (random() % XRANGE - DELTA) + x;
+		desty = (random() % YRANGE) + y;
+	    
+		XCopyArea (dpy, DefaultRootWindow (dpy), DefaultRootWindow (dpy),
+			   gc, x, y, xsize, ysize, destx, desty);
+	}
+}
+
+
+
+
+
+
+

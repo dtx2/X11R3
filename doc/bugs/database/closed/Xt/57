@@ -1,0 +1,60 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 17:23:15 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA04052; Wed, 29 Jun 88 16:21:14 CDT
+Date: Wed, 29 Jun 88 16:21:14 CDT
+From: wtg@uc.msc.umn.edu
+Subject: Need to include <sys/time.h> in NextEvent.c
+Message-Id: <8806292121.AA04052@uc.msc.umn.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   664
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2  Xt
+
+CLIENT MACHINE:
+	***************** Cray2 only *******************
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	 Need to include <sys/time.h> in NextEvent.c
+
+DESCRIPTION:
+	 Need to include <sys/time.h> in NextEvent.c
+
+REPEAT-BY:
+	Compile NextEvent.c
+
+FIX:
+
+diff -c5 Xt/NextEvent.c sunXt/NextEvent.c
+*** Xt/NextEvent.c      Mon May 16 14:26:13 1988
+--- sunXt/NextEvent.c   Fri May  6 10:42:36 1988
+***************
+*** 27,39 ****
+  ******************************************************************/
+
+  #include <stdio.h>
+  #include <errno.h>
+  #include <X11/Xos.h>
+- #ifdef CRAY2
+- #include <sys/time.h>
+- #endif
+  #include <X11/Xlib.h>
+  #include "IntrinsicI.h"
+  #include <sys/param.h>
+  #include "fd.h"
+
+--- 27,36 ----
+***************
+
+

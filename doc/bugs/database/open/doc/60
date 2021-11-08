@@ -1,0 +1,46 @@
+Return-Path: @XX.LCS.MIT.EDU:liam%cs.qmc.ac.uk@nss.cs.ucl.ac.uk
+Received: by expo.lcs.mit.edu; Thu, 13 Oct 88 15:37:41 EDT
+Received: from NSS.Cs.Ucl.AC.UK by XX.LCS.MIT.EDU with TCP/SMTP; Thu 13 Oct 88 15:37:05-EDT
+Received: from cs.qmc.ac.uk by NSS.Cs.Ucl.AC.UK   via Janet with NIFTP
+           id aa07069; 13 Oct 88 20:18 BST
+Received: from sequent by csvax.cs.qmc.ac.uk id a019684; 13 Oct 88 20:24 BST
+Date:     Thu, 13 Oct 88 20:07:05 WET DST
+From: William Roberts <liam%cs.qmc.ac.uk@nss.cs.ucl.ac.uk>
+To: xbugs%expo.lcs.mit.edu@nss.cs.ucl.ac.uk
+Subject:  Protocol clarification required
+Reply-To: liam%cs.qmc.ac.uk@nss.cs.ucl.ac.uk
+Message-Id:  <8810131923.a028820@sequent.cs.qmc.ac.uk>
+
+### bug number:   1074
+### area:         doc
+### severity:     low
+### comments:     
+
+Protocol Specification (X version 11, release 2)
+
+In the description of CreateGC, the description
+of wide lines (pages 45-46) includes the sentence:
+
+    "A pixel is part of the line (and hence drawn) if the
+     center of the pixel is fully inside the bounding box ..."
+
+This sentence raises an ambiguity concerning the meaning of
+coordinates in X11: other references to pixel coordinates treat
+pixels as indivisible objects, so it makes sens to associate
+the coordinate (0,0) with the top-left pixel, for example.
+
+Since the notion of "the center of a pixel" appears in the
+definition of wide line behaviour, it is now necessary to treat
+the pixels as unit squares in real-number coordinate system.
+The question not answered by the protocol spec is
+
+        Where in the pixel (x,y) is the point (x,y) ?
+
+I suspect that the answer is that point (x,y) is the upper left
+corner of pixel (x,y), but the answer could alternatively be
+that point (x,y) is at the centre of the pixel!
+
+William Roberts         ARPA: liam@cs.qmc.ac.uk  (gw: cs.ucl.edu)
+Queen Mary College      UUCP: liam@qmc-cs.UUCP
+LONDON, UK              Tel:  01-975 5250
+

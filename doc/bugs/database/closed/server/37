@@ -1,0 +1,53 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 17:48:20 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 179379; Thu 17-Mar-88 17:47:14 EST
+Date: Thu, 17 Mar 88 17:46 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: mfbUnnaturalTileFS and mfbUnnaturalStippleFS
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880317224656.6.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   164
+### area:         server
+### severity:     high
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	mfbUnnaturalTileFS and mfbUnnaturalStippleFS (in mfbfillsp.c)
+reference outside the tile.
+
+DESCRIPTION:
+	The code does not take care that xSrc and ySrc always be less
+than x and y respectively.  If they are not, then iline and rem maybe
+negative, which will cause references outside the bounds of the tile or
+stipple.
+
+REPEAT-BY:
+	I did some stippling with a large stipple origin.
+
+FIX:
+	Replace:
+
+    xSrc += pGC->patOrg.x;
+    ySrc += pGC->patOrg.y;
+
+with
+
+    xSrc += ((pGC->patOrg.x % tileWidth) - tileWidth);
+    ySrc += ((pGC->patOrg.y % pTile->height) - pTile->height);
+

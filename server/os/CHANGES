@@ -1,0 +1,7 @@
+The following changes have been made to this directory since R2:
+
+     o  support for hpux and macII has been integrated into the generic
+	4.2bsd library.
+     o  bsd emulation routines (e.g. bcopy, bzero, etc. have been moved into
+	a new bsdemul library).
+     o  the sysV directory has been removed since it really wasn't System 5.

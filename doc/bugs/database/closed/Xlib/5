@@ -1,0 +1,145 @@
+Return-Path: karlton@decwrl.dec.com
+Received: from sonora.dec.com by expo.lcs.mit.edu; Wed, 6 Apr 88 21:28:35 EDT
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA28549; Wed, 6 Apr 88 18:27:03 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA05483; Wed, 6 Apr 88 18:26:59 PDT
+Message-Id: <8804070126.AA05483@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: rws@zermatt.lcs.mit.edu, bglover@flume.dec.com,
+        orgovan%star.DEC@decwrl.dec.com, chow@decwrl.dec.com,
+        haynes@decwrl.dec.com, karlton@decwrl.dec.com
+Subject: bogosity in XKeyBind.c dealing with keysyms in [XK_A .. XK_Z]
+Date: Wed, 06 Apr 88 18:26:58 -0700
+From: Phil Karlton <karlton@decwrl.dec.com>
+
+### bug number:   324
+### area:         Xlib
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     see response at bottom
+
+The following code in the Initialize routine
+
+        nbd = (dpy->max_keycode - dpy->min_keycode + 1) *
+		dpy->keysyms_per_keycode;
+        for (bd = dpy->keysyms; bd < (dpy->keysyms + nbd); bd += 2) {
+        if ((*(bd + 1) == NoSymbol) && (*bd >= XK_A) && (*bd <= XK_Z)) {
+            *(bd + 1) = *bd;
+            *bd += 0x20;
+            }
+	}
+
+is in error. To begin with the phrase
+	bd += 2
+should be
+	bd += dpy->keysyms_per_code
+It will not continue to be the case that all servers have at most 2
+columns in their keysym arrays.
+
+The more fundamental problem I have with this is that Xlib is altering
+the information being returned by the server. If the above bug were
+fixed it would be changing rows of the form
+	XK_A, None, None, ...
+to
+	XK_a, XK_A, None, ...
+This is inappropriate. This makes it impossible for the client to
+distinguish between a key with both "a" and "A" on it from a key with
+only "A" engraved on it. What about Linotype keyboards that have the
+upper and lower symbols on different keys?
+
+I realize that this makes it a little more efficient at runtime for
+XLookupString to generate the appropriate conversion. However, this
+efficiency should not be purchased at the cost of getting the wrong answer.
+
+It could be that the argument is that the dpy->keysyms is private to
+Xlib and the clients should keep their hands out. That may be true, but
+it probably means that the intrinsics will have to maintain its own
+version so that it can legitimately parse and understand and
+distinguish translation tables of the form
+	<Key>a: 	choice_3()
+	Shift<Key>a:	choice_2()
+	<Key>A:		choice_3()
+	Shift<Key>A:	choice_4()
+I will leave to the intrinsics writers how they will do the bindings
+for these productions for the bulk of keyboards that currently exist.
+
+PK
+
+[and Bob's response...]
+
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Thu, 7 Apr 88 12:05:36 EDT
+Date: Thu, 7 Apr 88 12:05 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: bogosity in XKeyBind.c dealing with keysyms in [XK_A .. XK_Z]
+To: karlton@decwrl.dec.com, xbugs@expo.lcs.mit.edu
+Cc: bglover%flume.dec@decwrl.dec.com, orgovan%star.DEC@decwrl.dec.com,
+        chow@decwrl.dec.com, haynes@decwrl.dec.com, jg@decwrl.dec.com
+In-Reply-To: <8804070126.AA05483@gilroy.dec.com>
+Message-Id: <880407120514.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+    Date: Wed, 06 Apr 88 18:26:58 -0700
+    From: Phil Karlton <karlton@decwrl.dec.com>
+
+		 To begin with the phrase
+	    bd += 2
+    should be
+	    bd += dpy->keysyms_per_code
+
+Even this fix is inadequate, since there is no guarantee that
+dpy->keysyms_per_code is always > 1.
+
+    The more fundamental problem I have with this is that Xlib is altering
+    the information being returned by the server.
+
+>From the point of view of XLookupString, this doesn't matter.  The
+dpy->keysyms data is supposed to be entirely private to Xlib, and
+it should do what it pleases with it.  HOWEVER,
+
+						   If the above bug were
+    fixed it would be changing rows of the form
+	    XK_A, None, None, ...
+    to
+	    XK_a, XK_A, None, ...
+    This is inappropriate. This makes it impossible for the client to
+    distinguish between a key with both "a" and "A" on it from a key with
+    only "A" engraved on it.
+
+The fact that other Xlib keysym routines (e.g. XLookupKeysym,
+XKeycodeToKeysym) use the same transformed dpy->keysyms is not well
+specified in Xlib.  It is hinted at in the description of
+XKeycodeToKeysym, but not in other routines, and the transformation
+isn't well specified.  The overall chapter probably needs a paragraph
+explaining all this.
+
+    I realize that this makes it a little more efficient at runtime for
+    XLookupString to generate the appropriate conversion. However, this
+    efficiency should not be purchased at the cost of getting the wrong answer.
+
+Whether it is the wrong answer depends on your perspective.  These are
+Xlib "convenience" routines, and they try to provide functionality that
+is convenient to the widest range of applications.  Since the protocol
+doc is clear that a single A should be treated as a/A, having the Xlib
+routines do this transformation for you seems appropriate.  If a client
+really cares, it can query the keymap explicitly, and look for itself.
+
+    It could be that the argument is that the dpy->keysyms is private to
+    Xlib and the clients should keep their hands out.
+
+Absolutely.
+
+						      That may be true, but
+    it probably means that the intrinsics will have to maintain its own
+    version so that it can legitimately parse and understand and
+    distinguish translation tables of the form
+	    <Key>a: 	choice_3()
+	    Shift<Key>a:	choice_2()
+	    <Key>A:		choice_3()
+	    Shift<Key>A:	choice_4()
+
+I don't see any language in the Xt manual that even comes close to
+explaining what <Key>A is supposed to mean; I guess it's supposed to be
+"obvious", but it isn't.
+

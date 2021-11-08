@@ -1,0 +1,79 @@
+Return-Path: toddb
+Received: by expo.lcs.mit.edu; Mon, 25 Jul 88 13:44:23 EDT
+Message-Id: <8807251744.AA23028@EXPO.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: delayed write implementation, et. al.
+Date: Mon, 25 Jul 88 13:44:19 EDT
+From: Todd Brunhoff <toddb@EXPO.LCS.MIT.EDU>
+
+### bug number:   777
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	a couple of changes---
+	- Server needs a delayed write mechanism so that it buffers output
+	  to clients.
+	- Some ddx layers need an opportunity to shut down the hardware
+	  before the server exits
+	- Some types in server/include/os.h and server/os/*/utils.c are
+	  inconsistent.
+
+DESCRIPTION:
+	Currently the server writes all output to clients as soon as it
+	composes it.  This can be slow for clients with many
+	windows getting exposed.  In addition, the server is very unforgiving:
+	if the client is not ready to accept output within two seconds, the
+	server kills it.
+
+	The ddx abort changes and the type clash changes are as above.
+REPEAT-BY:
+	Suspend your xclock and then rub on it with another window
+	using opaquemove to generate lots of exposure events.  Eventually
+	xclock dies.
+
+FIX:
+	Many, many changes.  The delayed write code has been tested on all
+	machines at the consortium.  At first it was thought that these
+	changes would speed things up greatly, but I've only seen 10% at
+	best.  It turns out that the biggest win was on buffering the
+	client's output even if it is write-blocked.  Basically:
+	      - WriteToClient now buffers output unless the amount
+		requested to be written is larger than its current
+		available buffer size (this avoids copying large amounts
+		of data for something like a GetImage).
+	      - when some device events {button,key}{press,release}
+		are handed to WriteToClient, a flag is set saying that
+		there is critical output.  In Dispatch, after all input
+		events are processed, the dix layer requests that the
+		output buffer be flushed if there is critical output.
+	      - Every time the dispatcher changes clients in the round-
+		robin scheduling loop, it requests that the client
+		output be flushed unconditionally.
+	      - The os layer implementations (4.2bsd and hpux) honor
+		requests for flushes on a client-by-client basis: if
+		the client has any more requests in its input buffer,
+		the flush is ignored on the guess that there will probably
+		be more output generated for this client.
+
+	The changes for type clashes between server/include/os.h and
+	server/os/*/utils.c were included here because they intersected
+	with the changes for the delayed write implementation.
+
+	There is a new routine expected to appear in ddx layers
+	called AbortDDX(); it is called just before the server exits
+	(on a fatal error).  Changes are provided for all ddx layers.
+
+	There are also some changes to ddx.doc.tbl.ms documenting everything
+	above, plus documenting some existing routines: Error() and ErrorF()
+	and FatalError().
+
+	See fix-trackers for the actual patches...
+

@@ -1,0 +1,95 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 17:23:20 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA04062; Wed, 29 Jun 88 16:21:25 CDT
+Date: Wed, 29 Jun 88 16:21:25 CDT
+From: wtg@uc.msc.umn.edu
+Message-Id: <8806292121.AA04062@uc.msc.umn.edu>
+Subject: sizeof int assumed 4 in Xt macros
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   666
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2  Xt
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	 sizeof int assumed 4 in Xt macros
+
+DESCRIPTION:
+	 The macros in IntrinsicI.h assume that a word is 4 bytes.
+The macros are XtBCopy, XtBZero, and XtBCmp.
+
+REPEAT-BY:
+	Visual inspection.
+
+FIX:
+	bzero, bcopy and bcmp can be used safely:
+
+diff -c5 Xt/IntrinsicI.h sunXt/IntrinsicI.h
+*** Xt/IntrinsicI.h	Fri May  6 13:23:18 1988
+--- sunXt/IntrinsicI.h	Fri May  6 10:42:39 1988
+***************
+*** 37,84 ****
+   *
+   ****************************************************************/
+  
+  
+  extern void bcopy();
+- #ifdef CRAY
+  #define XtBCopy(src, dst, size)				    \
+- 	bcopy((char *) (src), (char *) (dst), (int) (size));
+- #else
+- #define XtBCopy(src, dst, size)				    \
+      if (size == sizeof(int) &&				    \
+  	!((unsigned int) src & 0x3) &&			    \
+  	!((unsigned int) dst & 0x3))			    \
+  	*((int *) (dst)) = *((int *) (src));		    \
+      else if (size == sizeof(char))			    \
+  	*((char *) (dst)) = *((char *) (src));		    \
+      else						    \
+  	bcopy((char *) (src), (char *) (dst), (int) (size));
+- #endif
+  
+  extern void bzero();
+- #ifdef CRAY
+  #define XtBZero(dst, size)				    \
+- 	(bzero((char *) (dst), (int) (size)))
+- #else
+- #define XtBZero(dst, size)				    \
+      if (size == sizeof(int))				    \
+  	*((int *) (dst)) = 0;				    \
+      else						    \
+  	bzero((char *) (dst), (int) (size));
+- #endif
+  
+  extern int bcmp();
+- #ifdef CRAY
+  #define XtBCmp(b1, b2, size)				    \
+-     ( bcmp((char *) (b1), (char *) (b2), (int) (size)))
+- #else
+- #define XtBCmp(b1, b2, size)				    \
+      (size == sizeof(int) ?				    \
+  	*((int *) (b1)) != *((int *) (b2))		    \
+      :   bcmp((char *) (b1), (char *) (b2), (int) (size))    \
+      )
+- #endif
+  
+  
+  
+  /****************************************************************
+   *
+--- 37,69 ----
+

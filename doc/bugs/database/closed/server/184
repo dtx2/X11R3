@@ -1,0 +1,67 @@
+Return-Path: dana@thumper.bellcore.com
+Received: by expo.lcs.mit.edu; Fri, 17 Jun 88 13:09:41 EDT
+Received: by thumper.bellcore.com (5.54/4.7)
+	id AA24616; Fri, 17 Jun 88 13:07:04 EDT
+Received: by dino.bellcore.com (4.12/4.7)
+	id AA04634; Fri, 17 Jun 88 13:06:02 edt
+Date: Fri, 17 Jun 88 13:06:02 edt
+From: dana@thumper.bellcore.com (Dana A. Chee)
+Message-Id: <8806171706.AA04634@dino.bellcore.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: dana@thumper.bellcore.com, ludwig@zippy.lcs.mit.edu
+Subject: lowering font filename case
+
+### bug number:   613
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	no matter
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	SUN
+
+SYNOPSIS:
+	when the font name is converted to lower case, all of it is
+
+DESCRIPTION:
+	in server/os/4.2bsd/filenames.c, the routine that converts the
+	font filename to lower case doesn't consider the full path
+	case of a font name, and blindly converts the entire thing,
+	therefore converting path components as well as the actual
+	font name.  Example, the font /usr/dana/X11/TMP/myfont.snf
+	would be converted to /usr/dana/x11/tmp/myfont.snf, and would
+	not be found.
+
+REPEAT-BY:
+
+FIX:
+*** server/os/4.2bsd/filenames.c	Mon Feb  1 09:18:03 1988
+--- /tmp/filenames.c	Fri Jun 17 13:02:36 1988
+***************
+*** 258,264 ****
+      /*
+       * reduce to lower case only
+       */
+!     for ( in=0; in<lenfname; in++)
+  	if ( isupper( lowername[in]))
+  	    lowername[in] = tolower( lowername[in]);
+      
+--- 258,264 ----
+      /*
+       * reduce to lower case only
+       */
+!     for ( in=lenfname-1; in>= 0 && lowername[in] != '/'; in--)
+  	if ( isupper( lowername[in]))
+  	    lowername[in] = tolower( lowername[in]);
+      
+
+

@@ -1,0 +1,83 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Mon, 7 Mar 88 17:24:12 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803072224.AA22845@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: patch for X.V11R2/xinit/xinit.c for nonblocking IO
+Date: Mon, 07 Mar 88 17:24:11 EST
+
+### bug number:   51
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+The fix provided is not necessarily the best one....
+------- Forwarded Message
+
+Return-Path: ardent!jkh%scrod@uunet.uu.net
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 7 Mar 88 17:21:33 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA02396; Mon, 7 Mar 88 15:49:59 EST
+Received: from ardent.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA13652; Mon, 7 Mar 88 15:49:40 EST
+Received: by ardent.ardent.ether (5.51/SMI-3.0DEV3)
+	id AA16384; Mon, 7 Mar 88 12:43:04 PST
+Received: by scrod.ardent.ether (1.1/SMI-3.0DEV3)
+	id AA00202; Mon, 7 Mar 88 12:43:13 PST
+Date: Mon, 7 Mar 88 12:43:13 PST
+From: ardent!jkh%scrod@uunet.uu.net (Jordan Hubbard)
+Message-Id: <8803072043.AA00202@scrod.ardent.ether>
+To: uunet!xpert%athena.mit.edu@uunet.uu.net
+Subject: patch for X.V11R2/xinit/xinit.c
+
+On suns (I don't know about other machines since I don't use xinit on
+anything else), the keyboard is often left in a hosed state after xinit
+terminates. Most of this is because non blocking IO is left on, which causes
+the shell to think it's getting EOF's. The following patch will fix that,
+as well as invoking a few keyboard restoring programs that will save you
+if you're really screwed up. The stuff between the #ifdef isn't mandatory,
+so you can either remove it or change the pathnames to work on your system.
+"setkeys" comes with suntools, kbd_mode comes with the X software.
+
+I think Adam Richter is responsible for an earlier version of this patch,
+but it never made it into xinit proper.
+- ----cut here----
+*** xinit.c.old	Mon Mar  7 12:29:37 1988
+- --- xinit.c	Mon Mar  7 12:40:16 1988
+***************
+*** 321,326 ****
+- --- 321,329 ----
+  shutdown(serverpid, clientpid)
+  	int	serverpid, clientpid;
+  {
++         int console;
++ 	int zero = 0;
++ 
+  	/* have kept display opened, so close it now */
+  	if (clientpid > 0) {
+  		XCloseDisplay(xd);
+***************
+*** 332,338 ****
+- --- 335,348 ----
+  			Error("can't killpg(%d, SIGHUP) for client\n",
+  				clientpid);
+  	}
++ 	console = open("/dev/console", O_WRONLY);
++ 	ioctl(console, FIONBIO, &zero);
++ 	close(console);
+  
++ #ifdef SUN
++ 	system("/usr/newX11/kbd_mode -a");
++ 	system("/usr/bin/setkeys reset");
++ #endif
+  	if (serverpid < 0)
+  		return;
+  	errno = 0;
+- --------
+
+
+					Jordan Hubbard
+
+
+------- End of Forwarded Message
+

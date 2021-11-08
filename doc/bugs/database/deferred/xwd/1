@@ -1,0 +1,46 @@
+Return-Path: jim
+Received: by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 08:51:37 EST
+Message-Id: <8803281351.AA00903@EXPO.LCS.MIT.EDU>
+From: sybase!webster!jef@sun.com (Jef Poskanzer)
+To: xbugs
+Subject: xwd file format
+Date: Mon, 28 Mar 88 08:51:36 EST
+Sender: jim@EXPO.LCS.MIT.EDU
+
+### bug number:   232
+### area:         xwd
+### severity:     low
+### comments:     Not only does the program write out XColor structures as a
+###               whole, it also writes its header out as one large chunk.
+###               It also makes assumptions about the layout of the subfields
+###               within the XColor struct (note how it swaps the gun values:
+###               it does a swapshort of 3, starting at red)
+
+
+------- Forwarded Message
+
+Date: Sat, 26 Mar 88 18:35:13 PST
+From: sybase!webster!jef@sun.com (Jef Poskanzer)
+To: pacbell!sun!athena.mit.edu!xpert@sun.com
+Subject: xwd file format
+
+I've been looking at the format of the bitmap files produced by xwd.
+The header is described in XWDFile.h, and it's all nice and machine-
+independent.  But if you look at xwd.c, you will find that it writes
+out XColor structs directly.  This doesn't seem very portable -- the
+actual size of this struct could vary from compiler to compiler.
+Since xwd goes to great lengths to be machine-independent, this seems
+weird.
+
+Can someone who knows more about it than I do comment on whether the
+XColors should be translated to 32-bit xwdvals before they are written
+out?  Naturally this would mean bumping the XWD_FILE_VERSION.
+- ---
+Jef
+
+        Jef Poskanzer   pacbell!sybase!jef@Sun.Com   jef@lbl-rtsg.ARPA
+
+
+------- End of Forwarded Message
+
+

@@ -1,0 +1,58 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:47:04 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26307; Tue, 5 Jul 88 14:45:21 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 10:45:33 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA29705; Tue, 5 Jul 88 11:45:35 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 5 Jul 88 11:47:19 pdt
+Message-Id: <8807051847.AA17993@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xwd window off screen
+X-Mailer: mh6.5
+Date: Tue, 05 Jul 88 11:47:15 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   696
+### area:         xwd
+### severity:     low
+### comments:     Actually, if it can figure out whether or not the window is
+###               is off screen, it can figure out what parts to grab that are
+###               on screen.  Be careful of reparenting window managers....
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	If an window is partially off the screen, give user
+	friendly message instead of generating an X protocal
+	error via XGetImage.
+DESCRIPTION:
+
+REPEAT-BY:
+	Place a window partially off the screen.
+	Try dumping that window via 'xwd'.
+SUGGESTED FIX:
+*** clients/xwd/xwd.c.old	Fri Jun 24 13:03:54 1988
+--- clients/xwd/xwd.c	Fri Jun 24 13:00:43 1988
+***************
+*** 158,163
+      if(!XGetWindowAttributes(dpy, window, &win_info)) 
+        Fatal_Error("Can't get target window attributes.");
+  
+      XFetchName(dpy, window, &win_name);
+      if (!win_name || !win_name[0])
+        win_name = "xwdump";
+
+--- 158,169 -----
+      if(!XGetWindowAttributes(dpy, window, &win_info)) 
+        Fatal_Error("Can't get target window attributes.");
+  
++     if (win_info.x + win_info.border_width * nobdrs < 0 ||
++         win_info.y + win_info.border_width * nobdrs < 0 ||
++ 	win_info.x + win_info.border_width + win_info.width + win_info.border_width * (!nobdrs) > DisplayWidth(dpy,screen) ||
++ 	win_info.y + win_info.border_width + win_info.height + win_info.border_width * (!nobdrs) > DisplayHeight(dpy,screen))
++ 	Fatal_Error("Target window lies partially off screen\n");
++ 	
+      XFetchName(dpy, window, &win_name);
+      if (!win_name || !win_name[0])
+        win_name = "xwdump";
+

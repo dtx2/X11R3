@@ -1,0 +1,6 @@
+The following changes have been made to this directory since R2:
+
+     o  Atoms.h has been replaced by StringDefs.h.
+     o  added -hl to set highlight color.
+     o	several bugs and other improvements by virtue of fixes
+	to the Load widget (c.f.).

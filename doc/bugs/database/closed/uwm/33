@@ -1,0 +1,52 @@
+Return-Path: jtkohl@athena.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 1 Sep 88 09:56:58 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA22978; Thu, 1 Sep 88 09:57:07 EDT
+Received: by LYCUS.MIT.EDU (5.45/4.7) id AA24949; Thu, 1 Sep 88 09:57:01 EDT
+Date: Thu, 1 Sep 88 09:57:01 EDT
+From: John T Kohl <jtkohl@athena.mit.edu>
+Message-Id: <8809011357.AA24949@LYCUS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: uwm doesn't use resources
+Us-Snail: 64 Dudley St., Brookline, MA
+Zip-Code: 02146
+
+### bug number:   928
+### area:         uwm
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    X Window System, Release 2
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    VAXstation II/GPX running 4.3BSD
+
+DISPLAY:
+    Digital QDSS
+
+WINDOW MANAGER:
+    uwm
+
+AREA:
+    uwm
+
+SYNOPSIS:
+   uwm doesn't do color defaults like everything else
+
+DESCRIPTION:
+   uwm has its own color specs set up within its config file.  It should
+use the standard Resource stuff.
+
+
+REPEAT BY:
+   Set *Background and *Foreground.  Watch uwm ignore them.
+
+
+

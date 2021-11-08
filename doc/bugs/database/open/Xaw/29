@@ -1,0 +1,94 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:davidsc%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Sat, 13 Aug 88 10:20:50 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Sat 13 Aug 88 06:07:49-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ac29743; 12 Aug 88 21:29 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa19135; 12 Aug 88 21:14 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA22397; Fri, 12 Aug 88 16:33:19 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA22095; Fri, 12 Aug 88 16:34:35 PDT
+From: David Schiferl <davidsc@shark.gwd.tek.com>
+Message-Id: <8808122334.AA22095@shark.GWD.TEK.COM>
+Date: Fri, 12 Aug 88 16:34:33 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject: lib/Xaw/Imakefile was missing Cascade.c and Cascade.o
+
+### bug number:   864
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+David Schiferl
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2482
+davidsc@shark.tek.com
+
+--------------------
+VERSION:
+	X11 release 2 with fixes 1-215 applied
+
+CLIENT MACHINE:
+	any
+
+CLIENT OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+SYNOPSIS:
+	Imakefile was missing Cascade.c and Cascade.o.
+
+DESCRIPTION:
+	Area: Xaw
+	Files: lib/Xaw/Makefile
+
+
+REPEAT-BY:
+	Read the file.
+
+FIX:
+
+*** /tmp/,RCSt1006941	Fri Aug 12 16:21:19 1988
+--- Imakefile	Fri Aug 12 16:18:40 1988
+***************
+*** 44,49
+  	AsciiSink.c \
+  	AsciiText.c \
+  	Box.c \
+  	Clock.c \
+  	Command.c \
+  	Dialog.c \
+
+--- 44,50 -----
+  	AsciiSink.c \
+  	AsciiText.c \
+  	Box.c \
++ 	Cascade.c \
+  	Clock.c \
+  	Command.c \
+  	Dialog.c \
+***************
+*** 67,72
+  	AsciiSink.o \
+  	AsciiText.o \
+  	Box.o \
+  	Clock.o \
+  	Command.o \
+  	Dialog.o \
+
+--- 68,74 -----
+  	AsciiSink.o \
+  	AsciiText.o \
+  	Box.o \
++ 	Cascade.o \
+  	Clock.o \
+  	Command.o \
+  	Dialog.o \
+

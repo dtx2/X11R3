@@ -1,0 +1,7 @@
+The following changes have been made to this directory since R2:
+
+     o  support has been added for the Apple Macintosh II in macII.
+     o  support has been added for Parallax Graphics controllers in plx.
+     o  support has been added for a non-device backend for testing the
+	server in ndx.
+

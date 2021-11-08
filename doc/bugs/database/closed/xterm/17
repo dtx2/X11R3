@@ -1,0 +1,271 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by expo.lcs.mit.edu; Tue, 5 Apr 88 18:21:58 EDT
+Received: by harvard.harvard.edu; Tue, 5 Apr 88 17:23:19 EST
+Received: from jeeves.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA22548; Tue, 5 Apr 88 18:11:40 EDT
+Received: by jeeves.ksr.com (3.2/SMI-3.2)
+	id AA00448; Tue, 5 Apr 88 18:11:38 EDT
+Message-Id: <8804052211.AA00448@jeeves.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: jim@expo.lcs.mit.edu
+Subject: -S to xterm on Sun seems not to work
+Reply-To: ksr!benson@harvard.harvard.edu
+Date: Tue, 05 Apr 88 18:11:36 EDT
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   311
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+        Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	3/50 mono
+
+SYNOPSIS:
+          Xterm gets a protocol error when run with -S in the
+aforementioned environment.
+
+DESCRIPTION:
+When I invoke xterm with -S, it takes an error like 
+
+xterm: invalid resource ID for this connection
+request code 1, minor code 0, serial #46, resource ID 173932544
+
+I believe that all of the numbers in the above, including the resource
+ID, constants across any number of attempts to execute this.
+
+If I try to use -synchronous to isolate the problem, it changes.
+xterm pops up the window and then hangs.
+
+	Appended here are the sources of a program to try out xterm
+-S. just compile make_xterm.c -DDEBUG and getpty.c and link them
+together, and then try make_xterm.	
+
+  
+
+REPEAT-BY:
+
+cc -g -c -DDEBUG make_xterm.c
+cc -g getpty.c
+cc -o make_xterm make_xterm.o getpty.o
+
+make_xterm
+
+
+------------------------------ make_xterm.c ------------------------------
+
+/* make_xterm.c -- opens an xterm window and returns a descriptor to the
+   tty side of its pty. */
+
+#include <stdio.h>
+
+#define MAKE_XTERM
+#include "make_xterm_defs.h"
+
+char * getenv ();
+
+void
+make_xterm (mxi)
+     make_xterm_info * mxi;
+{
+  char **xterm_argv;
+  int  xterm_argc;
+  extern char *calloc();
+  char ptymaster[100];
+  char ptyslave[100];
+  int  masterfd;
+  int  slavefd;
+  char Sarg[50];
+
+  if (mxi->version!=1)
+    {
+      fprintf(stderr,
+	      "make_xterm: called with bad structure version %d.\n", mxi->version);
+      exit(1);
+    }
+
+  if(!getpty(ptymaster, ptyslave, &masterfd, &slavefd))
+    {
+	perror ("make_xterm: failed to get a pty.");
+	exit (1);
+    }
+    
+
+  xterm_argc = 1 /* argv[0] */
+    + 1 /* -Spp */
+      + mxi->n_xterm_args + 1; /* 1 for the 0 at the end */
+
+  xterm_argv = (char **)calloc (xterm_argc, sizeof (char *));
+
+  xterm_argv[0] = XTERM;
+  {
+    int ax;
+    for (ax = 0;ax < mxi->n_xterm_args;ax ++) 
+      xterm_argv[ax+1]=mxi->xterm_args[ax];
+  }
+  xterm_argv[mxi->n_xterm_args+1]=Sarg;
+  xterm_argv[mxi->n_xterm_args+2]=(char *)0;
+
+  /* The pty is assumed to be of the form /dev/ttyXX, since xterm won't
+     deal with anything else. */
+
+  sprintf(Sarg, "-S%c%c%d", ptyslave[8], ptyslave[9], masterfd);
+
+  switch (mxi->xterm_pid = fork ())
+    {
+    case 0: /* the child */
+	close(slavefd);
+	execvp (XTERM, xterm_argv);
+	fprintf(stderr, "Failed to exec %s\n", XTERM);
+	exit(100);
+    case -1: /* error */
+	perror("make_xterm: failed to fork - ");
+	exit(1);
+	break;
+    default: /* the parent */
+	break;
+    }
+
+  {
+      unsigned long wid;
+      read(slavefd,&wid,sizeof(unsigned long) + 1 /* \n */);
+  }
+  close(masterfd);
+
+  strcpy(mxi->tty_path,ptyslave);
+
+  return;
+}
+
+#ifdef DEBUG
+
+main (argc, argv)
+     int argc;
+     char * argv[];
+
+{
+  make_xterm_info mxi;
+
+  mxi.version = 1;
+  mxi.n_xterm_args = argc - 1;
+  mxi.xterm_args = &argv[1];
+
+  make_xterm(&mxi);
+
+  printf("xterm pid: %d, tty: %s.\n", mxi.xterm_pid, mxi.tty_path);
+  system("/bin/sh");
+  exit(0);
+}
+#endif 
+
+------------------------------ make_xterm_defs.h ------------------------------
+
+/* Begin include file make_xterm_defs.h */
+
+#ifdef MAKE_XTERM
+
+#ifndef XTERM
+#define XTERM "xterm"
+#endif
+
+#endif
+
+/* argument structure for client */
+
+typedef struct
+{
+  int version;			/* must be 1 */
+  int n_xterm_args;		/* number of pointers in the following */
+  char **xterm_args;		/* arguments that preceed the -e clause */
+  int xterm_pid;
+  char tty_path[256];
+} make_xterm_info;
+
+
+extern void make_xterm();
+
+/* End include file make_xterm_defs.h */
+
+------------------------------ getpty.c ------------------------------
+
+/* subroutine to grab an available pty */
+/* on some systems, this has to be run in a setuid program. */
+
+#include <stdio.h>
+#include <errno.h>
+#include <sgtty.h>
+#include <sys/ioctl.h>
+
+#ifndef lint
+static char RCSid[] = "@(#)$Header$";
+#endif
+
+/* $Author$
+   $Date$
+   $Locker$
+
+   $Log$
+*/
+
+/*
+   success = getpty (mastername, slavename, &masterfd, &slavefd)
+
+*/
+
+    int
+getpty(ptyname, ptsname, pfpty, pfpts)
+char	*ptyname, *ptsname;
+int	*pfpty, *pfpts;
+{
+    static char ptlist[] = "0123456789abcdef";
+    int fpty, fpts;			/* descriptors for ""   ""    ""     */
+    register int c, i;			/* index */
+    int ptydisc;
+    extern int errno;
+
+     /* Look for available pty master/slave pair.
+      */
+    for (c = 'p'; c != 't' ; c++) {
+	for (i = 0; ptlist[i]; i++) {
+	    (void) sprintf(ptyname, "/dev/pty%c%c", c, ptlist[i]);
+	    if ((fpty = open(ptyname, 2)) < 0) {
+		if (errno == ENOENT)
+		    goto Bombout;
+		continue;
+	    }
+	    (void) sprintf(ptsname, "/dev/tty%c%c", c, ptlist[i]);
+	    if ((fpts = open(ptsname, 2)) < 0) {
+		(void) close(fpty);
+		goto Bombout;
+	    }
+	    /* This doesn't close the security hole,
+	     * but it helps avoid certain problems.
+	     */
+	    if (ioctl(fpts, (int)TIOCGETD, (char *)&ptydisc) || ptydisc) {
+		(void) close(fpts);
+		(void) close(fpty);
+		continue;
+	    }
+	    /* Okay, this one will do */
+	    *pfpts = fpts;
+	    *pfpty = fpty;
+	    return(1);
+	} /* for */
+    } /* for */
+
+Bombout:
+    return(0);
+} /* GetPty */
+

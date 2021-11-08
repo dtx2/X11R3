@@ -1,0 +1,180 @@
+Return-Path: keith
+Received: by expo.lcs.mit.edu; Mon, 25 Jul 88 17:20:41 EDT
+From: keith@expo.lcs.mit.edu (Keith Packard)
+Message-Id: <8807252120.AA25561@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: hp CopyArea/PolyFillRect ignore ClientClip/SubwindowMode
+Date: Mon, 25 Jul 88 17:20:39 EDT
+
+### bug number:   778
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+DISPLAY:
+	topcat (any hp color)
+
+AREA:
+	server
+
+SYNOPSIS:
+	hp CopyArea/PolyFillRect ignore ClientClip/SubwindowMode
+
+DESCRIPTION:
+	hpfbUnnaturalFastFillRect and hpfbCopyArea didn't use
+	the CompositeClip from the GC, rather they used
+	the raw pWin->clipList for windows, and created a
+	new region for pixmaps, spanning the pixmap.
+
+	This caused them to ignore ClientClip lists and
+	the GC's SubwindowMode bits.
+
+REPEAT BY:
+	Reimplemented miPaintWindow to draw to the appropriate
+	Root window rather than mangling the window clip list
+	if possible, then attempt to draw a tiled border for a window
+
+FIX:
+
+*** /tmp/,RCSt1a25260	Mon Jul 25 17:04:23 1988
+--- server/ddx/hp/cfb/hpfb.c	Mon Jul 25 17:04:07 1988
+***************
+*** 48,54 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: hpfb.c,v 1.2 88/02/06 14:58:38 rws Exp $ */
+  /* Author: Todd Newman  (aided and abetted by Mr. Drewry) */
+  
+  #include "X.h"
+--- 48,54 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: hpfb.c,v 1.3 88/07/25 17:03:24 keith Exp $ */
+  /* Author: Todd Newman  (aided and abetted by Mr. Drewry) */
+  
+  #include "X.h"
+***************
+*** 387,415 ****
+      }
+  
+      prect = prectInit;
+!     for (i = 0; i<nrectFill; i++, prect++) {
+! 	    /* if window, intersect wth clip list, else call direct */
+! 	    if (pDrawable->type == DRAWABLE_WINDOW) {
+! 		prgnDstClip = ((WindowPtr)pDrawable)->clipList;
+! 		for (pClipBox = prgnDstClip->rects,
+! 		     j = 0;
+! 		     j < prgnDstClip->numRects;
+! 		     j++,
+! 		     pClipBox++) {
+! 		    realRect.x = max(pClipBox->x1, prect->x);
+! 		    realRect.y = max(pClipBox->y1, prect->y);
+! 		    realRect.width = min(pClipBox->x2, (prect->x + prect->width)) -
+! 			realRect.x;
+! 		    realRect.height = min(pClipBox->y2, (prect->y + prect->height)) -
+! 			realRect.y;
+! 		    if (((short)(realRect.width) > 0) &&
+! 			((short)(realRect.height) > 0))
+! 			UFFRHelper(pGC, pTile, &realRect);
+! 		}
+! 	    }
+! 	    else
+! 		UFFRHelper(pGC, pTile, prect);
+  	}
+  }
+  
+  /* HPFBPOLYFILLRECT -- public entry for PolyFillRect request
+--- 387,415 ----
+      }
+  
+      prect = prectInit;
+!     for (i = 0; i<nrectFill; i++, prect++)
+!     {
+! 	/*
+! 	 * clip request to GC Composite clip
+! 	 */
+! 	prgnDstClip = ((cfbPrivGC *) (pGC->devPriv))->pCompositeClip;
+! 	for (pClipBox = prgnDstClip->rects,
+! 	     j = 0;
+! 	     j < prgnDstClip->numRects;
+! 	     j++,
+! 	     pClipBox++)
+!  	{
+! 	    realRect.x = max(pClipBox->x1, prect->x);
+! 	    realRect.y = max(pClipBox->y1, prect->y);
+! 	    realRect.width = min(pClipBox->x2, (prect->x + prect->width)) -
+! 		realRect.x;
+! 	    realRect.height = min(pClipBox->y2, (prect->y + prect->height)) -
+! 		realRect.y;
+! 	    if (((short)(realRect.width) > 0) &&
+! 		((short)(realRect.height) > 0))
+! 		UFFRHelper(pGC, pTile, &realRect);
+  	}
++     }
+  }
+  
+  /* HPFBPOLYFILLRECT -- public entry for PolyFillRect request
+***************
+*** 481,487 ****
+      RegionPtr 		prgnSrcClip, prgnDstClip;
+      			/* non-0 if we've created a src clip */
+      int 		realSrcClip = 0,
+-                         realDstClip = 0,
+                          useOrdering = 0;
+      int			srcx, srcy, dstx, dsty, i, j, y, width, height,
+      			xMin, xMax, yMin, yMax;
+--- 481,486 ----
+***************
+*** 542,562 ****
+  	    dstx += ((WindowPtr)pDstDrawable)->absCorner.x;
+  	    dsty += ((WindowPtr)pDstDrawable)->absCorner.y;
+  	}
+- 	prgnDstClip = ((WindowPtr)pDstDrawable)->clipList;
+      }
+-     else
+- 	{
+- 	BoxRec box;
+  
+! 	box.x1 = 0;
+! 	box.y1 = 0;
+! 	box.x2 = ((PixmapPtr)pDstDrawable)->width;
+! 	box.y2 = ((PixmapPtr)pDstDrawable)->height;
+  
+- 	prgnDstClip = (*pGC->pScreen->RegionCreate)(&box, 1);
+- 	realDstClip = 1;
+- 	}
+- 
+  #if SAOK
+      SALLOC(prgnSrcClip->numRects*sizeof(unsigned int));
+      ordering = (unsigned int *)SADDR;
+--- 541,550 ----
+  	    dstx += ((WindowPtr)pDstDrawable)->absCorner.x;
+  	    dsty += ((WindowPtr)pDstDrawable)->absCorner.y;
+  	}
+      }
+  
+!     prgnDstClip = ((cfbPrivGC *) (pGC->devPriv))->pCompositeClip;
+  
+  #if SAOK
+      SALLOC(prgnSrcClip->numRects*sizeof(unsigned int));
+      ordering = (unsigned int *)SADDR;
+***************
+*** 801,809 ****
+  		      widthSrc, heightSrc, xOut, yOut);
+      if(realSrcClip)
+        (*pGC->pScreen->RegionDestroy)(prgnSrcClip);
+-     if(realDstClip)
+-       (*pGC->pScreen->RegionDestroy)(prgnDstClip);
+-     
+  }
+  
+  
+--- 789,794 ----
+
+

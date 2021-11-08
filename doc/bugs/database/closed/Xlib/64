@@ -1,0 +1,79 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:glennw@shark.gwd.tek.com
+Received: by expo.lcs.mit.edu; Mon, 23 May 88 16:26:40 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Mon 23 May 88 16:21:50-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id al03550; 23 May 88 15:51 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id ar23305; 23 May 88 15:43 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA09497; Mon, 23 May 88 09:57:25 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA10418; Mon, 23 May 88 09:58:49 PDT
+From: Glenn Widener <glennw@shark.gwd.tek.com>
+Message-Id: <8805231658.AA10418@shark.GWD.TEK.COM>
+Date: Mon, 23 May 88 09:58:48 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject: XrmQGetSearchList(?) resource resolution precedence order wrong
+
+### bug number:   532
+### area:         Xlib
+### severity:     low
+### comments:     
+
+
+Glenn Widener
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2494
+glennw@shark.GWD.TEK.COM
+
+--------------------
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Tektronix 4317 (probably actually any)
+
+CLIENT OPERATING SYSTEM:
+	UTEK 2.3 (~=4.2bsd kernel + some 4.3 utilities)
+	(probably actually any)
+
+DISPLAY:
+	Tektronix 4317 (probably actually any)
+
+SYNOPSIS:
+	In the toolkit usage of the resource manager, "*" takes 
+	priority over "."
+
+DESCRIPTION:
+	Area: toolkit, xrm
+	Files: probably Xrm.c
+
+	The Xlib spec on the resource manager has a prioritized list of 
+	rules for matching resources.  Item 2 in this list says that dot
+	takes precedence over "*".  I infer from this that if you load the 
+	following resources:
+
+xbiff.Background: green
+xbiff*Background: red
+
+you get red when you should have gotten green.  Swapping the entries
+demonstrates that it is indeed the "*" that is controlling the result.
+However, the problem does not appear with
+
+bitmap*BorderWidth: 5 
+bitmap.BorderWidth: 0
+
+This gives a width of 0.  So I infer that the problem is in the
+XrmQGetSearchList routine used by the toolkit, not in XrmQGetResource,
+used by Xlib.
+
+FIX:
+	I ws not able to spot the problem right away in the convoluted
+	rm code, but a temporary workaround should be to convert the
+	toolkit back to using XrmQGetResource (better slow than wrong).
+	The recent bugfix to SearchList allocation in xt/Resources.c 
+	does not affect this problem.
+

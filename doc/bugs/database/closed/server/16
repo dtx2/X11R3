@@ -1,0 +1,49 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:23 EST
+Date: Fri, 4 Mar 88 16:13:23 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA05008@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: CreateColormap
+
+### bug number:   15
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 15:03:29 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 175873; Thu 3-Mar-88 15:02:30 EST
+Date: Thu, 3 Mar 88 15:02 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CreateColormap
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com
+Message-Id: <19880303200226.5.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	CreateColormap does not initialize pmap->clientPixelsRed
+properly.
+
+DESCRIPTION:
+	It assumes that using bzero on an array of pointers will fill
+the array with NULL's.  This is not a valid assumption in general.
+
+REPEAT-BY:
+	Try to free a colormap.
+
+FIX:
+	Initialize the arrays to NULL explicitly.

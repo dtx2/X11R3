@@ -1,0 +1,179 @@
+Return-Path: jim@thrush.stanford.edu
+Received: from thrush.STANFORD.EDU by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 14:51:42 EST
+Message-Id: <8803161951.AA16274@EXPO.LCS.MIT.EDU>
+Received: by thrush.STANFORD.EDU (3.2/4.7); Wed, 16 Mar 88 11:48:28 PST
+To: xbugs@expo.lcs.mit.edu (Jim Fulton)
+Cc: jim@thrush.stanford.edu
+Subject: Re: Changing icon bitmaps in xterm 
+In-Reply-To: Your message of Tue, 15 Mar 88 10:40:52 EST.
+             <8803151540.AA26298@EXPO.LCS.MIT.EDU> 
+Date: Wed, 16 Mar 88 11:48:26 PST
+From: Jim Helman <jim@thrush.stanford.edu>
+
+### bug number:   134
+### area:         Xt
+### severity:     low
+### status:       closed
+###               the -ib stuff should probably be implemented as a resource
+###               converter in the toolkit
+
+> From: jim@expo.lcs.mit.edu (Jim Fulton)
+> Subject: Re: Changing icon bitmaps in xterm 
+>
+> You are welcome to send the xterm diffs to xbugs@expo.lcs.mit.edu.  See
+> doc/bugs/bug-report.
+
+It's not exactly a bug.....but anyway here it is...
+
+Jim Helman (jim@thrush.stanford.edu)
+Department of Applied Physics
+Stanford University
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	General.  Tested on Sun-3/60M, Sun-3/160M, Sun-3/260C, 
+	VaxStationII, VaxStationGPX.
+
+CLIENT OPERATING SYSTEM:
+	General.  Tested on SunOS 3.4.2 and Ultrix 2.2
+
+DISPLAY:
+	General.  Tested on bwtwo, cgtwo, qvss, qdss
+
+SYNOPSIS:
+	In xterm, -i option is listed in in usage but isn't
+	implemented.  However, it is not shown in the man page.  There
+	is no facility for using icon bitmaps.
+
+DESCRIPTION:
+	Some users like to have a desktop come up with some windows in
+	iconic form for which "-i" is required.  Also, some users like
+	to have	different icon bitmaps for different applications which 
+	might be running under xterm, so a "-ib icon_bitmap_file" option 
+	is also desirable.
+
+REPEAT-BY:
+	Try 'xterm -i'.
+
+FIX:
+	Implement -i (and -ib).  What follows is a diff for
+	implementing [-i] for iconic startup and a new option
+	[-ib icon_bitmap_file].  Since XtInitialize is used to
+	parse the options, the diff also implements "*iconic" 
+	and "*iconBitmapFile" entries in Xdefaults.
+
+
+	
+*** main.c.dist	Fri Feb 26 06:14:30 1988
+--- main.c	Wed Mar 16 10:27:07 1988
+***************
+*** 154,159 ****
+--- 154,162 ----
+  
+  static char *icon_geometry;
+  static char *title;
++ static char *icon_bitmap_file;
++ static Boolean iconic;
++ static Boolean defaultIconic = FALSE;
+  
+  /* used by VT (charproc.c) */
+  
+***************
+*** 160,165 ****
+--- 163,172 ----
+  static XtResource application_resources[] = {
+      {"name", "Name", XtRString, sizeof(char *),
+  	(Cardinal)&xterm_name, XtRString, "xterm"},
++     {"iconic", "Iconic", XtRBoolean, sizeof(Boolean),
++        (Cardinal)&iconic, XtRBoolean, (caddr_t) &defaultIconic},
++     {"iconBitmapFile", "IconBitmapFile", XtRString, sizeof(char *),
++        (Cardinal)&icon_bitmap_file, XtRString, (caddr_t) NULL},
+      {"iconGeometry", "IconGeometry", XtRString, sizeof(char *),
+  	(Cardinal)&icon_geometry, XtRString, (caddr_t) NULL},
+      {XtNtitle, XtCTitle, XtRString, sizeof(char *),
+***************
+*** 179,184 ****
+--- 186,194 ----
+  {"+cu",		"*curses",	XrmoptionNoArg,		(caddr_t) "off"},
+  {"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
+  {"-fb",		"*boldFont",	XrmoptionSepArg,	(caddr_t) NULL},
++ {"-i",		"*iconic",	XrmoptionNoArg,		(caddr_t) "on"},
++ {"+i",		"*iconic",	XrmoptionNoArg,		(caddr_t) "off"},
++ {"-ib",		"*iconBitmapFile",XrmoptionSepArg,	(caddr_t) NULL},
+  {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
+  {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
+  {"-l",		"*logging",	XrmoptionNoArg,		(caddr_t) "on"},
+***************
+*** 445,451 ****
+--- 455,501 ----
+  	    }
+  	    break;
+  	}
++ 	/*
++ 	 * icon bitmap stuff added by jim@thrush.stanford.edu
++ 	 */
++ 	if (icon_bitmap_file != NULL) {
++ 	  int junk;
++ 	  Arg args[1];
++ 	  
++ 	  args[0].name = XtNiconPixmap;
++ 	  switch (XReadBitmapFile(XtDisplay(toplevel), 
++ 				  DefaultRootWindow(XtDisplay(toplevel)),
++ 				  icon_bitmap_file, 
++ 				  &junk, &junk,
++ 				  &args[0].value,
++ 				  NULL, NULL)) {
++ 	  case BitmapSuccess:
++ 	    XtSetValues( toplevel, args, 1);
++ 	    break;
++ 	  case BitmapOpenFailed:
++ 	    fprintf (stderr, 
++ 		     "Unable to open icon bitmap file %s\n",
++ 		     icon_bitmap_file);
++ 	    break;
++ 	  case BitmapFileInvalid:
++ 	    fprintf (stderr, "Bogus icon bitmap file\n");
++ 	    break;
++ 	  case BitmapNoMemory:
++ 	    fprintf (stderr, "No memory for icon pixmap\n");
++ 	    break;
++ 	  }
++ 	}
++ 	/*
++ 	 * iconic startup added by jim@thrush.stanford.edu
++ 	 */
++ 	if (iconic) {
++ 	  Arg args[1];
+  
++ 	  args[0].name = XtNiconic;
++ 	  args[0].value = TRUE;
++ 	  XtSetValues( toplevel, args, 1);
++ 	}
++ 	
+          term = (XtermWidget) XtCreateManagedWidget(
+  	    "vt100", xtermWidgetClass, toplevel, NULL, 0);
+              /* this causes the initialize method to be called */
+***************
+*** 606,613 ****
+  " [-bg backgrnd_color] [-bw border_width] [-cr cursor_color] [-cu] \\\n",
+  #endif	/* TIOCCONS */
+  " [-fb bold_font] [-fg foregrnd_color] [-fn norm_font] \\\n",
+! " [-i] [-j] [-l] [-lf logfile] [-ls] [-mb] [-ms mouse_color] \\\n",
+! " [-n name] [-nb bell_margin] [-rv] [-rw] [-s] \\\n",
+  " [-sb] [-si] [-sk] [-sl save_lines] [-sn] [-st] [-T title] [-t] [-tb] \\\n",
+  " [-vb] [=[width]x[height][[+-]xoff[[+-]yoff]]] \\\n",
+  " [%[width]x[height][[+-]xoff[[+-]yoff]]] [#[+-]xoff[[+-]yoff]] \\\n",
+--- 656,663 ----
+  " [-bg backgrnd_color] [-bw border_width] [-cr cursor_color] [-cu] \\\n",
+  #endif	/* TIOCCONS */
+  " [-fb bold_font] [-fg foregrnd_color] [-fn norm_font] \\\n",
+! " [-i] [-ib icon_bitmap_file] [-j] [-l] [-lf logfile] [-ls] [-mb] \\\n",
+! " [-ms mouse_color] [-n name] [-nb bell_margin] [-rv] [-rw] [-s] \\\n",
+  " [-sb] [-si] [-sk] [-sl save_lines] [-sn] [-st] [-T title] [-t] [-tb] \\\n",
+  " [-vb] [=[width]x[height][[+-]xoff[[+-]yoff]]] \\\n",
+  " [%[width]x[height][[+-]xoff[[+-]yoff]]] [#[+-]xoff[[+-]yoff]] \\\n",
+
+----- cut here -----
+

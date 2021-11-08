@@ -1,0 +1,63 @@
+Return-Path: mcvax!doc.ic.ac.uk!lmjm@uunet.uu.net
+Received: from uunet.UU.NET by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 06:21:02 EST
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA15788; Fri, 25 Mar 88 06:19:53 EST
+Received: by mcvax.cwi.nl; Fri, 25 Mar 88 12:06:05 +0100 (MET)
+Received: from doc.ic.ac.uk by kestrel.Ukc.AC.UK   via Janet (UKC CAMEL FTP)
+           id aa20921; 25 Mar 88 7:40 GMT
+From: Lee McLoughlin <mcvax!doc.ic.ac.uk!lmjm@uunet.uu.net>
+Date: Fri, 25 Mar 88 01:29:45 GMT
+Message-Id: <15737.8803250129@oriona.doc.ic.ac.uk>
+To: xbugs@expo.lcs.mit.edu
+Subject: syntax error in enum in Xaw/Form.h
+
+### bug number:   214
+### area:         Xt
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     More non-standard compiler troubles
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	HLH Orion
+
+CLIENT OPERATING SYSTEM:
+	4.2 BSD
+
+DISPLAY:
+	StarPoint
+
+SYNOPSIS:
+	 Syntax error in enum in Xaw/Form.h
+
+DESCRIPTION:
+	 An enum is given with a trailing ',' before the '}'.
+
+REPEAT-BY:
+	Compile anything using Form.h
+
+FIX:
+*** Form.h.orig	Fri Mar 25 01:23:32 1988
+--- Form.h	Fri Mar 25 01:23:57 1988
+***************
+*** 96,102
+  				   the left of the form */
+      XtChainRight,		/* Keep this edge a constant distance from
+  				   the right of the form */
+!     XtRubber,			/* Keep this edge a proportional distance
+  				   from the edges of the form*/
+  } XtEdgeType;
+  #endif  _XtEdgeType_e
+
+--- 96,102 -----
+  				   the left of the form */
+      XtChainRight,		/* Keep this edge a constant distance from
+  				   the right of the form */
+!     XtRubber 			/* Keep this edge a proportional distance
+  				   from the edges of the form*/
+  } XtEdgeType;
+  #endif  _XtEdgeType_e
+

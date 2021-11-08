@@ -1,0 +1,94 @@
+Return-Path: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu
+Received: from nutmeg.Berkeley.EDU by expo.lcs.mit.edu; Mon, 11 Apr 88 07:37:27 EDT
+Received: by nutmeg.Berkeley.EDU (5.57/1.25)
+	id AA05996; Sat, 9 Apr 88 21:26:40 PDT
+Date: Sat, 9 Apr 88 21:26:40 PDT
+From: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu (Adam R de Boor)
+Message-Id: <8804100426.AA05996@nutmeg.Berkeley.EDU>
+To: x11%brie@sun.com, xbugs@expo.lcs.mit.edu
+Subject: VPaned doesn't handle geometry requests properly
+
+### bug number:   346
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	 When VPaned receives a geometry request from a child whose
+	 allowResize resource is True, it responds to the requesting
+	 widget correctly, but leaves the other panes in the widget
+	 unaltered.
+
+DESCRIPTION:
+	 When a VPaned widget grants a geometry request to one of its children
+	 and its refigureMode is On, it should not just recalculate the new
+	 positions for its panes, but actually alter them. At the moment,
+	 its data record one set of locations and the windows themselves
+	 display another, causing annoyance to the user (i.e. me).
+
+REPEAT-BY:
+	Create a VPaned widget with two panes, one of which is allowed to
+	resize (I used a Box widget and added a large Command widget to it
+	to force it to resize) and make that one resize (either smaller
+	or larger -- smaller makes the effect clearer).
+
+FIX:
+*** /tmp/,RCSt1a05990	Sat Apr  9 20:25:56 1988
+--- VPaned.c	Sat Apr  9 20:24:06 1988
+***************
+*** 585,591
+        return XtGeometryAlmost;
+      }
+  
+-     w->core.height = request->height;
+      if (pane->min > pane->dheight) pane->min = pane->dheight;
+      if (pane->max < pane->dheight) pane->max = pane->dheight;
+      RefigureLocations(vpw, PaneIndex(pane->grip), UpperPane);
+
+--- 585,590 -----
+        return XtGeometryAlmost;
+      }
+  
+      if (pane->min > pane->dheight) pane->min = pane->dheight;
+      if (pane->max < pane->dheight) pane->max = pane->dheight;
+  
+***************
+*** 588,595
+      w->core.height = request->height;
+      if (pane->min > pane->dheight) pane->min = pane->dheight;
+      if (pane->max < pane->dheight) pane->max = pane->dheight;
+!     RefigureLocations(vpw, PaneIndex(pane->grip), UpperPane);
+!     return XtGeometryYes;
+  }
+  
+  /* ARGSUSED */
+
+--- 587,599 -----
+  
+      if (pane->min > pane->dheight) pane->min = pane->dheight;
+      if (pane->max < pane->dheight) pane->max = pane->dheight;
+! 
+!     /*
+!      * Shift other panes around in their structures and real life,
+!      * then tell caller everything's done.
+!      */
+!     RefigureLocationsAndCommit(vpw, PaneIndex(pane->grip), UpperPane);
+!     return XtGeometryDone;
+  }
+  
+  /* ARGSUSED */
+

@@ -1,0 +1,52 @@
+Return-Path: jtkohl@athena.mit.edu
+Received: by expo.lcs.mit.edu; Sun, 14 Aug 88 20:19:55 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23622; Sun, 14 Aug 88 20:20:08 EDT
+Received: by LYCUS.MIT.EDU (5.45/4.7) id AA21923; Sun, 14 Aug 88 20:20:04 EDT
+Date: Sun, 14 Aug 88 20:20:04 EDT
+From: John T Kohl <jtkohl@athena.mit.edu>
+Message-Id: <8808150020.AA21923@LYCUS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in ico (X11R2)
+Us-Snail: 64 Dudley St., Brookline, MA
+Zip-Code: 02146
+
+### bug number:   870
+### area:         demos
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	VAXstation II/GPX running 4.3BSD
+
+DISPLAY:
+	Digital QDSS
+
+WINDOW MANAGER:
+	uwm
+
+AREA:
+	ico
+
+SYNOPSIS:
+	Ico mis-names the octahedron
+
+DESCRIPTION:
+	Ico claims that it displays a tetrahedron when it in fact
+	displays an octahedron.
+
+REPEAT BY:
+	ico -obj tetra
+	Observe that the object is actually an octahedron
+
+FIX:
+	1) add a tetrahedron (4 faces, 6 edges, 4 vertices)
+	2) Change the tetrahedron name to octahedron
+
+

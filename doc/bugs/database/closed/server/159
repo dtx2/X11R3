@@ -1,0 +1,125 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:scotthe%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Wed, 15 Jun 88 21:56:05 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Wed 15 Jun 88 21:56:10-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ad18328; 15 Jun 88 19:14 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa18192; 15 Jun 88 19:07 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA15782; Wed, 15 Jun 88 13:08:33 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA01998; Wed, 15 Jun 88 13:08:17 PDT
+From: Scott Hennes <scotthe@shark.gwd.tek.com>
+Message-Id: <8806152008.AA01998@shark.GWD.TEK.COM>
+Date: Wed, 15 Jun 88 13:08:14 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com
+Subject: X11 R2 bug report: Improper scroll using CopyArea
+
+### bug number:   608
+### area:         server
+### severity:     low
+### comments:     
+
+
+Scott Hennes
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2144
+tektronix!shark!scotthe
+
+--------------------
+VERSION:
+	X11 release 2 with fixes 1-115 applied
+
+CLIENT MACHINE:
+	Tektronix 4316
+
+CLIENT OPERATING SYSTEM:
+	UTEK 2.3 (== 4.2bsd kernel with some 4.3 utilities)
+
+DISPLAY:
+	Tektronix 4316
+
+SYNOPSIS:
+	CopyArea doesn't scroll correctly when srcy is negative
+
+DESCRIPTION:
+	Area: XCopyArea
+
+	XCopyArea doesn't copy the pixels when a negative source y value 
+	is specified.
+
+	For example
+		XCopyArea(dpy, win, win, gc, 0, -50, 200, 400, 0, 0)
+	doesn't move any pixels.
+	The region 0, 0, 200, 50 is erased and a graphics expose event is
+	correctly generated.
+
+		XCopyArea(dpy, win, win, gc, 0, 0, 200, 400, 0, 50)
+	works just fine.
+
+
+REPEAT-BY:
+	Run this program fragment using "wcurrent" as a window ID of an xterm
+	window which has a full page of text being displayed:
+	The correct result should be to scroll the text down in the window.
+	The sample server (mfb) just clears the top line and doesn't move
+	any bits.
+
+	int i;
+	XWindowAttributes windowAttributes;
+	unsigned int width, height;
+
+	XGetWindowAttributes(pDpy, wcurrent, &windowAttributes);
+	width = windowAttributes.width;
+	height = windowAttributes.height;
+	for (i=0; i< 10; i++) {
+	    XCopyArea(pDpy, wcurrent, wcurrent, gc, 0, -16, 
+		width, height, 0, 0);
+	    XFlush(pDpy);
+	    sleep(5);
+	}
+
+        FIX:
+	The offending section in mfbCopyArea (and at least miCopyPlane) is:
+	/*
+	 * Clip the left and top edges of the source.
+	 */
+	if (srcx < 0)
+	{
+	    width += srcx;
+	    srcx = 0;
+	}
+	if (srcy < 0)
+	{
+	    height += srcy;
+	    srcy = 0;
+	}
+
+	I recommend removing this section.  The clipping will be done correctly
+	later on in this routine even without this section.  I don't know
+	why it is even there.  If it is included as a performance aid, then
+	the proper thing would seem to be to add a special case to
+	the region code rather than doing this in CopyArea.
+
+	If the code is necessary for some reason I don't understand, I think
+	it can be fixed as:
+	/*
+	 * Clip the left and top edges of the source.
+	 */
+	if (srcx < 0)
+	{
+	    width += srcx;
+	    dstx += srcx;
+	    srcx = 0;
+	}
+	if (srcy < 0)
+	{
+	    height += srcy;
+	    dsty += srcy;
+	    srcy = 0;
+	}
+

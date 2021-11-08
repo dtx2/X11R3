@@ -1,0 +1,108 @@
+Return-Path: tek@cs.ucla.edu
+Received: by expo.lcs.mit.edu; Mon, 29 Aug 88 20:07:03 EDT
+Return-Path: <tek@CS.UCLA.EDU>
+Received: by penzance.cs.ucla.edu (Sendmail 5.59/2.00)
+	id AA09642; Mon, 29 Aug 88 17:07:06 PDT
+Date: Mon, 29 Aug 88 17:07:06 PDT
+From: tek@cs.ucla.edu (Ted Kim (ATW))
+Message-Id: <8808300007.AA09642@penzance.cs.ucla.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: XCopyPlane
+
+### bug number:   920
+### area:         server
+### severity:     low
+### comments:     
+
+	X BUG REPORT
+	xbugs@expo.lcs.mit.edu
+
+VERSION:
+	X11 release 2 (with FIXES 1-33 applied)
+
+CLIENT MACHINE:	
+	SUN-3/60
+
+CLIENT OPERATING SYSTEM:
+	SUN OS 3.5
+
+DISPLAY:
+	CG4 
+
+SYNOPSIS:
+	XCopyPlane does not seem to work properly. About last quarter
+	of the destination rectangle comes out wrong.
+
+DESCRIPTION:
+	The following program, on my machine, does not do what is
+	expected. Namely, the XCopyPlane should paint a red square in
+	the destination window. Instead, I get a square about 3/4 red,
+	with the last 1/4 in white. The program pauses at one point,
+	so you can leisurely position the windows with UWM before
+	proceeding. 
+
+REPEAT-BY:
+	try this program:
+
+	********
+#include <stdio.h>
+#include <X11/Xlib.h>
+
+#define DoAll (DoRed|DoGreen|DoBlue)
+#define WinAttrs (CWBackPixel|CWBorderPixel|CWColormap)
+#define GCAttrs (GCForeground)
+
+main()
+{
+  Display *display;
+  Colormap cmap;
+  Window w1, w2;
+  XSetWindowAttributes xswa;
+  GC gc;
+  XGCValues xgcv;
+  int i;
+
+  display = XOpenDisplay(NULL);
+
+  cmap = XCreateColormap(display, DefaultRootWindow(display), 
+			 DefaultVisual(display, DefaultScreen(display)),
+			 AllocAll);
+  XStoreNamedColor(display, cmap, "green", 8, DoAll);
+  XStoreNamedColor(display, cmap, "lightgray", 4, DoAll);
+  XStoreNamedColor(display, cmap, "red", 2, DoAll);
+  XStoreNamedColor(display, cmap, "white", 1, DoAll);
+  XStoreNamedColor(display, cmap, "black", 0, DoAll);
+  XInstallColormap(display, cmap);
+			 
+  xswa.background_pixel = 0;
+  xswa.border_pixel = 8;
+  xswa.colormap = cmap;
+  w1 = XCreateWindow(display, DefaultRootWindow(display), 0,0, 200,200,  1, 8,
+		     InputOutput, CopyFromParent, WinAttrs, &xswa);
+  w2 = XCreateWindow(display, DefaultRootWindow(display), 0,0, 200,200,  1, 8,
+		     InputOutput, CopyFromParent, WinAttrs, &xswa);
+  XMapWindow(display, w1);
+  XMapWindow(display, w2);
+
+  XFlush(display);
+  printf("enter a number to proceed\n");
+  scanf("%d", &i);
+
+  xgcv.foreground = 4;
+  gc = XCreateGC(display, w1, GCAttrs, &xgcv);
+  XFillRectangle(display, w1, gc, 0,0, 200,200);
+  XFillRectangle(display, w2, gc, 0,0, 200,200);
+
+  XSetForeground(display, gc, 2);
+  XCopyPlane(display, w1, w2, gc, 50,50, 100,100, 50,50, 4);
+
+  XFlush(display);
+  printf("done\n");
+  sleep(1000);
+}
+	********
+
+FIX:
+	don't know
+
+

@@ -1,0 +1,55 @@
+Return-Path: mcvax!cwi.nl!guido@uunet.uu.net
+Received: by expo.lcs.mit.edu; Sun, 26 Jun 88 11:54:26 EDT
+Received: from mcvax.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA12718; Sun, 26 Jun 88 11:52:33 EDT
+Received: by mcvax.cwi.nl; Sun, 26 Jun 88 15:06:43 +0200 (MET)
+Received: by piring.cwi.nl; Sun, 26 Jun 88 15:06:38 +0200 (MET)
+Message-Id: <8806261306.AA01618@piring.cwi.nl>
+To: xbugs@expo.lcs.mit.edu
+Cc: mcvax!cwi.nl!guido@uunet.uu.net
+Subject: sloppy code in lib/X/Xrm.c
+From: Guido van Rossum <mcvax!cwi.nl!guido@uunet.uu.net>
+Organization: CWI (Centre for Mathematics and Computer Science), Amsterdam
+Phone: +31 20 5924138 (work), +31 20 225521 (home), +31 20 5924199 (fax)
+Date: Sun, 26 Jun 88 15:06:36 +0100
+Sender: mcvax!cwi.nl!guido@uunet.uu.net
+
+### bug number:   642
+### area:         Xlib
+### severity:     low
+### comments:     
+### status:       closed
+                  I have code to fix the buffer overflow problem.
+                  I've sent a message to xlib and intrinsics about the \<NULL>
+                  case.
+                  ralph, 8/29: fixed (Xrm.c rev 1.14)
+
+VERSION:
+	X11 release 2 (unpatched)
+
+SYNOPSIS:
+	sloppy code in lib/X/Xrm.c
+
+DESCRIPTION:
+	Inspection of the source shows that the static functions
+	getstring and PutLineResources will handle bad input
+	incorrectly
+	
+	When getstring is confronted with a string that isn't
+	terminated by \n, it will require *two* terminating null
+	bytes to recognize the end of the string.  And when a line
+	is longer that the size of the buffer, it will forever
+	return the same data when called repeatedly.
+	
+	In PutLineResources, a terminating null byte preceded by a
+	backslash will go undetected, so any garbage left in the buffer
+	will be appended to the resource.
+
+FIX:
+	If the X consortium people really have no time to fix this, I'll
+	cook up a fixed version and mail it to you, but I'd rather not
+	work on something that has already been fixed.
+--
+Guido van Rossum, Centre for Mathematics and Computer Science (CWI), Amsterdam
+guido@cwi.nl or mcvax!guido or (from ARPAnet) guido%cwi.nl@uunet.uu.net
+

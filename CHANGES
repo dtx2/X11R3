@@ -1,0 +1,12 @@
+The following changes have been made to this directory since R2:
+
+     o  substantially improved the X man page.
+     o  added README file with quick instructions for those in the fast lane.
+     o  added RELEASENOTES file giving overview of what has changed and where
+	to look for more information.
+     o  added STANDARDS file describing what is and is not part of the X
+	Standard.
+     o  removed support for automatically building contrib directory from
+	the Imakefile since it won't work completely on any single platform.
+     o  moved rgb directory here from util.
+     o  added some misc. utility targets to the top-level Makefile.

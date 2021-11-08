@@ -1,0 +1,45 @@
+Return-Path: @XX.LCS.MIT.EDU,@neat.ai.toronto.edu:cks@csri.toronto.edu
+Received: by EXPO.LCS.MIT.EDU; Fri, 22 Jul 88 21:21:02 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Fri 22 Jul 88 21:21:06-EDT
+Received: from neat.ai.toronto.edu by RELAY.CS.NET id ap02971;
+          22 Jul 88 18:17 EDT
+Received: from gerrard.csri.toronto.edu by neat.ai.toronto.edu with SMTP id 622; Fri, 22 Jul 88 16:22:14 EDT
+Received: from cks by gerrard.csri.toronto.edu via UNIX id AA02613; Fri, 22 Jul 88 16:23:51 EDT
+Message-Id: <8807222023.AA02613@gerrard.csri.toronto.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm bug report
+Date: 	Fri, 22 Jul 88 19:03:41 EDT
+From: Chris Siebenmann <cks@csri.toronto.edu>
+
+### bug number:   772
+### area:         xterm
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2, patchlevel 10
+
+CLIENT MACHINE:
+	Sun 3/60 and Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	Sun B&W.
+
+SYNOPSIS:
+	If given a title as a command line argument as well as a
+command, xterm titles its window with the command name, not the title.
+
+DESCRIPTION:
+	If given a title via -title as well as a command to execute
+via -e, xterm will set the window's title to the command's name
+instead of the explicitly given title. 'xterm -title <whatever>'
+without a command works, as does setting the window title with escape
+sequences after the window has opened up. Setting the title via '-T'
+works fine, however.
+
+REPEAT-BY:
+	xterm -title hiho -e vi /etc/termcap
+

@@ -1,0 +1,66 @@
+Return-Path: elsie!ado@ncifcrf.gov
+Received: by expo.lcs.mit.edu; Tue, 26 Jul 88 00:03:33 EDT
+Received: by fcs280s.ncifcrf.gov (4.0/NCIFCRF-1.0)
+	id AA01524; Tue, 26 Jul 88 00:02:50 EDT
+Received: by elsie.UUCP (5.51/4.7)
+	id AA01345; Tue, 26 Jul 88 00:02:13 EDT
+Date: Tue, 26 Jul 88 00:02:13 EDT
+From: elsie!ado@ncifcrf.gov (Arthur David Olson)
+Message-Id: <8807260402.AA01345@elsie.UUCP>
+Apparently-To: xbugs@expo.lcs.mit.edu
+
+### bug number:   780
+### area:         xedit
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	Sun UNIX 4.2 Release 3.5
+
+DISPLAY:
+	Sun B&W
+
+SYNOPSIS:
+	xedit gives an erroneous exit status.
+
+REPEAT-BY:
+	Run xedit from an xterm window, and simply click its Quit button.
+	You should get results something like this:
+
+		Script started on Mon Jul 25 23:39:06 1988
+		daisy$ xedit
+		daisy$ echo $?
+		184
+		daisy$ exit
+
+		script done on Mon Jul 25 23:39:20 1988
+
+FIX:
+*** 1.1/clients/xedit/commands.c	Mon Jul 25 23:53:13 1988
+--- 1.2/clients/xedit/commands.c	Mon Jul 25 23:53:14 1988
+***************
+*** 38,44 ****
+  {
+      if((lastChangeNumber == PSchanges(source)) ||
+	 (quitChangeNumber == PSchanges(source))){
+!         exit();
+      } else {    
+	  XeditPrintf("\nUnsaved changes. Save them, or press Quit again.");
+	  Feep();
+--- 38,44 ----
+  {
+      if((lastChangeNumber == PSchanges(source)) ||
+	 (quitChangeNumber == PSchanges(source))){
+!         exit(0);
+      } else {    
+	  XeditPrintf("\nUnsaved changes. Save them, or press Quit again.");
+	  Feep();
+-- 
+	ado@ncifcrf.gov			ADO is a trademark of Ampex.
+

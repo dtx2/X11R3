@@ -1,0 +1,56 @@
+Return-Path: dave@cs.wisc.edu
+Received: by expo.lcs.mit.edu; Wed, 27 Apr 88 14:52:05 EDT
+Message-Id: <8804271851.AA04369@romano.cs.wisc.edu>
+Received: from localhost.WISC.EDU by romano.cs.wisc.edu; Wed, 27 Apr 88 13:51:43 CDT
+To: xbugs@expo.lcs.mit.edu
+Subject: Problems with the Text widget on a Sun4
+Date: Wed, 27 Apr 88 13:51:36 -0500
+From: Dave Cohrs <dave@cs.wisc.edu>
+
+### bug number:   462
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 4/110
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	B/W
+
+SYNOPSIS:
+	Text widget does not understand all of the events it
+	should using the default translation table.
+
+DESCRIPTION:
+	The default Text widget translation table does not recognize
+	all of the events it should on a Sun4/110.  Namely, shifted
+	Meta operations are not processed correctly.  The <Meta>
+	is ignored, and the character is just inserted into the text.
+	For example, <Meta><Shift><.> should mean <Meta> ">", or
+	go to end-of-document.  Instead, ">" is inserted into the text.
+
+REPEAT-BY:
+	Run X11 on a Sun4.
+	- start xmh, and Compose a new message.  Compose uses a Text
+	  widget for editing the new message.
+	- enter the key combination that should mean <Meta> ">" using
+	  the default translation table.  On a Sun4/110, with a
+	  Type 3 keyboard, using the default keymap, this means
+	  pressing the Left button, then Shift, then the ". >" button.
+	- rather than moving the cursor to the end of the file, a
+	  ">" will be inserted at the current cursor position.
+	- also, typing Left "[" should move to the previous paragraph.
+	  No shift keys are necessary here, but the Text widget
+	  still just inserts "[" into the text.  Left "]" works
+	  just fine, however.  Left Delete (aka Meta-Delete) also
+	  fails to delete the whole previous word.  It is treated
+	  like a plain Delete, and deletes only the previous character.
+
+

@@ -1,0 +1,45 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:07 EST
+Date: Fri, 4 Mar 88 16:13:07 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA04972@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: CloseFont
+
+### bug number:   13
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Return-Path: @ALDERAAN.SCRC.Symbolics.COM,@dagobah.scrc.symbolics.com:hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 14:51:11 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via INTERNET with SMTP id 175870; 3 Mar 88 14:50:23 EST
+Date: Thu, 3 Mar 88 14:50 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CloseFont
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com
+Message-Id: <19880303195015.3.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	CloseFont in server/ddx/snf/fonts.c has only one argument.  It
+is called by FreeClientResources with two.
+
+DESCRIPTION:
+	 See above.
+
+REPEAT-BY:
+	Run the server.

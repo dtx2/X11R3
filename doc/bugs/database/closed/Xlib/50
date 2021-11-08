@@ -1,0 +1,4728 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 18:21:35 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA04501; Wed, 29 Jun 88 17:19:21 CDT
+Date: Wed, 29 Jun 88 17:19:21 CDT
+From: wtg@uc.msc.umn.edu
+Subject: Portability problems with 64 bit word-addressable architecture
+Message-Id: <8806292219.AA04501@uc.msc.umn.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   667
+### area:         Xlib
+### severity:     low
+### comments:     [done - jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	Portability problems with 64 bit word-addressable architecture
+
+DESCRIPTION:
+
+	Please forgive me for taking the lazy way out and reporting
+all these problems at once.  I did a context diff on the Xlib directory
+and put the results into one file.  Rather than chopping the file
+up by problem type, I present it whole.  I would like to describe
+the problems types in general, though.
+
+	1. SIZEOF - The size of a Cray structure will not necessarily
+be the same as on other machines.  This is only a problem when working
+with protocol data, which must be aligned just so.  Cray uses a macro
+called SIZEOF to replace the C language sizeof whenever the code is
+dealing with a protocol structure.
+
+	2. Socket call parameters. The Cray system call socket has
+a slightly different calling sequence than standard UCB4.2.  These
+changes are isolated to XConnDis.c.
+
+	3. Pointer arithmetic.  Again, when referencing data that
+must be aligned in machine independent ways, ie. the protocol data,
+incrementing a pointer may cause a reference to an undesired location.
+An example would be:
+	*(unsigned long *) (req + 1) = def->pixel;
+where req is a pointer to a structure.  The expression (req + 1)
+will really advance the pointer by what the compiler thinks the
+sizeof req is, not SIZEOF req.
+
+	4. Packing/Unpacking data.  Data is frequently copied from
+a structure to the output buffer or vice versa from the input buffer
+to a structure.  The data in the buffers will assume contiguous
+32 bit integers and cannot be copied directly to/from 64 bit integers.
+We use the macro Data32 to pack 32 bits of a 64 bit integer into
+the output buffer, Data16 to pack 16 bits of a 64 bit integer.
+Likewise we use XRead32 to unpack 32 bit data into a 64 bit integer,
+and XRead16 to unpack 16 bit data into a 64 bit integer.  We also
+have to keep track of the current buffer pointer by hand when doing this.
+
+	5. Miscellaneous.  One problem with integer overflow, using
+int instead of long. One problem assuming word size to be 4 bytes,
+where sizeof(int) would be a portable expression.
+
+
+REPEAT-BY:
+
+FIX:
+diff -c5 Xlib/Quarks.c sunXlib/Quarks.c
+*** Xlib/Quarks.c	Thu May 19 14:17:25 1988
+--- sunXlib/Quarks.c	Fri Jun 10 14:35:20 1988
+***************
+*** 30,44 ****
+  #include "Xresource.h"
+  
+  extern void bcopy();
+  
+  
+- #ifdef CRAY
+- typedef long Signature;
+- #else
+  typedef int Signature;
+- #endif
+  
+  static XrmQuark nextQuark = 1;	/* next available quark number */
+  static XrmString *quarkToStringTable = NULL;
+  static int maxQuarks = 0;	/* max names in current quarkToStringTable */
+  #define QUARKQUANTUM 600;	/* how much to extend quarkToStringTable by */
+--- 30,40 ----
+***************
+*** 54,68 ****
+      unsigned int length;
+  {
+      char *ret;
+  
+      /* round to nearest 4-byte boundary */
+- #ifdef CRAY
+-     length = (length + 7) & (~7);		/* should be sizeof(int) - 1 */
+- #else
+      length = (length + 3) & (~3);
+- #endif
+      if (neverFreeTableSize < length) {
+  	neverFreeTableSize =
+  	    (length > NEVERFREETABLESIZE ? length : NEVERFREETABLESIZE);
+  	neverFreeTable = Xmalloc(neverFreeTableSize);
+      }
+--- 50,60 ----
+***************
+*** 143,155 ****
+  
+      if (name == NULL)
+  	return (NULLQUARK);
+  
+      /* Compute string signature (sparse 32-bit hash value) */
+!     for (tname = name; *tname != '\0'; tname++) {
+  	sig = sig*scale + (unsigned int) *tname;
+-     }
+      strLength = tname - name + 1;
+  
+      /* Look for string in hash table */
+      hashp = &nodeTable[sig & HASHTABLEMASK];
+      for (np = *hashp; np != NULL; np = np->next) {
+--- 135,146 ----
+  
+      if (name == NULL)
+  	return (NULLQUARK);
+  
+      /* Compute string signature (sparse 32-bit hash value) */
+!     for (tname = name; *tname != '\0'; tname++)
+  	sig = sig*scale + (unsigned int) *tname;
+      strLength = tname - name + 1;
+  
+      /* Look for string in hash table */
+      hashp = &nodeTable[sig & HASHTABLEMASK];
+      for (np = *hashp; np != NULL; np = np->next) {
+diff -c5 Xlib/XBackgnd.c sunXlib/XBackgnd.c
+*** Xlib/XBackgnd.c	Thu Apr 14 17:08:31 1988
+--- sunXlib/XBackgnd.c	Fri Jun 10 14:35:21 1988
+***************
+*** 14,24 ****
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBackPixel;
+!     dpy->bufptr -= 4;
+!     Data32(dpy,(char *)&pixel,4);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 14,23 ----
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBackPixel;
+!     * (unsigned long *) (req + 1) = pixel;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XBdrWidth.c sunXlib/XBdrWidth.c
+*** Xlib/XBdrWidth.c	Thu Apr 14 17:08:31 1988
+--- sunXlib/XBdrWidth.c	Fri Jun 10 14:35:21 1988
+***************
+*** 13,23 ****
+      register xConfigureWindowReq *req;
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 4, req);
+      req->window = w;
+      req->mask = CWBorderWidth;
+!     dpy->bufptr -= 4;
+!     Data32(dpy,(char *)&width,4);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 13,22 ----
+      register xConfigureWindowReq *req;
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 4, req);
+      req->window = w;
+      req->mask = CWBorderWidth;
+!     * (unsigned long *) (req + 1) = width;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XBorder.c sunXlib/XBorder.c
+*** Xlib/XBorder.c	Thu Apr 14 17:08:33 1988
+--- sunXlib/XBorder.c	Fri Jun 10 14:35:21 1988
+***************
+*** 14,24 ****
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBorderPixel;
+!     dpy->bufptr -= 4;
+!     Data32(dpy,(char *)&pixel,4);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 14,23 ----
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBorderPixel;
+!     * (unsigned long *) (req + 1) = pixel;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XChCmap.c sunXlib/XChCmap.c
+*** Xlib/XChCmap.c	Thu May 12 11:32:22 1988
+--- sunXlib/XChCmap.c	Fri Jun 10 14:35:22 1988
+***************
+*** 14,28 ****
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWColormap;
+- #ifdef CRAY
+-     dpy->bufptr -= 4;
+-     Data32(dpy, (char *) &colormap, 4);
+- #else
+      * (unsigned long *) (req + 1) = colormap;
+- #endif
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 14,23 ----
+diff -c5 Xlib/XChKeyCon.c sunXlib/XChKeyCon.c
+*** Xlib/XChKeyCon.c	Thu Apr 14 17:08:33 1988
+--- sunXlib/XChKeyCon.c	Fri Jun 10 14:35:22 1988
+***************
+*** 51,60 ****
+      /* note: Data is a macro that uses its arguments multiple
+         times, so "nvalues" is changed in a separate assignment
+         statement */
+  
+      nvalues <<= 2;
+!     Data32 (dpy, (char *) values, nvalues);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  
+      }
+--- 51,60 ----
+      /* note: Data is a macro that uses its arguments multiple
+         times, so "nvalues" is changed in a separate assignment
+         statement */
+  
+      nvalues <<= 2;
+!     Data (dpy, (char *) values, nvalues);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  
+      }
+diff -c5 Xlib/XChProp.c sunXlib/XChProp.c
+*** Xlib/XChProp.c	Thu Apr 14 17:08:33 1988
+--- sunXlib/XChProp.c	Fri Jun 10 14:35:22 1988
+***************
+*** 27,49 ****
+      req->nUnits = nelements;
+      
+      switch (format) {
+        case 8:
+  	req->length += (nelements + 3)>>2;
+! 	Data32 (dpy, (char *)data, nbytes);
+          break;
+   
+        case 16:
+  	req->length += (nelements + 1)>>1;
+  	nbytes <<= 1;
+! 	Data16 (dpy, (char *) data, nbytes);
+  	break;
+  
+        case 32:
+  	req->length += nelements;
+  	nbytes <<= 2;
+! 	Data32 (dpy, (char *) data, nbytes);
+  	break;
+  
+        default:
+          /* XXX this is an error! */ ;
+        }
+--- 27,49 ----
+      req->nUnits = nelements;
+      
+      switch (format) {
+        case 8:
+  	req->length += (nelements + 3)>>2;
+! 	Data (dpy, (char *)data, nbytes);
+          break;
+   
+        case 16:
+  	req->length += (nelements + 1)>>1;
+  	nbytes <<= 1;
+! 	PackData (dpy, (char *) data, nbytes);
+  	break;
+  
+        case 32:
+  	req->length += nelements;
+  	nbytes <<= 2;
+! 	Data (dpy, (char *) data, nbytes);
+  	break;
+  
+        default:
+          /* XXX this is an error! */ ;
+        }
+diff -c5 Xlib/XChWindow.c sunXlib/XChWindow.c
+*** Xlib/XChWindow.c	Thu Apr 14 17:08:34 1988
+--- sunXlib/XChWindow.c	Fri Jun 10 14:35:22 1988
+***************
+*** 8,30 ****
+  XResizeWindow(dpy, w, width, height)
+  register Display *dpy;
+  Window w;
+  unsigned int width, height;
+  {
+      register xConfigureWindowReq *req;
+  
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 8, req); /* 2 4-byte quantities */
+  
+      /* XXX assuming that sizeof(unsigned long) is 32 bits */
+  
+      req->window = w;
+      req->mask = CWWidth | CWHeight;
+! 
+!     dpy->bufptr -= 8;
+! 
+!     Data32(dpy,(char *)&width,4);
+!     Data32(dpy,(char *)&height,4);
+! 
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 8,28 ----
+  XResizeWindow(dpy, w, width, height)
+  register Display *dpy;
+  Window w;
+  unsigned int width, height;
+  {
++     register unsigned long *valuePtr;
+      register xConfigureWindowReq *req;
+  
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 8, req); /* 2 4-byte quantities */
+  
+      /* XXX assuming that sizeof(unsigned long) is 32 bits */
+  
+      req->window = w;
+      req->mask = CWWidth | CWHeight;
+!     valuePtr = (unsigned long *) (req + 1);
+!     *valuePtr++ = width;
+!     *valuePtr++ = height;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XConfWind.c sunXlib/XConfWind.c
+*** Xlib/XConfWind.c	Thu Apr 14 17:08:34 1988
+--- sunXlib/XConfWind.c	Fri Jun 10 14:35:24 1988
+***************
+*** 9,30 ****
+  register Display *dpy;
+  Window w;
+  int x, y;
+  unsigned int width, height;
+  {
+      register xConfigureWindowReq *req;
+  
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 16, req);
+      req->window = w;
+      req->mask = CWX | CWY | CWWidth | CWHeight;
+! 
+!     dpy->bufptr -= 16;
+! 
+!     Data32(dpy,(char *)&x,4);
+!     Data32(dpy,(char *)&y,4);
+!     Data32(dpy,(char *)&width,4);
+!     Data32(dpy,(char *)&height,4);
+! 
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 9,28 ----
+  register Display *dpy;
+  Window w;
+  int x, y;
+  unsigned int width, height;
+  {
++     unsigned long *valuePtr;
+      register xConfigureWindowReq *req;
+  
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 16, req);
+      req->window = w;
+      req->mask = CWX | CWY | CWWidth | CWHeight;
+!     valuePtr = (unsigned long *) (req + 1);
+!     *valuePtr++ = x;
+!     *valuePtr++ = y;
+!     *valuePtr++ = width;
+!     *valuePtr   = height;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XConnDis.c sunXlib/XConnDis.c
+*** Xlib/XConnDis.c	Tue May 17 14:26:06 1988
+--- sunXlib/XConnDis.c	Fri Jun 10 14:35:24 1988
+***************
+*** 5,27 ****
+  /*
+   * THIS IS AN OS DEPENDENT FILE! It should work on 4.2BSD derived
+   * systems.  VMS and System V should plan to have their own version.
+   */
+  #include <stdio.h>
+- #include <X11/Xos.h>
+  #include "Xlibint.h"
+  #include <sys/socket.h>
+  #ifdef UNIXCONN
+  #include <sys/un.h>
+  #ifndef X_UNIX_PATH
+  #define X_UNIX_PATH "/tmp/.X11-unix/X"
+  #endif /* X_UNIX_PATH */
+  #endif /* UNIXCONN */
+  void bcopy();
+- #ifdef CRAY
+- extern long dumpreq;
+- #endif
+  /* 
+   * Attempts to connect to server, given display name. Returns file descriptor
+   * (network socket) or -1 if connection fails. The expanded display name
+   * of the form hostname:number.screen ("::" if DECnet) is returned in a result
+   * parameter. The screen number to use is also returned.
+--- 5,25 ----
+  /*
+   * THIS IS AN OS DEPENDENT FILE! It should work on 4.2BSD derived
+   * systems.  VMS and System V should plan to have their own version.
+   */
+  #include <stdio.h>
+  #include "Xlibint.h"
++ #include <X11/Xos.h>
+  #include <sys/socket.h>
++ 
+  #ifdef UNIXCONN
+  #include <sys/un.h>
+  #ifndef X_UNIX_PATH
+  #define X_UNIX_PATH "/tmp/.X11-unix/X"
+  #endif /* X_UNIX_PATH */
+  #endif /* UNIXCONN */
+  void bcopy();
+  /* 
+   * Attempts to connect to server, given display name. Returns file descriptor
+   * (network socket) or -1 if connection fails. The expanded display name
+   * of the form hostname:number.screen ("::" if DECnet) is returned in a result
+   * parameter. The screen number to use is also returned.
+***************
+*** 37,47 ****
+  	register char *display_ptr;	/* Display string buffer pointer */
+  	register char *numbuf_ptr;	/* Server number buffer pointer */
+  	char *screen_ptr;		/* Pointer for locating screen num */
+  	int display_num;		/* Display number */
+  	struct sockaddr_in inaddr;	/* INET socket address. */
+-         long  hostinetaddr;
+  #ifdef UNIXCONN
+  	struct sockaddr_un unaddr;	/* UNIX socket address. */
+  #endif
+  	struct sockaddr *addr;		/* address to connect to */
+          struct hostent *host_ptr;
+--- 35,44 ----
+***************
+*** 165,179 ****
+  		    return(-1);	    /* errno set by system call. */
+  	    } else
+  #endif
+  	    {
+  		/* Get the statistics on the specified host. */
+! 
+!                 hostinetaddr = inet_addr(displaybuf);
+! 
+!                 if (hostinetaddr == -1) {
+! 
+  			if ((host_ptr = gethostbyname(displaybuf)) == NULL) {
+  				/* No such host! */
+  				errno = EINVAL;
+  				return(-1);
+  			}
+--- 162,172 ----
+  		    return(-1);	    /* errno set by system call. */
+  	    } else
+  #endif
+  	    {
+  		/* Get the statistics on the specified host. */
+! 		if ((inaddr.sin_addr.s_addr = inet_addr(displaybuf)) == -1) {
+  			if ((host_ptr = gethostbyname(displaybuf)) == NULL) {
+  				/* No such host! */
+  				errno = EINVAL;
+  				return(-1);
+  			}
+***************
+*** 184,217 ****
+  				return(-1);
+  			}
+   
+  			/* Set up the socket data. */
+  			inaddr.sin_family = host_ptr->h_addrtype;
+- #ifdef  CRAY
+-                         {
+-                                 long t;
+-                                 bcopy((char *)host_ptr->h_addr,
+-                                       (char *)&t,
+-                                       sizeof(inaddr.sin_addr));
+-                                 inaddr.sin_addr = t;
+-                         }
+- #else
+- 
+  			bcopy((char *)host_ptr->h_addr, 
+  			      (char *)&inaddr.sin_addr, 
+  			      sizeof(inaddr.sin_addr));
+- #endif
+  		} else {
+- #ifdef CRAY
+-                         inaddr.sin_addr = hostinetaddr;
+- #else
+-                         inaddr.sin_addr.s_addr = hostinetaddr;
+- #endif
+  			inaddr.sin_family = AF_INET;
+  		}
+  		addr = (struct sockaddr *) &inaddr;
+! 		addrlen = sizeof(struct sockaddr_in);
+  		inaddr.sin_port = display_num;
+  		inaddr.sin_port += X_TCP_PORT;
+  		inaddr.sin_port = htons(inaddr.sin_port);
+  		/*
+  		 * Open the network connection.
+--- 177,194 ----
+  				return(-1);
+  			}
+   
+  			/* Set up the socket data. */
+  			inaddr.sin_family = host_ptr->h_addrtype;
+  			bcopy((char *)host_ptr->h_addr, 
+  			      (char *)&inaddr.sin_addr, 
+  			      sizeof(inaddr.sin_addr));
+  		} else {
+  			inaddr.sin_family = AF_INET;
+  		}
+  		addr = (struct sockaddr *) &inaddr;
+! 		addrlen = sizeof (struct sockaddr_in);
+  		inaddr.sin_port = display_num;
+  		inaddr.sin_port += X_TCP_PORT;
+  		inaddr.sin_port = htons(inaddr.sin_port);
+  		/*
+  		 * Open the network connection.
+***************
+*** 221,231 ****
+  		    return(-1);	    /* errno set by system call. */
+  		/* make sure to turn off TCP coalescence */
+  #ifdef TCP_NODELAY
+  		{
+  		int mi;
+! 		setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &mi, sizeof(int));
+  		}
+  #endif
+  	    }
+   
+  
+--- 198,208 ----
+  		    return(-1);	    /* errno set by system call. */
+  		/* make sure to turn off TCP coalescence */
+  #ifdef TCP_NODELAY
+  		{
+  		int mi;
+! 		setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &mi, sizeof (int));
+  		}
+  #endif
+  	    }
+   
+  
+***************
+*** 318,339 ****
+  		(*_XIOErrorFunction)(dpy);
+  	    pend = pend_not_register;
+  
+  	    /* must read at least one xEvent; if none is pending, then
+  	       we'll just block waiting for it */
+! 	    if (pend < SIZEOF(xEvent)) pend = SIZEOF(xEvent);
+  		
+  	    /* but we won't read more than the max buffer size */
+  	    if (pend > BUFSIZE) pend = BUFSIZE;
+  
+  	    /* round down to an integral number of XReps */
+! 	    pend = (pend / SIZEOF(xEvent)) * SIZEOF(xEvent);
+  
+  	    _XRead (dpy, buf, pend);
+! 	    for (ev = (xEvent *) buf; pend > 0; 
+! 		ev = (xEvent *) ( (char *) ev + SIZEOF(xEvent) ),
+! 		 pend -= SIZEOF(xEvent))
+  	    {
+  		if (ev->u.u.type == X_Error)
+  		    _XError (dpy, (xError *) ev);
+  		else		/* it's an event packet; enqueue it */
+  		    _XEnq (dpy, ev);
+--- 295,314 ----
+  		(*_XIOErrorFunction)(dpy);
+  	    pend = pend_not_register;
+  
+  	    /* must read at least one xEvent; if none is pending, then
+  	       we'll just block waiting for it */
+! 	    if (pend < sizeof(xEvent)) pend = sizeof (xEvent);
+  		
+  	    /* but we won't read more than the max buffer size */
+  	    if (pend > BUFSIZE) pend = BUFSIZE;
+  
+  	    /* round down to an integral number of XReps */
+! 	    pend = (pend / sizeof (xEvent)) * sizeof (xEvent);
+  
+  	    _XRead (dpy, buf, pend);
+! 	    for (ev = (xEvent *) buf; pend > 0; ev++, pend -= sizeof(xEvent))
+  	    {
+  		if (ev->u.u.type == X_Error)
+  		    _XError (dpy, (xError *) ev);
+  		else		/* it's an event packet; enqueue it */
+  		    _XEnq (dpy, ev);
+***************
+*** 382,397 ****
+          auth_length = strlen(auth_proto);
+          auth_strlen = strlen(auth_string);
+          client->nbytesAuthProto = auth_length;
+  	client->nbytesAuthString = auth_strlen;
+  
+! 	bytes = (SIZEOF(xConnClientPrefix) + 
+                         auth_length + padlength[auth_length & 3] +
+                         auth_strlen + padlength[auth_strlen & 3]);
+  
+! 	bcopy(client, buffer, SIZEOF(xConnClientPrefix));
+!         bptr = buffer + SIZEOF(xConnClientPrefix);
+          if (auth_length)
+  	{
+  	    bcopy(auth_proto, bptr, auth_length);
+              bptr += auth_length;
+              if (padlength[auth_length & 3])
+--- 357,372 ----
+          auth_length = strlen(auth_proto);
+          auth_strlen = strlen(auth_string);
+          client->nbytesAuthProto = auth_length;
+  	client->nbytesAuthString = auth_strlen;
+  
+! 	bytes = (sizeof(xConnClientPrefix) + 
+                         auth_length + padlength[auth_length & 3] +
+                         auth_strlen + padlength[auth_strlen & 3]);
+  
+! 	bcopy(client, buffer, sizeof(xConnClientPrefix));
+!         bptr = buffer + sizeof(xConnClientPrefix);
+          if (auth_length)
+  	{
+  	    bcopy(auth_proto, bptr, auth_length);
+              bptr += auth_length;
+              if (padlength[auth_length & 3])
+***************
+*** 408,419 ****
+  	    {
+  		bcopy(pad, bptr, padlength[auth_strlen & 3]);
+  	        bptr += padlength[auth_strlen & 3];
+  	    }
+  	}
+- #ifdef CRAY
+- 	if (dumpreq) dumpx(buffer,bytes);
+- #endif
+  	(void) WriteToServer(dpy->fd, buffer, bytes);
+  	return;
+  }
+  
+--- 383,391 ----
+diff -c5 Xlib/XCrGC.c sunXlib/XCrGC.c
+*** Xlib/XCrGC.c	Thu Apr 14 17:08:34 1988
+--- sunXlib/XCrGC.c	Fri Jun 10 14:35:25 1988
+***************
+*** 127,137 ****
+       * times, so "nvalues" is changed in a separate assignment
+       * statement 
+       */
+  
+      nvalues <<= 2;
+!     Data32 (dpy, (char *) values, nvalues);
+      gc->dirty = 0L;
+  
+      }
+  
+  
+--- 127,137 ----
+       * times, so "nvalues" is changed in a separate assignment
+       * statement 
+       */
+  
+      nvalues <<= 2;
+!     Data (dpy, (char *) values, nvalues);
+      gc->dirty = 0L;
+  
+      }
+  
+  
+diff -c5 Xlib/XCrWindow.c sunXlib/XCrWindow.c
+*** Xlib/XCrWindow.c	Thu May 12 11:44:43 1988
+--- sunXlib/XCrWindow.c	Fri Jun 10 14:35:26 1988
+***************
+*** 30,48 ****
+      req->class = CopyFromParent;
+      req->visual = CopyFromParent;
+      wid = req->wid = XAllocID(dpy);
+      req->mask = CWBackPixel | CWBorderPixel;
+  
+- #ifdef CRAY
+-     dpy->bufptr -= 8;
+-     Data32(dpy, (char *) &background, 4);
+-     Data32(dpy, (char *) &border, 4);
+- #else
+      valuePtr = (unsigned long *) (req + 1);
+      *valuePtr++ = background;
+      *valuePtr = border;
+- #endif
+- 
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return (wid);
+      }
+--- 30,41 ----
+diff -c5 Xlib/XDefCursor.c sunXlib/XDefCursor.c
+*** Xlib/XDefCursor.c	Thu May 12 11:20:19 1988
+--- sunXlib/XDefCursor.c	Fri Jun 10 14:35:26 1988
+***************
+*** 14,28 ****
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWCursor;
+- #ifdef CRAY
+-     dpy->bufptr -= 4;
+-     Data32(dpy, (char *) &cursor, 4);
+- #else
+      * (unsigned long *) (req + 1) = cursor;
+- #endif
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 14,23 ----
+diff -c5 Xlib/XDrArc.c sunXlib/XDrArc.c
+*** Xlib/XDrArc.c	Thu Apr 14 17:08:35 1988
+--- sunXlib/XDrArc.c	Fri Jun 10 14:35:27 1988
+***************
+*** 17,45 ****
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+      int angle1, angle2; /* INT16 */
+  {
+!     register xArc arc;
+      register xPolyArcReq *req;
+-     long len;
+  
+-     arc.x = x;
+-     arc.y = y;
+-     arc.width = width;
+-     arc.height = height;
+-     arc.angle1 = angle1;
+-     arc.angle2 = angle2;
+- 
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+!     GetReqExtra (PolyArc, SIZEOF(xArc), req);
+  
+      req->drawable = d;
+      req->gc = gc->gid;
+!     dpy->bufptr -= SIZEOF(xArc);
+!     len = SIZEOF(xArc); 
+!     Data(dpy,(char *)&arc,len);
+  
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 17,42 ----
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+      int angle1, angle2; /* INT16 */
+  {
+!     register xArc *arc;
+      register xPolyArcReq *req;
+  
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+!     GetReqExtra (PolyArc, sizeof(xArc), req);
+  
+      req->drawable = d;
+      req->gc = gc->gid;
+! 
+!     arc = (xArc *) (req + 1);
+!     arc->x = x;
+!     arc->y = y;
+!     arc->width = width;
+!     arc->height = height;
+!     arc->angle1 = angle1;
+!     arc->angle2 = angle2;
+  
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XDrArcs.c sunXlib/XDrArcs.c
+*** Xlib/XDrArcs.c	Thu Apr 14 17:08:35 1988
+--- sunXlib/XDrArcs.c	Fri Jun 10 14:35:27 1988
+***************
+*** 18,31 ****
+      FlushGC(dpy, gc);
+      GetReq(PolyArc,req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* SIZEOF(xArc) will be a multiple of 4 */
+!     req->length += n_arcs * (SIZEOF(xArc) / 4);
+      
+!     n_arcs *= SIZEOF(xArc);
+  
+!     Data16 (dpy, (char *) arcs, n_arcs);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 18,31 ----
+      FlushGC(dpy, gc);
+      GetReq(PolyArc,req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* sizeof(xArc) will be a multiple of 4 */
+!     req->length += n_arcs * (sizeof(xArc) / 4);
+      
+!     n_arcs *= sizeof(xArc);
+  
+!     PackData (dpy, (char *) arcs, (long)n_arcs);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XDrLine.c sunXlib/XDrLine.c
+*** Xlib/XDrLine.c	Thu Apr 14 17:08:35 1988
+--- sunXlib/XDrLine.c	Fri Jun 10 14:35:27 1988
+***************
+*** 5,55 ****
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = SIZEOF(xPolySegmentReq) + EPERBATCH * SIZEOF(xSegment);
+  
+  XDrawLine (dpy, d, gc, x1, y1, x2, y2)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x1, y1, x2, y2;
+  {
+!     long len;
+!     register xSegment segment;
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+- 
+      register xPolySegmentReq *req = (xPolySegmentReq *) dpy->last_req;
+- 
+-     segment.x1 = x1;
+-     segment.y1 = y1;
+-     segment.x2 = x2;
+-     segment.y2 = y2;
+- 
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolySegment)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + SIZEOF(xSegment)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+! 	 req->length += SIZEOF(xSegment) >> 2;
+  	 }
+  
+      else {
+! 	GetReqExtra (PolySegment, SIZEOF(xSegment), req);
+  	req->drawable = d;
+  	req->gc = gc->gid;
+!         dpy->bufptr -= SIZEOF(xSegment);
+  	}
+  
+!     len = SIZEOF(xSegment); 
+!     Data(dpy,(char *)&segment,len);
+! 
+      UnlockDisplay(dpy);
+      SyncHandle();
+      }
+  }
+  
+--- 5,50 ----
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = sizeof(xPolySegmentReq) + EPERBATCH * sizeof(xSegment);
+  
+  XDrawLine (dpy, d, gc, x1, y1, x2, y2)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x1, y1, x2, y2;
+  {
+!     register xSegment *segment;
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolySegmentReq *req = (xPolySegmentReq *) dpy->last_req;
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolySegment)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + sizeof (xSegment)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+!          segment = (xSegment *) dpy->bufptr;
+! 	 req->length += sizeof (xSegment) >> 2;
+! 	 dpy->bufptr += sizeof (xSegment);
+  	 }
+  
+      else {
+! 	GetReqExtra (PolySegment, sizeof(xSegment), req);
+  	req->drawable = d;
+  	req->gc = gc->gid;
+! 	segment = (xSegment *) (req + 1);
+  	}
+  
+!     segment->x1 = x1;
+!     segment->y1 = y1;
+!     segment->x2 = x2;
+!     segment->y2 = y2;
+      UnlockDisplay(dpy);
+      SyncHandle();
+      }
+  }
+  
+diff -c5 Xlib/XDrLines.c sunXlib/XDrLines.c
+*** Xlib/XDrLines.c	Thu Apr 14 17:08:35 1988
+--- sunXlib/XDrLines.c	Fri Jun 10 14:35:27 1988
+***************
+*** 22,32 ****
+      req->gc = gc->gid;
+      req->coordMode = mode;
+      req->length += npoints;
+         /* each point is 2 16-bit integers */
+      length = npoints << 2; 
+! 
+!     Data16 (dpy, (char *) points, length);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 22,33 ----
+      req->gc = gc->gid;
+      req->coordMode = mode;
+      req->length += npoints;
+         /* each point is 2 16-bit integers */
+      length = npoints << 2; 
+!        /* do this here, not in arguments to PackData, since PackData
+!           may be a macro which uses its arguments more than once */
+!     PackData (dpy, (char *) points, length);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XDrPoint.c sunXlib/XDrPoint.c
+*** Xlib/XDrPoint.c	Thu Apr 14 17:08:35 1988
+--- sunXlib/XDrPoint.c	Fri Jun 10 14:35:27 1988
+***************
+*** 5,52 ****
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = SIZEOF(xPolyPointReq) + EPERBATCH * SIZEOF(xPoint);
+  
+  XDrawPoint(dpy, d, gc, x, y)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+  {
+!     long    len;
+!     xPoint point;
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyPointReq *req = (xPolyPointReq *) dpy->last_req;
+- 
+-     point.x = x;
+-     point.y = y;
+- 
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolyPoint)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+         && (req->coordMode == CoordModeOrigin)
+!        && ((dpy->bufptr + SIZEOF(xPoint)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+! 	 req->length += SIZEOF(xPoint) >> 2;
+  	 }
+  
+      else {
+  	GetReqExtra(PolyPoint, 4, req); /* 1 point = 4 bytes */
+  	req->drawable = d;
+  	req->gc = gc->gid;
+  	req->coordMode = CoordModeOrigin;
+! 	dpy->bufptr -= SIZEOF(xPoint);
+  	}
+!     len = SIZEOF(xPoint);
+!     Data(dpy,(char *)&point,len);
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 5,49 ----
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = sizeof(xPolyPointReq) + EPERBATCH * sizeof(xPoint);
+  
+  XDrawPoint(dpy, d, gc, x, y)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+  {
+!     xPoint *point;
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyPointReq *req = (xPolyPointReq *) dpy->last_req;
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolyPoint)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+         && (req->coordMode == CoordModeOrigin)
+!        && ((dpy->bufptr + sizeof (xPoint)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+!          point = (xPoint *) dpy->bufptr;
+! 	 req->length += sizeof (xPoint) >> 2;
+! 	 dpy->bufptr += sizeof (xPoint);
+  	 }
+  
+      else {
+  	GetReqExtra(PolyPoint, 4, req); /* 1 point = 4 bytes */
+  	req->drawable = d;
+  	req->gc = gc->gid;
+  	req->coordMode = CoordModeOrigin;
+! 	point = (xPoint *) (req + 1);
+  	}
+!     point->x = x;
+!     point->y = y;
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XDrPoints.c sunXlib/XDrPoints.c
+*** Xlib/XDrPoints.c	Thu Apr 14 17:08:35 1988
+--- sunXlib/XDrPoints.c	Fri Jun 10 14:35:27 1988
+***************
+*** 23,33 ****
+      req->coordMode = mode;
+  
+      /* on the VAX, each point is 2 16-bit integers */
+      req->length += n_points;
+  
+      nbytes = (long)n_points << 2;
+  
+!     Data16 (dpy, (char *) points, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 23,35 ----
+      req->coordMode = mode;
+  
+      /* on the VAX, each point is 2 16-bit integers */
+      req->length += n_points;
+  
++     /* do this explicitly once; PackData may be a macro and thus do it
++        multiple times if we pass it as a parameter */
+      nbytes = (long)n_points << 2;
+  
+!     PackData(dpy, (char *) points, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XDrRect.c sunXlib/XDrRect.c
+*** Xlib/XDrRect.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XDrRect.c	Fri Jun 10 14:35:27 1988
+***************
+*** 5,53 ****
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = SIZEOF(xPolyRectangleReq) + EPERBATCH * SIZEOF(xRectangle);
+  
+  XDrawRectangle(dpy, d, gc, x, y, width, height)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+  {
+!     long       len;
+!     xRectangle rect;
+  
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyRectangleReq *req = (xPolyRectangleReq *) dpy->last_req;
+- 
+-     rect.x = x;
+-     rect.y = y;
+-     rect.width  = width;
+-     rect.height = height;
+- 
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolyRectangle)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + SIZEOF(xRectangle)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+! 	 req->length += SIZEOF(xRectangle) >> 2;
+  	 }
+  
+      else {
+! 	GetReqExtra(PolyRectangle, SIZEOF(xRectangle), req);
+  	req->drawable = d;
+  	req->gc = gc->gid;
+! 	dpy->bufptr -= SIZEOF(xRectangle);
+  	}
+!     len = SIZEOF(xRectangle);
+!     Data(dpy,(char *)&rect,len);
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 5,50 ----
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = sizeof(xPolyRectangleReq) + EPERBATCH * sizeof(xRectangle);
+  
+  XDrawRectangle(dpy, d, gc, x, y, width, height)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+  {
+!     xRectangle *rect;
+  
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyRectangleReq *req = (xPolyRectangleReq *) dpy->last_req;
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolyRectangle)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + sizeof (xRectangle)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+!          rect = (xRectangle *) dpy->bufptr;
+! 	 req->length += sizeof (xRectangle) >> 2;
+! 	 dpy->bufptr += sizeof (xRectangle);
+  	 }
+  
+      else {
+! 	GetReqExtra(PolyRectangle, sizeof(xRectangle), req);
+  	req->drawable = d;
+  	req->gc = gc->gid;
+! 	rect = (xRectangle *) (req + 1);
+  	}
+!     rect->x = x;
+!     rect->y = y;
+!     rect->width = width;
+!     rect->height = height;
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XDrRects.c sunXlib/XDrRects.c
+*** Xlib/XDrRects.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XDrRects.c	Fri Jun 10 14:35:27 1988
+***************
+*** 18,31 ****
+      FlushGC(dpy, gc);
+      GetReq(PolyRectangle, req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* SIZEOF(xRectangle) will be a multiple of 4 */
+!     req->length += n_rects * (SIZEOF(xRectangle) / 4);
+  
+!     n_rects *= SIZEOF(xRectangle);
+  
+!     Data16 (dpy, (char *) rects, n_rects);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 18,31 ----
+      FlushGC(dpy, gc);
+      GetReq(PolyRectangle, req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* sizeof(xRectangle) will be a multiple of 4 */
+!     req->length += n_rects * (sizeof(xRectangle) / 4);
+  
+!     n_rects *= sizeof(xRectangle);
+  
+!     PackData (dpy, (char *) rects, (long)n_rects);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XDrSegs.c sunXlib/XDrSegs.c
+*** Xlib/XDrSegs.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XDrSegs.c	Fri Jun 10 14:35:28 1988
+***************
+*** 21,30 ****
+      req->drawable = d;
+      req->gc = gc->gid;
+      req->length += nsegments<<1;
+         /* each segment is 4 16-bit integers, i.e. 2*32 bits */
+      nbytes = nsegments << 3; 
+!     Data16 (dpy, (char *) segments, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 21,32 ----
+      req->drawable = d;
+      req->gc = gc->gid;
+      req->length += nsegments<<1;
+         /* each segment is 4 16-bit integers, i.e. 2*32 bits */
+      nbytes = nsegments << 3; 
+!        /* do this here, not in arguments to PackData, since PackData
+!           may be a macro which uses its arguments more than once */
+!     PackData (dpy, (char *) segments, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XErrDes.c sunXlib/XErrDes.c
+*** Xlib/XErrDes.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XErrDes.c	Fri Jun 10 14:35:28 1988
+***************
+*** 68,78 ****
+      char *defaultp = NULL;
+      char buf[32];
+      register _XExtension *ext;
+  
+      sprintf(buf, "%d", code);
+!     if (code <= (XErrorListSize/ sizeof(char *)) && code > 0) {
+  	defaultp =  XErrorList[code];
+  	XGetErrorDatabaseText(dpy, "XProtoError", buf, defaultp, buffer, nbytes);
+  	}
+      ext = dpy->ext_procs;
+      while (ext) {		/* call out to any extensions interested */
+--- 68,78 ----
+      char *defaultp = NULL;
+      char buf[32];
+      register _XExtension *ext;
+  
+      sprintf(buf, "%d", code);
+!     if (code <= (XErrorListSize/ sizeof (char *)) && code > 0) {
+  	defaultp =  XErrorList[code];
+  	XGetErrorDatabaseText(dpy, "XProtoError", buf, defaultp, buffer, nbytes);
+  	}
+      ext = dpy->ext_procs;
+      while (ext) {		/* call out to any extensions interested */
+diff -c5 Xlib/XEvToWire.c sunXlib/XEvToWire.c
+*** Xlib/XEvToWire.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XEvToWire.c	Fri Jun 10 14:35:28 1988
+***************
+*** 111,121 ****
+  	      case KeymapNotify:
+  		{
+  			register XKeymapEvent *ev = (XKeymapEvent *) re;
+  			bcopy ( &ev->key_vector[1], 
+  				(char *)(((xKeymapEvent *) event)->map),
+! 			       sizeof(((xKeymapEvent *) event)->map));
+  		}
+  		break;
+  	      case Expose:
+  		{
+  			register XExposeEvent *ev = (XExposeEvent *) re;
+--- 111,121 ----
+  	      case KeymapNotify:
+  		{
+  			register XKeymapEvent *ev = (XKeymapEvent *) re;
+  			bcopy ( &ev->key_vector[1], 
+  				(char *)(((xKeymapEvent *) event)->map),
+! 			       sizeof (((xKeymapEvent *) event)->map));
+  		}
+  		break;
+  	      case Expose:
+  		{
+  			register XExposeEvent *ev = (XExposeEvent *) re;
+diff -c5 Xlib/XFillArc.c sunXlib/XFillArc.c
+*** Xlib/XFillArc.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XFillArc.c	Fri Jun 10 14:35:28 1988
+***************
+*** 5,57 ****
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = SIZEOF(xPolyFillArcReq) + EPERBATCH * SIZEOF(xArc);
+  
+  XFillArc(dpy, d, gc, x, y, width, height, angle1, angle2)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+      int angle1, angle2; /* INT16 */
+  {
+!     long    len;
+!     xArc arc;
+  
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyFillArcReq *req = (xPolyFillArcReq *) dpy->last_req;
+      /* if same as previous request, with same drawable, batch requests */
+- 
+-     arc.x = x;
+-     arc.y = y;
+-     arc.width = width;
+-     arc.height = height;
+-     arc.angle1 = angle1;
+-     arc.angle2 = angle2;
+- 
+      if (
+            (req->reqType == X_PolyFillArc)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + SIZEOF(xArc)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+! 	 req->length += SIZEOF(xArc) >> 2;
+  	 }
+  
+      else {
+! 	GetReqExtra(PolyFillArc, SIZEOF(xArc), req);
+  
+  	req->drawable = d;
+  	req->gc = gc->gid;
+!         dpy->bufptr -= SIZEOF(xArc);
+  	}
+!     len = SIZEOF(xArc);
+!     Data(dpy,(char *)&arc,len);
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 5,54 ----
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = sizeof(xPolyFillArcReq) + EPERBATCH * sizeof(xArc);
+  
+  XFillArc(dpy, d, gc, x, y, width, height, angle1, angle2)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+      int angle1, angle2; /* INT16 */
+  {
+!     xArc *arc;
+  
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyFillArcReq *req = (xPolyFillArcReq *) dpy->last_req;
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolyFillArc)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + sizeof (xArc)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+!          arc = (xArc *) dpy->bufptr;
+! 	 req->length += sizeof (xArc) >> 2;
+! 	 dpy->bufptr += sizeof (xArc);
+  	 }
+  
+      else {
+! 	GetReqExtra(PolyFillArc, sizeof(xArc), req);
+  
+  	req->drawable = d;
+  	req->gc = gc->gid;
+! 	arc = (xArc *) (req + 1);
+  	}
+!     arc->x = x;
+!     arc->y = y;
+!     arc->width = width;
+!     arc->height = height;
+!     arc->angle1 = angle1;
+!     arc->angle2 = angle2;
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XFillArcs.c sunXlib/XFillArcs.c
+*** Xlib/XFillArcs.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XFillArcs.c	Fri Jun 10 14:35:28 1988
+***************
+*** 19,32 ****
+      FlushGC(dpy, gc);
+      GetReq(PolyFillArc, req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* SIZEOF(xArc) will be a multiple of 4 */
+!     req->length += n_arcs * (SIZEOF(xArc) / 4);
+      
+!     nbytes = n_arcs * SIZEOF(xArc);
+  
+!     Data16 (dpy, (char *) arcs, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 19,32 ----
+      FlushGC(dpy, gc);
+      GetReq(PolyFillArc, req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* sizeof(xArc) will be a multiple of 4 */
+!     req->length += n_arcs * (sizeof(xArc) / 4);
+      
+!     nbytes = n_arcs * sizeof(xArc);
+  
+!     PackData (dpy, (char *) arcs, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XFillPoly.c sunXlib/XFillPoly.c
+*** Xlib/XFillPoly.c	Thu Apr 14 17:08:36 1988
+--- sunXlib/XFillPoly.c	Fri Jun 10 14:35:28 1988
+***************
+*** 31,39 ****
+  
+      /* shift (mult. by 4) before passing to the (possible) macro */
+  
+      nbytes = n_points << 2;
+      
+!     Data16 (dpy, (char *) points, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 31,39 ----
+  
+      /* shift (mult. by 4) before passing to the (possible) macro */
+  
+      nbytes = n_points << 2;
+      
+!     PackData(dpy, (char *) points, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XFillRect.c sunXlib/XFillRect.c
+*** Xlib/XFillRect.c	Thu Apr 14 17:08:38 1988
+--- sunXlib/XFillRect.c	Fri Jun 10 14:35:28 1988
+***************
+*** 5,53 ****
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = SIZEOF(xPolyFillRectangleReq) + EPERBATCH * SIZEOF(xRectangle);
+  
+  XFillRectangle(dpy, d, gc, x, y, width, height)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+  {
+!     long      len;
+!     xRectangle rect;
+  
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyFillRectangleReq *req 
+  		= (xPolyFillRectangleReq *) dpy->last_req;
+-     rect.x = x;
+-     rect.y = y;
+-     rect.width = width;
+-     rect.height = height;
+- 
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolyFillRectangle)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + SIZEOF(xRectangle)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+! 	 req->length += SIZEOF(xRectangle) >> 2;
+  	 }
+  
+      else {
+! 	GetReqExtra(PolyFillRectangle, SIZEOF(xRectangle), req);
+  	req->drawable = d;
+  	req->gc = gc->gid;
+!         dpy->bufptr -= SIZEOF(xRectangle);
+  	}
+!     len = SIZEOF(xRectangle);
+!     Data(dpy,(char *)&rect,len);
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 5,51 ----
+  
+  #include "Xlibint.h"
+  
+  /* precompute the maximum size of batching request allowed */
+  
+! static int size = sizeof(xPolyFillRectangleReq) + EPERBATCH * sizeof(xRectangle);
+  
+  XFillRectangle(dpy, d, gc, x, y, width, height)
+      register Display *dpy;
+      Drawable d;
+      GC gc;
+      int x, y; /* INT16 */
+      unsigned int width, height; /* CARD16 */
+  {
+!     xRectangle *rect;
+  
+      LockDisplay(dpy);
+      FlushGC(dpy, gc);
+      {
+      register xPolyFillRectangleReq *req 
+  		= (xPolyFillRectangleReq *) dpy->last_req;
+      /* if same as previous request, with same drawable, batch requests */
+      if (
+            (req->reqType == X_PolyFillRectangle)
+         && (req->drawable == d)
+         && (req->gc == gc->gid)
+!        && ((dpy->bufptr + sizeof (xRectangle)) <= dpy->bufmax)
+         && (((char *)dpy->bufptr - (char *)req) < size) ) {
+!          rect = (xRectangle *) dpy->bufptr;
+! 	 req->length += sizeof (xRectangle) >> 2;
+! 	 dpy->bufptr += sizeof (xRectangle);
+  	 }
+  
+      else {
+! 	GetReqExtra(PolyFillRectangle, sizeof(xRectangle), req);
+  	req->drawable = d;
+  	req->gc = gc->gid;
+! 	rect = (xRectangle *) (req + 1);
+  	}
+!     rect->x = x;
+!     rect->y = y;
+!     rect->width = width;
+!     rect->height = height;
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XFillRects.c sunXlib/XFillRects.c
+*** Xlib/XFillRects.c	Thu Apr 14 17:08:38 1988
+--- sunXlib/XFillRects.c	Fri Jun 10 14:35:29 1988
+***************
+*** 19,33 ****
+      FlushGC(dpy, gc);
+      GetReq(PolyFillRectangle, req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* SIZEOF(xRectangle) will be a multiple of 4 */
+!     req->length += n_rects * (SIZEOF(xRectangle) / 4);
+  
+!     nbytes = n_rects * SIZEOF(xRectangle);
+  
+!     Data16 (dpy, (char *) rectangles, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+      
+--- 19,33 ----
+      FlushGC(dpy, gc);
+      GetReq(PolyFillRectangle, req);
+      req->drawable = d;
+      req->gc = gc->gid;
+  
+!     /* sizeof(xRectangle) will be a multiple of 4 */
+!     req->length += n_rects * (sizeof(xRectangle) / 4);
+  
+!     nbytes = n_rects * sizeof(xRectangle);
+  
+!     PackData (dpy, (char *) rectangles, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+      
+diff -c5 Xlib/XFont.c sunXlib/XFont.c
+*** Xlib/XFont.c	Tue Apr 19 15:21:30 1988
+--- sunXlib/XFont.c	Fri Jun 10 14:35:29 1988
+***************
+*** 72,88 ****
+      register XFontStruct *fs;
+      register long nbytes;
+      xQueryFontReply reply;
+      register xResourceReq *req;
+      register _XExtension *ext;
+-     xCharInfo *xcip;
+  
+      GetResReq(QueryFont, fid, req);
+      if (!_XReply (dpy, (xReply *) &reply,
+!        ((SIZEOF(xQueryFontReply) - SIZEOF(xReply)) >> 2), xFalse))
+  	   return (NULL);
+!     fs = (XFontStruct *) Xmalloc (sizeof(XFontStruct));
+      fs->ext_data 		= NULL;
+      fs->fid 			= fid;
+      fs->direction 		= reply.drawDirection;
+      fs->min_char_or_byte2	= reply.minCharOrByte2;
+      fs->max_char_or_byte2 	= reply.maxCharOrByte2;
+--- 72,87 ----
+      register XFontStruct *fs;
+      register long nbytes;
+      xQueryFontReply reply;
+      register xResourceReq *req;
+      register _XExtension *ext;
+  
+      GetResReq(QueryFont, fid, req);
+      if (!_XReply (dpy, (xReply *) &reply,
+!        ((sizeof (reply) - sizeof (xReply)) >> 2), xFalse))
+  	   return (NULL);
+!     fs = (XFontStruct *) Xmalloc (sizeof (XFontStruct));
+      fs->ext_data 		= NULL;
+      fs->fid 			= fid;
+      fs->direction 		= reply.drawDirection;
+      fs->min_char_or_byte2	= reply.minCharOrByte2;
+      fs->max_char_or_byte2 	= reply.maxCharOrByte2;
+***************
+*** 93,147 ****
+      fs->ascent 			= reply.fontAscent;
+      fs->descent 		= reply.fontDescent;
+      
+      /* XXX the next two statements won't work if short isn't 16 bits */
+  
+- #if 0
+      fs->min_bounds = * (XCharStruct *) &reply.minBounds;
+      fs->max_bounds = * (XCharStruct *) &reply.maxBounds;
+- #endif
+- #if 1
+-     xcip = (xCharInfo *) &reply.minBounds;
+-     fs->min_bounds.lbearing = xcip->leftSideBearing;
+-     fs->min_bounds.rbearing = xcip->rightSideBearing;
+-     fs->min_bounds.width = xcip->characterWidth;
+-     fs->min_bounds.ascent = xcip->ascent;
+-     fs->min_bounds.descent = xcip->descent;
+-     fs->min_bounds.attributes = xcip->attributes;
+  
+-     xcip = (xCharInfo *) &reply.maxBounds;
+-     fs->max_bounds.lbearing = xcip->leftSideBearing;
+-     fs->max_bounds.rbearing = xcip->rightSideBearing;
+-     fs->max_bounds.width = xcip->characterWidth;
+-     fs->max_bounds.ascent = xcip->ascent;
+-     fs->max_bounds.descent = xcip->descent;
+-     fs->max_bounds.attributes = xcip->attributes;
+- #endif
+- 
+      fs->n_properties = reply.nFontProps;
+      /* 
+       * if no properties defined for the font, then it is bad
+       * font, but shouldn't try to read nothing.
+       */
+      fs->properties = NULL;
+      if (fs->n_properties > 0) {
+! 	    nbytes = reply.nFontProps * sizeof(XFontProp);
+! 	    fs->properties = (XFontProp *) Xmalloc (nbytes);
+! 	    nbytes = reply.nFontProps * sizeof(xFontProp);
+! 	    _XRead32 (dpy, (char *)fs->properties, nbytes);
+      }
+      /*
+       * If no characters in font, then it is a bad font, but
+       * shouldn't try to read nothing.
+       */
+      /* XXX may have to unpack charinfos on some machines (CRAY) */
+      fs->per_char = NULL;
+      if (reply.nCharInfos > 0){
+! 	    nbytes = reply.nCharInfos * sizeof(XCharStruct);
+! 	    fs->per_char = (XCharStruct *) Xmalloc (nbytes);
+! 	    nbytes = reply.nCharInfos * sizeof(xCharInfo);
+! 	    _XRead16 (dpy, (char *)fs->per_char, nbytes);
+      }
+  
+      ext = dpy->ext_procs;
+      while (ext) {		/* call out to any extensions interested */
+  	if (ext->create_Font != NULL) 
+--- 92,125 ----
+      fs->ascent 			= reply.fontAscent;
+      fs->descent 		= reply.fontDescent;
+      
+      /* XXX the next two statements won't work if short isn't 16 bits */
+  
+      fs->min_bounds = * (XCharStruct *) &reply.minBounds;
+      fs->max_bounds = * (XCharStruct *) &reply.maxBounds;
+  
+      fs->n_properties = reply.nFontProps;
+      /* 
+       * if no properties defined for the font, then it is bad
+       * font, but shouldn't try to read nothing.
+       */
+      fs->properties = NULL;
+      if (fs->n_properties > 0) {
+! 	    fs->properties = (XFontProp *) Xmalloc (
+! 	       (unsigned)(nbytes = reply.nFontProps * sizeof (XFontProp)));
+! 	    _XRead (dpy, (char *)fs->properties, nbytes);
+      }
+      /*
+       * If no characters in font, then it is a bad font, but
+       * shouldn't try to read nothing.
+       */
+      /* XXX may have to unpack charinfos on some machines (CRAY) */
+      fs->per_char = NULL;
+      if (reply.nCharInfos > 0){
+! 	    fs->per_char = (XCharStruct *) Xmalloc (
+! 	       (unsigned)(nbytes = reply.nCharInfos * sizeof (XCharStruct)));
+! 	    _XRead (dpy, (char *)fs->per_char, nbytes);
+      }
+  
+      ext = dpy->ext_procs;
+      while (ext) {		/* call out to any extensions interested */
+  	if (ext->create_Font != NULL) 
+diff -c5 Xlib/XFontInfo.c sunXlib/XFontInfo.c
+*** Xlib/XFontInfo.c	Thu Apr 14 17:08:39 1988
+--- sunXlib/XFontInfo.c	Fri Jun 10 14:35:29 1988
+***************
+*** 29,52 ****
+      _XSend (dpy, pattern, nbytes);
+      /* use _XSend instead of Data, since subsequent _XReply will flush buffer */
+  
+      for (i = 0; ; i++) {
+  	if (!_XReply (dpy, (xReply *) &reply,
+! 	   ((sizeof(reply) - SIZEOF(xGenericReply)) >> 2), xFalse))
+  		return (NULL);
+  	if (reply.nameLength == 0)
+  	    break;
+  	if ((i + reply.nReplies) >= size) {
+  	    size = i + reply.nReplies + 1;
+  	    if (finfo) {
+  		finfo = (XFontStruct *) Xrealloc ((char *) finfo,
+! 						  sizeof(XFontStruct) * size);
+  		flist = (char **) Xrealloc ((char *) flist,
+! 					    sizeof(char *) * size);
+  	    } else {
+! 		finfo = (XFontStruct *) Xmalloc (sizeof(XFontStruct) * size);
+! 		flist = (char **) Xmalloc (sizeof(char *) * size);
+  	    }
+  	}
+  	fs = &finfo[i];
+  
+  	fs->ext_data 		= NULL;
+--- 29,52 ----
+      _XSend (dpy, pattern, nbytes);
+      /* use _XSend instead of Data, since subsequent _XReply will flush buffer */
+  
+      for (i = 0; ; i++) {
+  	if (!_XReply (dpy, (xReply *) &reply,
+! 	   ((sizeof (reply) - sizeof (xGenericReply)) >> 2), xFalse))
+  		return (NULL);
+  	if (reply.nameLength == 0)
+  	    break;
+  	if ((i + reply.nReplies) >= size) {
+  	    size = i + reply.nReplies + 1;
+  	    if (finfo) {
+  		finfo = (XFontStruct *) Xrealloc ((char *) finfo,
+! 						  sizeof (XFontStruct) * size);
+  		flist = (char **) Xrealloc ((char *) flist,
+! 					    sizeof (char *) * size);
+  	    } else {
+! 		finfo = (XFontStruct *) Xmalloc (sizeof (XFontStruct) * size);
+! 		flist = (char **) Xmalloc (sizeof (char *) * size);
+  	    }
+  	}
+  	fs = &finfo[i];
+  
+  	fs->ext_data 		= NULL;
+***************
+*** 67,77 ****
+  	fs->min_bounds = * (XCharStruct *) &reply.minBounds;
+  	fs->max_bounds = * (XCharStruct *) &reply.maxBounds;
+  
+  	fs->n_properties = reply.nFontProps;
+  	if (fs->n_properties > 0) {
+! 	    nbytes = reply.nFontProps * sizeof(XFontProp);
+  	    fs->properties = (XFontProp *) Xmalloc ((unsigned int) nbytes);
+  	    _XRead (dpy, (char *)fs->properties, nbytes);
+  	} else
+  	    fs->properties = NULL;
+  	flist[i] = (char *) Xmalloc ((unsigned int) (reply.nameLength + 1));
+--- 67,77 ----
+  	fs->min_bounds = * (XCharStruct *) &reply.minBounds;
+  	fs->max_bounds = * (XCharStruct *) &reply.maxBounds;
+  
+  	fs->n_properties = reply.nFontProps;
+  	if (fs->n_properties > 0) {
+! 	    nbytes = reply.nFontProps * sizeof (XFontProp);
+  	    fs->properties = (XFontProp *) Xmalloc ((unsigned int) nbytes);
+  	    _XRead (dpy, (char *)fs->properties, nbytes);
+  	} else
+  	    fs->properties = NULL;
+  	flist[i] = (char *) Xmalloc ((unsigned int) (reply.nameLength + 1));
+diff -c5 Xlib/XFreeCols.c sunXlib/XFreeCols.c
+*** Xlib/XFreeCols.c	Thu Apr 14 17:08:39 1988
+--- sunXlib/XFreeCols.c	Fri Jun 10 14:35:29 1988
+***************
+*** 26,35 ****
+      /* divide by 4 once; Data may be a macro and thus do it
+         multiple times if we pass it as a parameter */
+  
+      nbytes = npixels << 2;
+  
+!     Data32(dpy, (char *) pixels, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 26,35 ----
+      /* divide by 4 once; Data may be a macro and thus do it
+         multiple times if we pass it as a parameter */
+  
+      nbytes = npixels << 2;
+  
+!     Data(dpy, (char *) pixels, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XGetDflt.c sunXlib/XGetDflt.c
+*** Xlib/XGetDflt.c	Thu Apr 14 17:08:39 1988
+--- sunXlib/XGetDflt.c	Fri Jun 10 14:35:30 1988
+***************
+*** 38,48 ****
+  {
+  	int uid;
+  	extern char *getenv();
+  	extern int getuid();
+  	extern struct passwd *getpwuid();
+! 	struct passwd *pw, *getpwnam();
+  	register char *ptr;
+  
+  	if((ptr = getenv("HOME")) != NULL) {
+  		(void) strcpy(dest, ptr);
+  
+--- 38,48 ----
+  {
+  	int uid;
+  	extern char *getenv();
+  	extern int getuid();
+  	extern struct passwd *getpwuid();
+! 	struct passwd *pw;
+  	register char *ptr;
+  
+  	if((ptr = getenv("HOME")) != NULL) {
+  		(void) strcpy(dest, ptr);
+  
+diff -c5 Xlib/XGetFPath.c sunXlib/XGetFPath.c
+*** Xlib/XGetFPath.c	Thu Apr 14 17:08:39 1988
+--- sunXlib/XGetFPath.c	Fri Jun 10 14:35:30 1988
+***************
+*** 20,30 ****
+  
+  	LockDisplay(dpy);
+  	GetEmptyReq (GetFontPath, req);
+  	(void) _XReply (dpy, (xReply *) &rep, 0, xFalse);
+  	if (*npaths = rep.nPaths) {
+! 	    flist = (char **) Xmalloc ((unsigned)*npaths * sizeof(char *));
+  	    nbytes = (long)rep.length << 2;
+  	    ch = (char *) Xmalloc ((unsigned) (nbytes + 1));
+                  /* +1 to leave room for last null-terminator */
+  	    _XReadPad (dpy, ch, nbytes);
+  	    /*
+--- 20,30 ----
+  
+  	LockDisplay(dpy);
+  	GetEmptyReq (GetFontPath, req);
+  	(void) _XReply (dpy, (xReply *) &rep, 0, xFalse);
+  	if (*npaths = rep.nPaths) {
+! 	    flist = (char **) Xmalloc ((unsigned)*npaths * sizeof (char *));
+  	    nbytes = (long)rep.length << 2;
+  	    ch = (char *) Xmalloc ((unsigned) (nbytes + 1));
+                  /* +1 to leave room for last null-terminator */
+  	    _XReadPad (dpy, ch, nbytes);
+  	    /*
+diff -c5 Xlib/XGetKCnt.c sunXlib/XGetKCnt.c
+*** Xlib/XGetKCnt.c	Tue May 17 14:22:10 1988
+--- sunXlib/XGetKCnt.c	Fri Jun 10 14:35:31 1988
+***************
+*** 16,26 ****
+      xGetKeyboardControlReply rep;
+      register xReq *req;
+      LockDisplay(dpy);
+      GetEmptyReq (GetKeyboardControl, req);
+      (void) _XReply (dpy, (xReply *) &rep, 
+! 	(SIZEOF(xGetKeyboardControlReply) - SIZEOF(xReply)) >> 2, xTrue);
+  
+      state->key_click_percent = rep.keyClickPercent;
+      state->bell_percent = rep.bellPercent;
+      state->bell_pitch = rep.bellPitch;
+      state->bell_duration = rep.bellDuration;
+--- 16,26 ----
+      xGetKeyboardControlReply rep;
+      register xReq *req;
+      LockDisplay(dpy);
+      GetEmptyReq (GetKeyboardControl, req);
+      (void) _XReply (dpy, (xReply *) &rep, 
+! 	(sizeof(rep) - sizeof (xReply)) >> 2, xTrue);
+  
+      state->key_click_percent = rep.keyClickPercent;
+      state->bell_percent = rep.bellPercent;
+      state->bell_pitch = rep.bellPitch;
+      state->bell_duration = rep.bellDuration;
+diff -c5 Xlib/XGetMoEv.c sunXlib/XGetMoEv.c
+*** Xlib/XGetMoEv.c	Thu Apr 14 17:08:40 1988
+--- sunXlib/XGetMoEv.c	Fri Jun 10 14:35:31 1988
+***************
+*** 29,39 ****
+  	return (NULL);
+  	}
+      
+      *nEvents = rep.nEvents;
+      tc = (XTimeCoord *) Xmalloc (
+! 		(unsigned)(nbytes = (long)rep.nEvents * sizeof(XTimeCoord)));
+      if (!tc) {
+  	/* XXX this is wrong!!  we need to read and throw away the data
+             somehow.  Probably we should try to malloc less space and repeatedly
+             read the events into the smaller space.... */
+  	*nEvents = 0;
+--- 29,39 ----
+  	return (NULL);
+  	}
+      
+      *nEvents = rep.nEvents;
+      tc = (XTimeCoord *) Xmalloc (
+! 		(unsigned)(nbytes = (long)rep.nEvents * sizeof (XTimeCoord)));
+      if (!tc) {
+  	/* XXX this is wrong!!  we need to read and throw away the data
+             somehow.  Probably we should try to malloc less space and repeatedly
+             read the events into the smaller space.... */
+  	*nEvents = 0;
+diff -c5 Xlib/XGetPntMap.c sunXlib/XGetPntMap.c
+*** Xlib/XGetPntMap.c	Tue May 10 14:27:31 1988
+--- sunXlib/XGetPntMap.c	Fri Jun 10 14:35:32 1988
+***************
+*** 56,74 ****
+      (void) _XReply(dpy, (xReply *)&rep, 0, xFalse);
+  
+      if (rep.length > 0) {
+          *keysyms_per_keycode = rep.keySymsPerKeyCode;
+  	nbytes = (long)rep.length << 2;
+- #ifdef CRAY
+- 	mapping = (KeySym *) Xmalloc((unsigned) nbytes * 2);
+- 
+- 	_XRead32 (dpy, (char *)mapping, nbytes);
+- #else
+  	mapping = (KeySym *) Xmalloc((unsigned) nbytes);
+  
+  	_XRead (dpy, (char *)mapping, nbytes);
+- #endif
+        }
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return (mapping);
+  }
+--- 56,68 ----
+diff -c5 Xlib/XGetWAttrs.c sunXlib/XGetWAttrs.c
+*** Xlib/XGetWAttrs.c	Thu Apr 14 17:08:40 1988
+--- sunXlib/XGetWAttrs.c	Fri Jun 10 14:35:32 1988
+***************
+*** 20,30 ****
+      register Screen *sp;
+   
+      LockDisplay(dpy);
+      GetResReq(GetWindowAttributes, w, req1);
+      if (!_XReply (dpy, (xReply *)&rep,
+!        (SIZEOF(xGetWindowAttributesReply) - SIZEOF(xReply)) >> 2, xTrue)) {
+  		UnlockDisplay(dpy);
+  		SyncHandle();
+        		return (0);
+  	}
+      att->class = rep.class;
+--- 20,30 ----
+      register Screen *sp;
+   
+      LockDisplay(dpy);
+      GetResReq(GetWindowAttributes, w, req1);
+      if (!_XReply (dpy, (xReply *)&rep,
+!        (sizeof(xGetWindowAttributesReply) - sizeof(xReply)) >> 2, xTrue)) {
+  		UnlockDisplay(dpy);
+  		SyncHandle();
+        		return (0);
+  	}
+      att->class = rep.class;
+diff -c5 Xlib/XImUtil.c sunXlib/XImUtil.c
+*** Xlib/XImUtil.c	Thu Apr 14 17:08:41 1988
+--- sunXlib/XImUtil.c	Fri Jun 10 14:35:34 1988
+***************
+*** 235,245 ****
+  		  XCreateImage can calculate it.*/
+  {
+  	register XImage *image;
+  	int bits_per_pixel = 1;
+  
+! 	image = (XImage *) Xcalloc (1, (unsigned) sizeof(XImage));
+  	image->width = width;
+  	image->height = height;
+  	image->format = format;
+  	image->byte_order = dpy->byte_order;
+  	image->bitmap_unit = dpy->bitmap_unit;
+--- 235,245 ----
+  		  XCreateImage can calculate it.*/
+  {
+  	register XImage *image;
+  	int bits_per_pixel = 1;
+  
+! 	image = (XImage *) Xcalloc (1, (unsigned) sizeof (XImage));
+  	image->width = width;
+  	image->height = height;
+  	image->format = format;
+  	image->byte_order = dpy->byte_order;
+  	image->bitmap_unit = dpy->bitmap_unit;
+***************
+*** 488,498 ****
+  	register XImage *subimage;
+  	int dsize;
+  	register int row, col;
+  	register unsigned long pixel;
+  	char *data;
+! 	subimage = (XImage *) Xcalloc (1, sizeof(XImage));
+  	subimage->width = width;
+  	subimage->height = height;
+  	subimage->xoffset = 0;
+  	subimage->format = ximage->format;
+  	subimage->byte_order = ximage->byte_order;
+--- 488,498 ----
+  	register XImage *subimage;
+  	int dsize;
+  	register int row, col;
+  	register unsigned long pixel;
+  	char *data;
+! 	subimage = (XImage *) Xcalloc (1, sizeof (XImage));
+  	subimage->width = width;
+  	subimage->height = height;
+  	subimage->xoffset = 0;
+  	subimage->format = ximage->format;
+  	subimage->byte_order = ximage->byte_order;
+diff -c5 Xlib/XInitExt.c sunXlib/XInitExt.c
+*** Xlib/XInitExt.c	Thu Apr 14 17:08:41 1988
+--- sunXlib/XInitExt.c	Fri Jun 10 14:35:34 1988
+***************
+*** 23,33 ****
+  	if (!XQueryExtension(dpy, name, 
+  		&codes.major_opcode, &codes.first_event,
+  		&codes.first_error)) return (NULL);
+  
+  	LockDisplay (dpy);
+! 	ext = (_XExtension *) Xcalloc (1, sizeof(_XExtension));
+  	codes.extension = dpy->ext_number++;
+  	ext->codes = codes;
+  	
+  	/* chain it onto the display list */
+  	ext->next = dpy->ext_procs;
+--- 23,33 ----
+  	if (!XQueryExtension(dpy, name, 
+  		&codes.major_opcode, &codes.first_event,
+  		&codes.first_error)) return (NULL);
+  
+  	LockDisplay (dpy);
+! 	ext = (_XExtension *) Xcalloc (1, sizeof (_XExtension));
+  	codes.extension = dpy->ext_number++;
+  	ext->codes = codes;
+  	
+  	/* chain it onto the display list */
+  	ext->next = dpy->ext_procs;
+diff -c5 Xlib/XKeyBind.c sunXlib/XKeyBind.c
+*** Xlib/XKeyBind.c	Tue May 10 15:41:00 1988
+--- sunXlib/XKeyBind.c	Fri Jun 10 14:35:34 1988
+***************
+*** 271,281 ****
+      trans = p = (struct XKeytrans *)Xmalloc(sizeof(struct XKeytrans));
+      p->next = tmp;	/* chain onto list */
+      p->string = (char *) Xmalloc(nbytes);
+      bcopy (str, p->string, nbytes);
+      p->len = nbytes;
+!     nb = sizeof(KeySym) * nm;
+      p->modifiers = (KeySym *) Xmalloc(nb);
+      bcopy (mlist, p->modifiers, nb);
+      p->key = keysym;
+      p->mlen = nm;
+      ComputeMaskFromKeytrans(dpy, p);
+--- 271,281 ----
+      trans = p = (struct XKeytrans *)Xmalloc(sizeof(struct XKeytrans));
+      p->next = tmp;	/* chain onto list */
+      p->string = (char *) Xmalloc(nbytes);
+      bcopy (str, p->string, nbytes);
+      p->len = nbytes;
+!     nb = sizeof (KeySym) * nm;
+      p->modifiers = (KeySym *) Xmalloc(nb);
+      bcopy (mlist, p->modifiers, nb);
+      p->key = keysym;
+      p->mlen = nm;
+      ComputeMaskFromKeytrans(dpy, p);
+diff -c5 Xlib/XLiHosts.c sunXlib/XLiHosts.c
+*** Xlib/XLiHosts.c	Thu Apr 14 17:08:41 1988
+--- sunXlib/XLiHosts.c	Fri Jun 10 14:35:35 1988
+***************
+*** 39,58 ****
+  	return (NULL);
+  	}
+  
+      nbytes = reply.length << 2;	/* compute number of bytes in reply */
+      op = outbuf = 
+! 	(XHostAddress *) Xmalloc (nbytes + *nhosts * sizeof(XHostAddress));
+!     bp = buf = ((unsigned char  *)outbuf) + *nhosts * sizeof(XHostAddress);
+  
+      _XRead (dpy, (char *) buf, nbytes);
+  
+      for (i = 0; i < *nhosts; i++) {
+  	op->family = ((xHostEntry *) bp)->family;
+  	op->length =((xHostEntry *) bp)->length; 
+  	op->address = (char *) (((xHostEntry *) bp) + 1);
+! 	bp += SIZEOF(xHostEntry) + (((op->length + 3) >> 2) << 2);
+  	op++;
+  	}
+  	
+  
+      UnlockDisplay(dpy);
+--- 39,58 ----
+  	return (NULL);
+  	}
+  
+      nbytes = reply.length << 2;	/* compute number of bytes in reply */
+      op = outbuf = 
+! 	(XHostAddress *) Xmalloc (nbytes + *nhosts * sizeof (XHostAddress));
+!     bp = buf = ((unsigned char  *)outbuf) + *nhosts * sizeof (XHostAddress);
+  
+      _XRead (dpy, (char *) buf, nbytes);
+  
+      for (i = 0; i < *nhosts; i++) {
+  	op->family = ((xHostEntry *) bp)->family;
+  	op->length =((xHostEntry *) bp)->length; 
+  	op->address = (char *) (((xHostEntry *) bp) + 1);
+! 	bp += sizeof(xHostEntry) + (((op->length + 3) >> 2) << 2);
+  	op++;
+  	}
+  	
+  
+      UnlockDisplay(dpy);
+diff -c5 Xlib/XListExt.c sunXlib/XListExt.c
+*** Xlib/XListExt.c	Thu Apr 14 17:08:41 1988
+--- sunXlib/XListExt.c	Fri Jun 10 14:35:35 1988
+***************
+*** 21,31 ****
+  	LockDisplay(dpy);
+  	GetEmptyReq (ListExtensions, req);
+  	(void) _XReply (dpy, (xReply *) &rep, 0, xFalse);
+  	if(*nextensions = rep.nExtensions) {
+  	    list = (char **) Xmalloc (
+! 		(unsigned)((long)*nextensions * sizeof(char *)));
+  	    rlen = rep.length << 2;
+  	    ch = (char *) Xmalloc ((unsigned) rlen + 1);
+                  /* +1 to leave room for last null-terminator */
+  	    _XReadPad (dpy, ch, rlen);
+  	    /*
+--- 21,31 ----
+  	LockDisplay(dpy);
+  	GetEmptyReq (ListExtensions, req);
+  	(void) _XReply (dpy, (xReply *) &rep, 0, xFalse);
+  	if(*nextensions = rep.nExtensions) {
+  	    list = (char **) Xmalloc (
+! 		(unsigned)((long)*nextensions * sizeof (char *)));
+  	    rlen = rep.length << 2;
+  	    ch = (char *) Xmalloc ((unsigned) rlen + 1);
+                  /* +1 to leave room for last null-terminator */
+  	    _XReadPad (dpy, ch, rlen);
+  	    /*
+diff -c5 Xlib/XLookupCol.c sunXlib/XLookupCol.c
+*** Xlib/XLookupCol.c	Thu Apr 14 17:08:41 1988
+--- sunXlib/XLookupCol.c	Fri Jun 10 14:35:35 1988
+***************
+*** 20,30 ****
+  	LockDisplay(dpy);
+  	GetReq (LookupColor, req);
+  	req->cmap = cmap;
+  	req->nbytes = n;
+  	req->length += (n + 3) >> 2;
+! 	Data (dpy, spec, n);
+  	if (!_XReply (dpy, (xReply *) &reply, 0, xTrue)) {
+  	    UnlockDisplay(dpy);
+  	    SyncHandle();
+  	    return (0);
+  	    }
+--- 20,30 ----
+  	LockDisplay(dpy);
+  	GetReq (LookupColor, req);
+  	req->cmap = cmap;
+  	req->nbytes = n;
+  	req->length += (n + 3) >> 2;
+! 	Data (dpy, spec, (long)n);
+  	if (!_XReply (dpy, (xReply *) &reply, 0, xTrue)) {
+  	    UnlockDisplay(dpy);
+  	    SyncHandle();
+  	    return (0);
+  	    }
+diff -c5 Xlib/XLowerWin.c sunXlib/XLowerWin.c
+*** Xlib/XLowerWin.c	Thu Apr 14 17:08:41 1988
+--- sunXlib/XLowerWin.c	Fri Jun 10 14:35:36 1988
+***************
+*** 7,27 ****
+  
+  XLowerWindow(dpy, w)
+  Display *dpy;
+  Window w;
+  {
+-     unsigned long xbelow;
+      register xConfigureWindowReq *req;
+- 
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 4, req);
+      req->window = w;
+      req->mask = CWStackMode;
+!     dpy->bufptr -= 4;
+!     xbelow = Below;
+! 
+!     Data32(dpy,(char *)&xbelow,4);
+! 
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 7,21 ----
+  
+  XLowerWindow(dpy, w)
+  Display *dpy;
+  Window w;
+  {
+      register xConfigureWindowReq *req;
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 4, req);
+      req->window = w;
+      req->mask = CWStackMode;
+!     * (unsigned long *) (req + 1) = Below;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XMapRaised.c sunXlib/XMapRaised.c
+*** Xlib/XMapRaised.c	Thu May 12 11:49:25 1988
+--- sunXlib/XMapRaised.c	Fri Jun 10 14:35:36 1988
+***************
+*** 13,30 ****
+      register xResourceReq *req2;
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 4, req);
+      req->window = w;
+      req->mask = CWStackMode;
+- #ifdef CRAY
+- {   long zero = 0;
+-     dpy->bufptr -= 4;
+-     Data32(dpy, (char *) &zero, 4);
+- }
+- #else
+      * (unsigned long *) (req + 1) = Above;
+- #endif
+      GetResReq (MapWindow, w, req2);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 13,23 ----
+diff -c5 Xlib/XModMap.c sunXlib/XModMap.c
+*** Xlib/XModMap.c	Thu Apr 14 17:08:42 1988
+--- sunXlib/XModMap.c	Fri Jun 10 14:35:37 1988
+***************
+*** 18,28 ****
+      LockDisplay(dpy);
+      GetEmptyReq(GetModifierMapping, req);
+      (void) _XReply (dpy, (xReply *)&rep, 0, xFalse);
+  
+      nbytes = (unsigned long)rep.length << 2;
+!     res = (XModifierKeymap *) Xmalloc(sizeof(XModifierKeymap));
+      res->modifiermap = (KeyCode *) Xmalloc (nbytes);
+      _XReadPad(dpy, (char *) res->modifiermap, nbytes);
+      res->max_keypermod = rep.numKeyPerModifier;
+  
+      UnlockDisplay(dpy);
+--- 18,28 ----
+      LockDisplay(dpy);
+      GetEmptyReq(GetModifierMapping, req);
+      (void) _XReply (dpy, (xReply *)&rep, 0, xFalse);
+  
+      nbytes = (unsigned long)rep.length << 2;
+!     res = (XModifierKeymap *) Xmalloc(sizeof (XModifierKeymap));
+      res->modifiermap = (KeyCode *) Xmalloc (nbytes);
+      _XReadPad(dpy, (char *) res->modifiermap, nbytes);
+      res->max_keypermod = rep.numKeyPerModifier;
+  
+      UnlockDisplay(dpy);
+***************
+*** 51,71 ****
+      req->numKeyPerModifier = modifier_map->max_keypermod;
+  
+      bcopy(modifier_map->modifiermap, (char *)&req[1], mapSize);
+  
+      (void) _XReply(dpy, (xReply *) & rep,
+! 	(SIZEOF(xSetModifierMappingReply) - SIZEOF(xReply)) >> 2, xTrue);
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return (rep.success);
+  }
+  
+  XModifierKeymap *
+  XNewModifiermap(keyspermodifier)
+      int keyspermodifier;
+  {
+!     XModifierKeymap *res = (XModifierKeymap *) Xmalloc((sizeof(XModifierKeymap)));
+  
+      res->max_keypermod = keyspermodifier;
+      res->modifiermap = (keyspermodifier > 0 ?
+  			(KeyCode *) Xmalloc(8 * keyspermodifier)
+  			: (KeyCode *) NULL);
+--- 51,71 ----
+      req->numKeyPerModifier = modifier_map->max_keypermod;
+  
+      bcopy(modifier_map->modifiermap, (char *)&req[1], mapSize);
+  
+      (void) _XReply(dpy, (xReply *) & rep,
+! 	(sizeof(xSetModifierMappingReply) - sizeof(xReply)) >> 2, xTrue);
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return (rep.success);
+  }
+  
+  XModifierKeymap *
+  XNewModifiermap(keyspermodifier)
+      int keyspermodifier;
+  {
+!     XModifierKeymap *res = (XModifierKeymap *) Xmalloc((sizeof (XModifierKeymap)));
+  
+      res->max_keypermod = keyspermodifier;
+      res->modifiermap = (keyspermodifier > 0 ?
+  			(KeyCode *) Xmalloc(8 * keyspermodifier)
+  			: (KeyCode *) NULL);
+diff -c5 Xlib/XMoveWin.c sunXlib/XMoveWin.c
+*** Xlib/XMoveWin.c	Thu Apr 14 17:08:42 1988
+--- sunXlib/XMoveWin.c	Fri Jun 10 14:35:37 1988
+***************
+*** 8,27 ****
+  XMoveWindow (dpy, w, x, y)
+      register Display *dpy;
+      Window w;
+      int x, y;
+  {
+      register xConfigureWindowReq *req;
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 8, req);
+      req->window = w;
+      req->mask = CWX | CWY;
+! 
+!     dpy->bufptr -= 8;
+! 
+!     Data32(dpy,(char *)&x,4);
+!     Data32(dpy,(char *)&y,4);
+! 
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 8,25 ----
+  XMoveWindow (dpy, w, x, y)
+      register Display *dpy;
+      Window w;
+      int x, y;
+  {
++     unsigned long *valuePtr;
+      register xConfigureWindowReq *req;
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 8, req);
+      req->window = w;
+      req->mask = CWX | CWY;
+!     valuePtr = (unsigned long *) (req + 1);
+!     *valuePtr++ = x;
+!     *valuePtr = y;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XOpenDis.c sunXlib/XOpenDis.c
+*** Xlib/XOpenDis.c	Thu Apr 14 17:08:42 1988
+--- sunXlib/XOpenDis.c	Fri Jun 10 14:35:37 1988
+***************
+*** 112,122 ****
+  	client.minorVersion = X_PROTOCOL_REVISION;
+  	_XSendClientPrefix (dpy, &client);
+  /*
+   * Now see if connection was accepted...
+   */
+! 	_XRead (dpy, (char *)&prefix,(long)SIZEOF(xConnSetupPrefix));
+  
+  	if (prefix.majorVersion < X_PROTOCOL) {
+  		(void) fputs ("Warning: Client built for newer server!\n", stderr);
+  	}
+  	if (prefix.minorVersion != X_PROTOCOL_REVISION) {
+--- 112,122 ----
+  	client.minorVersion = X_PROTOCOL_REVISION;
+  	_XSendClientPrefix (dpy, &client);
+  /*
+   * Now see if connection was accepted...
+   */
+! 	_XRead (dpy, (char *)&prefix,(long)sizeof(xConnSetupPrefix));
+  
+  	if (prefix.majorVersion < X_PROTOCOL) {
+  		(void) fputs ("Warning: Client built for newer server!\n", stderr);
+  	}
+  	if (prefix.minorVersion != X_PROTOCOL_REVISION) {
+diff -c5 Xlib/XParseCol.c sunXlib/XParseCol.c
+*** Xlib/XParseCol.c	Thu Apr 14 17:08:42 1988
+--- sunXlib/XParseCol.c	Fri Jun 10 14:35:37 1988
+***************
+*** 24,34 ****
+  	    LockDisplay(dpy);
+  	    GetReq (LookupColor, req);
+  	    req->cmap = cmap;
+  	    req->nbytes = n;
+  	    req->length += (n + 3) >> 2;
+! 	    Data (dpy, spec, n);
+  	    if (!_XReply (dpy, (xReply *) &reply, 0, xTrue)) {
+  		UnlockDisplay(dpy);
+  		SyncHandle();
+  	    	return (0);
+  		}
+--- 24,34 ----
+  	    LockDisplay(dpy);
+  	    GetReq (LookupColor, req);
+  	    req->cmap = cmap;
+  	    req->nbytes = n;
+  	    req->length += (n + 3) >> 2;
+! 	    Data (dpy, spec, (long)n);
+  	    if (!_XReply (dpy, (xReply *) &reply, 0, xTrue)) {
+  		UnlockDisplay(dpy);
+  		SyncHandle();
+  	    	return (0);
+  		}
+diff -c5 Xlib/XPmapBgnd.c sunXlib/XPmapBgnd.c
+*** Xlib/XPmapBgnd.c	Thu Apr 14 17:08:42 1988
+--- sunXlib/XPmapBgnd.c	Fri Jun 10 14:35:38 1988
+***************
+*** 13,23 ****
+      register xChangeWindowAttributesReq *req;
+      LockDisplay (dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBackPixmap;
+!     dpy->bufptr -= 4;
+!     Data32(dpy,(char *)&pixmap,4);
+      UnlockDisplay (dpy);
+      SyncHandle();
+  }
+  
+--- 13,22 ----
+      register xChangeWindowAttributesReq *req;
+      LockDisplay (dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBackPixmap;
+!     * (unsigned long *) (req + 1) = pixmap;
+      UnlockDisplay (dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XPmapBord.c sunXlib/XPmapBord.c
+*** Xlib/XPmapBord.c	Thu Apr 14 17:08:42 1988
+--- sunXlib/XPmapBord.c	Fri Jun 10 14:35:38 1988
+***************
+*** 13,23 ****
+      register xChangeWindowAttributesReq *req;
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBorderPixmap;
+!     dpy->bufptr -= 4;
+!     Data32(dpy,(char *)&pixmap,4);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 13,22 ----
+      register xChangeWindowAttributesReq *req;
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWBorderPixmap;
+!     * (unsigned long *) (req + 1) = pixmap;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XPolyTxt.c sunXlib/XPolyTxt.c
+*** Xlib/XPolyTxt.c	Thu Apr 14 17:08:42 1988
+--- sunXlib/XPolyTxt.c	Fri Jun 10 14:35:40 1988
+***************
+*** 32,52 ****
+  	    length += 5;  /* a 255 byte, plus size of Font id */
+          if (item->delta)
+          {
+  	    if (item->delta > 0)
+  	    {
+! 	      length += SIZEOF(xTextElt) * ((item->delta + 126) / 127);
+  	    }
+              else
+              {
+!    	      length += SIZEOF(xTextElt) * ((abs(item->delta) + 127) / 128);
+   	    }
+          }
+  	if (item->nchars > 0)
+  	{
+! 	    length += SIZEOF(xTextElt) * ((item->nchars + 253) / 254 - 1);
+! 	    if (!item->delta) length += SIZEOF(xTextElt);
+  	    length += item->nchars;
+       	}
+  	item++;
+      }
+  
+--- 32,52 ----
+  	    length += 5;  /* a 255 byte, plus size of Font id */
+          if (item->delta)
+          {
+  	    if (item->delta > 0)
+  	    {
+! 	      length += sizeof(xTextElt) * ((item->delta + 126) / 127);
+  	    }
+              else
+              {
+!    	      length += sizeof(xTextElt) * ((abs(item->delta) + 127) / 128);
+   	    }
+          }
+  	if (item->nchars > 0)
+  	{
+! 	    length += sizeof(xTextElt) * ((item->nchars + 253) / 254 - 1);
+! 	    if (!item->delta) length += sizeof(xTextElt);
+  	    length += item->nchars;
+       	}
+  	item++;
+      }
+  
+***************
+*** 81,147 ****
+              /* update GC shadow */
+  	    gc->values.font = item->font;
+  	    }
+  
+  	{
+! 	    int nbytes = SIZEOF(xTextElt);
+  	    int PartialNChars = item->nchars;
+  	    int PartialDelta = item->delta;
+              register xTextElt *elt;
+  	    int FirstTimeThrough = True;
+   	    char *CharacterOffset = item->chars;
+-             char *tbuf;
+  
+  	    while((PartialDelta < -128) || (PartialDelta > 127))
+              {
+! 	    	int nb = SIZEOF(xTextElt);
+  
+! 	    	BufAlloc (char *, tbuf, nb); 
+! 	    	*tbuf = 0;    /*   elt->len  */
+  	    	if (PartialDelta > 0 ) 
+  		{
+! 		    *(tbuf+1) = 127;  /* elt->delta  */
+  		    PartialDelta = PartialDelta - 127;
+  		}
+  		else
+  		{
+! 		    *(tbuf+1) = -128;     /* elt->delta  */
+  		    PartialDelta = PartialDelta + 128;
+  		}
+  	    }
+  	    if (PartialDelta)
+              {
+!                 BufAlloc (char *, tbuf , nbytes); 
+! 	        *tbuf = 0;      /* elt->len */
+! 		*(tbuf+1) = PartialDelta;    /* elt->delta  */
+  	    }
+  	    while(PartialNChars > 254)
+              {
+  		nbytes = 254;
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += SIZEOF(xTextElt);
+! 	   		BufAlloc (char *, tbuf, nbytes); 
+! 		        *(tbuf+1) = 0;     /* elt->delta */
+  		    }
+  		    else
+  		    {
+  			char *DummyChar;
+  		        BufAlloc(char *, DummyChar, nbytes);
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += SIZEOF(xTextElt);
+! 	   	    BufAlloc (char *, tbuf, nbytes);
+! 		    *(tbuf+1) = 0;   /* elt->delta */
+  		}
+! 	    	*tbuf = 254;     /* elt->len */
+!                 bcopy (CharacterOffset, tbuf+2 , 254);
+  		PartialNChars = PartialNChars - 254;
+  		CharacterOffset += 254;
+  
+  	    }
+  	    if (PartialNChars)
+--- 81,149 ----
+              /* update GC shadow */
+  	    gc->values.font = item->font;
+  	    }
+  
+  	{
+! 	    int nbytes = sizeof (xTextElt);
+  	    int PartialNChars = item->nchars;
+  	    int PartialDelta = item->delta;
+              register xTextElt *elt;
+  	    int FirstTimeThrough = True;
+   	    char *CharacterOffset = item->chars;
+  
+  	    while((PartialDelta < -128) || (PartialDelta > 127))
+              {
+! 	    	int nb = sizeof (xTextElt);
+  
+! 	    	BufAlloc (xTextElt *, elt, nb); 
+! 	    	elt->len = 0;
+  	    	if (PartialDelta > 0 ) 
+  		{
+! 		    elt->delta = 127;
+  		    PartialDelta = PartialDelta - 127;
+  		}
+  		else
+  		{
+! 		    elt->delta = -128;
+  		    PartialDelta = PartialDelta + 128;
+  		}
+  	    }
+  	    if (PartialDelta)
+              {
+!                 BufAlloc (xTextElt *, elt, nbytes); 
+! 	        elt->len = 0;
+! 		elt->delta = PartialDelta;
+  	    }
+  	    while(PartialNChars > 254)
+              {
+  		nbytes = 254;
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += sizeof(xTextElt);
+! 	   		BufAlloc (xTextElt *, elt, nbytes); 
+! 		        elt->delta = 0;
+  		    }
+  		    else
+  		    {
+  			char *DummyChar;
+  		        BufAlloc(char *, DummyChar, nbytes);
++ #ifdef lint
++ 			DummyChar = DummyChar;
++ #endif
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += sizeof(xTextElt);
+! 	   	    BufAlloc (xTextElt *, elt, nbytes);
+! 		    elt->delta = 0;
+  		}
+! 	    	elt->len = 254;
+!                 bcopy (CharacterOffset, (char *) (elt + 1), 254);
+  		PartialNChars = PartialNChars - 254;
+  		CharacterOffset += 254;
+  
+  	    }
+  	    if (PartialNChars)
+***************
+*** 150,177 ****
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += SIZEOF(xTextElt);
+! 	   		BufAlloc (char *, tbuf, nbytes); 
+! 			*(tbuf+1) = 0;   /*  elt->delta  */
+  		    }
+  		    else
+  		    {
+  			char *DummyChar;
+  		        BufAlloc(char *, DummyChar, nbytes);
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += SIZEOF(xTextElt);
+! 	   	    BufAlloc (char *, tbuf, nbytes); 
+! 		    *(tbuf+1) = 0;   /* elt->delta  */
+  		}
+! 	    	*tbuf = PartialNChars;   /*  elt->len  */
+!                 bcopy (CharacterOffset, tbuf+2 , PartialNChars);
+  	    }
+  	}
+      item++;
+      }
+  
+--- 152,182 ----
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += sizeof(xTextElt);
+! 	   		BufAlloc (xTextElt *, elt, nbytes); 
+! 			elt->delta = 0;
+  		    }
+  		    else
+  		    {
+  			char *DummyChar;
+  		        BufAlloc(char *, DummyChar, nbytes);
++ #ifdef lint
++ 			DummyChar = DummyChar;
++ #endif
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += sizeof(xTextElt);
+! 	   	    BufAlloc (xTextElt *, elt, nbytes); 
+! 		    elt->delta = 0;
+  		}
+! 	    	elt->len = PartialNChars;
+!                 bcopy (CharacterOffset, (char *) (elt + 1), PartialNChars);
+  	    }
+  	}
+      item++;
+      }
+  
+diff -c5 Xlib/XPolyTxt16.c sunXlib/XPolyTxt16.c
+*** Xlib/XPolyTxt16.c	Thu Apr 14 17:08:43 1988
+--- sunXlib/XPolyTxt16.c	Fri Jun 10 14:35:42 1988
+***************
+*** 32,52 ****
+  	    length += 5;  /* a 255 byte, plus size of Font id */
+          if (item->delta)
+          {
+  	    if (item->delta > 0)
+  	    {
+! 	      length += SIZEOF(xTextElt) * ((item->delta + 126) / 127);
+  	    }
+              else
+              {
+!    	      length += SIZEOF(xTextElt) * ((abs(item->delta) + 127) / 128);
+   	    }
+          }
+  	if (item->nchars > 0)
+  	{
+! 	    length += SIZEOF(xTextElt) * ((item->nchars + 253) / 254 - 1);
+! 	    if (!item->delta) length += SIZEOF(xTextElt);
+  	    length += item->nchars << 1;
+       	}
+  	item++;
+      }
+  
+--- 32,52 ----
+  	    length += 5;  /* a 255 byte, plus size of Font id */
+          if (item->delta)
+          {
+  	    if (item->delta > 0)
+  	    {
+! 	      length += sizeof(xTextElt) * ((item->delta + 126) / 127);
+  	    }
+              else
+              {
+!    	      length += sizeof(xTextElt) * ((abs(item->delta) + 127) / 128);
+   	    }
+          }
+  	if (item->nchars > 0)
+  	{
+! 	    length += sizeof(xTextElt) * ((item->nchars + 253) / 254 - 1);
+! 	    if (!item->delta) length += sizeof(xTextElt);
+  	    length += item->nchars << 1;
+       	}
+  	item++;
+      }
+  
+***************
+*** 81,100 ****
+              /* update GC shadow */
+  	    gc->values.font = item->font;
+  	    }
+  
+  	{
+! 	    int nbytes = SIZEOF(xTextElt);
+  	    int PartialNChars = item->nchars;
+  	    int PartialDelta = item->delta;
+              register xTextElt *elt;
+  	    int FirstTimeThrough = True;
+   	    XChar2b *CharacterOffset = item->chars;
+  
+  	    while((PartialDelta < -128) || (PartialDelta > 127))
+              {
+! 	    	int nb = SIZEOF(xTextElt);
+  
+  	    	BufAlloc (xTextElt *, elt, nb); 
+  	    	elt->len = 0;
+  	    	if (PartialDelta > 0 ) 
+  		{
+--- 81,100 ----
+              /* update GC shadow */
+  	    gc->values.font = item->font;
+  	    }
+  
+  	{
+! 	    int nbytes = sizeof (xTextElt);
+  	    int PartialNChars = item->nchars;
+  	    int PartialDelta = item->delta;
+              register xTextElt *elt;
+  	    int FirstTimeThrough = True;
+   	    XChar2b *CharacterOffset = item->chars;
+  
+  	    while((PartialDelta < -128) || (PartialDelta > 127))
+              {
+! 	    	int nb = sizeof (xTextElt);
+  
+  	    	BufAlloc (xTextElt *, elt, nb); 
+  	    	elt->len = 0;
+  	    	if (PartialDelta > 0 ) 
+  		{
+***************
+*** 119,129 ****
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += SIZEOF(xTextElt);
+  	   		BufAlloc (xTextElt *, elt, nbytes); 
+  		        elt->delta = 0;
+  		    }
+  		    else
+  		    {
+--- 119,129 ----
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += sizeof(xTextElt);
+  	   		BufAlloc (xTextElt *, elt, nbytes); 
+  		        elt->delta = 0;
+  		    }
+  		    else
+  		    {
+***************
+*** 134,144 ****
+  #endif
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += SIZEOF(xTextElt);
+  	   	    BufAlloc (xTextElt *, elt, nbytes);
+  		    elt->delta = 0;
+  		}
+  	    	elt->len = 254;
+                  bcopy ((char *)CharacterOffset, (char *) (elt + 1), 254 * 2);
+--- 134,144 ----
+  #endif
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += sizeof(xTextElt);
+  	   	    BufAlloc (xTextElt *, elt, nbytes);
+  		    elt->delta = 0;
+  		}
+  	    	elt->len = 254;
+                  bcopy ((char *)CharacterOffset, (char *) (elt + 1), 254 * 2);
+***************
+*** 152,162 ****
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += SIZEOF(xTextElt);
+  	   		BufAlloc (xTextElt *, elt, nbytes); 
+  			elt->delta = 0;
+  		    }
+  		    else
+  		    {
+--- 152,162 ----
+  	    	if (FirstTimeThrough)
+  		{
+  		    FirstTimeThrough = False;
+  		    if (!item->delta)
+   		    { 
+! 			nbytes += sizeof(xTextElt);
+  	   		BufAlloc (xTextElt *, elt, nbytes); 
+  			elt->delta = 0;
+  		    }
+  		    else
+  		    {
+***************
+*** 167,177 ****
+  #endif
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += SIZEOF(xTextElt);
+  	   	    BufAlloc (xTextElt *, elt, nbytes); 
+  		    elt->delta = 0;
+  		}
+  	    	elt->len = PartialNChars;
+                  bcopy ((char *)CharacterOffset, (char *) (elt + 1), PartialNChars * 2);
+--- 167,177 ----
+  #endif
+  		    }
+  		}
+  		else
+  		{
+!  		    nbytes += sizeof(xTextElt);
+  	   	    BufAlloc (xTextElt *, elt, nbytes); 
+  		    elt->delta = 0;
+  		}
+  	    	elt->len = PartialNChars;
+                  bcopy ((char *)CharacterOffset, (char *) (elt + 1), PartialNChars * 2);
+diff -c5 Xlib/XPutBEvent.c sunXlib/XPutBEvent.c
+*** Xlib/XPutBEvent.c	Thu Apr 14 17:08:43 1988
+--- sunXlib/XPutBEvent.c	Fri Jun 10 14:35:42 1988
+***************
+*** 14,24 ****
+  	{
+  	register _XQEvent *qelt;
+  
+  	LockDisplay(dpy);
+  	if (!_qfree) {
+!     	    _qfree = (_XQEvent *) Xmalloc (sizeof(_XQEvent));
+  	    _qfree->next = NULL;
+  	    }
+  	qelt = _qfree;
+  	_qfree = qelt->next;
+  	qelt->next = dpy->head;
+--- 14,24 ----
+  	{
+  	register _XQEvent *qelt;
+  
+  	LockDisplay(dpy);
+  	if (!_qfree) {
+!     	    _qfree = (_XQEvent *) Xmalloc (sizeof (_XQEvent));
+  	    _qfree->next = NULL;
+  	    }
+  	qelt = _qfree;
+  	_qfree = qelt->next;
+  	qelt->next = dpy->head;
+diff -c5 Xlib/XPutImage.c sunXlib/XPutImage.c
+*** Xlib/XPutImage.c	Thu Apr 14 17:08:43 1988
+--- sunXlib/XPutImage.c	Fri Jun 10 14:35:42 1988
+***************
+*** 609,619 ****
+      if ((req_width == 0) || (req_height == 0))
+  	return;
+      
+      Available = ((65536 < dpy->max_request_size) ? (65536 << 2)
+  						 : (dpy->max_request_size << 2))
+! 		- SIZEOF(xPutImageReq);
+  
+      if ((image->depth == 1) || (image->format != ZPixmap)) {
+  	left_pad = (image->xoffset + req_xoffset) & (dpy->bitmap_unit - 1);
+  	BytesPerRow = (ROUNDUP((long)req_width + left_pad,
+  			       dpy->bitmap_pad) >> 3) * image->depth;
+--- 609,619 ----
+      if ((req_width == 0) || (req_height == 0))
+  	return;
+      
+      Available = ((65536 < dpy->max_request_size) ? (65536 << 2)
+  						 : (dpy->max_request_size << 2))
+! 		- sizeof(xPutImageReq);
+  
+      if ((image->depth == 1) || (image->format != ZPixmap)) {
+  	left_pad = (image->xoffset + req_xoffset) & (dpy->bitmap_unit - 1);
+  	BytesPerRow = (ROUNDUP((long)req_width + left_pad,
+  			       dpy->bitmap_pad) >> 3) * image->depth;
+diff -c5 Xlib/XQuColor.c sunXlib/XQuColor.c
+*** Xlib/XQuColor.c	Thu Apr 14 17:08:43 1988
+--- sunXlib/XQuColor.c	Fri Jun 10 14:35:43 1988
+***************
+*** 17,33 ****
+  
+      LockDisplay(dpy);
+      GetReqExtra(QueryColors, 4, req); /* a pixel (CARD32) is 4 bytes */
+      req->cmap = cmap;
+  
+!     dpy->bufptr -= 4;
+  
+-     Data32(dpy,(char *)&(def->pixel),4);
+- 
+      if (_XReply(dpy, (xReply *) &rep, 0, xFalse) != 0) {
+  
+! 	    _XRead(dpy, (char *)&color, (long) SIZEOF(xrgb));
+  
+  	    def->red = color.red;
+  	    def->blue = color.blue;
+  	    def->green = color.green;
+  	    def->flags = DoRed | DoGreen | DoBlue;
+--- 17,31 ----
+  
+      LockDisplay(dpy);
+      GetReqExtra(QueryColors, 4, req); /* a pixel (CARD32) is 4 bytes */
+      req->cmap = cmap;
+  
+!     * (unsigned long *) (req + 1) = def->pixel;
+  
+      if (_XReply(dpy, (xReply *) &rep, 0, xFalse) != 0) {
+  
+! 	    _XRead(dpy, (char *)&color, (long) sizeof(xrgb));
+  
+  	    def->red = color.red;
+  	    def->blue = color.blue;
+  	    def->green = color.green;
+  	    def->flags = DoRed | DoGreen | DoBlue;
+diff -c5 Xlib/XQuColors.c sunXlib/XQuColors.c
+*** Xlib/XQuColors.c	Thu Apr 14 17:08:43 1988
+--- sunXlib/XQuColors.c	Fri Jun 10 14:35:43 1988
+***************
+*** 24,40 ****
+      req->cmap = cmap;
+  
+      req->length += ncolors; /* each pixel is a CARD32 */
+  
+      for (i = 0; i < ncolors; i++)
+!       Data32(dpy, (char *)&defs[i].pixel, 4L);
+         /* XXX this isn't very efficient */
+  
+      if (_XReply(dpy, (xReply *) &rep, 0, xFalse) != 0) {
+  
+  	    color = (xrgb *) Xmalloc(
+! 		(unsigned)(nbytes = (long)ncolors * SIZEOF(xrgb)));
+  	    _XRead(dpy, (char *) color, nbytes);
+  
+  	    for (i = 0; i < ncolors; i++) {
+  		register XColor *def = &defs[i];
+  		register xrgb *rgb = &color[i];
+--- 24,40 ----
+      req->cmap = cmap;
+  
+      req->length += ncolors; /* each pixel is a CARD32 */
+  
+      for (i = 0; i < ncolors; i++)
+!       Data(dpy, (char *)&defs[i].pixel, 4L);
+         /* XXX this isn't very efficient */
+  
+      if (_XReply(dpy, (xReply *) &rep, 0, xFalse) != 0) {
+  
+  	    color = (xrgb *) Xmalloc(
+! 		(unsigned)(nbytes = (long)ncolors * sizeof(xrgb)));
+  	    _XRead(dpy, (char *) color, nbytes);
+  
+  	    for (i = 0; i < ncolors; i++) {
+  		register XColor *def = &defs[i];
+  		register xrgb *rgb = &color[i];
+diff -c5 Xlib/XQuKeybd.c sunXlib/XQuKeybd.c
+*** Xlib/XQuKeybd.c	Thu Apr 14 17:08:43 1988
+--- sunXlib/XQuKeybd.c	Fri Jun 10 14:35:43 1988
+***************
+*** 19,29 ****
+      register xReq *req;
+  
+      LockDisplay(dpy);
+      GetEmptyReq(QueryKeymap, req);
+      (void) _XReply(dpy, (xReply *)&rep, 
+!        (SIZEOF(xQueryKeymapReply) - SIZEOF(xReply)) >> 2, xTrue);
+      *(struct kmap *) keys = *(struct kmap *)rep.map;  /* faster than bcopy */
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 19,29 ----
+      register xReq *req;
+  
+      LockDisplay(dpy);
+      GetEmptyReq(QueryKeymap, req);
+      (void) _XReply(dpy, (xReply *)&rep, 
+!        (sizeof (xQueryKeymapReply) - sizeof (xReply)) >> 2, xTrue);
+      *(struct kmap *) keys = *(struct kmap *)rep.map;  /* faster than bcopy */
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XRaiseWin.c sunXlib/XRaiseWin.c
+*** Xlib/XRaiseWin.c	Thu Apr 14 17:08:43 1988
+--- sunXlib/XRaiseWin.c	Fri Jun 10 14:35:44 1988
+***************
+*** 7,27 ****
+  
+  XRaiseWindow (dpy, w)
+      register Display *dpy;
+      Window w;
+  {
+-     unsigned long xabove;
+      register xConfigureWindowReq *req;
+  
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 4, req);
+      req->window = w;
+      req->mask = CWStackMode;
+!     dpy->bufptr -= 4;
+!     xabove = Above;
+! 
+!     Data32(dpy,(char *)&xabove,4);
+! 
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 7,22 ----
+  
+  XRaiseWindow (dpy, w)
+      register Display *dpy;
+      Window w;
+  {
+      register xConfigureWindowReq *req;
+  
+      LockDisplay(dpy);
+      GetReqExtra(ConfigureWindow, 4, req);
+      req->window = w;
+      req->mask = CWStackMode;
+!     * (unsigned long *) (req + 1) = Above;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XReconfWin.c sunXlib/XReconfWin.c
+*** Xlib/XReconfWin.c	Thu May 19 11:21:45 1988
+--- sunXlib/XReconfWin.c	Fri Jun 10 14:35:44 1988
+***************
+*** 53,62 ****
+      /* note: Data is a macro that uses its arguments multiple
+         times, so "nvalues" is changed in a separate assignment
+         statement */
+  
+      nvalues <<= 2;
+!     Data32 (dpy, (char *) values, nvalues);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  
+      }
+--- 53,62 ----
+      /* note: Data is a macro that uses its arguments multiple
+         times, so "nvalues" is changed in a separate assignment
+         statement */
+  
+      nvalues <<= 2;
+!     Data (dpy, (char *) values, nvalues);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  
+      }
+diff -c5 Xlib/XRegion.c sunXlib/XRegion.c
+*** Xlib/XRegion.c	Thu Apr 14 17:08:44 1988
+--- sunXlib/XRegion.c	Fri Jun 10 14:35:45 1988
+***************
+*** 172,182 ****
+  {
+      register int i;
+      register XRectangle *xr;
+      LockDisplay (dpy);
+      xr = (XRectangle *) 
+!     	_XAllocScratch(dpy, (unsigned long)(r->numRects * sizeof(XRectangle)));
+      for (i = 0; i < r->numRects; i++) {
+          xr->x = r->rects[i].x1;
+  	xr->y = r->rects[i].y1;
+  	xr->width = r->rects[i].x2 - r->rects[i].x1;
+  	xr->height = r->rects[i].y2 - r->rects[i].y1;
+--- 172,182 ----
+  {
+      register int i;
+      register XRectangle *xr;
+      LockDisplay (dpy);
+      xr = (XRectangle *) 
+!     	_XAllocScratch(dpy, (unsigned long)(r->numRects * sizeof (XRectangle)));
+      for (i = 0; i < r->numRects; i++) {
+          xr->x = r->rects[i].x1;
+  	xr->y = r->rects[i].y1;
+  	xr->width = r->rects[i].x2 - r->rects[i].x1;
+  	xr->height = r->rects[i].y2 - r->rects[i].y1;
+diff -c5 Xlib/XRestackWs.c sunXlib/XRestackWs.c
+*** Xlib/XRestackWs.c	Thu Apr 14 17:08:44 1988
+--- sunXlib/XRestackWs.c	Fri Jun 10 14:35:45 1988
+***************
+*** 9,35 ****
+      register Display *dpy;
+      register Window *windows;
+      int n;
+      {
+      int i = 0;
+-     unsigned long xbelow;
+      LockDisplay(dpy);
+-     xbelow = Below;
+      while (windows++, ++i < n) {
+  	register unsigned long *values;
+  	register xConfigureWindowReq *req;
+  
+      	GetReqExtra (ConfigureWindow, 8, req);
+  	req->window = *windows;
+  	req->mask = CWSibling | CWStackMode;
+!         dpy->bufptr -= 8;
+!         Data32(dpy,(char *)(windows-1),4);
+! /*  *values++ = *(windows-1);
+!  */
+!         Data32(dpy,(char *)&xbelow,4);
+! /*  *values   = Below;
+!  */
+  	}
+      UnlockDisplay(dpy);
+      SyncHandle();
+      }
+  
+--- 9,29 ----
+      register Display *dpy;
+      register Window *windows;
+      int n;
+      {
+      int i = 0;
+      LockDisplay(dpy);
+      while (windows++, ++i < n) {
+  	register unsigned long *values;
+  	register xConfigureWindowReq *req;
+  
+      	GetReqExtra (ConfigureWindow, 8, req);
+  	req->window = *windows;
+  	req->mask = CWSibling | CWStackMode;
+!         values = (unsigned long *) (req + 1);
+! 	*values++ = *(windows-1);
+! 	*values   = Below;
+  	}
+      UnlockDisplay(dpy);
+      SyncHandle();
+      }
+  
+diff -c5 Xlib/XRotProp.c sunXlib/XRotProp.c
+*** Xlib/XRotProp.c	Thu Apr 14 17:08:44 1988
+--- sunXlib/XRotProp.c	Fri Jun 10 14:35:45 1988
+***************
+*** 22,32 ****
+      req->nPositions = npositions;
+      
+      req->length += nprops;
+      nbytes = nprops << 2;
+  /* XXX Cray needs packing here.... */
+!     Data32 (dpy, (char *) properties, nbytes);
+  
+  
+      UnlockDisplay(dpy);
+      SyncHandle();
+      }
+--- 22,32 ----
+      req->nPositions = npositions;
+      
+      req->length += nprops;
+      nbytes = nprops << 2;
+  /* XXX Cray needs packing here.... */
+!     Data (dpy, (char *) properties, nbytes);
+  
+  
+      UnlockDisplay(dpy);
+      SyncHandle();
+      }
+diff -c5 Xlib/XSelInput.c sunXlib/XSelInput.c
+*** Xlib/XSelInput.c	Thu Apr 14 17:08:44 1988
+--- sunXlib/XSelInput.c	Fri Jun 10 14:35:45 1988
+***************
+*** 14,24 ****
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWEventMask;
+!     dpy->bufptr -= 4;
+!     Data32(dpy,(char *)&mask,4);
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 14,23 ----
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWEventMask;
+!     * (unsigned long *) (req + 1) = mask;
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+diff -c5 Xlib/XSetCRects.c sunXlib/XSetCRects.c
+*** Xlib/XSetCRects.c	Thu Apr 14 17:08:44 1988
+--- sunXlib/XSetCRects.c	Fri Jun 10 14:35:45 1988
+***************
+*** 37,47 ****
+      GetReq (SetClipRectangles, req);
+      req->gc = gc->gid;
+      req->xOrigin = gc->values.clip_x_origin = clip_x_origin;
+      req->yOrigin = gc->values.clip_y_origin = clip_y_origin;
+      req->ordering = ordering;
+!     req->length += n * (SIZEOF(xRectangle)/4);
+      gc->rects = 1;
+!     nbytes = (long)n * SIZEOF(xRectangle);
+!     Data16 (dpy, (char *) rectangles, nbytes);
+      gc->dirty &= ~(GCClipMask | GCClipXOrigin | GCClipYOrigin);
+  }
+--- 37,47 ----
+      GetReq (SetClipRectangles, req);
+      req->gc = gc->gid;
+      req->xOrigin = gc->values.clip_x_origin = clip_x_origin;
+      req->yOrigin = gc->values.clip_y_origin = clip_y_origin;
+      req->ordering = ordering;
+!     req->length += n * (sizeof (xRectangle)/4);
+      gc->rects = 1;
+!     nbytes = (long)n * sizeof(xRectangle);
+!     PackData (dpy, (char *) rectangles, nbytes);
+      gc->dirty &= ~(GCClipMask | GCClipXOrigin | GCClipYOrigin);
+  }
+diff -c5 Xlib/XSetHints.c sunXlib/XSetHints.c
+*** Xlib/XSetHints.c	Thu Apr 14 17:08:46 1988
+--- sunXlib/XSetHints.c	Fri Jun 10 14:35:47 1988
+***************
+*** 120,130 ****
+  	XIconSize *list;
+  	int count; 	/* number of items on the list */
+  {
+  	register int i;
+  	xPropIconSize *pp, *prop;
+! 	unsigned nbytes = count * SIZEOF(xPropIconSize);
+  	prop = pp = (xPropIconSize *) Xmalloc (nbytes);
+  	for (i = 0; i < count; i++) {
+  	    pp->minWidth  = list->min_width;
+  	    pp->minHeight = list->min_height;
+  	    pp->maxWidth  = list->max_width;
+--- 120,130 ----
+  	XIconSize *list;
+  	int count; 	/* number of items on the list */
+  {
+  	register int i;
+  	xPropIconSize *pp, *prop;
+! 	unsigned nbytes = count * sizeof(xPropIconSize);
+  	prop = pp = (xPropIconSize *) Xmalloc (nbytes);
+  	for (i = 0; i < count; i++) {
+  	    pp->minWidth  = list->min_width;
+  	    pp->minHeight = list->min_height;
+  	    pp->maxWidth  = list->max_width;
+diff -c5 Xlib/XSetPntMap.c sunXlib/XSetPntMap.c
+*** Xlib/XSetPntMap.c	Tue May 10 14:51:54 1988
+--- sunXlib/XSetPntMap.c	Fri Jun 10 14:35:47 1988
+***************
+*** 44,59 ****
+      req->firstKeyCode = first_keycode;
+      req->keyCodes = nkeycodes;
+      req->keySymsPerKeyCode = keysyms_per_keycode;
+      req->firstKeyCode = first_keycode;
+      req->length += nkeycodes * keysyms_per_keycode;
+!     nbytes = keysyms_per_keycode * nkeycodes * sizeof(CARD32);
+! #ifdef CRAY
+!     Data32 (dpy, (char *)keysyms, nbytes);
+! #else
+      Data (dpy, (char *)keysyms, nbytes);
+- #endif
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return;
+      }
+      
+--- 44,55 ----
+      req->firstKeyCode = first_keycode;
+      req->keyCodes = nkeycodes;
+      req->keySymsPerKeyCode = keysyms_per_keycode;
+      req->firstKeyCode = first_keycode;
+      req->length += nkeycodes * keysyms_per_keycode;
+!     nbytes = keysyms_per_keycode * nkeycodes * sizeof (CARD32);
+      Data (dpy, (char *)keysyms, nbytes);
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return;
+      }
+      
+diff -c5 Xlib/XStBytes.c sunXlib/XStBytes.c
+*** Xlib/XStBytes.c	Thu Apr 14 17:08:46 1988
+--- sunXlib/XStBytes.c	Fri Jun 10 14:35:48 1988
+***************
+*** 32,42 ****
+      unsigned long nitems;
+      unsigned long leftover;
+      unsigned char *data;
+      *nbytes = 0;
+      if ((buffer < 0) || (buffer > 7)) return (NULL);
+! /* XXX should be (sizeof(maxint) - 1)/4 */
+      if (XGetWindowProperty(dpy, RootWindow(dpy, 0), n_to_atom[buffer], 
+  	0L, 10000000L, False, XA_STRING, 
+  	&actual_type, &actual_format, &nitems, &leftover, &data) != Success) {
+  	return (NULL);
+  	}
+--- 32,42 ----
+      unsigned long nitems;
+      unsigned long leftover;
+      unsigned char *data;
+      *nbytes = 0;
+      if ((buffer < 0) || (buffer > 7)) return (NULL);
+! /* XXX should be (sizeof (maxint) - 1)/4 */
+      if (XGetWindowProperty(dpy, RootWindow(dpy, 0), n_to_atom[buffer], 
+  	0L, 10000000L, False, XA_STRING, 
+  	&actual_type, &actual_format, &nitems, &leftover, &data) != Success) {
+  	return (NULL);
+  	}
+diff -c5 Xlib/XStColor.c sunXlib/XStColor.c
+*** Xlib/XStColor.c	Thu Apr 14 17:08:46 1988
+--- sunXlib/XStColor.c	Fri Jun 10 14:35:48 1988
+***************
+*** 12,22 ****
+  {
+      xColorItem *citem;
+      register xStoreColorsReq *req;
+  
+      LockDisplay(dpy);
+!     GetReqExtra(StoreColors, SIZEOF(xColorItem), req); /* assume size is 4*n */
+  
+      req->cmap = cmap;
+  
+      citem = (xColorItem *) (req + 1);
+  
+--- 12,22 ----
+  {
+      xColorItem *citem;
+      register xStoreColorsReq *req;
+  
+      LockDisplay(dpy);
+!     GetReqExtra(StoreColors, sizeof(xColorItem), req); /* assume size is 4*n */
+  
+      req->cmap = cmap;
+  
+      citem = (xColorItem *) (req + 1);
+  
+diff -c5 Xlib/XStColors.c sunXlib/XStColors.c
+*** Xlib/XStColors.c	Thu Apr 14 17:08:46 1988
+--- sunXlib/XStColors.c	Fri Jun 10 14:35:49 1988
+***************
+*** 18,28 ****
+      LockDisplay(dpy);    
+      GetReq(StoreColors, req);
+  
+      req->cmap = cmap;
+  
+!     req->length += (ncolors * SIZEOF(xColorItem)) >> 2; /* assume size is 4*n */
+  
+      for (i = 0; i < ncolors; i++) {
+  	citem.pixel = defs[i].pixel;
+  	citem.red = defs[i].red;
+  	citem.green = defs[i].green;
+--- 18,28 ----
+      LockDisplay(dpy);    
+      GetReq(StoreColors, req);
+  
+      req->cmap = cmap;
+  
+!     req->length += (ncolors * sizeof(xColorItem)) >> 2; /* assume size is 4*n */
+  
+      for (i = 0; i < ncolors; i++) {
+  	citem.pixel = defs[i].pixel;
+  	citem.red = defs[i].red;
+  	citem.green = defs[i].green;
+***************
+*** 29,39 ****
+  	citem.blue = defs[i].blue;
+  	citem.flags = defs[i].flags;
+  
+  	/* note that xColorItem doesn't contain all 16-bit quantities, so
+  	   we can't use PackData */
+! 	Data(dpy, (char *)&citem, (long) SIZEOF(xColorItem)); 
+  			/* assume size is 4*n */
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+--- 29,39 ----
+  	citem.blue = defs[i].blue;
+  	citem.flags = defs[i].flags;
+  
+  	/* note that xColorItem doesn't contain all 16-bit quantities, so
+  	   we can't use PackData */
+! 	Data(dpy, (char *)&citem, (long) sizeof(xColorItem)); 
+  			/* assume size is 4*n */
+      }
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+diff -c5 Xlib/XText.c sunXlib/XText.c
+*** Xlib/XText.c	Thu Apr 14 17:08:44 1988
+--- sunXlib/XText.c	Fri Jun 10 14:35:49 1988
+***************
+*** 26,36 ****
+      req->gc = gc->gid;
+      req->x = x;
+      req->y = y;
+  
+  
+!     Datalength += SIZEOF(xTextElt) * ((length + 253) / 254) + length;
+  
+  
+      req->length += (Datalength + 3)>>2;  /* convert to number of 32-bit words */
+  
+  
+--- 26,36 ----
+      req->gc = gc->gid;
+      req->x = x;
+      req->y = y;
+  
+  
+!     Datalength += sizeof(xTextElt) * ((length + 253) / 254) + length;
+  
+  
+      req->length += (Datalength + 3)>>2;  /* convert to number of 32-bit words */
+  
+  
+***************
+*** 47,86 ****
+      {
+  	int nbytes;
+  	int PartialNChars = length;
+          register xTextElt *elt;
+   	char *CharacterOffset = string;
+-         unsigned char *tbuf;
+  
+  	while(PartialNChars > 254)
+          {
+!  	    nbytes = 254 + SIZEOF(xTextElt);
+! 	    BufAlloc (unsigned char *, tbuf, nbytes);
+! /*    elt->delta = 0;
+!  *    elt->len = 254;
+!  */
+!             *tbuf = 254;
+!             *(tbuf+1) = 0;
+! /*       bcopy (CharacterOffset, (char *) (elt + 1), 254);
+!  */
+!             bcopy (CharacterOffset, tbuf+2, 254);
+  	    PartialNChars = PartialNChars - 254;
+  	    CharacterOffset += 254;
+  	}
+  	    
+          if (PartialNChars)
+          {
+! 	    nbytes = PartialNChars + SIZEOF(xTextElt);
+! 	    BufAlloc (unsigned char *, tbuf, nbytes); 
+! /*    elt->delta = 0;
+!  *    elt->len = PartialNChars;
+!  */
+!             *tbuf =  PartialNChars;
+!             *(tbuf+1) = 0;
+! /*     bcopy (CharacterOffset, (char *) (elt + 1), PartialNChars);
+!  */
+!          bcopy (CharacterOffset, tbuf+2, PartialNChars);
+  	 }
+      }
+  
+      /* Pad request out to a 32-bit boundary */
+  
+--- 47,75 ----
+      {
+  	int nbytes;
+  	int PartialNChars = length;
+          register xTextElt *elt;
+   	char *CharacterOffset = string;
+  
+  	while(PartialNChars > 254)
+          {
+!  	    nbytes = 254 + sizeof(xTextElt);
+! 	    BufAlloc (xTextElt *, elt, nbytes);
+! 	    elt->delta = 0;
+! 	    elt->len = 254;
+!             bcopy (CharacterOffset, (char *) (elt + 1), 254);
+  	    PartialNChars = PartialNChars - 254;
+  	    CharacterOffset += 254;
+  	}
+  	    
+          if (PartialNChars)
+          {
+! 	    nbytes = PartialNChars + sizeof(xTextElt);
+! 	    BufAlloc (xTextElt *, elt, nbytes); 
+! 	    elt->delta = 0;
+! 	    elt->len = PartialNChars;
+!             bcopy (CharacterOffset, (char *) (elt + 1), PartialNChars);
+  	 }
+      }
+  
+      /* Pad request out to a 32-bit boundary */
+  
+diff -c5 Xlib/XText16.c sunXlib/XText16.c
+*** Xlib/XText16.c	Thu Apr 14 17:08:47 1988
+--- sunXlib/XText16.c	Fri Jun 10 14:35:50 1988
+***************
+*** 26,36 ****
+      req->gc = gc->gid;
+      req->x = x;
+      req->y = y;
+  
+  
+!     Datalength += SIZEOF(xTextElt) * ((length + 253) / 254) + (length << 1);
+  
+  
+      req->length += (Datalength + 3)>>2;  /* convert to number of 32-bit words */
+  
+  
+--- 26,36 ----
+      req->gc = gc->gid;
+      req->x = x;
+      req->y = y;
+  
+  
+!     Datalength += sizeof(xTextElt) * ((length + 253) / 254) + (length << 1);
+  
+  
+      req->length += (Datalength + 3)>>2;  /* convert to number of 32-bit words */
+  
+  
+***************
+*** 50,60 ****
+          register xTextElt *elt;
+   	XChar2b *CharacterOffset = string;
+  
+  	while(PartialNChars > 254)
+          {
+!  	    nbytes = 254 * 2 + SIZEOF(xTextElt);
+  	    BufAlloc (xTextElt *, elt, nbytes);
+  	    elt->delta = 0;
+  	    elt->len = 254;
+              bcopy ((char *)CharacterOffset, (char *) (elt + 1), 254 * 2);
+  	    PartialNChars = PartialNChars - 254;
+--- 50,60 ----
+          register xTextElt *elt;
+   	XChar2b *CharacterOffset = string;
+  
+  	while(PartialNChars > 254)
+          {
+!  	    nbytes = 254 * 2 + sizeof(xTextElt);
+  	    BufAlloc (xTextElt *, elt, nbytes);
+  	    elt->delta = 0;
+  	    elt->len = 254;
+              bcopy ((char *)CharacterOffset, (char *) (elt + 1), 254 * 2);
+  	    PartialNChars = PartialNChars - 254;
+***************
+*** 61,71 ****
+  	    CharacterOffset += 254;
+  	}
+  	    
+          if (PartialNChars)
+          {
+! 	    nbytes = PartialNChars * 2  + SIZEOF(xTextElt);
+  	    BufAlloc (xTextElt *, elt, nbytes); 
+  	    elt->delta = 0;
+  	    elt->len = PartialNChars;
+              bcopy ((char *)CharacterOffset, (char *) (elt + 1), PartialNChars * 2);
+  	 }
+--- 61,71 ----
+  	    CharacterOffset += 254;
+  	}
+  	    
+          if (PartialNChars)
+          {
+! 	    nbytes = PartialNChars * 2  + sizeof(xTextElt);
+  	    BufAlloc (xTextElt *, elt, nbytes); 
+  	    elt->delta = 0;
+  	    elt->len = PartialNChars;
+              bcopy ((char *)CharacterOffset, (char *) (elt + 1), PartialNChars * 2);
+  	 }
+diff -c5 Xlib/XUndefCurs.c sunXlib/XUndefCurs.c
+*** Xlib/XUndefCurs.c	Thu May 12 11:34:16 1988
+--- sunXlib/XUndefCurs.c	Fri Jun 10 14:35:50 1988
+***************
+*** 13,29 ****
+  
+      LockDisplay(dpy);
+      GetReqExtra (ChangeWindowAttributes, 4, req);
+      req->window = w;
+      req->valueMask = CWCursor;
+- #ifdef CRAY
+- {long zero = 0;
+-     dpy->bufptr -= 4;
+-     Data32(dpy, (char *) &zero, 4);
+- }
+- #else
+      * (unsigned long *) (req + 1) = 0;
+- #endif
+      UnlockDisplay(dpy);
+      SyncHandle();
+  }
+  
+--- 13,22 ----
+diff -c5 Xlib/XWindow.c sunXlib/XWindow.c
+*** Xlib/XWindow.c	Thu Apr 14 17:08:48 1988
+--- sunXlib/XWindow.c	Fri Jun 10 14:35:52 1988
+***************
+*** 108,116 ****
+      if (valuemask & CWCursor)
+  	*value++ = attributes->cursor;
+  
+      req->length += (nvalues = value - values);
+  
+      nvalues <<= 2;
+!     Data32 (dpy, (char *) values, (long)nvalues);
+  
+      }
+--- 108,120 ----
+      if (valuemask & CWCursor)
+  	*value++ = attributes->cursor;
+  
+      req->length += (nvalues = value - values);
+  
++     /* note: Data is a macro that uses its arguments multiple
++        times, so "nvalues" is changed in a separate assignment
++        statement */
++ 
+      nvalues <<= 2;
+!     Data (dpy, (char *) values, (long)nvalues);
+  
+      }
+diff -c5 Xlib/Xkeymap.h sunXlib/Xkeymap.h
+*** Xlib/Xkeymap.h	Thu Apr 14 17:08:48 1988
+--- sunXlib/Xkeymap.h	Fri Jun 10 14:37:48 1988
+***************
+*** 25,35 ****
+      unsigned char metabits;
+      unsigned char length;
+      } ExtensionHeader;
+  
+  #define ExtensionHeaderSize 3
+!     /* since sizeof(ExtensionHeader) is 4 on some machines, e.g. Sun */
+  
+  /* macro used to iterate through the extension */
+  #define NextExtension(this) \
+    this = (ExtensionHeader *) ((char *)this + ExtensionHeaderSize + this->length)
+  
+--- 25,35 ----
+      unsigned char metabits;
+      unsigned char length;
+      } ExtensionHeader;
+  
+  #define ExtensionHeaderSize 3
+!     /* since sizeof (ExtensionHeader) is 4 on some machines, e.g. Sun */
+  
+  /* macro used to iterate through the extension */
+  #define NextExtension(this) \
+    this = (ExtensionHeader *) ((char *)this + ExtensionHeaderSize + this->length)
+  
+diff -c5 Xlib/Xlib.h sunXlib/Xlib.h
+*** Xlib/Xlib.h	Thu Apr 14 17:08:47 1988
+--- sunXlib/Xlib.h	Fri Jun 10 14:37:49 1988
+***************
+*** 23,37 ****
+   *	Structures and symbols starting with "_" are private to the library.
+   */
+  #ifndef _XLIB_H_
+  #define _XLIB_H_
+  
+- #ifndef __TYPES__
+- #define __TYPES__
+  #include <sys/types.h>
+- #endif
+- 
+  #include <X11/X.h>
+  
+  #define Bool int
+  #define Status int
+  #define True 1
+--- 23,33 ----
+diff -c5 Xlib/XlibInt.c sunXlib/XlibInt.c
+*** Xlib/XlibInt.c	Thu May 19 11:21:16 1988
+--- sunXlib/XlibInt.c	Fri Jun 10 14:35:52 1988
+***************
+*** 12,25 ****
+  #define NEED_EVENTS
+  #define NEED_REPLIES
+  
+  #include <stdio.h>
+  #include "Xlibint.h"
+- #ifdef CRAY
+- long dumpreq = 0;
+- long dumprep = 0;
+- #endif
+  
+  /*
+   * The following routines are internal routines used by Xlib for protocol
+   * packet transmission and reception.
+   *
+--- 12,21 ----
+***************
+*** 63,75 ****
+  	/*
+  	 * While write has not written the entire buffer, keep looping
+  	 * until the entire buffer is written.  bufindex will be incremented
+  	 * and size decremented as buffer is written out.
+  	 */
+- #ifdef CRAY
+- 	if (size && dumpreq) {printf("req = "); dumpx(dpy->buffer, size); }
+- #endif
+  	while (size) {
+  	    write_stat = WriteToServer(dpy->fd, bufindex, (int) todo);
+  	    if (write_stat >= 0) {
+  		size -= write_stat;
+  		todo = size;
+--- 59,68 ----
+***************
+*** 103,121 ****
+  	
+  	if (mode == QueuedAfterFlush)
+  	    _XFlush(dpy);
+  	if (BytesReadable(dpy->fd, (char *) &pend) < 0)
+  	    (*_XIOErrorFunction)(dpy);
+! 	if ((len = pend) < SIZEOF(xReply))
+  	    return(0);
+  	else if (len > BUFSIZE)
+  	    len = BUFSIZE;
+! 	len /= SIZEOF(xReply);
+! 	pend = len * SIZEOF(xReply);
+  	_XRead (dpy, buf, (long) pend);
+! 	for (rep = (xReply *) buf; len > 0; 
+! 		rep = (xReply *) ( (char *) rep + SIZEOF(xReply) ), len--) {
+  	    if (rep->generic.type == X_Error)
+  		_XError(dpy, (xError *)rep);
+  	    else   /* must be an event packet */
+  		_XEnq(dpy, (xEvent *) rep);
+  	}
+--- 96,113 ----
+  	
+  	if (mode == QueuedAfterFlush)
+  	    _XFlush(dpy);
+  	if (BytesReadable(dpy->fd, (char *) &pend) < 0)
+  	    (*_XIOErrorFunction)(dpy);
+! 	if ((len = pend) < sizeof(xReply))
+  	    return(0);
+  	else if (len > BUFSIZE)
+  	    len = BUFSIZE;
+! 	len /= sizeof(xReply);
+! 	pend = len * sizeof(xReply);
+  	_XRead (dpy, buf, (long) pend);
+! 	for (rep = (xReply *) buf; len > 0; rep++, len--) {
+  	    if (rep->generic.type == X_Error)
+  		_XError(dpy, (xError *)rep);
+  	    else   /* must be an event packet */
+  		_XEnq(dpy, (xEvent *) rep);
+  	}
+***************
+*** 140,163 ****
+  	    	(*_XIOErrorFunction)(dpy);
+  	    pend = pend_not_register;
+  
+  	    /* must read at least one xEvent; if none is pending, then
+  	       we'll just block waiting for it */
+! 	    if (pend < SIZEOF(xEvent))
+! 	    	pend = SIZEOF(xEvent);
+  		
+  	    /* but we won't read more than the max buffer size */
+  	    if (pend > BUFSIZE)
+  	    	pend = BUFSIZE;
+  
+  	    /* round down to an integral number of XReps */
+! 	    pend = (pend / SIZEOF(xEvent)) * SIZEOF(xEvent);
+  
+  	    _XRead (dpy, buf, pend);
+! 	    for (ev = (xEvent *) buf; pend > 0; 
+! 		ev = (xEvent *) ((char *) ev + SIZEOF(xEvent)), 
+! 		pend -= SIZEOF(xEvent)) {
+  		if (ev->u.u.type == X_Error)
+  		    _XError (dpy, (xError *) ev);
+  		else  /* it's an event packet; enqueue it */
+  		    _XEnq (dpy, ev);
+  	    }
+--- 132,153 ----
+  	    	(*_XIOErrorFunction)(dpy);
+  	    pend = pend_not_register;
+  
+  	    /* must read at least one xEvent; if none is pending, then
+  	       we'll just block waiting for it */
+! 	    if (pend < sizeof(xEvent))
+! 	    	pend = sizeof (xEvent);
+  		
+  	    /* but we won't read more than the max buffer size */
+  	    if (pend > BUFSIZE)
+  	    	pend = BUFSIZE;
+  
+  	    /* round down to an integral number of XReps */
+! 	    pend = (pend / sizeof (xEvent)) * sizeof (xEvent);
+  
+  	    _XRead (dpy, buf, pend);
+! 	    for (ev = (xEvent *) buf; pend > 0; ev++, pend -= sizeof(xEvent)) {
+  		if (ev->u.u.type == X_Error)
+  		    _XError (dpy, (xError *) ev);
+  		else  /* it's an event packet; enqueue it */
+  		    _XEnq (dpy, ev);
+  	    }
+***************
+*** 172,185 ****
+  	register Display *dpy;
+  	register char *data;
+  	register long size;
+  {
+  	register long bytes_read;
+- #ifdef CRAY
+- 	char *sdata = data;
+- 	long ssize = size;
+- #endif
+  
+  	if (size == 0) return;
+  	while ((bytes_read = ReadFromServer(dpy->fd, data, (int)size))
+  		!= size) {
+  
+--- 162,171 ----
+***************
+*** 203,286 ****
+  		    /* If it's a system call interrupt, it's not an error. */
+  		    if (errno != EINTR)
+  		    	(*_XIOErrorFunction)(dpy);
+  		    }
+  	    	 }
+- #ifdef CRAY
+- 	if (dumprep) {printf("rep = "); dumpx(sdata ,ssize); }
+- #endif
+  }
+- #ifdef WORD64
+- /*
+-  * _XRead32 - Read bytes from the socket unpacking each 32 bits
+-  *            into a long (64 bits on a CRAY computer).
+-  * 
+-  */
+- _XRead32 (dpy, data, size)
+-         register Display *dpy;
+-         register long *data;
+-         register long size;
+- {
+-  long *lpack,*lp;
+-  long mask32 = 0x00000000ffffffff;
+-  long maskw, nwords, i, bits;
+-  extern char packbuffer[];
+  
+-         _XRead(dpy,packbuffer,size);
+- 
+-         lp = data;
+-         lpack = (long *) packbuffer;
+-         nwords = size >> 2;
+-         bits = 32;
+- 
+-         for(i=0;i<nwords;i++){
+-             maskw = mask32 << bits;
+-            *lp++ = ( *lpack & maskw ) >> bits;
+-             bits = bits ^32;
+-             if(bits){
+-                lpack++;
+-             }
+-         }
+- }
+  /*
+-  * _XRead16 - Read bytes from the socket unpacking each 16 bits
+-  *            into a long (64 bits on a CRAY computer).
+-  *
+-  */
+- _XRead16 (dpy, data, size)
+-         register Display *dpy;
+-         register long *data;
+-         register long size;
+- {
+-  long *lpack,*lp;
+-  long mask16 = 0x000000000000ffff;
+-  long maskw, nwords, i, bits;
+-  extern char packbuffer[];
+- 
+- 
+-         _XRead(dpy,packbuffer,size);
+- 
+-         lp = data;
+-         lpack = (long *) packbuffer;
+-         nwords = size >> 1;  /* number of 16 bit words to be unpacked */
+-         bits = 48;
+-         for(i=0;i<nwords;i++){
+-             maskw = mask16 << bits;
+-            *lp++ = ( *lpack & maskw ) >> bits;
+-             bits -= 16;
+-             if(bits < 0){
+-                lpack++;
+-                bits = 48;
+-             }
+-         }
+- }
+- #endif
+- 
+- 
+- 
+- 
+- /*
+   * _XReadPad - Read bytes from the socket taking into account incomplete
+   * reads.  If the number of bytes is not 0 mod 32, read additional pad
+   * bytes. This routine may have to be reworked if int < long.
+   */
+  _XReadPad (dpy, data, size)
+--- 189,201 ----
+***************
+*** 466,476 ****
+      int extra;		/* number of 32-bit words expected after the reply */
+      Bool discard;	/* should I discard data followind "extra" words? */
+  {
+      _XFlush(dpy);
+      while (1) {
+! 	_XRead(dpy, (char *)rep, (long)SIZEOF(xReply));
+  	switch ((int)rep->generic.type) {
+  
+  	    case X_Reply:
+  	        /* Reply recieved. */
+  		dpy->last_request_read = dpy->request;
+--- 381,391 ----
+      int extra;		/* number of 32-bit words expected after the reply */
+      Bool discard;	/* should I discard data followind "extra" words? */
+  {
+      _XFlush(dpy);
+      while (1) {
+! 	_XRead(dpy, (char *)rep, (long)sizeof(xReply));
+  	switch ((int)rep->generic.type) {
+  
+  	    case X_Reply:
+  	        /* Reply recieved. */
+  		dpy->last_request_read = dpy->request;
+***************
+*** 483,508 ****
+  		if (extra == rep->generic.length) {
+  		    /* 
+  		     * Read the extra data into storage immediately following
+  		     * the GenericReply structure. 
+  		     */
+! 		    _XRead (dpy, (char *) rep + SIZEOF(xReply), ((long)extra)<<2);
+  		    return (1);
+  		    }
+  		if (extra < rep->generic.length) {
+  		    /* Actual reply is longer than "extra" */
+! 		    _XRead (dpy, (char *)  rep + SIZEOF(xReply), ((long)extra)<<2);
+  		    if (discard)
+  		        _EatData (dpy, rep->generic.length - extra);
+  		    return (1);
+  		    }
+  		/* 
+  		 *if we get here, then extra > rep->generic.length--meaning we
+  		 * read a reply that's shorter than we expected.  This is an 
+  		 * error,  but we still need to figure out how to handle it...
+  		 */
+! 		_XRead (dpy, (char *)  rep + SIZEOF(xReply), (long) (rep->generic.length<<2));
+  		(*_XIOErrorFunction) (dpy);
+  		return (0);
+  
+      	    case X_Error:
+  	    	{
+--- 398,423 ----
+  		if (extra == rep->generic.length) {
+  		    /* 
+  		     * Read the extra data into storage immediately following
+  		     * the GenericReply structure. 
+  		     */
+! 		    _XRead (dpy, (char *) (rep+1), ((long)extra)<<2);
+  		    return (1);
+  		    }
+  		if (extra < rep->generic.length) {
+  		    /* Actual reply is longer than "extra" */
+! 		    _XRead (dpy, (char *) (rep+1), ((long)extra)<<2);
+  		    if (discard)
+  		        _EatData (dpy, rep->generic.length - extra);
+  		    return (1);
+  		    }
+  		/* 
+  		 *if we get here, then extra > rep->generic.length--meaning we
+  		 * read a reply that's shorter than we expected.  This is an 
+  		 * error,  but we still need to figure out how to handle it...
+  		 */
+! 		_XRead (dpy, (char *) (rep+1), (long) (rep->generic.length<<2));
+  		(*_XIOErrorFunction) (dpy);
+  		return (0);
+  
+      	    case X_Error:
+  	    	{
+***************
+*** 751,761 ****
+  		{
+  			register XKeymapEvent *ev = (XKeymapEvent *) re;
+  			ev->window	= dpy->current;
+  			bcopy ((char *)((xKeymapEvent *) event)->map,
+  			       &ev->key_vector[1], 
+! 			       sizeof(((xKeymapEvent *) event)->map));
+  		}
+  		break;
+  	      case Expose:
+  		{
+  			register XExposeEvent *ev = (XExposeEvent *) re;
+--- 666,676 ----
+  		{
+  			register XKeymapEvent *ev = (XKeymapEvent *) re;
+  			ev->window	= dpy->current;
+  			bcopy ((char *)((xKeymapEvent *) event)->map,
+  			       &ev->key_vector[1], 
+! 			       sizeof (((xKeymapEvent *) event)->map));
+  		}
+  		break;
+  	      case Expose:
+  		{
+  			register XExposeEvent *ev = (XExposeEvent *) re;
+***************
+*** 1150,1264 ****
+  	char *data;
+  {
+  	Xfree (data);
+  }
+  
+! /*
+!  * Data - Place 8 bit data in the buffer and pad the end to provide
+!  * 32 bit word alignment.  Transmit if the buffer fills.
+!  *
+!  * "dpy" is a pointer to a Display.
+!  * "data" is a pointer to a data buffer.
+!  * "len" is the length of the data buffer.
+!  * we can presume buffer less than 2^16 bytes, so bcopy can be used safely.
+!  */
+! Data(dpy, data, len)
+!     register Display *dpy;
+!     char *data;
+!     unsigned len;
+  {
+!         if (dpy->bufptr + (len) <= dpy->bufmax) {
+!                 bcopy(data, dpy->bufptr, (int)len);
+!                 dpy->bufptr += ((len) + 3) & ~3;
+!         } else
+!                 _XSend(dpy, data, len);
+  }
+  
+! #ifdef WORD64
+! 
+! /*
+!  * Data16 - Place 16 bit data in the buffer.
+!  *
+!  * "dpy" is a pointer to a Display.
+!  * "data" is a pointer to the data.
+!  * "len" is the length in bytes of the data.
+!  */
+! 
+! char packbuffer[1024];
+! Data16(dpy, data, len)
+      register Display *dpy;
+      short *data;
+      unsigned len;
+  {
+!     long *lp,*lpack;
+!     long i, nwords,bits;
+!     long mask16 = 0x000000000000ffff;
+! 
+!         lp = (long *)data;
+!         lpack = (long *)packbuffer;
+!         *lpack = 0;
+! 
+! /*  nwords is the number of 16 bit values to be packed,
+!  *  the low order 16 bits of each word will be packed
+!  *  into 64 bit words
+!  */
+!         nwords = len >> 1;
+!         bits = 48;
+! 
+!         for(i=0;i<nwords;i++){
+!            *lpack ^= (*lp & mask16) << bits;
+!            bits -= 16 ;
+!            lp++;
+!            if(bits < 0){
+!                lpack++;
+!                *lpack = 0;
+!                bits = 48;
+!            }
+!         }
+!         Data(dpy, packbuffer, len);
+! 
+  }
+  
+! /*
+!  * Data32 - Place 32 bit data in the buffer.
+!  *
+!  * "dpy" is a pointer to a Display.
+!  * "data" is a pointer to the data.
+!  * "len" is the length in bytes of the data.
+!  */
+! 
+! Data32(dpy, data, len)
+!     register Display *dpy;
+!     long *data;
+!     unsigned len;
+  {
+!     long *lp,*lpack;
+!     long i,bits,nwords;
+!     long mask32 = 0x00000000ffffffff;
+  
+!         lpack = (long *) packbuffer;
+!         lp = data;
+! 
+!         *lpack = 0;
+! 
+! /*  nwords is the number of 32 bit values to be packed
+!  *  the low order 32 bits of each word will be packed
+!  *  into 64 bit words
+!  */
+!         nwords = len >> 2;
+!         bits = 32;
+! 
+!         for(i=0;i<nwords;i++){
+!            *lpack ^= (*lp & mask32) << bits;
+!            bits = bits ^32;
+!            lp++;
+!            if(bits){
+!               lpack++;
+!               *lpack = 0;
+!            }
+!         }
+!         Data(dpy, packbuffer, len);
+  }
+- 
+  #endif
+- 
+- 
+--- 1065,1117 ----
+  	char *data;
+  {
+  	Xfree (data);
+  }
+  
+! #ifdef BIGSHORTS
+! UnpackShorts(from, to, bytes)
+! 	ushort_p *from;
+! 	short *to;
+! 	unsigned bytes;
+  {
+! 	unsigned i;
+! 	for (i = 0; i < (bytes/psizeof(short)); i++)
+! 		if (i&1)
+! 			to[i] = from[i>>1].right;
+! 		else
+! 			to[i] = from[i>>1].left;
+  }
+  
+! char packbuffer[1000];
+! PackData(dpy, data, len)
+      register Display *dpy;
+      short *data;
+      unsigned len;
+  {
+! 	if (dpy->bufptr + len < dpy->bufmax) {
+! 		PackShorts(data, dpy->bufptr, len);
+! 		dpy->bufptr += (len + 3) & ~3;
+! 	} else {
+! 		PackShorts(data, packbuffer, len);
+! 		_XSend(dpy, packbuffer, len);
+! 	}
+  }
+  
+! PackShorts(from, to, bytes)
+! 	short *from;
+! 	char *to;
+! 	unsigned bytes;
+  {
+! 	unsigned i, n, offset;
+! 	ushort_p *uto;
+  
+! 	uto = (ushort_p *)to;
+! 	offset = ((int)to & 2) >> 1; /* lost 2 bits of pointer */
+! 	n = (bytes / 2) + offset;
+! 	for (i = offset; i < n; i++) {
+! 		if (i&1)
+! 			uto[i>>1].right = from[i-offset];
+! 		else
+! 			uto[i>>1].left = from[i-offset];
+! 	}
+  }
+  #endif
+diff -c5 Xlib/Xlibint.h sunXlib/Xlibint.h
+*** Xlib/Xlibint.h	Thu Apr 14 17:08:48 1988
+--- sunXlib/Xlibint.h	Fri Jun 10 14:37:49 1988
+***************
+*** 10,23 ****
+   *
+   */
+  #ifndef NEED_EVENTS
+  #define _XEVENT_
+  #endif
+- #ifndef __TYPES__
+- #define __TYPES__
+  #include <sys/types.h>
+- #endif
+  #include <X11/Xlib.h>
+  #include <X11/Xproto.h>
+  #include "Xlibos.h"
+  #include <errno.h>
+  
+--- 10,20 ----
+***************
+*** 47,78 ****
+  
+  /*
+   * X Protocol packetizing macros.
+   */
+  
+- /*   Need to start requests on 64 bit word boundries
+-  *   on a CRAY computer so add a NoOp (127) if needed.
+-  *   A character pointer on a CRAY computer will be non-zero
+-  *   after shifting right 61 bits of it is not pointing to
+-  *   a word boundary.
+-  */
+- #ifdef WORD64
+- #define WORD64ALIGN if((long)dpy->bufptr>>61){\
+-            dpy->last_req = dpy->bufptr;\
+-            *(dpy->bufptr)   = 127;\
+-            *(dpy->bufptr+1) =  0;\
+-            *(dpy->bufptr+2) =  0;\
+-            *(dpy->bufptr+3) =  1;\
+-              dpy->request += 1;\
+-              dpy->bufptr += 4;\
+-          }
+- #else
+- #define WORD64ALIGN
+- #endif
+  
+- 
+- 
+  /*
+   * GetReq - Get the next avilable X request packet in the buffer and
+   * return it. 
+   *
+   * "name" is the name of the request, e.g. CreatePixmap, OpenFont, etc.
+--- 44,54 ----
+***************
+*** 80,133 ****
+   *
+   */
+  
+  #ifdef __STDC__
+  #define GetReq(name, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(x/**/name/**/Req)) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x##name##Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+! 	req->length = (SIZEOF(x/**/name/**/Req))>>2;\
+! 	dpy->bufptr += SIZEOF(x/**/name/**/Req);\
+  	dpy->request++
+  
+  #else  /* non-ANSI C uses empty comment instead of "##" for token concatenation */
+  #define GetReq(name, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(x/**/name/**/Req)) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x/**/name/**/Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+! 	req->length = (SIZEOF(x/**/name/**/Req))>>2;\
+! 	dpy->bufptr += SIZEOF(x/**/name/**/Req);\
+  	dpy->request++
+  #endif
+  
+  /* GetReqExtra is the same as GetReq, but allocates "n" additional
+     bytes after the request. "n" must be a multiple of 4!  */
+  
+  
+  #ifdef __STDC__
+  #define GetReqExtra(name, n, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(*req) + n) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x##name##Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+! 	req->length = (SIZEOF(*req) + n)>>2;\
+! 	dpy->bufptr += SIZEOF(*req) + n;\
+  	dpy->request++
+  #else
+  #define GetReqExtra(name, n, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(x/**/name/**/Req) + n) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x/**/name/**/Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+! 	req->length = (SIZEOF(x/**/name/**/Req) + n)>>2;\
+! 	dpy->bufptr += SIZEOF(x/**/name/**/Req) + n;\
+  	dpy->request++
+  #endif
+  
+  /*
+   * GetResReq is for those requests that have a resource ID 
+--- 56,105 ----
+   *
+   */
+  
+  #ifdef __STDC__
+  #define GetReq(name, req) \
+! 	if ((dpy->bufptr + sizeof(*req)) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x##name##Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+! 	req->length = (sizeof(*req))>>2;\
+! 	dpy->bufptr += sizeof(*req);\
+  	dpy->request++
+  
+  #else  /* non-ANSI C uses empty comment instead of "##" for token concatenation */
+  #define GetReq(name, req) \
+! 	if ((dpy->bufptr + sizeof(*req)) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x/**/name/**/Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+! 	req->length = (sizeof(*req))>>2;\
+! 	dpy->bufptr += sizeof(*req);\
+  	dpy->request++
+  #endif
+  
+  /* GetReqExtra is the same as GetReq, but allocates "n" additional
+     bytes after the request. "n" must be a multiple of 4!  */
+  
+  
+  #ifdef __STDC__
+  #define GetReqExtra(name, n, req) \
+! 	if ((dpy->bufptr + sizeof(*req) + n) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x##name##Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+! 	req->length = (sizeof(*req) + n)>>2;\
+! 	dpy->bufptr += sizeof(*req) + n;\
+  	dpy->request++
+  #else
+  #define GetReqExtra(name, n, req) \
+! 	if ((dpy->bufptr + sizeof(*req) + n) > dpy->bufmax)\
+  		_XFlush(dpy);\
+  	req = (x/**/name/**/Req *)(dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+! 	req->length = (sizeof(*req) + n)>>2;\
+! 	dpy->bufptr += sizeof(*req) + n;\
+  	dpy->request++
+  #endif
+  
+  /*
+   * GetResReq is for those requests that have a resource ID 
+***************
+*** 135,189 ****
+   * "rid" is the name of the resource. 
+   */
+  
+  #ifdef __STDC__
+  #define GetResReq(name, rid, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(xResourceReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xResourceReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+  	req->length = 2;\
+  	req->id = (rid);\
+! 	dpy->bufptr += SIZEOF(xResourceReq);\
+  	dpy->request++
+  #else
+  #define GetResReq(name, rid, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(xResourceReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xResourceReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+  	req->length = 2;\
+  	req->id = (rid);\
+! 	dpy->bufptr += SIZEOF(xResourceReq);\
+  	dpy->request++
+  #endif
+  
+  /*
+   * GetEmptyReq is for those requests that have no arguments
+   * at all. 
+   */
+  #ifdef __STDC__
+  #define GetEmptyReq(name, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(xReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+  	req->length = 1;\
+! 	dpy->bufptr += SIZEOF(xReq);\
+  	dpy->request++
+  #else
+  #define GetEmptyReq(name, req) \
+!         WORD64ALIGN\
+! 	if ((dpy->bufptr + SIZEOF(xReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+  	req->length = 1;\
+! 	dpy->bufptr += SIZEOF(xReq);\
+  	dpy->request++
+  #endif
+  
+  #define SyncHandle() \
+  	if (dpy->synchandler) (*dpy->synchandler)(dpy)
+--- 107,157 ----
+   * "rid" is the name of the resource. 
+   */
+  
+  #ifdef __STDC__
+  #define GetResReq(name, rid, req) \
+! 	if ((dpy->bufptr + sizeof(xResourceReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xResourceReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+  	req->length = 2;\
+  	req->id = (rid);\
+! 	dpy->bufptr += sizeof(xResourceReq);\
+  	dpy->request++
+  #else
+  #define GetResReq(name, rid, req) \
+! 	if ((dpy->bufptr + sizeof(xResourceReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xResourceReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+  	req->length = 2;\
+  	req->id = (rid);\
+! 	dpy->bufptr += sizeof(xResourceReq);\
+  	dpy->request++
+  #endif
+  
+  /*
+   * GetEmptyReq is for those requests that have no arguments
+   * at all. 
+   */
+  #ifdef __STDC__
+  #define GetEmptyReq(name, req) \
+! 	if ((dpy->bufptr + sizeof(xReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_##name;\
+  	req->length = 1;\
+! 	dpy->bufptr += sizeof(xReq);\
+  	dpy->request++
+  #else
+  #define GetEmptyReq(name, req) \
+! 	if ((dpy->bufptr + sizeof(xReq)) > dpy->bufmax)\
+  	    _XFlush(dpy);\
+  	req = (xReq *) (dpy->last_req = dpy->bufptr);\
+  	req->reqType = X_/**/name;\
+  	req->length = 1;\
+! 	dpy->bufptr += sizeof(xReq);\
+  	dpy->request++
+  #endif
+  
+  #define SyncHandle() \
+  	if (dpy->synchandler) (*dpy->synchandler)(dpy)
+***************
+*** 196,207 ****
+   *
+   * "dpy" is a pointer to a Display.
+   * "data" is a pinter to a data buffer.
+   * "len" is the length of the data buffer.
+   * we can presume buffer less than 2^16 bytes, so bcopy can be used safely.
+-  * >>>>>>>>>>>  This macro moved to XlibInt.c
+   */
+  
+  
+  /* Allocate bytes from the buffer.  No padding is done, so if
+   * the length is not a multiple of 4, the caller must be
+   * careful to leave the buffer aligned after sending the
+--- 164,180 ----
+   *
+   * "dpy" is a pointer to a Display.
+   * "data" is a pinter to a data buffer.
+   * "len" is the length of the data buffer.
+   * we can presume buffer less than 2^16 bytes, so bcopy can be used safely.
+   */
++ #define Data(dpy, data, len) \
++ 	if (dpy->bufptr + (len) <= dpy->bufmax) {\
++ 		bcopy(data, dpy->bufptr, (int)len);\
++ 		dpy->bufptr += ((len) + 3) & ~3;\
++ 	} else\
++ 		_XSend(dpy, data, len)
+  
+  
+  /* Allocate bytes from the buffer.  No padding is done, so if
+   * the length is not a multiple of 4, the caller must be
+   * careful to leave the buffer aligned after sending the
+***************
+*** 220,235 ****
+      if (dpy->bufptr + (n) > dpy->bufmax) \
+          _XFlush (dpy); \
+      ptr = (type) dpy->bufptr; \
+      dpy->bufptr += (n);
+  
+! #ifndef WORD64
+! #define Data16(dpy, data, len) Data((dpy), (data), (len))
+! #define Data32(dpy, data, len) Data((dpy), (data), (len))
+! #define _XRead16(dpy, data, len) _XRead((dpy), (data), (len))
+! #define _XRead32(dpy, data, len) _XRead((dpy), (data), (len))
+! #define Pack16(f, t, n)   bcopy(f, t, n)
+  #endif
+  
+  #define min(a,b) (((a) < (b)) ? (a) : (b))
+  #define max(a,b) (((a) > (b)) ? (a) : (b))
+  
+--- 193,205 ----
+      if (dpy->bufptr + (n) > dpy->bufmax) \
+          _XFlush (dpy); \
+      ptr = (type) dpy->bufptr; \
+      dpy->bufptr += (n);
+  
+! #ifndef BIGSHORTS
+! #define PackData(dpy, data, len) Data(dpy, data, len)
+! #define PackShorts(f, t, n)  bcopy(f, t, n)
+  #endif
+  
+  #define min(a,b) (((a) < (b)) ? (a) : (b))
+  #define max(a,b) (((a) > (b)) ? (a) : (b))
+  
+diff -c5 Xlib/Xlibos.h sunXlib/Xlibos.h
+*** Xlib/Xlibos.h	Thu Apr 14 17:08:48 1988
+--- sunXlib/Xlibos.h	Fri Jun 10 14:37:49 1988
+***************
+*** 135,143 ****
+   *	struct iovec {
+   *		caddr_t iov_base;
+   *		int iov_len;
+   *	};
+   */
+! #ifndef CRAY
+  extern char *index();
+- #endif
+  #define SearchString(string, char) index((string), (char))
+--- 135,142 ----
+   *	struct iovec {
+   *		caddr_t iov_base;
+   *		int iov_len;
+   *	};
+   */
+! 
+  extern char *index();
+  #define SearchString(string, char) index((string), (char))
+diff -c5 Xlib/Xresource.h sunXlib/Xresource.h
+*** Xlib/Xresource.h	Thu Apr 14 17:08:46 1988
+--- sunXlib/Xresource.h	Fri Jun 10 14:37:49 1988
+***************
+*** 42,55 ****
+  /****************************************************************
+   *
+   * Miscellaneous definitions
+   *
+   ****************************************************************/
+! #ifndef __TYPES__
+! #define __TYPES__
+! #include <sys/types.h>
+! #endif
+  
+  #ifndef NULL
+  #define NULL 0
+  #endif
+  
+--- 42,53 ----
+  /****************************************************************
+   *
+   * Miscellaneous definitions
+   *
+   ****************************************************************/
+! 
+! #include	<sys/types.h>
+  
+  #ifndef NULL
+  #define NULL 0
+  #endif
+  
+

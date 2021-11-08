@@ -1,0 +1,65 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 09:11:58 EDT
+Date: Tue, 5 Jul 88 09:12 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: CLX: disallow setting gcontext-dashes to nil
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880705131217.5.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   681
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+WINDOW MANAGER:
+	any
+
+AREA:
+	CLX
+
+SYNOPSIS:
+	disallow setting gcontext-dashes to nil
+	(or any empty sequence, for that matter)
+
+DESCRIPTION:
+	ditto
+
+REPEAT-BY:
+	(setf (xlib:gcontext-dashes gc) nil)
+
+FILES:
+	lib/CLX/gcontext.l
+
+FIX:
+
+*** /tmp/,RCSt1a01075	Mon Jul  4 14:23:58 1988
+--- lib/CLX/gcontext.l	Mon Jul  4 14:24:00 1988
+***************
+*** 314,320 ****
+      ;; need single setf for atomicity
+      (setf (gcontext-internal-dash local-state)
+  	  (if (type? dashes 'sequence)
+! 	      (list nil (or dashes (vector)))
+  	      (list (encode-type card8 dashes))))
+      dashes))
+  
+--- 314,322 ----
+      ;; need single setf for atomicity
+      (setf (gcontext-internal-dash local-state)
+  	  (if (type? dashes 'sequence)
+! 	      (if (zerop (length dashes))
+! 		  (x-type-error dashes '(or card8 sequence) "non-empty sequence")
+! 		(list nil (or dashes (vector))))
+  	      (list (encode-type card8 dashes))))
+      dashes))
+  
+

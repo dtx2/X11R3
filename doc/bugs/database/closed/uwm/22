@@ -1,0 +1,141 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Mon, 13 Jun 88 12:57:09 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07025; Mon, 13 Jun 88 12:55:45 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Mon, 13 Jun 88 08:55:47 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA25914; Mon, 13 Jun 88 09:55:02 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Mon, 13 Jun 88 09:56:56 pdt
+Message-Id: <8806131656.AA02844@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm menu padding
+X-Mailer: mh6.5
+Date: Mon, 13 Jun 88 09:56:52 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   599
+### area:         uwm
+### severity:     enhancement
+### comments:     this is an unnecessary limit to functionality; see the 
+###               similar comment in the section on [hv]iconpad.
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	With large menupads, menu unusable.
+DESCRIPTION:
+	When a menupad is declared a quite large, the menu 'popped up'
+	for use is unusable. It is suggested that the menu padding be
+	clipped to the larges size allowed, i.e. so that the menu window
+	is only as large as the screen. If there is too many items, it
+	will still extend off the screen, but at least there is a chance.
+	to use it.
+REPEAT-BY:
+	vmenupad=999
+	hmenupad=999
+SUGGESTED ENHANCEMENT:
+*** clients/uwm/Menu.c.old	Mon Jun  6 21:01:33 1988
+--- clients/uwm/Menu.c	Sun Jun 12 15:49:51 1988
+***************
+*** 57,63
+  	     if (inv) \
+  	         XFillRectangle(dpy, w, MenuInvGC, 0, pane, width, height); \
+  	     else \
+!                  XDrawString(dpy, w, MenuGC, HMenuPad, pane + VMenuPad + MFontInfo->ascent, str, strlen(str)); \
+           } else { \
+               XSetForeground(dpy, MenuGC, bg); \
+  	     XFillRectangle(dpy, w, MenuGC, 0, pane, width, height); \
+
+--- 57,63 -----
+  	     if (inv) \
+  	         XFillRectangle(dpy, w, MenuInvGC, 0, pane, width, height); \
+  	     else \
+!                  XDrawString(dpy, w, MenuGC, menu->hpad, pane + menu->vpad + MFontInfo->ascent, str, strlen(str)); \
+           } else { \
+               XSetForeground(dpy, MenuGC, bg); \
+  	     XFillRectangle(dpy, w, MenuGC, 0, pane, width, height); \
+***************
+*** 62,68
+               XSetForeground(dpy, MenuGC, bg); \
+  	     XFillRectangle(dpy, w, MenuGC, 0, pane, width, height); \
+               XSetForeground(dpy, MenuGC, fg); \
+!              XDrawString(dpy, w, MenuGC, HMenuPad, pane + VMenuPad + MFontInfo->ascent, str, strlen(str)); \
+           }
+  
+  #ifdef SYSV
+
+--- 62,68 -----
+               XSetForeground(dpy, MenuGC, bg); \
+  	     XFillRectangle(dpy, w, MenuGC, 0, pane, width, height); \
+               XSetForeground(dpy, MenuGC, fg); \
+!              XDrawString(dpy, w, MenuGC, menu->hpad, pane + menu->vpad + MFontInfo->ascent, str, strlen(str)); \
+           }
+  
+  #ifdef SYSV
+***************
+*** 415,421
+      /*
+       * Stash the menu parameters in the menu info structure.
+       */
+!     menu->iheight = MFontInfo->ascent + MFontInfo->descent + (VMenuPad << 1);
+      menu->height = menu->iheight * count;
+      menu->width = maxwidth + (HMenuPad << 1);
+      menu->image = NULL;
+
+--- 415,427 -----
+      /*
+       * Stash the menu parameters in the menu info structure.
+       */
+!     menu->iheight = MFontInfo->ascent + MFontInfo->descent;
+!     menu->vpad = VMenuPad;
+!     if ((menu->iheight + (menu->vpad << 1)) * count > ScreenHeight) {
+! 	menu->vpad = (ScreenHeight - menu->iheight * count) / count / 2;
+! 	if (menu->vpad < 0) menu->vpad = 0;
+!     }
+!     menu->iheight += (menu->vpad << 1);
+      menu->height = menu->iheight * count;
+      menu->hpad = HMenuPad;
+      if (maxwidth + (menu->hpad << 1) > ScreenWidth) {
+***************
+*** 417,423
+       */
+      menu->iheight = MFontInfo->ascent + MFontInfo->descent + (VMenuPad << 1);
+      menu->height = menu->iheight * count;
+!     menu->width = maxwidth + (HMenuPad << 1);
+      menu->image = NULL;
+  
+      /*
+
+--- 423,434 -----
+      }
+      menu->iheight += (menu->vpad << 1);
+      menu->height = menu->iheight * count;
+!     menu->hpad = HMenuPad;
+!     if (maxwidth + (menu->hpad << 1) > ScreenWidth) {
+! 	menu->hpad = (ScreenWidth - maxwidth) / 2;
+! 	if (menu->hpad < 0) menu->hpad = 0;
+!     }
+!     menu->width = maxwidth + (menu->hpad << 1);
+      menu->image = NULL;
+  
+      /*
+*** clients/uwm/uwm.h.old	Thu Mar 31 14:02:19 1988
+--- clients/uwm/uwm.h	Sun Jun 12 15:19:47 1988
+***************
+*** 191,196
+      int iheight;		/* Height of an item. */
+      int width;			/* Width of this menu. */
+      int height;			/* Height of this menu. */
+      Pixmap image;		/* Saved image of the menu. */
+      char *foreground;		/* Name of foreground color. */
+      char *background;		/* Name of background color. */
+
+--- 191,198 -----
+      int iheight;		/* Height of an item. */
+      int width;			/* Width of this menu. */
+      int height;			/* Height of this menu. */
++     int vpad;			/* vertical padding */
++     int hpad;			/* horizontal padding */
+      Pixmap image;		/* Saved image of the menu. */
+      char *foreground;		/* Name of foreground color. */
+      char *background;		/* Name of background color. */
+

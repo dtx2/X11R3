@@ -1,0 +1,5 @@
+The following changes have been made to this directory since R2:
+
+     o  a new miscellaneous utilities library, libXmu.a and associated header 
+	file Xmu.h have been added; its interfaces are not part of the Xlib
+	standard.

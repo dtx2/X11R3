@@ -1,0 +1,65 @@
+Return-Path: becker@cs.rochester.edu
+Received: from cayuga.cs.rochester.edu ([192.5.53.209]) by EXPO.LCS.MIT.EDU; Wed, 23 Mar 88 10:40:56 EST
+Received: by cayuga.cs.rochester.edu (5.52/h) id AA16065; Wed, 23 Mar 88 10:39:27 EST
+Received: from loopback by teak.cs.rochester.edu (3.2/h) id AA24801; Wed, 23 Mar 88 10:39:15 EST
+Message-Id: <8803231539.AA24801@teak.cs.rochester.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: X.V11R2 Xmh starts up with blank buttons
+Date: Wed, 23 Mar 88 10:39:08 -0500
+From: Tim Becker <becker@cs.rochester.edu>
+
+### bug number:   206
+### area:         xmh
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+### see also:     60, 85, 97, 129
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/60
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4 and 3.5
+
+DISPLAY:
+	Sun monochrome
+
+SYNOPSIS:
+	I've sent in a bug report on xmh not painting text in his boxes
+	on startup.  I also sent a followup.  Here's another followup with
+	more (close to a fix) detail.
+
+DESCRIPTION:
+	I finally recompiled xmh with -g and started it up with dbx.  I
+	sent myself mail and inc'd it while I wasn't running xmh.  Sure
+	enough, when I started up xmh, it wouldn't paint the buttons
+	(or any windows for that matter).  I interrupted the
+	program and printed a stack trace.  It was stopped in
+	XWindowEvent() inside TUScanFileForToc() in tocutil.c
+
+	Looking at the code, if the folder is out of sync with the xmh
+	cache file, it wants to re"scan" the folder.  Before it does
+	this it tries to put up an alert bux saying "Rescanning %s".
+	It hangs trying to do this -- the message never comes up.
+
+	I don't know enough about Xlib/Xtk at this point to suggest a
+	good fix (yes, I could come up with a gross hack -)).  What needs
+	to happen is the code needs to check if the application is all
+	up.  Possibly it could check on whatever it is that is making
+	XWindowEvent() hang (some kind of Xlib/Xtk call is needed for
+	this function to work - no doubt).  If the application isn't all
+	set up, then don't put up the alert box.  (I put #ifdef notdef
+	around the offending code in TUScanFileForToc() and it comes
+	up.  So I *know* that I found the problem).
+	
+
+REPEAT-BY:
+	See above.
+
+FIX:
+	Not quite.
+

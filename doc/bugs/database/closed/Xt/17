@@ -1,0 +1,57 @@
+Return-Path: schoch@trident.arc.nasa.gov
+Received: by expo.lcs.mit.edu; Tue, 17 May 88 22:30:28 EDT
+Received: Tue, 17 May 88 19:30:26 PDT by trident.arc.nasa.gov (5.59/1.2)
+Date: Tue, 17 May 88 19:30:26 PDT
+From: Steve Schoch <schoch@trident.arc.nasa.gov>
+Message-Id: <8805180230.AA04955@trident.arc.nasa.gov>
+X-Mailer: Mail User's Shell (Vers 6.0b) Tue Jan  5 17:40:17 PST 1988
+To: xbugs@expo.lcs.mit.edu
+Subject: X11 Toolkit can indirect through a NULL pointer
+
+### bug number:   513
+### area:         Xt
+### severity:     high
+### comments:     
+
+Description:
+	When using Timeouts in the X Toolkit, a check is not made
+	for a NULL pointer, causing bus errors on many machines.
+Repeat-By:
+	Use XtAddTimeOut to call a timeout routine once.
+Fix:
+	Apply the following patch to NextEvent.c:
+*** /tmp/,RCSt1004939	Tue May 17 19:29:26 1988
+--- NextEvent.c	Tue May 17 19:28:29 1988
+***************
+*** 455,468
+  		IeCallProc(ie_ptr);
+  	}
+  	(void) gettimeofday (&cur_time, &cur_timezone);
+! 	if (TimerQueue!= NULL) {	/* check timeout queue */
+! 		while(IS_AFTER (TimerQueue->te_timer_value, cur_time)) {
+! 			te_ptr = TimerQueue;
+! 			TimerQueue = TimerQueue->te_next;
+! 			te_ptr->te_next = NULL;
+! 			TeCallProc(te_ptr);
+! 			XtFree((char*)te_ptr);
+! 		}
+  	}
+  	XFlush(toplevelDisplay);
+  	Claims_X_is_pending = _XtwaitForSomething(
+
+--- 455,467 -----
+  		IeCallProc(ie_ptr);
+  	}
+  	(void) gettimeofday (&cur_time, &cur_timezone);
+! 	/* check timeout queue */
+! 	while(TimerQueue && IS_AFTER (TimerQueue->te_timer_value, cur_time)) {
+! 		te_ptr = TimerQueue;
+! 		TimerQueue = TimerQueue->te_next;
+! 		te_ptr->te_next = NULL;
+! 		TeCallProc(te_ptr);
+! 		XtFree((char*)te_ptr);
+  	}
+  	XFlush(toplevelDisplay);
+  	Claims_X_is_pending = _XtwaitForSomething(
+----
+

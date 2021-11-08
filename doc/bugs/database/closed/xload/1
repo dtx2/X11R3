@@ -1,0 +1,57 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Tue, 22 Mar 88 19:26:55 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA03816; Tue, 22 Mar 88 19:25:49 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 22 Mar 88 16:23:57 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA04004; Tue, 22 Mar 88 16:27:16 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 22 Mar 88 16:27:41 pst
+Message-Id: <8803230027.AA01925@hpcvxlc.HP.COM>
+To: xbugs@ATHENA.MIT.EDU
+Subject: xload scale bug
+X-Mailer: mh6.5
+Date: Tue, 22 Mar 88 16:27:36 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   196
+### area:         xload
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	The scale option for 'xload' does not appear to work correctly.
+DESCRIPTION:
+	It appears that as long as the calculated scale and the saved
+	'load.scale' are equal, 'scale' is never tested against
+	'load.min_scale'.Therefore the correct scale is not used until
+	the calculated scale and the load.scale become different.
+REPEAT-BY:
+	'xload -scale 3' on a quiescent system.
+FIX:
+	Note: these line numbers may be incorrect.
+
+303,315c315,321
+<     if ((scale = ((int)w->load.max_value) + 1) != w->load.scale) {
+< 	if (scale >= w->load.min_scale) {
+< 	    w->load.scale = scale;
+< 	    left = 0;
+< 	    width = next;
+< 	}
+< 	else {
+< 	    if (w->load.scale != w->load.min_scale) {
+< 		w->load.scale = w->load.min_scale;
+< 		left = 0;
+< 		width = next;
+< 	    }
+< 	}
+---
+>     scale = ((int) w->load.max_value) + 1;
+>     if (scale < w->load.min_scale)
+>       scale = w->load.min_scale;
+>     if (scale != w->load.scale) {
+>       w->load.scale = scale;
+>       left = 0;
+>       width = next;

@@ -1,0 +1,114 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:scotthe%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Fri, 9 Sep 88 22:14:20 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Fri 9 Sep 88 22:15:38-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ah27855; 9 Sep 88 20:36 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa03626; 9 Sep 88 20:07 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA02769; Fri, 9 Sep 88 17:20:56 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA07273; Fri, 9 Sep 88 17:20:58 PDT
+From: Scott Hennes <scotthe@shark.gwd.tek.com>
+Message-Id: <8809100020.AA07273@shark.GWD.TEK.COM>
+Date: Fri,  9 Sep 88 17:20:56 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com
+Fcc: //shark/bd/X11/doc/bugtracking/xbugs_mail
+Subject: r3b FlushClient kills innocent client
+
+### bug number:   961
+### area:         server
+### severity:     medium
+### comments:     fix below might be nearsighted
+
+
+Scott Hennes
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2144
+tektronix!shark!scotthe
+
+--------------------
+VERSION:
+	X11 release 2 with fixes 1-216 applied
+	(but eyeballing R3 pre-release code shows same code problem)
+
+CLIENT MACHINE:
+	Tektronix 4316
+
+CLIENT OPERATING SYSTEM:
+	UTEK 2.3 (== 4.2bsd kernel with some 4.3 utilities)
+
+DISPLAY:
+	Tektronix 4316
+
+SYNOPSIS:
+	tmon killed while matching a window
+
+DESCRIPTION:
+	Area: server
+	Files: server/os/4.2bsd/io.c
+
+	FlushAllOutput can call FlushClient even if there is nothing
+	to flush.  This can cause FlushClient to close the client connection
+	after seeing an EINVAL error return from writev() (because iovCnt is 0).
+
+REPEAT-BY:
+	1) xterm &
+	2) move to the xterm window.
+	3) tmon -i testit
+	4) press the [COMMAND_KEY] key followed by the [m] key.
+	5) wait for approx 10 seconds.
+	6) if nothing happens, press [q] and tmon will announce completion.
+	7) if tmon worked correctly, try "rm testit* ; clear ; tmon -i testit"
+	   followed by steps 4-6.
+	8) repeat step 7 as necessary until the following message appears:
+
+		mouse match starting...Connection # 3 to server broken.
+		XIO: Unconnected pipe
+
+
+        FIX:
+*** /tmp/,RCSt1001950	Fri Sep  9 16:36:03 1988
+--- io.c	Thu Sep  8 18:22:55 1988
+***************
+*** 21,27
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: io.c,v 1.5 88/08/18 11:48:00 adamsc Exp $ */
+  /*****************************************************************
+   * i/o functions
+   *
+
+--- 21,27 -----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: io.c,v 1.6 88/09/08 18:17:07 toddb Exp $ */
+  /*****************************************************************
+   * i/o functions
+   *
+***************
+*** 494,500
+  		BITSET(OutputPending, oc->fd); /* set the bit again */
+  		NewOutputPending = TRUE;
+  	    }
+! 	    else
+  		FlushClient(client, oc, NULL, 0);
+  	}
+      }
+
+--- 494,500 -----
+  		BITSET(OutputPending, oc->fd); /* set the bit again */
+  		NewOutputPending = TRUE;
+  	    }
+! 	    else if (oc->count)
+  		FlushClient(client, oc, NULL, 0);
+  	}
+      }
+
+

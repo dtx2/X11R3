@@ -1,0 +1,170 @@
+Return-Path: fred%hpcvxft@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Tue, 12 Apr 88 10:50:47 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07602; Tue, 12 Apr 88 09:49:24 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 12 Apr 88 06:48:56 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA01850; Tue, 12 Apr 88 06:49:05 PST
+Received: from hpcvxft by hpcvxft.HP.COM; Tue, 12 Apr 88 07:49:17 pdt
+Message-Id: <8804121449.AA08082@hpcvxft.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Cc: asente@decwrl.mit.edu, swick@athena.mit.edu, fred%hpcvxft@hplabs.hp.com
+Subject: Translation manager bug
+X-Mailer: mh6.5
+Date: Tue, 12 Apr 88 07:49:11 PDT
+From: fred%hpcvxft@hplabs.hp.com
+
+### bug number:   363
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     see also 258
+
+
+VERSION:
+	Xtk release 2
+
+SYNOPSIS:
+        Adding a global translation to a realized widget destroys the
+        widget's translations.
+
+DESCRIPTION:
+	As I reported in an earlier bug report, if a new translation is
+        added to a realized widget (using XtOverrideTranslation), and the
+        action to which the translation is tied has not been previously used
+        for that widget, all of the translations for that widget get
+        destroyed.
+
+REPEAT-BY:
+        Register a global action routine, and set up a translation for a
+        realized widget which uses this action.
+
+FIX:
+        There were actually several problems in the translation
+        manager which contributed to this problem.  They include:
+
+        1) After the first time a widget's translations were bound, the
+           proc_table size was never again changed; even if future translations
+           referenced different action routines.
+
+        2) After an augment or override request, the translations were not
+           really being rebound; this is a result of the table being the
+           wrong size and the fact that only NULL table entries are bound,
+           and none of the entries had been NULL'ed out.
+
+        3) The old event handler for the widget was not removed.
+
+        4) The new translations were never installed.
+        
+*************************** diffs start here *******************************
+
+727a728
+> 
+1078,1081c1079
+< /*
+<     MergeTables(widget->core.translations, new, TRUE);
+< */
+<      Cardinal  numQuarks =0;
+---
+>     Cardinal  numQuarks = 0;
+1083a1082
+> 
+1089c1088,1089
+<      if (widget->core.tm.translations != NULL)
+---
+> 
+>     if (widget->core.tm.translations != NULL)
+1090a1091
+> 
+1093,1097c1094,1126
+< /*    _XtOverrideTranslations(widget->core.tm.translations, new);*/
+<       widget->core.tm.translations =(*(XtTranslations*)to.addr);
+<      if (XtIsRealized(widget))
+<         _XtBindActions(widget,&widget->core.tm,numQuarks);
+<         
+---
+> 
+>     widget->core.tm.translations =(*(XtTranslations*)to.addr);
+> 
+>     if (XtIsRealized(widget))
+>     {
+>         int i;
+> 
+>         if (numQuarks != widget->core.tm.translations->numQuarks)
+>         {
+>            widget->core.tm.proc_table= (XtActionProc*) XtRealloc(
+>                widget->core.tm.proc_table,
+>                widget->core.tm.translations->numQuarks * sizeof(XtActionProc));
+>         }
+> 
+>         /*
+>          * Since the old table was merged into the new table,
+>          * we need to force all translations to be rebound; this
+>          * is because the indices into the proc_table have changed,
+>          * and duplicate actions will have been removed by MergeTables().
+>          */
+>         for (i=0; i < widget->core.tm.translations->numQuarks; i++)
+>            widget->core.tm.proc_table[i] = 0;
+> 
+>         /*
+>          * Bind the new actions (rebind the old actions); we must
+>          * also remove the old event handler, and then install the
+>          * new set of translations.
+>          */
+>         _XtBindActions(widget, &widget->core.tm, 0);
+>         XtRemoveEventHandler (widget, XtAllEvents, True, _XtTranslateEvent,
+>                               (caddr_t)&widget->core.tm);
+>         _XtInstallTranslations (widget, widget->core.tm.translations);
+>     }
+1104c1133
+<     Cardinal  numQuarks =0;
+---
+>     Cardinal  numQuarks = 0;
+1106a1136
+> 
+1112c1142,1143
+<      if (widget->core.tm.translations != NULL)
+---
+> 
+>     if (widget->core.tm.translations != NULL)
+1113a1145
+> 
+1116,1119d1147
+< /*    _XtAugmentTranslations(widget->core.tm.translations, new);*/
+<      widget->core.tm.translations = (*(XtTranslations*)to.addr);
+<      if (XtIsRealized(widget)) 
+<         _XtBindActions(widget,&widget->core.tm,numQuarks);
+1120a1149,1180
+>     widget->core.tm.translations = (*(XtTranslations*)to.addr);
+> 
+>     if (XtIsRealized(widget)) 
+>     {
+>         int i;
+> 
+>         if (numQuarks != widget->core.tm.translations->numQuarks)
+>         {
+>            widget->core.tm.proc_table= (XtActionProc*) XtRealloc(
+>                widget->core.tm.proc_table,
+>                widget->core.tm.translations->numQuarks * sizeof(XtActionProc));
+>         }
+> 
+>         /* Force all entries to be bound (see note below) */
+>         for (i = 0; i < widget->core.tm.translations->numQuarks; i++)
+>            widget->core.tm.proc_table[i] = 0;
+> 
+>         /*
+>          * Bind the new actions and all existing actions; we must rebind
+>          * the old actions because MergeTables() may have compressed the
+>          * proc_table, and we thus no longer know where the new entries
+>          * start (This really is caused by a bug in ParseActionSeq(),
+>          * which doesn't check to see if an action already has an entry
+>          * in the proc_table; thus, an action can initially appear more
+>          * than once).  We must also remove the old event handler, 
+>          * and then install the new set of translations.
+>          */
+>         _XtBindActions(widget, &widget->core.tm, 0);
+>         XtRemoveEventHandler (widget, XtAllEvents, True, _XtTranslateEvent,
+>                               (caddr_t)&widget->core.tm);
+>         _XtInstallTranslations (widget, widget->core.tm.translations);
+>     }
+

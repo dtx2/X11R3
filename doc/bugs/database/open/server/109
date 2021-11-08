@@ -1,0 +1,32 @@
+Return-Path: @MITVMA.MIT.EDU:DAN@yktvmv.bitnet
+Received: from MITVMA.MIT.EDU by expo.lcs.mit.edu; Thu, 14 Apr 88 16:02:58 EDT
+Message-Id: <8804142002.AA14071@EXPO.LCS.MIT.EDU>
+Received: from MITVMA.MIT.EDU by MITVMA.MIT.EDU ; Thu, 14 Apr 88 16:01:07 EDT
+Received: from YKTVMV (DAN) by MITVMA.MIT.EDU (Mailer X1.25) with BSMTP id
+ 5288; Thu, 14 Apr 88 16:01:04 EDT
+Date: 14 Apr 1988 15:59:34-EDT (Thursday)
+From: DAN%YKTVMV.BITNET@mitvma.mit.edu
+To: XBUGS@expo.lcs.mit.edu
+Subject: bug report
+
+### bug number:   383
+### area:         server
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     
+
+VERSION:
+    X11 Release 1, Release 2 with updates 1-11 on ACIS 4.3
+SYNOPSIS:
+    IBM Megapel bitmaps are broken
+DESCRIPTION:
+    A bitmap larger than 32 bits wide is replicated rather than
+    continued.  Ex 0-31, 0-15 for a 48 bit wide bitmap. There does
+    not seem to be    a problem    in the Y direction.
+REPEAT-BY:
+    xbiff - note that the mailbox    is chopped and    duplicated.
+    xshell - same thing    only    worse. Replicated 3    times.
+FIX:
+    Nope.
+

@@ -1,0 +1,48 @@
+Return-Path: phil@brl.arpa 
+Received: from ZERMATT.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Sun, 6 Mar 88 23:35:48 EST
+Date:     Sun, 6 Mar 88 23:25:17 EST
+From: Phil Dykstra <phil@brl.arpa>
+To: xbugs@expo.lcs.mit.edu
+Subject:  InstallManPages macro doesn't work
+Message-Id:  <8803062325.aa04903@SPARK.BRL.ARPA>
+
+### bug number:   43
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	Sun
+
+SYNOPSIS:
+	InstallManPages macro doesn't work
+
+DESCRIPTION:
+	Setting InstallManPages to NO in *.macros still results in
+	their being installed (and a mkdir man<section>).  This
+	was a good idea, but as near as I can tell there is no
+	code to honor this define.
+
+REPEAT-BY:
+	Set InstallManPages to NO in util/imake.includes/<machine>.macros.
+	make makefiles
+	make install
+
+FIX:
+	Surround the mkdir <mandirectory> in TOPDIR/Imakefile by
+	#if InstallManPages for starters.  Perhaps do the same
+	thing to the body of the install rule in doc/Xlib/Xman/Imakefile.
+	The other misc man pages will be harder.
+
+- Phil
+<phil@brl.arpa>

@@ -1,0 +1,63 @@
+Return-Path: elsie!ado@ncifcrf.gov
+Received: by expo.lcs.mit.edu; Tue, 21 Jun 88 22:36:28 EDT
+Received: by fcs280s.ncifcrf.gov (4.0/NCIFCRF-1.0)
+	id AA12365; Tue, 21 Jun 88 22:28:47 EDT
+Received: by elsie.UUCP (5.51/4.7)
+	id AA04525; Tue, 21 Jun 88 22:32:56 EDT
+Date: Tue, 21 Jun 88 22:32:56 EDT
+From: elsie!ado@ncifcrf.gov (Arthur David Olson)
+Message-Id: <8806220232.AA04525@elsie.UUCP>
+Subject: two CLX files missing final newline breaks SCCS
+Apparently-To: xbugs@expo.lcs.mit.edu
+
+### bug number:   625
+### area:         CLX
+### severity:     low
+### comments:     
+
+-------------------------------------------------------------------------------
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	Sun B&W
+
+SYNOPSIS:
+	 Two core distribution source files lack trailing newlines and so
+	 can't be SCCSed.
+
+REPEAT-BY:
+	Script started on Tue Jun 21 22:22:14 1988
+	elsie$ ls -l lib/CLX/depdefs.l lib/CLX/dependent.l
+	-r--r--r--  1 ado         11035 Feb 26 00:26 lib/CLX/depdefs.l
+	-r--r--r--  1 ado         42993 Feb 26 00:26 lib/CLX/dependent.l
+	elsie$ mkdir lib/CLX/SCCS
+	elsie$ sccs admin -ilib/CLX/depdefs.l lib/CLX/depdefs.l
+	No id keywords (cm7)
+	elsie$ sccs admin -ilib/CLX/dependent.l lib/CLX/dependent.l
+	No id keywords (cm7)
+	elsie$ sccs get lib/CLX/depdefs.l lib/CLX/dependent.l
+
+	lib/CLX/SCCS/s.depdefs.l:
+	1.1
+>>>>	ERROR [lib/CLX/SCCS/s.depdefs.l]: premature eof (co5)
+
+	lib/CLX/SCCS/s.dependent.l:
+	1.1
+>>>>	ERROR [lib/CLX/SCCS/s.dependent.l]: premature eof (co5)
+	elsie$ exit
+
+	script done on Tue Jun 21 22:23:53 1988
+
+FIX:
+	For the benefit of SCCS users, append trailing newlines to the
+	files in question.
+-- 
+	ado@ncifcrf.gov			ADO is a trademark of Ampex.
+

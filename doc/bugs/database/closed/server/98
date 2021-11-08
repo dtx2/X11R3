@@ -1,0 +1,44 @@
+Return-Path: @LARRY-BIRD.SCRC.Symbolics.COM,@winter.scrc.symbolics.com:hornig@alderaan.scrc.symbolics.com
+Received: from LARRY-BIRD.SCRC.Symbolics.COM ([128.81.41.178]) by expo.lcs.mit.edu; Sat, 2 Apr 88 17:13:19 EST
+Received: from WINTER.SCRC.Symbolics.COM by LARRY-BIRD.SCRC.Symbolics.COM via INTERNET with SMTP id 4607; 2 Apr 88 16:37:38 EST
+Date: Sat, 2 Apr 88 16:37 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: cfbwindow.c,mfbwindow.c
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880402213724.0.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   251
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	Invalid cast of pointer to integer.
+
+DESCRIPTION:
+	Both the mfb and cfb ChangeWindowAttributes routines assume that
+NULL is the only pointer which when cast to an integer is zero.  This is
+not true in general.
+
+REPEAT-BY:
+	Compile them.
+
+FIX:
+	Only cast the pixmap pointer to an integer if IS_VALID_PIXMAP is
+false.
+

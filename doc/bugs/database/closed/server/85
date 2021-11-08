@@ -1,0 +1,453 @@
+Return-Path: ibmuupa!erik@ucbvax.berkeley.edu
+Received: from ucbvax.Berkeley.EDU by expo.lcs.mit.edu; Sat, 2 Apr 88 12:37:07 EST
+Received: by ucbvax.Berkeley.EDU (5.59/1.26)
+	id AA19849; Sat, 2 Apr 88 09:37:11 PST
+Received: by ibmpa.pasc.ibm.com (5.51/4.7)
+	id AA06538; Sat, 2 Apr 88 02:51:55 PST
+Received: by salmon.pasc.ibm.com (5.51/5.17)
+	id AA03553; Sat, 2 Apr 88 02:51:26 PST
+Date: Sat, 2 Apr 88 02:51:26 PST
+From: ibmuupa!erik@ucbvax.berkeley.edu (Erik Fortune)
+Message-Id: <8804021051.AA03553@salmon.pasc.ibm.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: unneccesary validates
+
+### bug number:   247
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Any (discovered on RT)
+
+CLIENT OPERATING SYSTEM:
+	Any (discovered on IBM 4.3)
+
+DISPLAY:
+	Any
+
+SYNOPSIS:
+	ChangeGC causes lots of unnecessary validates.
+	(Release 2 IBM TCS (bug, performance hit, whatever) #5)
+
+DESCRIPTION:
+	DoChangeGC (../dix/gc.c) assumes that the gc is always going to change,
+	this can cause unnecessary validates.
+	Lots of dumb clients change things "just to be safe."  Libraries and
+	toolkits should be catching this, but we've noticed a performance 
+	improvement after modifying DoChangeGC to check values before it 
+	assigns them, and to report only changes that actually occur.
+
+	Two other things maybe worth noting:
+	    replaced index calculations in the loop (called ffs -- which is a
+	    function call (and expensive) on many machines) with:
+		index = (mask&(-mask));
+	    which always returns a word with only the lowest 1 bit remaining.
+	    The else clause of the GCClipMask case in the switch statement 
+	    (whew) looked mighty suspicious in the original code I changed:
+		pPixmap = (PixmapPtr)pval;
+	    to (effectively):
+		pPixmap = (PixmapPtr)*pval;
+
+	    Both of these have comments in the included FIX below (to call 
+	    attention to them).
+
+REPEAT-BY:
+	Examination
+
+FIX:
+	Including the entire new version of DoChangeGC:
+/* DoChangeGC(pGC, mask, pval, fPointer)
+   mask is a set of bits indicating which values to change.
+   pval contains an appropriate value for each mask.
+   fPointer is true if the values for tiles, stipples, fonts or clipmasks
+   are pointers instead of IDs.  
+   if there is an error, the value is marked as changed 
+   anyway, which is probably wrong, but infrequent.
+
+NOTE:
+	all values sent over the protocol for ChangeGC requests are
+32 bits long
+*/
+
+int
+DoChangeGC(pGC, mask, pval, fPointer)
+    register GC 	*pGC;
+    register BITS32	mask;
+    XID			*pval;
+    int			fPointer;
+{
+    register BITS32 	index;
+    register int 	error = 0;
+    register int	tmpVal;
+    PixmapPtr 		pPixmap;
+    BITS32		maskQ;
+    GCInterestPtr	pQ, pQInit;
+
+    maskQ = mask;	/* Set Only Thos Fields Which Have REALLY Changed */
+    while (mask && !error) 
+    {
+	index = (mask&(-mask));	/* 3/17/88 (ef) -- find first bit set */
+	mask &= ~index;
+	tmpVal=	*pval;
+	switch (index)
+	{
+	    case GCFunction:
+		if (((CARD8)tmpVal >= GXclear) && ((CARD8)tmpVal <= GXset)) {
+		    if (pGC->alu!=(CARD8)tmpVal) {
+			pGC->alu = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCPlaneMask:
+		if (pGC->planemask != tmpVal) {
+		    pGC->planemask = tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCForeground:
+		if (pGC->fgPixel != tmpVal) {
+		    pGC->fgPixel = tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCBackground:
+		if (pGC->bgPixel != tmpVal) {
+		    pGC->bgPixel = tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCLineWidth:		/* ??? line width is a CARD16 */
+		if (pGC->lineWidth != (CARD16) tmpVal) {
+		    pGC->lineWidth = (CARD16)tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCLineStyle:
+		if (((CARD8)tmpVal >= LineSolid) 
+		    && ((CARD8)tmpVal <= LineDoubleDash)) {
+		    if (pGC->lineStyle != (CARD8)tmpVal) {
+			pGC->lineStyle = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCCapStyle:
+		if (((CARD8)tmpVal >= CapNotLast) 
+		    && ((CARD8)tmpVal <= CapProjecting)) {
+		    if (pGC->capStyle != (CARD8)tmpVal) {
+			pGC->capStyle = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCJoinStyle:
+		if (((CARD8)tmpVal >= JoinMiter) 
+		    && ((CARD8)tmpVal <= JoinBevel)) {
+		    if (pGC->joinStyle != (CARD8)tmpVal) {
+			pGC->joinStyle = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCFillStyle:
+		if (((CARD8)tmpVal >= FillSolid) 
+		    && ((CARD8)tmpVal <= FillOpaqueStippled)) {
+		    if (pGC->fillStyle != (CARD8)tmpVal) {
+			pGC->fillStyle = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCFillRule:
+		if (((CARD8)tmpVal >= EvenOddRule) && 
+		    ((CARD8)tmpVal <= WindingRule)) {
+		    if (pGC->fillRule != (CARD8)tmpVal) {
+			pGC->fillRule = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCTile:
+		if(fPointer)
+		    pPixmap = (PixmapPtr) tmpVal;
+		else
+		    pPixmap = (PixmapPtr)LookupID((CARD32)tmpVal, 
+					      RT_PIXMAP, RC_CORE);
+		if (pPixmap)
+		{
+		    if ((pPixmap->drawable.depth != pGC->depth) ||
+			(pPixmap->drawable.pScreen != pGC->pScreen))
+		    {
+			error = BadMatch;
+		    }
+		    else
+		    {
+			(* pGC->pScreen->DestroyPixmap)(pGC->tile);
+			pGC->tile = pPixmap;
+			maskQ |= index;
+			pPixmap->refcnt++;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD32)tmpVal;
+		    error = BadPixmap;
+		}
+		break;
+	    case GCStipple:
+		if(fPointer)
+		    pPixmap = (PixmapPtr) tmpVal;
+		else
+		    pPixmap = (PixmapPtr)LookupID((CARD32)tmpVal, 
+					      RT_PIXMAP, RC_CORE);
+		if (pPixmap)
+		{
+		    if ((pPixmap->drawable.depth != 1) ||
+			(pPixmap->drawable.pScreen != pGC->pScreen))
+		    {
+			error = BadMatch;
+		    }
+		    else
+		    {
+			(* pGC->pScreen->DestroyPixmap)(pGC->stipple);
+			pGC->stipple = pPixmap;
+			maskQ |= index;
+			pPixmap->refcnt++;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD32)tmpVal;
+		    error = BadPixmap;
+		}
+		break;
+	    case GCTileStipXOrigin:
+		if (pGC->patOrg.x != (INT16)tmpVal) {
+		    pGC->patOrg.x = (INT16)tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCTileStipYOrigin:
+		if (pGC->patOrg.y != (INT16)tmpVal) {
+		    pGC->patOrg.y = (INT16)tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCFont:
+              {
+		FontPtr	pFont;
+
+
+		if(fPointer)
+		    pFont = (FontPtr) tmpVal;
+		else
+		    pFont = (FontPtr)LookupID((CARD32)tmpVal, RT_FONT, RC_CORE);
+
+		if (pFont)
+		{
+		    if (pGC->font!=pFont) {
+			if (pGC->font)
+			    CloseFont( pGC->font);
+			pGC->font = pFont;
+			maskQ |= index;
+			pGC->font->refcnt++;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = tmpVal;
+		    error = BadFont;
+		}
+		break;
+	      }
+	    case GCSubwindowMode:
+		if (((CARD8)tmpVal == ClipByChildren) ||
+		    ((CARD8)tmpVal == IncludeInferiors)) {
+		    if (pGC->subWindowMode!=(CARD8)tmpVal) {
+			pGC->subWindowMode = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCGraphicsExposures:
+		if ((Bool)tmpVal== xFalse) {
+		    if (pGC->graphicsExposures != FALSE) {
+			pGC->graphicsExposures = FALSE;
+			maskQ |= index;
+		    }
+		}
+		else if ((Bool)tmpVal== xTrue) {
+		    if (pGC->graphicsExposures != TRUE) {
+			pGC->graphicsExposures = TRUE;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (Bool)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    case GCClipXOrigin:
+		if (pGC->clipOrg.x != (INT16)tmpVal) {
+		    pGC->clipOrg.x = (INT16)tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCClipYOrigin:
+		if (pGC->clipOrg.y != (INT16)tmpVal) {
+		    pGC->clipOrg.y = (INT16)tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCClipMask:
+	      {
+		Pixmap pid;
+		int	clipType;
+
+		pid = (Pixmap) tmpVal;
+		if (pid == None)
+		{
+		    if (clipType != CT_NONE) {
+			clipType = CT_NONE;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+				/* 3/17/88 (ef) -- This looked suspicious 
+						   before -- was pval, *not*
+						   *pval */
+		    if(fPointer)
+			pPixmap = (PixmapPtr) tmpVal;
+		    else
+		        pPixmap = (PixmapPtr)LookupID(pid, RT_PIXMAP, RC_CORE);
+		    if (pPixmap)
+		    {
+		        clipType = CT_PIXMAP;
+			pPixmap->refcnt++;
+			maskQ |= index;
+		    }
+		    else
+		    {
+			clientErrorValue = pid;
+			error = BadPixmap;
+		    }
+		}
+		if(error == Success)
+		{
+		    (*pGC->ChangeClip)(pGC, clipType, pPixmap, 0);
+		}
+		break;
+	      }
+	    case GCDashOffset:
+		if (pGC->dashOffset != tmpVal) {
+		    pGC->dashOffset = (CARD16)tmpVal;
+		    maskQ |= index;
+		}
+		break;
+	    case GCDashList:
+		if ( pGC->numInDashList != 2 ) {
+		    xfree(pGC->dash);
+		    pGC->numInDashList = 2;
+		    pGC->dash = (unsigned char *)
+				xalloc(2 * sizeof(unsigned char));
+		    pGC->dash[0]= tmpVal;
+		    pGC->dash[1]= tmpVal;
+		    maskQ |= index;
+		}
+		else {
+		    if ( pGC->dash[0] != (CARD8)tmpVal ) {
+			pGC->dash[0] = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		    if ( pGC->dash[1] != (CARD8)tmpVal ) {
+			pGC->dash[1] = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		break;
+	    case GCArcMode:
+		if (((CARD8)tmpVal>= ArcChord) 
+		    && ((CARD8)tmpVal<= ArcPieSlice)) {
+		    if (pGC->arcMode != (CARD8)tmpVal) {
+			pGC->arcMode = (CARD8)tmpVal;
+			maskQ |= index;
+		    }
+		}
+		else
+		{
+		    clientErrorValue = (CARD8)tmpVal;
+		    error = BadValue;
+		}
+		break;
+	    default:
+		break;
+	}
+	pval++;
+    }
+
+    if ( maskQ ) {	/* did anything REALLY change */
+	pGC->serialNumber |= GC_CHANGE_SERIAL_BIT;
+	pGC->stateChanges |= maskQ;
+
+	pQ = pGC->pNextGCInterest;
+	pQInit = (GCInterestPtr) &pGC->pNextGCInterest;
+	do
+	{
+	    /* I assume that if you've set a change interest mask, you've set a
+	     * changeGC function */
+	    if(pQ->ChangeInterestMask & maskQ)
+		(*pQ->ChangeGC)(pGC, pQ, maskQ);
+	    pQ = pQ->pNextGCInterest;
+	}
+	while(pQ != pQInit);
+    }
+
+    return error;
+}
+
+

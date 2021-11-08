@@ -1,0 +1,76 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 21:28:34 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07561; Thu, 17 Mar 88 21:27:41 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 11:11:21 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA07706; Wed, 16 Mar 88 11:14:48 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 11:15:24 pst
+Message-Id: <8803161915.AA24520@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 11:15:18 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   169
+### area:         uwm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     very useful, code supplied
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	You must specify a height, width, x and y for uwm to place an
+	application.
+DESCRIPTION:
+	If an application is given the string '=+15+15', uwm goes
+	ahead and asks for a position rather than placing the application
+	at 15,15 and using the default height and width.
+REPEAT-BY:
+	bitmap junk =+15+15
+FIX:
+*** RubberBand.R2	Wed Mar 16 10:12:38 1988
+--- RubberBand.c	Wed Mar 16 10:18:24 1988
+***************
+*** 96,102
+  	int width_offset, height_offset; /* to subtract if resize increments */
+  	XSetWindowAttributes attr;	/* for setting save unders flag */
+  
+! 	if ((hints->flags & USPosition) && (hints->flags & USSize)) {
+  	  *x = hints->x;
+  	  *y = hints->y;
+  	  *width = hints->width;
+
+--- 96,102 -----
+  	int width_offset, height_offset; /* to subtract if resize increments */
+  	XSetWindowAttributes attr;	/* for setting save unders flag */
+  
+! 	if (hints->flags & USPosition) {
+  	  *x = hints->x;
+  	  *y = hints->y;
+  	  *width = hints->width;
+***************
+*** 101,106
+  	  *y = hints->y;
+  	  *width = hints->width;
+  	  *height = hints->height;
+  	  return;
+  	}
+          if (!XFetchName(dpy, window, &name))
+
+--- 101,112 -----
+  	  *y = hints->y;
+  	  *width = hints->width;
+  	  *height = hints->height;
++ 	  if (hints->flags & PMinSize) {
++ 	     if (*width < hints->min_width)
++ 		*width = hints->min_width;
++ 	     if (*height < hints->min_height)
++ 		*height = hints->min_height;
++ 	  }
+  	  return;
+  	}
+          if (!XFetchName(dpy, window, &name))
+

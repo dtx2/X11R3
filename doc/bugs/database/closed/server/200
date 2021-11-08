@@ -1,0 +1,120 @@
+Return-Path: ccaw001@utadnx.cc.utexas.edu
+Received: by EXPO.LCS.MIT.EDU; Thu, 21 Jul 88 13:46:58 EDT
+Message-Id: <8807211746.AA13205@EXPO.LCS.MIT.EDU>
+Date: 21 Jul 88 12:38:00 CDT
+From: "Rick Watson" <ccaw001@utadnx.cc.utexas.edu>
+Subject: Video blanking for DEC VAXStation-II qvss server
+To: "xbugs" <xbugs@expo.lcs.mit.edu>
+Cc: <xpert@expo.lcs.mit.edu>
+
+### bug number:   711
+### area:         server
+### severity:     enhancement
+### comments:     
+
+Here's a patch to enable video-blanking screen saving for DEC
+monochrome displays using the qvss driver.  No more waiting to refresh
+the screen! I've only tested this under Ultrix v2.2 on a VAXStation II.
+
+Rick Watson
+University of Texas Computation Center
+ arpa:   watson@utadnx.cc.utexas.edu (128.83.1.26)
+ uucp:   ...seismo!ut-sally!ut-emx!rick
+ bitnet: watson@utadnx
+ span:   utspan::watson (UTSPAN is 25.128)
+ phone:  512/471-8220 512/471-3241
+-----------------------------------------------------------------------------
+VERSION:
+	X11 release 2
+CLIENT MACHINE:
+	DEC VAXStation-II with qvss monochrome display
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.2
+DISPLAY:
+	VS-II monochome display
+DESCRIPTION:
+	Xqvss doesn't do video blanking for screen saving.
+FIX:
+	Patch to ./server/ddx/dec/qvss/qvss_io.c follows. I made the change 
+	ifdef'ed on QIOVIDEOON because I don't know if the video on/off
+	ioctl exists prior to Ultrix 2.2.
+
+*** qvss_io.c.orig	Wed Dec 23 00:28:20 1987
+--- qvss_io.c	Thu Jul 21 09:56:02 1988
+***************
+*** 74,79
+  
+  #define MAX_LED 3  /* only 3 LED's can be set by user; Lock LED is controlled by server */
+  
+  /* ARGSUSED */
+  static Bool
+  qvssSaveScreen(pScreen, on)
+
+--- 74,80 -----
+  
+  #define MAX_LED 3  /* only 3 LED's can be set by user; Lock LED is controlled by server */
+  
++ #ifdef QIOVIDEOON			/* if we know how to do this */
+  /* ARGSUSED */
+  static Bool
+  qvssSaveScreen(pScreen, on)
+***************
+*** 80,85
+      ScreenPtr pScreen;
+      int on;
+  {
+      if (on == SCREEN_SAVER_FORCER)
+      {
+          lastEventTime = GetTimeInMillis();	
+
+--- 81,109 -----
+      ScreenPtr pScreen;
+      int on;
+  {
++     if ( on == SCREEN_SAVER_FORCER)
++     {
++         lastEventTime = GetTimeInMillis();
++     }
++     else if (on == SCREEN_SAVER_ON) /* turn screen off */
++     {
++ 	ioctl(fdQVSS, QIOVIDEOOFF);
++     }
++     else /* turn screen on */
++     {
++ 	ioctl(fdQVSS, QIOVIDEOON);
++     }
++     return TRUE;
++ }
++ 
++ #else
++ 
++ /* ARGSUSED */
++ static Bool
++ qvssSaveScreen(pScreen, on)
++     ScreenPtr pScreen;
++     int on;
++ {
+      if (on == SCREEN_SAVER_FORCER)
+      {
+          lastEventTime = GetTimeInMillis();	
+***************
+*** 88,93
+      else
+          return FALSE;
+  }
+  
+  /* ARGSUSED */
+  static Bool
+
+--- 112,118 -----
+      else
+          return FALSE;
+  }
++ #endif
+  
+  /* ARGSUSED */
+  static Bool
+
+
+
+

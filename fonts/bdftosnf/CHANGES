@@ -1,0 +1,10 @@
+The following changes have been made to this directory since R2:
+
+     o  the sample font compiler is now called bdftosnf since other formats
+	will require compilers as well.
+     o  bdftosnf and showsnf now installed as a public utilities.
+     o  terminal emulator fonts now have ink metrics computed.
+     o  numerous bit and byte order problems have been fixed.
+     o  problems with truncation of bits have been fixed.
+     o  padding problems have been fixed.
+     o  additional error checking has been added.

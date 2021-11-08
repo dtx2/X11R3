@@ -1,0 +1,72 @@
+Return-Path: mmeyer@xenurus.gould.com
+Received: by expo.lcs.mit.edu; Mon, 3 Oct 88 12:29:56 EDT
+Date: Mon, 3 Oct 88 11:25:33 CDT
+From: mmeyer@xenurus.gould.com (Morris Meyer)
+Received: by xenurus.gould.com (5.54/)
+Message-Id: <8810031625.AA14668@xenurus.gould.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: clients/xhost core dumps
+Cc: mmeyer@xenurus.gould.com
+
+### bug number:   1042
+### area:         xhost
+### severity:     high
+### comments:     
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	(Gould PN 9080)
+
+CLIENT OPERATING SYSTEM:
+	(Gould UTX 2.1 - 4.3BSD + Real-Time)
+
+DISPLAY:
+	(Sun-2 Monochrome)
+
+SYNOPSIS:
+	Running xhost when server is not authorized to
+	connect to host (failed XOpenDisplay(NULL)) dumps core.
+
+DESCRIPTION:
+	The fprintf statement in lines 98 through 102 on revision 11.13
+	of 88/02/09 dumps core on our C compiler (4.3BSD).
+
+	static char *rcsid_xhost_c = "$Header: xhost.c,v 11.13 88/02/09
+	11:14:54 jim Exp
+	 $";
+
+98>	if ((dpy = XOpenDisplay(NULL)) == NULL) {
+99>	    fprintf(stderr, "%s: Can't open display /* '%s' */\n",
+100>		    argv[0]/*, XDisplayName("\0")*/);
+101>	    exit(1);
+102>	}
+	
+
+REPEAT-BY:
+	mycroft% /usr/bin/X11/xhost
+	Server is not authorized to connect to host
+	PROTECTION VIOLATION: name='xhost', pid=6026, pc=a426320, ps=80000aa0
+	Segmentation violation (core dumped)
+
+FIX:
+	Change the above lines to:
+
+98>	if ((dpy = XOpenDisplay(NULL)) == NULL) {
+99>	    fprintf(stderr, "%s: Can't open display.\n", argv[0]);
+100>	    exit(1);
+101>	}
+
+
+Thanks.  
+
+	--morris meyer
+
+Morris A. Meyer	                 USEnet:  ihnp4!uiucdcs!ccvaxa!mmeyer
+Gould CSD-Urbana                 ARPAnet: mmeyer@xenurus.gould.com
+1101 E. University               BELLnet: (217) 384-8739 
+Urbana, IL 61801
+

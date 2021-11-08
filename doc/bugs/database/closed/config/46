@@ -1,0 +1,34 @@
+Return-Path: karlton@wsl.dec.com
+Received: by expo.lcs.mit.edu; Wed, 5 Oct 88 21:36:38 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA24634; Wed, 5 Oct 88 18:36:29 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA04510; Wed, 5 Oct 88 18:36:29 PDT
+Message-Id: <8810060136.AA04510@gilroy.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: inconsistent use of SYS_LIBRARIES and SYSAUX_LIBRARIES
+Date: Wed, 05 Oct 88 18:36:27 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+
+### bug number:   1055
+### area:         config
+### severity:     medium
+### comments:     xeyes has been fixed; the various macros will be documented
+
+In an attempt to build the Beta R3 version with DECnet turned on, I put
+"SYSAUX_LIBRARIES = -ldnet" into Vax.macros and changed the ConnectionFlags
+to include DNETCONN. Most things built fine except that
+
+	contrib/xfig/Imakefile
+	demos/xeyes/Imakefile
+
+both redefine SYSAUX_LIBRARIES. Xfig is not built by the default "make World"
+so that is probably not much of an issue. (Note however that it also redefines
+SYS_LIBRARIES, so fixing it may be trickier.)
+
+I think the fix for demos/xeyes/Imakefile is to have it define SYS_LIBRARIES
+to be -lm and not SYSAUX_LIBRARIES.
+
+PK
+
+

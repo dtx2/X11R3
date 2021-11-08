@@ -1,0 +1,74 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Tue, 8 Mar 88 18:46:07 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803082346.AA04026@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: mroe on xinit and ksh
+Date: Tue, 08 Mar 88 18:46:06 EST
+
+### bug number:   54
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+
+------- Forwarded Message
+
+Path: mit-vax!bloom-beacon!gatech!mcnc!decvax!purdue!spaf
+From: spaf@cs.purdue.EDU (Gene Spafford)
+Newsgroups: comp.windows.x,comp.bugs.misc,purdue.windows
+Subject: Re: X11 & ksh? (+Workaround)
+Summary: Problem found & partial fix enclosed.
+Message-ID: <3465@medusa.cs.purdue.edu>
+Date: 8 Mar 88 19:19:06 GMT
+References: <3429@medusa.cs.purdue.edu>
+Sender: news@cs.purdue.EDU
+Organization: Department of Computer Science, Purdue University
+Lines: 40
+Xref: mit-vax comp.windows.x:2785 comp.bugs.misc:99
+
+
+A few days ago, I posted a request for help.  The problem I had was
+that if I ran "xinit" under the ksh, the server just hung and never
+finished starting up.  I narrowed the problem down further to find that
+only if I had the monitor (jobs facility) option set did the problem
+occur.
+
+Well, after an afternoon and evening of intense frustration debugging,
+I found the problem.  The following is a description of the problem and
+a workaround; the bug and some approaches to fixes have been submitted
+to the official buglist, but this may help others soon to encounter
+similar problems.
+
+When "xinit" starts the server, it resets the process group of the
+process running the X server (Xsun in my case) to 0 so it is in a
+different process group than the xinit process.   This is to prevent a
+problem that will not occur on a Sun -- that of the companion client
+process being spawned with the -L flag, and having a subsequent
+vhangup() call blow the parent processes away.  Unfortunately, one of
+the first things done by the new X server process is a
+"write(2, buffer, 0)" to see if the fd is open for error messages.
+Since the process no longer belongs to the distinguished process group
+of the terminal where unit 2 is open, it gets a SIGTTOU and blocks.
+
+Workaround is simple:  run xinit with stderr redirected to a file or
+pipe.  I now run ksh out of my .profile with:
+(xinit $HOME/bin/xstart; kbd_mode -a; clear) 2>&1 | cat -u
+Ugly maybe, but it works just fine.
+
+Mark Moraes @ University of Toronto sent me a patch he developed to get
+newcsh and tcsh running under X11.1.  He suggests I "#ifndef sun" the
+setpgrp causing the problem.  Unfortunately, the killpg mechanism in
+use causes the parent ksh to die when xinit terminates if this change
+is applied.  Hopefully the people supporting X11 will come up with a
+better, "official" fix.
+
+- -- 
+Gene Spafford
+Dept. of Computer Sciences, Purdue University, W. Lafayette IN 47907-2004
+Internet:  spaf@cs.purdue.edu	uucp:	...!{decwrl,gatech,ucbvax}!purdue!spaf
+
+
+------- End of Forwarded Message
+

@@ -1,0 +1,51 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:43:15 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26202; Tue, 5 Jul 88 14:41:40 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 10:41:54 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA29641; Tue, 5 Jul 88 11:41:58 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 5 Jul 88 11:43:44 pdt
+Message-Id: <8807051843.AA17932@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xload icon bitmap
+X-Mailer: mh6.5
+Date: Tue, 05 Jul 88 11:43:41 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   693
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Previous suggested bug fix for the 'label' Xdefault
+	caused the pixmap for the xload icon to be ignored.
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/xload/xload.c.old	Thu Jun 30 09:34:13 1988
+--- clients/xload/xload.c	Thu Jun 30 09:26:33 1988
+***************
+*** 55,61
+  	      XCreateBitmapFromData (XtDisplay(toplevel),
+  				     XtScreen(toplevel)->root,
+  				     xload_bits, xload_width, xload_height));
+!     load = XtCreateManagedWidget ("load", loadWidgetClass, toplevel, &arg, 1);
+      arg.name = XtNlabel;
+      arg.value = NULL;
+      XtGetValues(load, &arg, 1);
+
+--- 55,62 -----
+  	      XCreateBitmapFromData (XtDisplay(toplevel),
+  				     XtScreen(toplevel)->root,
+  				     xload_bits, xload_width, xload_height));
+!     XtSetValues (toplevel, &arg, 1);
+!     load = XtCreateManagedWidget ("load", loadWidgetClass, toplevel, &arg, 0);
+      arg.name = XtNlabel;
+      arg.value = NULL;
+      XtGetValues(load, &arg, 1);
+

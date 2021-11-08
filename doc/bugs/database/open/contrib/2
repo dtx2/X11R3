@@ -1,0 +1,116 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Wed, 9 Mar 88 09:03:11 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803091403.AA07569@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: patch for X.V11R2 xmore
+Date: Wed, 09 Mar 88 09:03:10 EST
+
+### bug number:   56
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+
+------- Forwarded Message
+
+Return-Path: sunpitt!eti!frob!x11@sun.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Tue, 8 Mar 88 19:18:08 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07883; Tue, 8 Mar 88 17:52:21 EST
+Received: from suntoo.sun.com (suntoo-bb.sun.com) by Sun.COM (4.0/SMI-4.0)
+	id AA18888; Tue, 8 Mar 88 14:51:53 PST
+Received: by suntoo.sun.com (3.2/SMI-3.2)
+	id AA19370; Tue, 8 Mar 88 14:54:53 PST
+Received: by sunpitt.uucp (3.2/SMI-2.0)
+	id AA06930; Tue, 8 Mar 88 17:15:12 EST
+Received: from frob.sun.com by eti.com (3.2/SMI-3.2)
+	id AA21691; Fri, 4 Mar 88 22:35:49 EST
+Received: by frob.sun.com (3.2/SMI-3.2)
+	id AA15295; Fri, 4 Mar 88 22:46:52 EST
+Date: Fri, 4 Mar 88 22:46:52 EST
+Message-Id: <8803050346.AA15295@frob.sun.com>
+From: Rick Busdiecker <sunpitt!eti!sunpitt!eti!rick%sun.com@sun.com>
+Sender: sunpitt!eti!frob!X11@sun.com
+To: sunpitt!sun!athena.mit.edu!xpert@sun.com (The Mail Bouncer)
+Subject: patch for X.V11R2 xmore
+
+Since the distributed version of xmore can't handle piped input, I
+made the (extremeley trivial) change in the command line parsing that
+defaults the input to stdin instead of barfing.  It still can't handle
+multiple files, but I decided that the change would take more than 90
+seconds so I blew it off.  Here's the patch:
+
+
+*** ../xmore/main.c	Fri Feb 26 01:52:34 1988
+- --- main.c	Fri Mar  4 22:23:44 1988
+***************
+*** 22,27 ****
+- --- 22,28 ----
+  
+  #include "globals.h"
+  #include "mit-copyright.h"
++ #include <stdio.h>
+  
+  /*	Function Name: main
+   *	Description: This is the main driver for Xman.
+***************
+*** 72,93 ****
+  
+    help_widget = NULL;
+  
+!   if (argc > 1) {
+!     if ( (file = fopen(argv[1],"r")) == NULL) {
+!       printf("Could not open file -  %s\n",argv[1]); 
+!       exit(1);
+!     }
+!     pane = CreatePane(top);
+!     scroll = CreateScroll(pane);
+!     XtManageChild(pane);
+!     InitPage(scroll,file);
+!     XtAddEventHandler(scroll,(unsigned int) ButtonPressMask|ButtonReleaseMask,
+! 		      FALSE, TextExit, NULL);
+!     XtRealizeWidget(top);
+!     AddCursor(top,main_cursor); /* must be done after realize. */
+!     XtMainLoop();
+    }
+!     printf("useage: xmore filename\n");
+  }
+  
+  /*	Function Name: CreateScroll
+- --- 73,104 ----
+  
+    help_widget = NULL;
+  
+! 
+!   switch (argc)
+!   {
+!   case 1:
+!       file = stdin;
+!       break;
+!   case 2:
+!       if ((file = fopen(argv[1],"r")) == NULL) {
+! 	      fprintf (stderr, "Could not open file -  %s\n",argv[1]);
+! 	      exit(1);
+! 	  }
+!       break;
+!   default:
+!       fprintf (stderr, "At most one argument, please.\n");
+!       exit (-1);
+    }
+! 
+!   pane = CreatePane(top);
+!   scroll = CreateScroll(pane);
+!   XtManageChild(pane);
+!   InitPage(scroll,file);
+!   XtAddEventHandler(scroll,(unsigned int) ButtonPressMask|ButtonReleaseMask,
+! 		    FALSE, TextExit, NULL);
+!   XtRealizeWidget(top);
+!   AddCursor(top,main_cursor); /* must be done after realize. */
+!   XtMainLoop();
+  }
+  
+  /*	Function Name: CreateScroll
+
+------- End of Forwarded Message
+

@@ -1,0 +1,7 @@
+Changes in this directory since R2
+
+     o  Move many routines to DIX where they belong.
+     o  reengineer os interface.
+     o  Font naming scheme isolates font names from file names.  Some
+	support exists here.
+     o  multiple font-file types interface done.

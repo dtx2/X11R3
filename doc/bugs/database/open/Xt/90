@@ -1,0 +1,49 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Wed, 7 Sep 88 16:12:57 EDT
+Date: Wed, 7 Sep 88 16:12:57 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8809072012.AA00200@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: Xt needs Meta_L or Meta_R keysym
+
+### bug number:   944
+### area:         Xt
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    all
+
+
+DISPLAY:
+    all
+
+
+WINDOW MANAGER:
+    all
+
+
+AREA:
+    Xt
+
+
+SYNOPSIS:
+    Xt needs Meta_L or Meta_R keysym in order to work properly.
+
+
+DESCRIPTION:
+    Widgets that use Meta in their translation tables (particular text widgets)
+    will not work properly if neither Meta_L nor Meta_R appear in the keysym
+    table.  Previous releases hardwired Meta to mod1.
+
+

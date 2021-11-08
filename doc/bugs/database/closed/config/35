@@ -1,0 +1,37 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Tue, 30 Aug 88 14:54:29 EDT
+Message-Id: <8808301854.AA25588@EXPO.LCS.MIT.EDU>
+From: Mark Moraes <moraes@csri.toronto.edu>
+To: xbugs
+Subject: suggestion for installation mode flag
+Date: Tue, 30 Aug 88 14:54:26 EDT
+Sender: jim@EXPO.LCS.MIT.EDU
+
+### bug number:   923
+### area:         config
+### severity:     enhancement
+### comments:     
+
+
+
+------- Forwarded Message
+
+Return-Path: @XX.LCS.MIT.EDU,@neat.ai.toronto.edu:moraes@bay.csri.toronto.edu
+Received: by expo.lcs.mit.edu; Tue, 30 Aug 88 14:42:05 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Tue 30 Aug 88 14:25:05-EDT
+Received: from neat.ai.toronto.edu by RELAY.CS.NET id ae01348;
+          30 Aug 88 14:00 EDT
+Received: from bay.csri.toronto.edu by neat.ai.toronto.edu with SMTP id 438; Mon, 29 Aug 88 08:25:27 EDT
+Received: by bay.csri.toronto.edu id 20392; Mon, 29 Aug 88 08:24:46 EDT
+From: Mark Moraes <moraes@csri.toronto.edu>
+To: jim@expo.lcs.mit.edu
+Subject: Small addition to Imake.tmpl
+Message-Id: <88Aug29.082446edt.20392@bay.csri.toronto.edu>
+Date: 	Mon, 29 Aug 88 08:24:36 EDT
+
+Shouldn't there be something like INSTBINFLAGS defined to 0755 (or 0555)
+in Imake.tmpl for applications to use?
+
+------- End of Forwarded Message
+
+

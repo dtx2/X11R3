@@ -1,0 +1,9 @@
+These files have been tested under TI, Symbolics, Lucid, and Franz.
+The files have been given .l suffixes to keep them within 12 characters,
+to keep SysV sites happy.  Please rename them with more appropriate
+suffixes for your system.
+
+The ms-patch.uu file is a patch to the current Lucid system.  You need
+to uudecode it to produce the binary.
+
+See also exclREADME.

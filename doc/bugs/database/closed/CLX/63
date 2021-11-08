@@ -1,0 +1,150 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: by expo.lcs.mit.edu; Fri, 26 Aug 88 11:40:03 EDT
+Received: from MACKENZIE.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 216789; Fri 26-Aug-88 11:03:06 EDT
+Date: Fri, 26 Aug 88 11:03 EDT
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CLX/locking on MacIvory
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880826150318.5.HORNIG@MACKENZIE.SCRC.Symbolics.COM>
+
+### bug number:   910
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	Symbolics' MacIvory system contains support for a new locking
+substrate which gives much better performance than the use of
+STORE-CONDITIONAL.
+
+DESCRIPTION:
+	The change given below enables use of the new locking substrate.
+
+FIX:
+
+;;-----------------------------------------------------------------------------
+;; Process Locking
+;;
+;;	Common-Lisp doesn't provide process locking primitives, so we define
+;;	our own here, based on Zetalisp primitives.  Holding-Lock is very
+;;	similar to with-lock on The TI Explorer, and a little more efficient
+;;	than with-process-lock on a Symbolics.
+
+#+excl
+(defun make-process-lock ()
+  (mp:make-process-lock))
+
+#+imach
+(defun make-process-lock ()
+  (process:make-lock "CLX Lock" :recursive t))
+
+#-(or excl imach)
+(defun make-process-lock ()
+  nil)
+
+#+imach
+(defmacro holding-lock ((locator &optional whostate) &body body)
+  whostate
+  `(process:with-lock (,locator)
+     ,@body))
+
+#+(and lispm (not imach))
+(defmacro holding-lock ((locator &optional whostate) &body body)
+  ; This macro is for use in a multi-process environment.
+  (let ((lock (gensym)) (have-lock (gensym)))
+    `(let* ((,lock (zl:locf ,locator))
+	    (,have-lock (eq (car ,lock) sys:current-process)))
+       (unwind-protect 
+	   (progn (unless ,have-lock
+		    ;; Redundant, but saves time if not locked.
+		    (or #+explorer
+			(si:%store-conditional ,lock nil sys:current-process)
+			#-explorer
+			(sys:store-conditional ,lock nil sys:current-process)
+			(sys:process-lock ,lock ,@(when whostate `(nil ,whostate)))))
+		  ,@body)
+	 (unless ,have-lock
+	   #+explorer
+	   (si:%store-conditional ,lock sys:current-process nil)
+	   #-explorer
+	   (sys:store-conditional ,lock sys:current-process nil))))))
+
+#+excl
+(defmacro holding-lock ((locator &optional whostate) &body body)
+  ;; This macro is for use in a multi-process environment.
+  (let ((lock (gensym)) (have-lock (gensym)) (curproc (gensym)))
+    `(let* ((,lock ,locator)
+	    (,curproc (if mp:*current-process* mp:*current-process* 83239))
+	    (,have-lock (eql (mp:process-lock-locker ,lock) ,curproc)))
+      (unwind-protect
+	   (progn (unless ,have-lock
+		    (mp:process-lock ,lock ,curproc
+				     ,@(when whostate `(,whostate))))
+		  ,@body)
+	(unless ,have-lock
+	  (mp:process-unlock ,lock ,curproc))))))
+
+;; If you're not sharing DISPLAY objects within a multi-processing
+;; shared-memory environment, this is sufficient
+#-(or lispm excl)
+(defmacro holding-lock ((locator &optional whostate) &body body)
+  locator whostate ;; not used
+  `(progn ,@body))
+
+#+(and lispm (not imach))
+(defmacro atomic-push (item reference)
+  `(sys:without-interrupts (push ,item ,reference)))
+
+#+(and lispm (not imach))
+(defmacro atomic-pop (list)
+  `(sys:without-interrupts (pop ,list)))
+
+#+imach
+(defmacro atomic-push (item reference)
+  `(process:atomic-push ,item ,reference))
+
+#+imach
+(defmacro atomic-pop (reference)
+  `(process:atomic-pop ,reference))
+
+#+excl
+(defmacro atomic-push (item reference)
+  ;; 2.0 didn't have without-interrupts, but without-scheduling is good enough.
+  #+allegro
+  `(mp::without-interrupts (push ,item ,reference))
+  #-allegro
+  `(mp:without-scheduling (push ,item ,reference))
+  )
+
+#+excl
+(defmacro atomic-pop (list)
+  ;; 2.0 didn't have without-interrupts, but without-scheduling is good enough.
+  #+allegro
+  `(mp::without-interrupts (pop ,list))
+  #-allegro
+  `(mp:without-scheduling (pop ,list))
+  )
+
+;; If you don't have multi-processing, this is sufficient
+#-(or lispm excl)
+(defmacro atomic-push (item reference)
+  `(push ,item ,reference))
+
+;; If you don't have multi-processing, this is sufficient
+#-(or lispm excl)
+(defmacro atomic-pop (list)
+  `(pop ,list))
+

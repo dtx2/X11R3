@@ -1,0 +1,34 @@
+Return-Path: jch@sonne.tn.cornell.edu
+Received: by expo.lcs.mit.edu; Thu, 22 Sep 88 17:12:46 EDT
+Received: from SONNE.TN.CORNELL.EDU by devvax.TN.CORNELL.EDU (5.59/1.3-Cornell-Theory-Center)
+	id AA06983; Thu, 22 Sep 88 17:11:55 EDT
+Received: from localhost by sonne.tn.cornell.edu (3.2/6.19)
+	id AA10476; Thu, 22 Sep 88 17:12:13 EDT
+Message-Id: <8809222112.AA10476@sonne.tn.cornell.edu>
+To: X bugs <xbugs@expo.lcs.mit.edu>
+Subject: resize to resize a window
+Date: Thu, 22 Sep 88 17:12:07 -0400
+From: Jeffrey C Honig <jch@sonne.tn.cornell.edu>
+
+### bug number:   998
+### area:         xterm
+### severity:     enhancement
+### comments:     
+
+In X10 the resize command was able to resize a window to the
+specifications given on the command line.  In X11.R2 it says:
+
+	resize: Can't set window size under VT100 emulation
+
+Will X11.R3 allow this?  The command I'm using is:
+
+	 rs 132 64
+
+where rs is defined as:
+
+	set noglob; eval `resize !*`; unset noglob
+
+Thanks.
+
+Jeff
+

@@ -1,0 +1,52 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Wed, 7 Sep 88 16:02:57 EDT
+Date: Wed, 7 Sep 88 16:02:57 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8809072002.AA00142@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: xterm uses wrong foreground in grayed out menu items
+
+### bug number:   942
+### area:         xterm
+### severity:     low
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    Sun 3/280 running SunOS 3.4
+
+
+DISPLAY:
+    HP topcat
+
+
+WINDOW MANAGER:
+    uwm
+
+
+AREA:
+    xterm
+
+
+SYNOPSIS:
+    The stippled text in disabled menu items is drawn in the wrong color.
+
+
+DESCRIPTION:
+    Grayed out menu items use text cursor color instead of menu foreground.
+
+
+REPEAT BY:
+    pull down a menu with a grayed out item
+
+
+SAMPLE FIX:
+

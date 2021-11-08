@@ -1,0 +1,290 @@
+Return-Path: dandelion!jeff@eddie.mit.edu
+Received: by EXPO.LCS.MIT.EDU; Mon, 9 May 88 11:44:31 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA14731@EDDIE.MIT.EDU>; Mon, 9 May 88 11:40:29 EDT
+Received: by dandelion.CI.COM (5.51/smail2.5/10-12-87)
+	id AA16445; Mon, 9 May 88 11:25:36 EDT
+Message-Id: <8805091525.AA16445@dandelion.CI.COM>
+Date: Mon, 9 May 88 11:25:29 EDT
+From: jeff@dandelion.ci.com (Jeff deRienzo)
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   477
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.0
+
+DISPLAY:
+	QVSS, GPX
+
+SYNOPSIS:
+	Expose events don't propagate to parent windows.
+
+DESCRIPTION:
+	Dear X Folks,
+
+
+	This program is an example of a problem I've encountered
+	in attempting to receive a child window's expose events
+	in its parent window under X11R2.
+
+	The program opens a parent window with eight children.
+	The parent has ExposureMask set in its event mask.  The
+	children have NoEventMask set in their do_not_propagate
+	mask.
+
+	The program selects input on the parent and then loops
+	on XNextEvent().  Whenever an event occurs it prints
+	the event type in the receiving window's upper left
+	corner and (blindly treating each event as an expose)
+	xors a rectangle (with IncludeInferiors GC) into the
+	receiving window to signify the exposed area.
+
+	When I generate expose events (by stacking or resizing
+	with a window manager) I expect that the parent window
+	would receive expose events for areas not covered by
+	its children.  It does.  I also expect that the parent
+	would receive expose events for any areas exposed in
+	its children.  This doesn't happen.
+
+	I've tried this program on vax and apollo servers
+	with exactly the same results.  ...also tried various
+	permutations of the code.
+
+	If I only set the event masks in the parent's XCreateWindow()
+	call and don't explicitly do an XSelectInput() then
+	I never get any events.  If I set the ExposureMask in
+	the childrens' attributes (but don't XSelectInput() on
+	any children) then I receive expose events for the
+	children, but the receiving window is the child in
+	which the expose occured.  [Why must I XSelectInput() on
+	the parent to get its events while I only need to set
+	the event mask in the children's XSetWindowAttributes
+	to get events from them?]
+
+	I would like to get expose events which occur in the
+	children to be reported in the parent.  This behavior
+	would be manifested in this program by a filled rectangle
+	inside of a child window in conjunction with the string
+	"TYPE=12" in the upper left corner of the parent.  I've
+	not yet been able to get this result.
+
+	Please let me know if the problem lies in the server or
+	in my understanding.
+
+
+				- Jeff
+
+
+	jeff@dandelion.CI.COM
+
+	
+REPEAT BY:
+/*
+---------------------------------------------------------------------------
+			Propagating Expose Events
+---------------------------------------------------------------------------
+
+
+	This program is an example of a problem I've encountered
+	in attempting to receive a child window's expose events
+	in its parent window under X11R2.
+
+	The program opens a parent window with eight children.
+	The parent has ExposureMask set in its event mask.  The
+	children have NoEventMask set in their do_not_propagate
+	mask.
+
+	The program selects input on the parent and then loops
+	on XNextEvent().  Whenever an event occurs it prints
+	the event type in the receiving window's upper left
+	corner and (blindly treating each event as an expose)
+	xors a rectangle (with IncludeInferiors GC) into the
+	receiving window to signify the exposed area.
+
+	When I generate expose events (by stacking or resizing
+	with a window manager) I expect that the parent window
+	would receive expose events for areas not covered by
+	its children.  It does.  I also expect that the parent
+	would receive expose events for any areas exposed in
+	its children.  This doesn't happen.
+
+	I've tried this program on vax and apollo servers
+	with exactly the same results.  ...also tried various
+	permutations of the code.
+
+	If I only set the event masks in the parent's XCreateWindow()
+	call and don't explicitly do an XSelectInput() then
+	I never get any events.  If I set the ExposureMask in
+	the childrens' attributes (but don't XSelectInput() on
+	any children) then I receive expose events for the
+	children, but the receiving window is the child in
+	which the expose occured.  [Why must I XSelectInput() on
+	the parent to get its events while I only need to set
+	the event mask in the children's XSetWindowAttributes
+	to get events from them?]
+
+	I would like to get expose events which occur in the
+	children to be reported in the parent.  This behavior
+	would be manifested in this program by a filled rectangle
+	inside of a child window in conjunction with the string
+	"TYPE=12" in the upper left corner of the parent.  I've
+	not yet been able to get this result.
+
+*/
+/***************************************************************************/
+#include <stdio.h>
+#include <X11/Xlib.h>
+
+Display          *dpy_;
+Visual           *visual_;
+int              screen;
+GC               igcSelect;
+XGCValues        gcValues;
+
+XSetWindowAttributes newWindow = { /* attributes for parent window */
+    ParentRelative,   /* background pixmap */
+    0,                /* background pixel */
+    None,             /* border pixmap */
+    1,                /* border color */
+    ForgetGravity,    /* bit gravity */
+    ForgetGravity,    /* window gravity */
+    NotUseful,        /* backing store */
+    AllPlanes,        /* backing planes */
+    0,                /* backing pixel */
+    False,            /* save under */
+    ExposureMask      /* event mask */
+	| ButtonPressMask,
+    ExposureMask,     /* not-propagated event mask */
+    True,             /* override redirect */
+    CopyFromParent,   /* colormap */
+    None              /* cursor */
+};
+XSetWindowAttributes kidWindow = { /* attributes for child windows */
+    ParentRelative,   /* background pixmap */
+    0,                /* background pixel */
+    None,             /* border bpixmap */
+    1,                /* border color */
+    ForgetGravity,    /* bit gravity */
+    ForgetGravity,    /* window gravity */
+    NotUseful,        /* backing store */
+    AllPlanes,        /* backing planes */
+    0,                /* backing pixel */
+    False,            /* save under */
+    NoEventMask,      /* event mask */
+    ButtonPressMask,  /* not-propagated event mask */
+    False,            /* override redirect */
+    CopyFromParent,   /* colormap */
+    None              /* cursor */
+};
+
+main()
+{
+    Window w;
+    Window k1;
+    Window k2;
+    Window k3;
+    Window k4;
+    Window k5;
+    Window k6;
+    Window k7;
+    Window k8;
+    XEvent event;
+    char pr_[256];
+
+    dpy_ = XOpenDisplay("");
+    screen = DefaultScreen(dpy_);
+    visual_ = DefaultVisual(dpy_,screen);
+    gcValues.function = GXxor;
+    gcValues.fill_style = FillSolid;
+    gcValues.foreground = 1;
+    gcValues.subwindow_mode = IncludeInferiors;
+    igcSelect = XCreateGC(dpy_,DefaultRootWindow(dpy_),
+			 GCFunction|GCFillStyle|GCForeground|GCSubwindowMode,
+			 &gcValues);
+    if((w = XCreateWindow(dpy_,DefaultRootWindow(dpy_),
+			  40,40,
+			  300,200,2,0,
+			  InputOutput,CopyFromParent,
+			  CWBackPixel|CWBorderPixel|CWOverrideRedirect
+			  |CWDontPropagate,
+			  &newWindow)) < 0L){
+	exit(1);
+    }
+    k1 = XCreateWindow(dpy_,w,10,10,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    k2 = XCreateWindow(dpy_,w,100,10,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    k3 = XCreateWindow(dpy_,w,190,10,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    k4 = XCreateWindow(dpy_,w,280,10,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    k5 = XCreateWindow(dpy_,w,10,120,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    k6 = XCreateWindow(dpy_,w,100,120,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    k7 = XCreateWindow(dpy_,w,190,120,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    k8 = XCreateWindow(dpy_,w,280,120,50,100,1,0,InputOutput,CopyFromParent,
+		       CWBackPixel|CWBorderPixel|CWOverrideRedirect
+		       |CWDontPropagate|CWEventMask,
+		       &kidWindow);
+    XSelectInput(dpy_,w,ExposureMask|ButtonPressMask);
+    XMapWindow(dpy_,w);
+    XMapWindow(dpy_,k1);
+    XMapWindow(dpy_,k2);
+    XMapWindow(dpy_,k3);
+    XMapWindow(dpy_,k4);
+    XMapWindow(dpy_,k5);
+    XMapWindow(dpy_,k6);
+    XMapWindow(dpy_,k7);
+    XMapWindow(dpy_,k8);
+    XFlush(dpy_);
+    while(1){
+	XNextEvent(dpy_,&event);
+	sprintf(pr_,"TYPE=%d\0",event.type);
+	XDrawString(dpy_,event.xexpose.window,igcSelect,1,20,
+		pr_,strlen(pr_));
+	XFillRectangle(dpy_,event.xexpose.window,igcSelect,
+		   event.xexpose.x,event.xexpose.y,
+		   event.xexpose.width,event.xexpose.height);
+	XFlush(dpy_);
+	sleep(1);
+	XFillRectangle(dpy_,event.xexpose.window,igcSelect,
+		   event.xexpose.x,event.xexpose.y,
+		   event.xexpose.width,event.xexpose.height);
+	XDrawString(dpy_,event.xexpose.window,igcSelect,1,20,
+		pr_,strlen(pr_));
+	XFlush(dpy_);
+	sleep(1);
+	if(event.type == ButtonPress){
+	    fprintf(stderr,"Button press event.  Exiting.\n");
+	    break;
+	}
+    }
+    exit(0);
+}
+

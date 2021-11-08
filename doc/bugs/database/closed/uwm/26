@@ -1,0 +1,117 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 23 Jun 88 23:33:56 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23887; Thu, 23 Jun 88 23:32:29 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 23 Jun 88 19:32:35 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA08673; Thu, 23 Jun 88 20:32:15 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 23 Jun 88 20:34:02 pdt
+Message-Id: <8806240334.AA06785@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm push big
+X-Mailer: mh6.5
+Date: Thu, 23 Jun 88 20:33:56 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   634
+### area:         uwm
+### severity:     low
+### comments:     The grammar won't let you set the push value to a negative
+###               number.  It isn't clear that restricting the push value is
+###               the right thing to do since somebody might want to use it to
+###               push edge windows on and off the screen.
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	'push=large value' can cause the window to be pushed in the wrong
+	direction.
+DESCRIPTION:
+	A negative or very large value can cause a window to be pushed in 
+	the wrong direction. For large values truncate to screen height/width.
+	For negative numbers, use default.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/uwm/Push.c.old	Mon Jun 13 15:45:42 1988
+--- clients/uwm/Push.c	Mon Jun 13 15:48:53 1988
+***************
+*** 94,99
+      XWindowAttributes rinfo;			/* Root window information. */
+      int xofs, yofs;			/* Movement offsets. */
+      int x, y;				/* New window position. */
+  
+      /*
+       * Do not try to move the root window.
+
+--- 94,100 -----
+      XWindowAttributes rinfo;			/* Root window information. */
+      int xofs, yofs;			/* Movement offsets. */
+      int x, y;				/* New window position. */
++     int pushval = Pushval;
+  
+      /*
+       * Do not try to move the root window.
+***************
+*** 110,115
+      /*
+       * Calculate the movement offsets.
+       */
+      switch(direction) {
+      case PUSH_DOWN:
+          xofs = 0;
+
+--- 111,128 -----
+      /*
+       * Calculate the movement offsets.
+       */
++     switch(direction) {
++     case PUSH_DOWN:
++     case PUSH_UP:
++ 	if (Push && pushval > ScreenHeight)
++ 		pushval = ScreenHeight;
++         break;
++     case PUSH_LEFT:
++     case PUSH_RIGHT:
++ 	if (Push && pushval > ScreenWidth)
++ 		pushval = ScreenWidth;
++         break;
++     }
+      switch(direction) {
+      case PUSH_DOWN:
+          xofs = 0;
+*** clients/uwm/uwm.c.old	Mon Jun 13 15:52:23 1988
+--- clients/uwm/uwm.c	Mon Jun 13 15:52:06 1988
+***************
+*** 896,901
+      /* If we pushrelative, we divide the window size by
+       * the push variable. If it's zero, we die a sad death.
+       * So lets use the default push value in this case.
+       */
+      if (!Pushval && Push)
+  	Pushval = DEF_PUSH;
+
+--- 896,902 -----
+      /* If we pushrelative, we divide the window size by
+       * the push variable. If it's zero, we die a sad death.
+       * So lets use the default push value in this case.
++      * Also negative push value makes no sense.
+       */
+      if ((!Pushval && Push) || Pushval < 0)
+  	Pushval = DEF_PUSH;
+***************
+*** 897,902
+       * the push variable. If it's zero, we die a sad death.
+       * So lets use the default push value in this case.
+       */
+!     if (!Pushval && Push)
+  	Pushval = DEF_PUSH;
+  }
+
+--- 898,903 -----
+       * So lets use the default push value in this case.
+       * Also negative push value makes no sense.
+       */
+!     if ((!Pushval && Push) || Pushval < 0)
+  	Pushval = DEF_PUSH;
+  }
+

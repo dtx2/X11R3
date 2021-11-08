@@ -1,0 +1,43 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 30 Jun 88 15:14:29 EDT
+Return-Path: <xpert-request@ATHENA.MIT.EDU>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 169113; 30 Jun 88 15:03:34 EDT
+Received: by expo.lcs.mit.edu; Thu, 30 Jun 88 15:02:56 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA04702; Thu, 30 Jun 88 15:01:33 EDT
+Received: by BLOOM-BEACON.MIT.EDU with sendmail-5.59/4.7 
+	id <AA14688@BLOOM-BEACON.MIT.EDU>; Thu, 30 Jun 88 15:00:20 EDT
+Received: from USENET by bloom-beacon.mit.edu with netnews
+	for xpert@athena.mit.edu (xpert@athena.mit.edu)
+	(contact usenet@bloom-beacon.mit.edu if you have questions)
+Date: 30 Jun 88 16:25:38 GMT
+From: ndd@cs.duke.edu  (Ned Danieley)
+Organization: Duke University CS Dept.; Durham, NC
+Subject: xwd -xy on color Suns?
+Message-Id: <11970@duke.cs.duke.edu>
+Sender: xpert-request@athena.mit.edu
+To: xpert@athena.mit.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 30 Jun 88 15:14 EDT
+Resent-Message-Id: <19880630191419.6.RWS@KILLINGTON.LCS.MIT.EDU>
+Resent-Comments: doesn't hang forever, just takes a long time and gets the wrong answer
+
+### bug number:   673
+### area:         server
+### severity:     low
+### comments:     
+
+Should 'xwd -xy' work on color Suns running X11? If I try
+xwd -xy on any of our color Suns (3/110C, 3/60C, 3/260CXP),
+it hangs forever. This seems to happen in the XGetImage call.
+There's a comment in xwd about version 7 not supporting color,
+but I can't find any commented-out code, and I'm not sure
+that the -xy option should be affected anyway. Has anyone gotten
+this to work?
+
+Ned Danieley (ndd@sunbar.mc.duke.edu)
+Basic Arrhythmia Laboratory
+Box 3140, Duke University Medical Center
+Durham, NC  27710
+(919) 684-6807 or 684-6942
+

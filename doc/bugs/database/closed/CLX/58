@@ -1,0 +1,682 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Sat, 13 Aug 88 13:24:23 EDT
+Date: Sat, 13 Aug 88 13:24 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: various CLX bugs
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880813172450.6.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   865
+### area:         CLX
+### severity:     low
+### comments:     
+
+AREA:
+	CLX
+
+DESCRIPTION:
+	Support Unix domain connections for Lucid and ExCL.
+
+	Some CLs insist on intern taking a package object.
+
+	More make-array's needing explicit :initial-element
+	for portability.
+
+	WM-HINTS should handle R2 C Xlib bug of dropping window-group.
+
+	Performance tweak for looking up windows and pixmaps.
+
+	Keep depths, formats, and screens in the order they were
+	sent by the server.
+
+	Work around Explorer :allow-other-keys bug.
+FIX:
+
+*** /tmp/,RCSt1a07474	Sat Aug 13 13:23:25 1988
+--- lib/CLX/depdefs.l	Sat Aug 13 11:27:21 1988
+***************
+*** 319,325 ****
+    (input-function 'buffer-read-default)
+    )
+  
+! ;; This is here because.
+  
+  (defun xintern (&rest parts)
+!   (intern (apply #'concatenate 'string (mapcar #'string parts)) 'xlib))
+--- 319,332 ----
+    (input-function 'buffer-read-default)
+    )
+  
+! ;; These are here because.
+  
++ (defparameter *xlib-package* (find-package (string 'xlib)))
++ 
+  (defun xintern (&rest parts)
+!   (intern (apply #'concatenate 'string (mapcar #'string parts)) *xlib-package*))
+! 
+! (defparameter *keyword-package* (find-package (string 'keyword)))
+! 
+! (defun kintern (name)
+!   (intern (string name) *keyword-package*))
+
+
+*** /tmp/,RCSt1a07395	Sat Aug 13 13:16:46 1988
+--- lib/CLX/dependent.l	Sat Aug 13 12:13:03 1988
+***************
+*** 762,768 ****
+  #+lucid
+  (defun open-x-stream (host display protocol)
+    protocol ;; unused
+!   (let ((fd (connect-to-server host (+ *x-tcp-port* display))))
+      (when (minusp fd)
+        (error "Failed to connect to server: ~A ~D" host display))
+      (user::make-lisp-stream :input-handle fd
+--- 762,768 ----
+  #+lucid
+  (defun open-x-stream (host display protocol)
+    protocol ;; unused
+!   (let ((fd (connect-to-server host display)))
+      (when (minusp fd)
+        (error "Failed to connect to server: ~A ~D" host display))
+      (user::make-lisp-stream :input-handle fd
+***************
+*** 781,787 ****
+  #+excl
+  (defun open-x-stream (host display protocol)
+    (declare (ignore protocol)) ;; unused
+!   (let ((fd (connect-to-server host (+ *x-tcp-port* display))))
+      (when (minusp fd)
+        (error "Failed to connect to server: ~A ~D" host display))
+      (let ((stm (excl::make-buffered-byte-stream fd t t)))
+--- 781,787 ----
+  #+excl
+  (defun open-x-stream (host display protocol)
+    (declare (ignore protocol)) ;; unused
+!   (let ((fd (connect-to-server host display)))
+      (when (minusp fd)
+        (error "Failed to connect to server: ~A ~D" host display))
+      (let ((stm (excl::make-buffered-byte-stream fd t t)))
+
+
+*** /tmp/,RCSt1a07054	Sat Aug 13 11:31:05 1988
+--- lib/CLX/display.l	Sat Aug 13 11:28:30 1988
+***************
+*** 113,126 ****
+  					    :display display :id id))
+  			       (save-id display id ,type))
+  			      ;; Found.  Check the type
+! 			      ,(if (member type '(window pixmap))
+! 				   `((or (type? ,type ',type) (type? ,type 'drawable)) ,type)
+! 				 `((type? ,type ',type) ,type))			       
+! 			      (t (x-error 'lookup-error
+! 					  :id id
+! 					  :display display
+! 					  :type ',type
+! 					  :object ,type))))
+  		   ;; Not being cached.  Create a new one each time.
+  		   `(,(xintern 'make- type)
+  		     :display display :id id))))
+--- 113,129 ----
+  					    :display display :id id))
+  			       (save-id display id ,type))
+  			      ;; Found.  Check the type
+! 			      ,(cond ((null *type-check?*)
+! 				      `(t ,type))
+! 				     ((member type '(window pixmap))
+! 				      `((type? ,type 'drawable) ,type))
+! 				     (t `((type? ,type ',type) ,type)))
+! 			      ,@(when *type-check?*
+! 				  `((t (x-error 'lookup-error
+! 						:id id
+! 						:display display
+! 						:type ',type
+! 						:object ,type))))))
+  		   ;; Not being cached.  Create a new one each time.
+  		   `(,(xintern 'make- type)
+  		     :display display :id id))))
+***************
+*** 144,150 ****
+    (declare-values (or null resource-id))
+    (gethash (if (keywordp atom)
+  	       atom
+! 	       (intern (string atom) 'keyword))
+  	   (display-atom-cache display)))
+  
+  (defun set-atom-id (atom display id)
+--- 147,153 ----
+    (declare-values (or null resource-id))
+    (gethash (if (keywordp atom)
+  	       atom
+! 	       (kintern atom))
+  	   (display-atom-cache display)))
+  
+  (defun set-atom-id (atom display id)
+***************
+*** 155,161 ****
+    (declare-values resource-id)
+    (setf (gethash (if (keywordp atom)
+  		     atom
+! 		     (intern (string atom) 'keyword))
+  		 (display-atom-cache display))
+  	id))
+  
+--- 158,164 ----
+    (declare-values resource-id)
+    (setf (gethash (if (keywordp atom)
+  		     atom
+! 		     (kintern atom))
+  		 (display-atom-cache display))
+  	id))
+  
+***************
+*** 222,228 ****
+  		      :display display
+  		      :output-stream stream
+  		      :input-stream stream
+! 		      :allow-other-keys t
+  		      options))
+  	 (ok-p nil))
+      (unwind-protect
+--- 225,231 ----
+  		      :display display
+  		      :output-stream stream
+  		      :input-stream stream
+! 		      #-ti :allow-other-keys #-ti t	; Explorer 4.1 is broken
+  		      options))
+  	 (ok-p nil))
+      (unwind-protect
+***************
+*** 313,318 ****
+--- 316,322 ----
+  				  :scanline-pad (card8-get 2))
+  						; 5 unused bytes
+  	      (display-pixmap-formats display)))
++       (setf (display-pixmap-formats display) (nreverse (display-pixmap-formats display)))
+        ;; Initialize the screens
+        (dotimes (i num-roots)
+  	(buffer-input display buffer-bbuf 0 40)
+***************
+*** 358,365 ****
+  		        ;; 4 bytes unused
+  		      visuals))
+  	      (push (cons depth (nreverse visuals)) depths)))
+! 	  (setf (screen-depths screen) depths)
+  	  (push screen (display-roots display))))
+        (setf (display-default-screen display) (first (display-roots display)))))
+    display)
+  
+--- 362,370 ----
+  		        ;; 4 bytes unused
+  		      visuals))
+  	      (push (cons depth (nreverse visuals)) depths)))
+! 	  (setf (screen-depths screen) (nreverse depths))
+  	  (push screen (display-roots display))))
++       (setf (display-roots display) (nreverse (display-roots display)))
+        (setf (display-default-screen display) (first (display-roots display)))))
+    display)
+  
+
+*** /tmp/,RCSt1a07144	Sat Aug 13 11:51:47 1988
+--- lib/CLX/gcontext.l	Sat Aug 13 11:49:38 1988
+***************
+*** 152,158 ****
+  	   (progn
+  	     (fill (the gcontext-state state) nil)
+  	     state)
+! 	 (make-array length)))))
+  
+  (defun deallocate-gcontext-state (state)
+    (atomic-push state *gcontext-local-state-cache*))
+--- 152,158 ----
+  	   (progn
+  	     (fill (the gcontext-state state) nil)
+  	     state)
+! 	 (make-array length :initial-element nil)))))
+  
+  (defun deallocate-gcontext-state (state)
+    (atomic-push state *gcontext-local-state-cache*))
+***************
+*** 888,894 ****
+    (let* ((gc-name (intern (concatenate 'string
+  				       (string 'gcontext-)
+  				       (string name)))) ;; in current package
+! 	 (key-name (intern (string name) 'keyword))
+  	 (setfer (xintern "Set-" gc-name))
+  	 (internal-set-function (xintern "Internal-Set-" gc-name))
+  	 (internal-copy-function (xintern "Internal-Copy-" gc-name))
+--- 888,894 ----
+    (let* ((gc-name (intern (concatenate 'string
+  				       (string 'gcontext-)
+  				       (string name)))) ;; in current package
+! 	 (key-name (kintern name))
+  	 (setfer (xintern "Set-" gc-name))
+  	 (internal-set-function (xintern "Internal-Set-" gc-name))
+  	 (internal-copy-function (xintern "Internal-Copy-" gc-name))
+
+
+*** /tmp/,RCSt1a07167	Sat Aug 13 11:53:53 1988
+--- lib/CLX/input.l	Sat Aug 13 11:51:05 1988
+***************
+*** 96,109 ****
+  
+  (eval-when (eval compile load)
+  (defconstant *max-events* 64) ;; Maximum number of events supported (the X11 alpha release only has 34)
+! (defvar *event-key-vector* (make-array *max-events*)
+    "Vector of event keys - See define-event")
+  )
+! (defvar *event-macro-vector* (make-array *max-events*)
+    "Vector of event handler functions - See declare-event")
+! (defvar *event-handler-vector* (make-array *max-events*)
+    "Vector of event handler functions - See declare-event")
+! (defvar *event-send-vector* (make-array *max-events*)
+    "Vector of event sending functions - See declare-event")
+  
+  (defun allocate-event ()
+--- 96,109 ----
+  
+  (eval-when (eval compile load)
+  (defconstant *max-events* 64) ;; Maximum number of events supported (the X11 alpha release only has 34)
+! (defvar *event-key-vector* (make-array *max-events* :initial-element nil)
+    "Vector of event keys - See define-event")
+  )
+! (defvar *event-macro-vector* (make-array *max-events* :initial-element nil)
+    "Vector of event handler functions - See declare-event")
+! (defvar *event-handler-vector* (make-array *max-events* :initial-element nil)
+    "Vector of event handler functions - See declare-event")
+! (defvar *event-send-vector* (make-array *max-events* :initial-element nil)
+    "Vector of event sending functions - See declare-event")
+  
+  (defun allocate-event ()
+***************
+*** 154,160 ****
+    ;; To define error handlers, use declare-error and define-condition.
+    (declare (type stringable name)
+  	   (type list events errors))
+!   (let ((name-symbol (intern (string name) 'keyword)) ;; Intern name in the keyword package
+  	(event-list (mapcar #'canonicalize-event-name events)))
+      `(eval-when (compile load eval)
+         (setq *extensions* (cons (list ',name-symbol ',event-list ',errors)
+--- 154,160 ----
+    ;; To define error handlers, use declare-error and define-condition.
+    (declare (type stringable name)
+  	   (type list events errors))
+!   (let ((name-symbol (kintern name)) ;; Intern name in the keyword package
+  	(event-list (mapcar #'canonicalize-event-name events)))
+      `(eval-when (compile load eval)
+         (setq *extensions* (cons (list ',name-symbol ',event-list ',errors)
+***************
+*** 165,171 ****
+    ;; Returns the event name keyword given an event name stringable
+    (declare (type stringable event))
+    (declare-values event-key)
+!   (intern (symbol-name event) 'keyword))
+  ) ;; end eval-when
+  
+  (eval-when (compile eval load)
+--- 165,171 ----
+    ;; Returns the event name keyword given an event name stringable
+    (declare (type stringable event))
+    (declare-values event-key)
+!   (kintern event))
+  ) ;; end eval-when
+  
+  (eval-when (compile eval load)
+***************
+*** 232,244 ****
+    (declare (type display display)
+  	   (type stringable name))
+    (declare-values card8)
+!   (let ((name-symbol (intern (string name) 'keyword))) ;; Intern name in the keyword package
+      `(or (second (assoc ',name-symbol (display-extension-alist ,display)))
+  	 (x-error 'absent-extension :name ',name-symbol :display ,display))))
+  
+  (defun initialize-extensions (display)
+    ;; Initialize extensions for DISPLAY
+!   (let ((event-extensions (make-array 16 :element-type 'card8))
+  	(extension-alist nil))
+      (declare (type vector event-extensions)
+  	     (type list extension-alist))
+--- 232,244 ----
+    (declare (type display display)
+  	   (type stringable name))
+    (declare-values card8)
+!   (let ((name-symbol (kintern name))) ;; Intern name in the keyword package
+      `(or (second (assoc ',name-symbol (display-extension-alist ,display)))
+  	 (x-error 'absent-extension :name ',name-symbol :display ,display))))
+  
+  (defun initialize-extensions (display)
+    ;; Initialize extensions for DISPLAY
+!   (let ((event-extensions (make-array 16 :element-type 'card8 :initial-element 0))
+  	(extension-alist nil))
+      (declare (type vector event-extensions)
+  	     (type list extension-alist))
+***************
+*** 259,265 ****
+  				  *first-extension-event-code*)))
+  		(declare (type card8 max-event))
+  		(when (>= max-event (length event-extensions))
+! 		  (let ((new-extensions (make-array (+ max-event 16) :element-type 'card8)))
+  		    (declare (type vector new-extensions))
+  		    (replace new-extensions event-extensions)
+  		    (setq event-extensions new-extensions))))
+--- 259,266 ----
+  				  *first-extension-event-code*)))
+  		(declare (type card8 max-event))
+  		(when (>= max-event (length event-extensions))
+! 		  (let ((new-extensions (make-array (+ max-event 16) :element-type 'card8
+! 						    :initial-element 0)))
+  		    (declare (type vector new-extensions))
+  		    (replace new-extensions event-extensions)
+  		    (setq event-extensions new-extensions))))
+***************
+*** 620,626 ****
+  		     #'(lambda (type index item args)
+  			 (flet ((event-get (type index item args)
+  					   (unless (member type '(pad8 pad16))
+! 					     `(,(intern (string item) 'keyword)
+  					       (,(getify type) ,index ,@args)))))
+  			   (if (atom item)
+  			       (event-get type index item args)
+--- 621,627 ----
+  		     #'(lambda (type index item args)
+  			 (flet ((event-get (type index item args)
+  					   (unless (member type '(pad8 pad16))
+! 					     `(,(kintern item)
+  					       (,(getify type) ,index ,@args)))))
+  			   (if (atom item)
+  			       (event-get type index item args)
+***************
+*** 635,642 ****
+  			       (progn
+  				 (push item keywords)
+  				 `((,(putify type) ,index ,item ,@args)))
+! 			     (let ((names (mapcar #'(lambda (name)
+! 						      (intern (symbol-name name) 'keyword))
+  						  item)))
+  			       (setq keywords (append item keywords))
+  			       `((,(putify type) ,index
+--- 636,642 ----
+  			       (progn
+  				 (push item keywords)
+  				 `((,(putify type) ,index ,item ,@args)))
+! 			     (let ((names (mapcar #'(lambda (name) (kintern name))
+  						  item)))
+  			       (setq keywords (append item keywords))
+  			       `((,(putify type) ,index
+***************
+*** 1148,1154 ****
+    ;; Execute BODY with the variables in VALUE-LIST bound to components of the
+    ;; EVENT-KEYS events.
+    (unless (consp event-keys) (setq event-keys (list event-keys)))
+!   (flet ((var-key (var) (intern (symbol-name (if (consp var) (first var) var)) 'keyword))
+  	 (var-symbol (var) (if (consp var) (second var) var)))
+      ;; VARS is an alist of:
+      ;;  (component-key ((event-key event-key ...) . extraction-code)
+--- 1148,1154 ----
+    ;; Execute BODY with the variables in VALUE-LIST bound to components of the
+    ;; EVENT-KEYS events.
+    (unless (consp event-keys) (setq event-keys (list event-keys)))
+!   (flet ((var-key (var) (kintern (if (consp var) (first var) var)))
+  	 (var-symbol (var) (if (consp var) (second var) var)))
+      ;; VARS is an alist of:
+      ;;  (component-key ((event-key event-key ...) . extraction-code)
+
+
+*** /tmp/,RCSt1a07190	Sat Aug 13 11:55:12 1988
+--- lib/CLX/manager.l	Sat Aug 13 11:52:56 1988
+***************
+*** 218,224 ****
+  	  (hints (make-wm-hints)))
+        (declare (type card32 flags)
+  	       (type wm-hints hints))
+!       (SETF (wm-hints-flags hints) flags)
+        (compiler-let ((*buffer* 'display))
+  	(when (logbitp input-hint flags)
+  	  (setf (wm-hints-input hints) (decode-type (member :off :on) (aref vector 1))))
+--- 218,224 ----
+  	  (hints (make-wm-hints)))
+        (declare (type card32 flags)
+  	       (type wm-hints hints))
+!       (setf (wm-hints-flags hints) flags)
+        (compiler-let ((*buffer* 'display))
+  	(when (logbitp input-hint flags)
+  	  (setf (wm-hints-input hints) (decode-type (member :off :on) (aref vector 1))))
+***************
+*** 235,241 ****
+  		(wm-hints-icon-y hints) (aref vector 6)))
+  	(when (logbitp icon-mask-hint flags)
+  	  (setf (wm-hints-icon-mask hints) (decode-type pixmap (aref vector 7))))
+! 	(when (logbitp window-group-hint flags)
+  	  (setf (wm-hints-window-group hints) (aref vector 8)))
+  	hints))))
+  
+--- 235,241 ----
+  		(wm-hints-icon-y hints) (aref vector 6)))
+  	(when (logbitp icon-mask-hint flags)
+  	  (setf (wm-hints-icon-mask hints) (decode-type pixmap (aref vector 7))))
+! 	(when (and (logbitp window-group-hint flags) (> (length vector) 7))
+  	  (setf (wm-hints-window-group hints) (aref vector 8)))
+  	hints))))
+  
+***************
+*** 602,608 ****
+  		  :start start :end end :transform transform)))
+  
+  ;; Implement the following:
+! ;; (DEFSETF cut-buffer (display buffer &key (type :string) (FORMAT 8)
+  ;;			        (transform #'char->card8) (start 0) end) (data)
+  ;; In order to avoid having to pass positional parameters to set-cut-buffer,
+  ;; We've got to do the following.  WHAT A PAIN...
+--- 602,608 ----
+  		  :start start :end end :transform transform)))
+  
+  ;; Implement the following:
+! ;; (defsetf cut-buffer (display &key (buffer 0) (type :string) (format 8)
+  ;;			        (transform #'char->card8) (start 0) end) (data)
+  ;; In order to avoid having to pass positional parameters to set-cut-buffer,
+  ;; We've got to do the following.  WHAT A PAIN...
+
+
+*** /tmp/,RCSt1a07220	Sat Aug 13 11:56:23 1988
+--- lib/CLX/requests.l	Sat Aug 13 11:54:04 1988
+***************
+*** 313,319 ****
+  	    (string string))
+  	  (with-buffer-reply (display 12 :sizes 32)
+  	    (setq id (resource-id-get 8)))
+! 	  (let ((keyword (if (keywordp name) name (intern string 'keyword))))
+  	    (setf (atom-id keyword display) id)
+  	    (save-id display id keyword)))
+  	(display-invoke-after-function display)
+--- 313,319 ----
+  	    (string string))
+  	  (with-buffer-reply (display 12 :sizes 32)
+  	    (setq id (resource-id-get 8)))
+! 	  (let ((keyword (if (keywordp name) name (kintern string))))
+  	    (setf (atom-id keyword display) id)
+  	    (save-id display id keyword)))
+  	(display-invoke-after-function display)
+***************
+*** 336,342 ****
+  	  (with-buffer-reply (display 12 :sizes 32)
+  	    (setq id (or-get 8 null resource-id)))
+  	  (when id 
+! 	    (let ((keyword (if (keywordp name) name (intern string 'keyword))))
+  	      (setf (atom-id keyword display) id)
+  	      (save-id display id keyword))))
+  	(display-invoke-after-function display)
+--- 336,342 ----
+  	  (with-buffer-reply (display 12 :sizes 32)
+  	    (setq id (or-get 8 null resource-id)))
+  	  (when id 
+! 	    (let ((keyword (if (keywordp name) name (kintern string))))
+  	      (setf (atom-id keyword display) id)
+  	      (save-id display id keyword))))
+  	(display-invoke-after-function display)
+***************
+*** 361,367 ****
+  	(card29 atom-id))
+        (with-buffer-reply (display nil :sizes (16))
+  	(setq keyword (string-get (card16-get 8))))
+!       (setq keyword (intern keyword 'keyword))
+        (setf (atom-id keyword display) atom-id))
+      (display-invoke-after-function display)
+      keyword))
+--- 361,367 ----
+  	(card29 atom-id))
+        (with-buffer-reply (display nil :sizes (16))
+  	(setq keyword (string-get (card16-get 8))))
+!       (setq keyword (kintern keyword))
+        (setf (atom-id keyword display) atom-id))
+      (display-invoke-after-function display)
+      keyword))
+
+
+*** /tmp/,RCSt1a07234	Sat Aug 13 11:56:58 1988
+--- lib/CLX/resource.l	Sat Aug 13 11:55:00 1988
+***************
+*** 133,140 ****
+    ;; Ensure STRINGABLE is a keyword.
+    (declare (type stringable stringable))
+    (if (symbolp stringable)
+!       (intern (symbol-name stringable) '#,(find-package 'keyword))
+!     (intern (string-upcase (the string stringable)) '#,(find-package 'keyword))))
+  
+  ;; This is in the inner-loop of the resource search.
+  ;; Try to be as fast as possible.
+--- 133,140 ----
+    ;; Ensure STRINGABLE is a keyword.
+    (declare (type stringable stringable))
+    (if (symbolp stringable)
+!       (kintern stringable)
+!     (kintern (string-upcase (the string stringable)))))
+  
+  ;; This is in the inner-loop of the resource search.
+  ;; Try to be as fast as possible.
+
+
+*** /tmp/,RCSt1a07346	Sat Aug 13 12:21:36 1988
+--- lib/CLX/socket.c	Sat Aug 13 12:16:19 1988
+***************
+*** 1,22 ****
+  /*
+   * THIS IS AN OS DEPENDENT FILE! It should work on 4.2BSD derived
+   * systems.  VMS and System V should plan to have their own version.
+   *
+!  * This code was cribbed from X11 beta connection code in XLIB.
+   * Compile using   
+!  *                    % cc -c socket.c
+   */
+  
+  #include <stdio.h>
+! #include <sys/types.h>
+  #include <errno.h>
+  #include <netinet/in.h>
+  #include <sys/ioctl.h>
+  #include <netdb.h> 
+- #include <fcntl.h>
+  #include <sys/socket.h>
+! #include <strings.h>
+  
+  void bcopy();
+  
+  /* 
+--- 1,31 ----
++ /* Copyright    Massachusetts Institute of Technology    1988	*/
+  /*
+   * THIS IS AN OS DEPENDENT FILE! It should work on 4.2BSD derived
+   * systems.  VMS and System V should plan to have their own version.
+   *
+!  * This code was cribbed from lib/X/XConnDis.c.
+   * Compile using   
+!  *                    % cc -c socket.c -DUNIXCONN
+   */
+  
+  #include <stdio.h>
+! #include <X11/Xos.h>
+! #include <X11/Xproto.h>
+  #include <errno.h>
+  #include <netinet/in.h>
+  #include <sys/ioctl.h>
+  #include <netdb.h> 
+  #include <sys/socket.h>
+! #ifndef hpux
+! #include <netinet/tcp.h>
+! #endif
+  
++ #ifdef UNIXCONN
++ #include <sys/un.h>
++ #ifndef X_UNIX_PATH
++ #define X_UNIX_PATH "/tmp/.X11-unix/X"
++ #endif /* X_UNIX_PATH */
++ #endif /* UNIXCONN */
+  void bcopy();
+  
+  /* 
+***************
+*** 32,41 ****
+--- 41,69 ----
+    struct sockaddr *addr;		/* address to connect to */
+    struct hostent *host_ptr;
+    int addrlen;			/* length of address */
++ #ifdef UNIXCONN
++   struct sockaddr_un unaddr;	/* UNIX socket address. */
++ #endif
+    extern char *getenv();
+    extern struct hostent *gethostbyname();
+    int fd;				/* Network socket */
+    {
++ #ifdef UNIXCONN
++     if ((host[0] == '\0') || 
++ 	(strcmp("unix", host) == 0)) {
++ 	/* Connect locally using Unix domain. */
++ 	unaddr.sun_family = AF_UNIX;
++ 	(void) strcpy(unaddr.sun_path, X_UNIX_PATH);
++ 	sprintf(&unaddr.sun_path[strlen(unaddr.sun_path)], "%d", display);
++ 	addr = (struct sockaddr *) &unaddr;
++ 	addrlen = strlen(unaddr.sun_path) + 2;
++ 	/*
++ 	 * Open the network connection.
++ 	 */
++ 	if ((fd = socket((int) addr->sa_family, SOCK_STREAM, 0)) < 0)
++ 	    return(-1);	    /* errno set by system call. */
++     } else
++ #endif
+      {
+        /* Get the statistics on the specified host. */
+        if ((inaddr.sin_addr.s_addr = inet_addr(host)) == -1) 
+***************
+*** 65,71 ****
+  	}
+        addr = (struct sockaddr *) &inaddr;
+        addrlen = sizeof (struct sockaddr_in);
+!       inaddr.sin_port = display;
+        inaddr.sin_port = htons(inaddr.sin_port);
+        /*
+         * Open the network connection.
+--- 93,99 ----
+  	}
+        addr = (struct sockaddr *) &inaddr;
+        addrlen = sizeof (struct sockaddr_in);
+!       inaddr.sin_port = display + X_TCP_PORT;
+        inaddr.sin_port = htons(inaddr.sin_port);
+        /*
+         * Open the network connection.
+***************
+*** 75,81 ****
+        /* make sure to turn off TCP coalescence */
+  #ifdef TCP_NODELAY
+        {
+! 	int mi;
+  	setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &mi, sizeof (int));
+        }
+  #endif
+--- 103,109 ----
+        /* make sure to turn off TCP coalescence */
+  #ifdef TCP_NODELAY
+        {
+! 	int mi = 1;
+  	setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &mi, sizeof (int));
+        }
+  #endif
+

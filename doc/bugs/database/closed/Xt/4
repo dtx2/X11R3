@@ -1,0 +1,81 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:davidsc@shark.gwd.tek.com
+Received: by expo.lcs.mit.edu; Wed, 27 Apr 88 12:38:58 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Wed 27 Apr 88 12:27:15-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id av05762; 26 Apr 88 16:36 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id cb01449; 26 Apr 88 16:20 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA16844; Tue, 26 Apr 88 12:34:14 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA24115; Tue, 26 Apr 88 12:34:23 PDT
+From: David Schiferl <davidsc@shark.gwd.tek.com>
+Message-Id: <8804261934.AA24115@shark.GWD.TEK.COM>
+Date: Tue, 26 Apr 88 12:34:21 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com, bobmi@hp-pcd.uucp
+Fcc: bugsub_mit
+Subject: X11 R2 bug report: incorrect use of XtRealloc()
+
+### bug number:   427
+### area:         Xt
+### severity:     high
+### comments:     
+
+
+David Schiferl
+M.S. 61-277
+Tektronix, Inc.
+P.O. Box 1000
+Wilsonville, OR
+	 97070-1000
+
+(503) 685-2482
+davidsc@shark.tek.com
+...tektronix!shark!davidsc
+
+--------------------
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	all
+
+CLIENT OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+SYNOPSIS:
+	XtRealloc() has an incorrect second parameter.
+
+DESCRIPTION:
+	Area: Xt
+	Files: lib/Xt/Resources.c
+
+	In function XrmGetResources(), XtRealloc()'s second parameter should
+	be the total number of bytes requested.  It currently is the number
+	of hash table entries requested.
+
+REPEAT-BY:
+	Read the code.
+
+FIX:
+	
+*** 265,271
+  	    searchList = NULL;
+  	    do {
+  		searchList = (XrmHashTable*)
+! 		    XtRealloc(searchList, (searchListSize *= 2));
+  		status = XrmQGetSearchList(XtDefaultDB, names, classes,
+  					   searchList, searchListSize);
+  	    } while (!status);
+
+--- 265,271 -----
+  	    searchList = NULL;
+  	    do {
+  		searchList = (XrmHashTable*)
+! 		    XtRealloc(searchList, sizeof(XrmHashTable) * (searchListSize *= 2));
+  		status = XrmQGetSearchList(XtDefaultDB, names, classes,
+  					   searchList, searchListSize);
+  	    } while (!status);
+

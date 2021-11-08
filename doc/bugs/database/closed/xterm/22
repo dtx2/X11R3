@@ -1,0 +1,26 @@
+Return-Path: swick@athena.mit.edu
+Received: by expo.lcs.mit.edu; Fri, 20 May 88 11:17:42 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23009; Fri, 20 May 88 10:16:36 EST
+Received: by LYRE.MIT.EDU (5.45/4.7) id AA07658; Fri, 20 May 88 11:16:12 EDT
+Message-Id: <8805201516.AA07658@LYRE.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm cursor color wrong when not focus
+Date: Fri, 20 May 88 11:16:09 EDT
+From: Ralph R. Swick <swick@athena.mit.edu>
+
+### bug number:   525
+### area:         xterm
+### severity:     very low
+### comments:     
+
+
+Date: Fri, 20 May 88 09:18:30 EDT
+From: John T Kohl <jtkohl@ATHENA.MIT.EDU>
+Subject: X11R2 xterm color bug
+
+In the X11R2 xterm, the color of the cursor changes to the text color if
+the focus is lost, i.e. the outline is drawn in the text color, even if
+it is different from the cursor color.
+
+John
+

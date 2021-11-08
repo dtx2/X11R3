@@ -1,0 +1,1749 @@
+./X11/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  Atoms.h has been removed; applications should be using StringDefs.h.
+     o  the header for Xmu.h is now included.
+     o  the headers for the List and Box widgets are now included.
+     o  Xmd.h has numerous new defines to make writing protocol structures
+	portable across non-32bit architectures.
+     o  JUSkeysym.h added; keysyms being proposed by Japan Users Society
+     o  Xproto.h reworked to avoid depending on sizeof()
+     o  the header file Misc.h has been renamed to XawMisc.h
+
+===========================================================
+./lib/oldX/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  XDraw byte-order dependency fixed.
+     o  XDraw trying to be smart about vertices with VertexDontDraw flag set
+	ended up do something that was unnecessary and wrong.
+
+
+===========================================================
+./lib/Xaw/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o	the Athena widgets now use the R3 Intrinsics.
+     o	many resources that the documentation said were ints are
+	really Dimensions and/or Positions.  See Xt/CHANGES for
+	the impact of this.
+     o	some resources that were formerly ints are now Dimensions.
+	The documentation and header files should now match reality.
+     o	the header file Misc.h has been renamed to XawMisc.h.
+     o	Label and Command have two additional resources; XtNresize
+	to disable resize requests in SetValues and XtNbitmap
+	to display a pixmap in place of the text.
+     o	Label and Command now support XtQueryGeometry.
+     o	Label, Command, and other subclasses of Simple will now display
+	their insensitive border in the foreground color rather than
+	always using white.
+     o	Box now returns a correct preferred geometry when first realized.
+     o	Form and Viewport now respect any initial non-zero width or
+	height specified for them when they are created.
+     o	Form now registers StringToWidget and StringToEdgeType conversion
+	procedures so that layouts can be specified externally in
+	a resource file.
+     o	Form supports the new XtCWQueryOnly flag in geometry requests
+     o	Scrollbar does color and reverse video properly.  SetValues on
+	an unrealized Scrollbar now works better.
+     o	Scroll has a new callback, XtNjumpProc, which is called under
+	the same conditions as XtNthumbProc but the call_data argument
+	is a float* to allow portable applications to be written.
+     o	AsciiSink (used by AsciiDisk and AsciiString) has been
+	fixed to not do a bad left-bearing computation and to get
+	the correct foreground.
+     o	Text, AsciiString, and AsciiDisk now get the correct background
+	resource.
+     o	Several key bindings in Text that were broken now work.
+     o	Several scrolling and positioning bugs in Text were fixed.
+     o	Text should now do wordWrap correctly.
+     o	Selection support has been added to Text.  Minimal support is
+	provided for all sources/sinks but sources can provide additional
+	support through new methods in the TextSource structure.  Any
+	private text sources and sinks will have to be updated to
+	initialize these new methods (NULL is fine).
+     o	Text*.h files have been re-organized to make public declarations
+	public, sink/source declarations semi-public and everything else
+	private (to subclasses).  New header TextSrcP.h contains
+	declarations needed by sources and sinks without exposing the
+	entire internals of TextP.h.
+     o	Clock now handles exposures without causing its interval timer to
+	close to zero.
+     o	Load now uses resource XtNhighlight to specify the label and scale
+	color.  It also updates more intelligently and scales correctly.
+     o	Extra spaces in Text have been removed to make it work on compilers
+	with small internal table space.
+     o	Grip has a cursor resource and determines its color from the
+	XtNforeground resource rather than XtNbackground.
+     o	the Mailbox widget has a new resource to specify a shell
+	command to be executed to check for new mail.  It also now
+	uses the translation manager and no longer compresses its
+	interval timer to zero on exposures or button presses.
+     o	Mailbox has two new resources: XtNvolume and XtNonceOnly to
+	provide better noise control.
+     o	XtNforceBars in Viewport no longer dumps core.
+     o	VPaned no longer assumes all it's children are
+	mapped_when_managed.  It no longer grabs the mouse when
+	resizing a pane.  It handles resize requests from children better.
+     o	a new routine, XtSimpleStippledPixmap, has been added.
+	(documentation not yet written).
+     o	a new widget, List, has been added.
+     o	Lots of resource and memory leaks due to missing Destroy methods
+	have been repaired.
+     o	New files Template.h, TemplateP.h and Template.c (all installed
+	in INCDIR) have been added to simplify new widget construction.
+     o	A VendorShell has been added to Xaw to register StringToPixmap
+	conversion for icon pixmaps.
+
+===========================================================
+./lib/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  a new miscellaneous utilities library, libXmu.a and associated header 
+	file Xmu.h have been added; its interfaces are not part of the Xlib
+	standard.
+
+===========================================================
+./lib/Xt/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o	the Intrinsics have been adopted by the Consortium as part
+	of the X Standard.
+     o	many bugs fixed, including the ability to create more than
+	896 widgets, to destroy the last widget in an application,
+	to call XtDestroyWidget from within a destroy_callback, to
+	call XtNextEvent recursively from input or timer callbacks, and
+	to call XtOverrideTranslations or XtAugmentTranslations after
+	the target widget has been realized.
+     o	A new build-time option for machine architectures that support
+	non-aligned references to ints and longs has been added and the
+	default changed to avoid problems on architectures that don't.
+     o	the build-time option to allow '=' as an abbreviation for
+	'-geometry' is no longer supported.
+     o	An additional source for application resource specifications
+	has been added; see XAPPLRESDIR under XtDisplayInitialize.
+     o	XtGetValues now works correctly on most machine architectures.
+	Applications that relied on the broken behaviour will have to
+	be fixed.  In particular, only the number of bytes specified
+	by the resource size will be copied; not an entire (long) word.
+     o	the definitions of the types Dimension and Position have
+	changed.  Correct code will not be affected by this, but code
+	that assumed that Dimensions and Positions were ints may
+	break.  In particular, all cases where pointers to such fields
+	are used will need to be checked.  In the standard interfaces,
+	the only such places are calls to XtMakeResizeRequest and
+	XtGetValues.  Widgets that pass pointers in callbacks or other
+	public interfaces will also need to be checked.  This change
+	plus the preceeding bugfix require all application calls to
+	XtGetValues to be checked for correctness, especially those
+	that refer to XtNx, XtNy, XtNwidth, XtNheight and
+	XtNborderWidth.
+     o	XtGetValues and XtSetValues on callback lists now work consistently
+	with the public callback list structures.
+     o	XtSetKeyboardFocus should work correctly.
+     o	the link Atoms.h has been removed; use StringDefs.h.
+     o	support for Selections has been added.  See section 11.5 of
+	the Intrinsics documentation.
+     o	new syntax in translation tables allows resource
+	specifications to provide translations that are merged with
+	the default widget translations, rather than completely
+	replacing them.
+     o	the translation table syntax has been extended to completely
+	support keysym names as modifier and detail fields.  Better
+	support for indicating upper/lower case sensitivity in
+	translations has been added, plus hooks for providing
+	non-standard case converters and non-standard keycode to
+	keysym converters.
+     o	Application Contexts have been added to several interfaces
+	to allow for re-entrant libraries.  The old interfaces remain
+	supported for compatibility (see Appendix C of the Intrinsics
+	documentation) and will use a global default context.
+     o	multiple Display connections are now supported.  Displays
+	opened with XOpenDisplay can also be registered with the
+	toolkit.
+     o	a new routine, XtReleaseGC, must be used in place of
+	XtDestroyGC if the application is using XtGetGC on multiple
+	displays.
+     o	XtInitialize has been split up into four separate routines;
+	XtToolkitInitialize, XtCreateApplicationContext, XtOpenDisplay
+	and XtAppCreateShell.  XtInitialize remains supported as a
+	convenience routine for simple applications.
+     o	additional standard command line options have been defined;
+	'-selectionTimeout' and '+synchronous'.
+     o	the resource database created by the Intrinsics can now be
+	accessed directly, using Xrm routines, if desired.
+     o	a per-user application class defaults file has been added,
+	which will be loaded into the resource database immediately
+	after the system-wide application class defaults and before
+	the user preference resources.
+     o	widget sub-classes can now provide default values for
+	superclass resources that override the superclass's default
+	before the superclass initialize procedure is called.
+     o	resource lists can now specify as default values the Black and
+	White pixels and the default font assigned by the server.
+	ReverseVideo is implemented only for these two pixels.  See
+	XtDefaultForeground, XtDefaultBackground and XtDefaultFont.
+     o	support for computing default values for resources at run-time
+	has been added.  See XtRCallProc.
+     o	additional error and warning message interfaces have been
+	defined that allow customization of error messages and provide
+	for textual substitution in the message.  All internal error
+	messages generated by the Intrinsics use these new interfaces.
+     o	a routine to determine if X input, alternate input, or timer
+	input is available without actually processing any has been
+	added.  See XtAppPending.
+     o	XtDispatchEvent now returns a Boolean indicating whether or
+	not a widget was found to which to dispatch the event.
+     o	a function to return the full event mask for a widget has been
+	added.  See XtBuildEventMask.
+     o	limited support for background processing has been added.
+	See XtAddWorkProc.
+     o	support for accelerators has been added to the translation
+	manager.  Accelerators are event bindings that trigger actions
+	in a widget other than the one in which the event(s) occurred.
+     o	resource hierarchies are no longer qualified by an additional
+	name and class to the left of the ApplicationShellWidget name
+	and class.  See the documentation for suggestions on ways
+	to build common or independent resource hierarchies within
+	a single application.  This may have compatibility implications
+	for existing resource files that contain full resource names,
+	and for applications that used XtCreateApplicationShell.
+     o	colormap and depth fields have been added to Core so that
+	widgets can specify values different from their parent's.
+     o	CoreClass has two new fields; a display_accelerator method
+	for the new accelerators capability and a field to allow
+	future additions to CoreClass without requiring a re-compile
+	of all widgets.  Widget class initializers should be
+	updated to initialize these to XtInheritDisplayAccelerator
+	and NULL, respectively.  Old widgets will continue to work 
+	without updating.
+     o	the interface to the accept_focus procedure now has a time
+	parameter and a new interface to it, XtCallAcceptFocus, has
+	been added.  The accept_focus procedure must now return a
+	Boolean to indicate whether or not the widget actually wanted
+	the focus.  Widgets implementing an accept_focus procedure
+	will have to be updated.
+     o	CompositeClass dropped the move_focus_to_next and
+	move_focus_to_prev fields.  CompositeClass also added the
+	field to allow for future expansion.  Widget class
+	initializers for all composite widgets must be modified to
+	remove the initializers for the first two and initialize the
+	last to NULL.
+     o	the num_mapped_children field has been dropped from
+	CompositePart.  Most widgets that used this field were
+	probably buggy.
+     o	a new flag, CWQueryOnly, has been added to geometry requests.
+	A geometry manager is expected to return the same information
+	whether or not this flag is set, but to not actually make any
+	geometry changes if CWQueryOnly is set.  Geometry managers
+	will have to be updated.
+     o	Any widget may be specified as the parent in XtCreateWidget.
+	Children of non-composite widgets may not be managed (via
+	XtManageChild), nor may they make geometry requests.
+     o	the inquiry function XtIsManaged has been added.
+     o	a new routine, XtGetResourceList has been added to return
+	the complete resource list for a widget class.
+     o	the builtin MenuPopdown action procedure now accepts
+	an optional (shell) widget name.
+     o	XtRealizeWidget now respects the map_when_managed attribute
+	for all widgets, including Shells.
+     o	XtCreateWindow and ShellRealize will now report more helpful
+	error messages when a widget is to be realized with a width
+	or height of 0.
+     o	Shell will now allow geometry changes via XtSetValues when
+	the XtNallowShellResize resource is False.
+     o	the "new" argument to set_values routines now contains the
+	real widget (was formerly the "current" argument).  This will
+	affect widgets that make explicit geometry requests within
+	their set_values routine.  Widgets should never assume the
+	geometry in "new" is what they will actually get; instead,
+	they should rely on a call to their Resize procedure to inform
+	them of changes.
+     o	XtDestroyWidget will now automatically call XtRemoveAllCallbacks
+	on every callback list for each destroyed widget; widget
+	destroy procedures are no longer required to do so.
+
+===========================================================
+./lib/CLX/CHANGES
+
+The following changes have been made to this directory since R2:
+
+    o  Numerous (re)declarations to keep non-lispms happy
+    o  Various portability problems fixed
+    o  Support Unix domain connections for Franz and Lucid
+    o  Support for Allegro CL 3.0
+    o  A few performance tweaks
+    o  Provide sequence numbers in events
+    o  New event-cond macro defined
+    o  discard-current-event function defined
+    o  keysym->keycodes function defined
+    o  force write-through cache for pixmaps in gcontexts
+    o  handle NILs in with-gcontext correctly
+    o  correct consecutive draw-line's to not join
+    o  write-bitmap-file obeys :width and :height
+    o  correct various byte/bit problems with image functions
+    o  correct some macro-expansions problems with event-case
+    o  other random bugs
+
+===========================================================
+./lib/X/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  XMisc.c has been added; it contains several routines for accessing
+	opaque information and was adopted in June.
+     o  Xlib now runs on the Cray and should be much easier to port to 
+       	non-32bit architectures.  As a result, several new mechanisms 
+	have been added:
+	     -  new ifdef MUSTCOPY for machines that need to copy data in and
+		out of network buffers instead of referencing. 
+	     -  new SIZEOF macro and lots of sizeof_ symbolic constants for 
+		computing size of protocol structures.
+	     -  new NEXTPTR macro for finding address of data following a
+		typed pointer; returns a (char *) on MUSTCOPY machines and
+		(type *) on direct dereference machines.
+	     -  new Data16, _XRead16, _XRead16Pad, Data32, and _XRead32
+		for converting arrays of shorts and longs to and from
+		INT16 and INT32.
+	     -  new macro OneDataCard32 for inserting a single data word.
+	     -  new STARTITERATE and ENDITERATE for walking network buffer.
+     o  The routines XChangeProperty and XGetWindowProperty now take care of
+	converting arrays of chars, shorts, and longs to and from INT8, 
+	INT16, and INT32.
+     o  The XCheck*Event routines and _XReadEvents have been changed to only
+	flush if they are about to block.
+     o  An experimental implementation of the ICCCM pseudoroots has been
+	provided for prototyping rooms or debugging nested window managers.
+	HOWEVER, IT IS NOT PART OF THE XLIB SPECIFICATION AND IS SUBJECT TO 
+	CHANGE OR REMOVAL WITHOUT NOTICE.  See the client "pseudoroot".
+     o  Untested support for Mips computers has been contributed.
+     o  Graphics Contexts cache flushing improved.
+     o  Signed network protocol objects (e.g. INT8, INT16, and INT32 within
+	an xSomething structure) now are extracted using the cvt macros in
+	X11/Xmd.h because bitfields are not guaranteed to honor signs.
+     o  preprocessor lines of the form #endif FOO have been changed to 
+	#endif /* FOO */ according to spec.
+     o  XGetWindowProperties always mallocs space for its return data even if
+	the data has zero elements, to match the Xlib manual.
+     o  XLookupString now has list of key bindings per display, can cope with
+	mod map changes, handles up and down case of all Latin-1, doesn't
+	convert non-Latin-1 keysyms, understand Control 2-8 and /, and use
+	prefered protocol definition for CapsLock.
+     o  fixed memory leaks from not freeing vendor name or event queue list.
+     o  make XPutImage handle nibble shifting.
+     o  better region code, including fix for overflow on complex regions.
+     o  made SendEvent subevent structure be a byte array on MUSTCOPY machines
+	because the protocol request wasn't quadaligned.
+     o  XrmPutfileDatabase will write file with proper special char quoting.
+     o  fixed cursor font caching.
+
+
+===========================================================
+./lib/Xmu/CHANGES
+
+This directory has been added since R2.
+
+===========================================================
+./server/dix/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  fix AllocColorPlanes to allow allocation of all planes at once
+     o  pGC->CopyArea/CopyPlane now return RegionPtr, DIX now calls
+	new pWindow->SendGraphicsExpose with this region to dispatch
+	GrapicsExposure events.
+     o  QueryFont now returns font Ink metrics correctly now.  Ink metrics
+	are an additional element of the DIX font structure which must
+	be set up by the font loader
+     o  Obeys Length restriction for client connections.
+     o  CopyGC now has an error return to indicate whether bits
+	outside the set of valid GC change bits were set -- this
+	now generates a Value error.  Many other specious requests
+	also generate Value errors now.
+     o  CopyPlane checks it's bit-plane argument for legality
+     o  Delayed/Buffered writes for client events implemented,
+	which required minor DIX changes.
+     o  GetImage checks pWindow->viewable
+     o  SelectionClear now sent to selection owner, not window creator
+     o  new utility function in dixutils.c CopyISOLatin1Lowered to
+	convert mixed case Latin1 strings to lower case.  Used by
+	the font routines and by the color-name lookup routines.
+     o  bug with keysym map width fixed
+     o  many bugs with cursor reference counts in grabs fixed
+     o  DIX save under support.  This code supplies save unders to
+	any DDX which advertises backing store but not save unders.
+     o  mixing window gravity and bit gravity fixed.
+     o  a host of minor bugs fixed
+
+===========================================================
+./server/ddx/apollo/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  backing store support using the mi backing store code.
+     o  fix for cursor to include line-width in bounding box
+	computations.
+
+
+===========================================================
+./server/ddx/mi/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  New and improved wide line, wide arc and filled arc code.
+	All but filled arcs should now conform to the protocol.  Mostly now
+        slower.
+     o  New interface to CopyArea/CopyPlane integrated info mibitblt.c,
+	other bugs in CopyArea/CopyPlane fixed.
+     o  Machine independent version of Backing Store implemented.  This
+	also caused some interface changes with DIX, so be cautious.
+     o  miPaintWindow optimized to eliminate GC allocation and reverification.
+	This is still a good candidate for replacement in the device library,
+	as the amount of extra work here is still large in some cases.
+     o  new routine miSendGraphicsExpose which should be placed in
+	pScreen->SendGraphicsExpose.  This conforms to the new
+	CopyArea/CopyPlane interface.
+     o  new file miinitext.c -- InitExtensions now lives in the DDX and
+	this file is used by several devices which don't have special hardware.
+     o  new hook in miValidateTree.  call miClipNotify with a function
+	to be called whenever the clipList for a window changes.  Parallax
+	uses this function to update a mask plane on the screen to select
+	video windows.
+     o  Various bugs in CopyPlane, GetImage, PutImage, and stippling fixed.
+
+===========================================================
+./server/ddx/mfb/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  CopyArea/CopyPlane interface changes done.
+     o  troubles with unsigned short overflow fixed in fillrct.c
+     o  backing store support with mi backing store code.
+     o  some bitblt optimizations
+
+===========================================================
+./server/ddx/ndx/CHANGES
+
+This directory is new for R3.  It is a DDX for a device-less server,
+no input and no tubes.  Has an MFB and a CFB screen.  Useful for testing
+drawing code or other server whacking without using a real display.
+
+===========================================================
+./server/ddx/junk.ibm/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  backing store support
+     o  new bits from IBM.
+
+===========================================================
+./server/ddx/sun/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  better screen saver
+     o  backing store support.  Wraps several screen routines,
+	and made changes to gc stuff as well.
+     o  new CopyArea/CopyPlane interface supported
+     o  turns off non-blocking I/O on exit
+     o  added note about setting SunOS{Major,Minor}Version in
+	util/imake.includes/Sun.macros.
+     o  correct cursor bounding box computations for line-width
+     o  fix input wedge when static buffer fills up
+     o  don't let Zaphod escape a confined window
+
+
+
+===========================================================
+./server/ddx/macII/CHANGES
+
+This directory is new to R3.  It provides a DDX for the mac II running
+A/UX version 1.0 or 1.1.  This is a simple monochrome (MFB) server.
+
+===========================================================
+./server/ddx/hp/hp/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  CopyArea/CopyPlane interface changes
+     o  backing store support using mi backing store.
+     o  other unknown changes from HP
+
+===========================================================
+./server/ddx/hp/mfb/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  CopyArea/CopyPlane interface changes
+     o  backing store support using mi backing store.
+     o  other unknown changes from HP
+
+===========================================================
+./server/ddx/hp/cfb/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  CopyArea/CopyPlane interface changes
+     o  backing store support using mi backing store.
+     o  other unknown changes from HP
+
+===========================================================
+./server/ddx/hp/topcat/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  CopyArea/CopyPlane interface changes.
+     o  backing store support using mi backing store.
+     o  other unknown changes from HP.
+
+===========================================================
+./server/ddx/hp/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  bogus code for non-topcat displays removed.
+
+===========================================================
+./server/ddx/cfb/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  CopyArea/CopyPlane interface changes.
+     o  backing store support using mi backing store.
+     o  some bitblt optimizations.
+     o  handles colormaps a bit better.
+     o  found and fixed some region leaks.
+     o  handles 24 bit pixels.
+     o  tile and stipple bugs fixed.
+
+===========================================================
+./server/ddx/snf/CHANGES
+
+Changes in this directory since R2
+
+     o  Move many routines to DIX where they belong.
+     o  reengineer os interface.
+     o  Font naming scheme isolates font names from file names.  Some
+	support exists here.
+     o  multiple font-file types interface done.
+
+===========================================================
+./server/ddx/dec/lk201/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  Compose Character key now has two keysyms
+	Multi_key and Meta.  This makes the toolkit much
+	happier.
+
+===========================================================
+./server/ddx/dec/qvss/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  support for Ultrix 3.0 sm driver.  One server will run
+	on either a qvss or an sm display without recompilation.
+     o  LockLED troubles fixed.
+     o  support screen blanking.
+
+===========================================================
+./server/ddx/dec/qdss/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  putImage has been mostly rewritten.  It's almost working.
+     o  backing store support using mi.  Currently the SaveAreas function
+	is very slow and needs to be rewritten.
+     o  huge stipple/tile troubles partially fixed.
+     o  support for Ultrix 3.0.  New driver reports 32 bits of time in ms.
+     o  mouse movement compression.  Previous server reported multiple
+	consecutive mouse motion events, now reports only the last.
+	Lacking a motion buffer, this is not a perfect fix.
+     o  planemasks fixed on some operations.
+
+===========================================================
+./server/ddx/dec/CHANGES
+
+This directory hasn't changed since R2.  Sub directories have.
+
+
+	
+
+===========================================================
+./server/ddx/plx/CHANGES
+
+This directory is new to R3.  It provides the DDX for a Parallax
+graphics board.  This server supports backing store and supports
+a new extension - the Parallax Video Extension.  See TOPDIR/extensions
+for other new stuff!
+===========================================================
+./server/ddx/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  support has been added for the Apple Macintosh II in macII.
+     o  support has been added for Parallax Graphics controllers in plx.
+     o  support has been added for a non-device backend for testing the
+	server in ndx.
+
+
+===========================================================
+./server/include/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  Delayed writes for clients - added several os routines
+     o  DIX font structure now has ink metrics
+     o  font nameing stuff impacted some font structures.
+     o  DIX/DDX gc interface changes
+     o  backing store changes in window structures/gc's
+     o  regions 'size' and 'numRects' fields are now longs instead of ints.
+     o  added ifdef for INCLUDE_ALLOCA_H for systems that need it 
+	(e.g. SunOS 4.0).
+
+===========================================================
+./server/os/4.2bsd/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  new OS routine CloseDownWellKnownSockets added.
+     o  new font naming scheme that separates font names from file names.
+     o  support for multiple font formats (SNF, BDF, compressed, etc.)
+     o  hpux and macII support integrated into generic 4.2bsd.
+     o  support for delayed and non-blocking writes added.
+     o  access control now gets restored on server reset.
+     o  DECnet object name changed as per Digital standards.
+     o  bugs in wildcard matching have been fixed.
+     o  huge input buffers are periodically shrunk.
+     o  font names and color names are now case insensative; lowercasing for
+	ISO Latin 1 names is done properly.
+     o  new routines ddxProcessArguments and ddxUseMsg are called to give the
+	individual ddx libraries a chance to parse command line arguments and
+	print usage messages.
+
+===========================================================
+./server/os/bsdemul/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  this directory now uses the same code that Xlib uses.
+
+===========================================================
+./server/os/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  support for hpux and macII has been integrated into the generic
+	4.2bsd library.
+     o  bsd emulation routines (e.g. bcopy, bzero, etc. have been moved into
+	a new bsdemul library).
+     o  the sysV directory has been removed since it really wasn't System 5.
+
+===========================================================
+./server/CHANGES
+
+This directory hasn't changed since R2.  However, all of the subdirectories 
+have.
+
+
+===========================================================
+./doc/Xlib/CHANGES
+
+There has been massive editorial work on the manual.
+
+
+XClientMessageEvent has its "l[5]" components changed from "int" to "long".
+
+XTimeCoord has its "x" and "y" components changed from "unsigned short" to
+"short".
+
+Note that BadValue errors as possible for XUngrabButton, XChangeActiveGrab, and
+XUngrabKey.
+
+XSelectInput has its "mask" argument changed from "unsigned long" to "long".
+
+XCheckWindowEvent has its "mask" argument changed from "int" to "long".
+
+XMaskEvent has its "mask" argument changed from "unsigned long" to "long".
+
+XCheckMaskEvent has its "mask" argument changed from "unsigned long" to "long".
+
+XSendEvent has its "event_mask" argument changed from "unsigned long" to
+"long".
+
+The return type from XAddPixel is deleted.
+
+XAddPixel has its "value" argument changed from "int" to "long".
+
+XErrorEvent has its "error_code", "request_code", and "minor_code" components
+changed from "char" to "unsigned char".
+
+XLookupString (only) converts Latin-1 keysyms to strings (the spec used
+to say just ASCII, the implementation used to return the LSByte of all
+keysyms).
+
+New types:
+
+typedef union { Display *display;
+		GC gc;
+		Visual *visual;
+		Screen *screen;
+		ScreenFormat *pixmap_format;
+		XFontStruct *font } XEDataObject;
+
+New routines:
+
+	XExtData **XEHeadOfExtensionList(object)
+		XEDataObject object;
+
+Provides access to XExtData components, to keep the types opaque.
+
+	XExtCodes *XAddExtension(display)
+		Display *display;
+
+For "local" extensions; allocates the XExtCodes structure, bumps the
+extension number count, and chains the extension onto the extension
+list.
+
+	long XMaxRequestSize(dpy)
+		Display *dpy;
+
+Returns the maximum request size supported by the server, in 4-byte units.
+
+	char *XResourceManagerString(dpy)
+		Display *dpy;
+
+Returns the RESOURCE_MANAGER property obtained during XOpenDisplay.
+
+	unsigned long XDisplayMotionBufferSize(dpy)
+		Display *dpy;
+
+Returns the size of the server's motion-buffer.
+
+	XDisplayKeycodes(dpy, min_keycode, max_keycode)
+		Display *dpy;
+		int *min_keycode_return, *max_keycode_return;
+
+Returns the min-keycode and max-keycode.
+
+	VisualID XVisualIDFromVisual(visual)
+		Visual *visual;
+
+Returns the VisualID of the Visual.
+
+===========================================================
+./doc/Protocol/CHANGES
+
+A general copy-edit of the document has been made.  The changes shown
+below may not reflect the exact wording now in the document.
+
+Semantic changes:
+
+In CreateGC:
+"The cap-style defines how the endpoints of a patch are drawn:
+NotLast	    Equivalent to Butt, except that for a line-width of
+	    zero /- or one -/ the final endpoint is not drawn.
+Butt	    Square at the endpoint (perpendicular to the slope of
+	    the line), with no projection beyond.
+Round	    A circular arc with diameter equal to the line-width,
+	    centered on the endpoint; equivalent to Butt for
+	    line-width zero /- or one -/.
+Projecting  Square at the end, but the path continues beyond the
+	    endpoint for a distance equal to half the line-width;	
+	    equivalent to Butt for line-width zero /- or one -/."
+
+In CreateGC:
+"The join-style defines how corners are drawn for wide lines:
+Miter	The outer edges of the two lines extend to meet at an
+	angle. /+ However, if the angle is less than 11 degrees,
+	then a Bevel join-style is used instead. +/"
+
+In PolyArc, replace the sentence beginning "For a wide line with
+line-width lw, ..." with the following:  "For a wide line with
+line-width lw, the bounding outlines for filling are given by the two
+infinitely thin paths consisting of all points whose perpendicular
+distance from the path of the circle/ellipse is equal to lw/2 (which may
+be a fractional value).  The cap-style is applied the same as for a line
+corresponding to the tangent of the circle/ellipse at the endpoint."
+
+In GrabPointer: "The request fails with status NotViewable if
+grab-window or confine-to window is not viewable /+ , or the confine-to
+window lies completely outside the boundaries of the root window. +/"
+
+In UngrabPointer: "An UngrabPointer request is performed automatically
+if the event window or confine-to window for active pointer grab becomes
+not viewable /+ , or if window reconfiguration causes the confine-to
+window to lie completely outside the boundaries of the root window. +/"
+
+In OpenFont:
+"/+ The interpretation of the characters ``?'' (octal value 77) and
+``*'' (octal value 52) in the pattern is left undefined, and is
+reserved for future definition. +/"
+
+Minor changes:
+
+In the TIMECOORD structure, change
+	x,y: CARD16
+to
+	x,y: INT16
+
+Add Value errors to UngrabButton, ChangeActivePointerGrab, and UngrabKey.
+
+In GetImage: "If the drawable is a window, the window must be /- mapped -/
+/+ viewable +/, and it must be the case that ..."
+
+In CopyPlane:  "The bit-plane must have exactly one bit set /+ and the
+value of bit-plane must be less than 2^N where N is the depth of
+src-drawable +/ (else a Value error)."
+
+In the encoding for CirculateNotify, replace the 4-byte "parent" field
+with a 4-byte "unused" field.
+
+In the encoding section on Connection Setup:  "For TCP connections,
+displays on a given host are numbered starting from 0, and the server
+for display N listens and accepts connections on port 6000+N. /+ For
+DECnet connections, displays on a given host are numbered starting from
+0, and the server for display N listens and accepts connections on the
+object name obtained by concatenating "X$X" with the decimal
+representation for N, e.g., X$X0 and X$X1. +/"
+
+Clarifications:
+
+In the description of Alloc error "Note that /- this -/ /+ the explicit
+listing of Alloc error in requests +/ only covers allocation errors at a
+very coarse level and is not intended to /- (nor can it in practice hope
+to) -/ cover all cases of a server running out of allocation space in
+the middle of service.  The semantics when a server runs out of
+allocation space are left unspecified /+ , but a server may generate an
+Alloc error on any request for this reason, and clients should be
+prepared to receive such errors and handle or discard them +/ ."
+
+In ClearArea:  "If the window has a defined background tile, the
+rectangle is tiled with a plane-mask of all ones and function of Copy /+
+and subwindow-mode of ClipByChildren +/ ."
+
+In CreateGC: "A line-width of zero /- differs -/ /+ may differ +/ from a
+line-width of one in which pixels are drawn."
+
+In CreateGC: "Pixels with centers on a horizontal edge are a special
+case and are part of the line if and only if the interior /+ or the
+boundary +/ is immediately below (y increasing direction) /+ and the
+interior or the boundary is immediately to the right (x increasing
+direction) +/ ."
+
+In GrabButton (at beginning of next-to-last paragraph): "/+ This request
+overrides all previous passive grabs by the same client on the same
+button/key combinations on the same window. +/"
+
+In GrabKey (at beginning of next-to-last paragraph): "/+ This request
+overrides all previous passive grabs by the same client on the same key
+combinations on the same window. +/"
+
+In GetImage (at end of next-to-last paragraph): "/+ The pointer cursor
+image is not included in the contents returned. /+"
+
+In CreateWindow: "If background-pixel is given, it overrides the default
+background-pixmap and any background-pixmap given explicitly, and a
+pixmap of undefined size filled with background-pixel is used for the
+background. /+ Range checking is not performed on the background-pixel
+value, it is simply truncated to the appropriate number of bits. +/"
+
+In CreateWindow: "If border-pixel is given, it overrides the default
+border-pixmap and any border-pixmap given explicitly, and a pixmap of
+undefined size filled with border-pixel is used for the border. /+ Range
+checking is not performed on the border-pixel value, it is simply
+truncated to the appropriate number of bits. +/"
+
+In CreateWindow: "If the background is None, the previous screen
+contents /+ from other windows of the same depth as the window +/ are
+simply left in place if the contents come from /+ the parent of the
+window or +/ an inferior /+ of the parent +/ /- window of the same depth
+-/, and otherwise the initial contents of the exposed regions are
+undefined."
+
+In CopyArea: "If graphics-exposures is True but /- no regions are
+exposed -/ /+ no GraphicsExposure events are generated +/ , then a
+NoExposure event is generated."
+
+In SetDashes: "The initial and alternating elements of dashes are the
+``even'' dashes; the others are the ``odd'' dashes.  /+ Each element
+specifies a dash length in pixels. +/"
+
+In ChangeKeyboardControl (at end of auto-repeat paragraph): "/+ Each key
+has an individual mode of whether or not it should auto-repeat, and a
+default setting for that mode.  In addition, there is a global mode of
+whether auto-repeat should be enabled or not, and a default setting for
+that mode.  When the global mode is On, keys should obey their
+individual auto-repeat modes; when the global mode is Off, no keys
+should auto-repeat.  An auto-repeating key generates alternating
+KeyPress and KeyRelease events.  When a key is used as a modifier, it is
+desirable for the key to not auto-repeat, regardless of the auto-repeat
+setting for the key. +/"
+
+In SetModifierMapping: "A server can impose restrictions on how
+modifiers can be changed (for example, if certain keys do not generate
+up transitions in hardware /+ or if auto-repeat cannot be disabled on
+certain keys +/ or if multiple keys per modifier are not supported)."
+
+In SendEvent: "The event code must be one of the core events or one of
+the events defined by an extension /+ (else a Value error) +/ , so that
+the server can correctly byte swap the contents as necessary."
+
+In Section 11: "... the save-set window is reparented to the closest
+ancestor such that the save-set window is not an inferior of a window
+created by the client. /+ The reparenting leaves unchanged the absolute
+coordinates (with respect to the root window) of the upper left outer
+corner of the save-set window. +/"
+
+In Section 13 (at end):  "/+ For a request from a given client, any
+events destined for that client which are caused by executing the
+request must be sent to the client before any reply or error is sent.
++/"
+
+===========================================================
+./doc/Server/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  CloseDownWellKnownSockets() added
+     o  ddxProcessArgument() and ddxUseMsg() added
+     o  AbortDDX() and ddxGiveUp() added
+     o  FlushAllOutput(), FlushIfCriticalOutputPending(), and
+        SetCriticalOutputPending() added
+     o  ErrorF(), FatalError(), and Error() documented
+     o  pScreen->SendGraphicsExpose() added
+     o  format arg removed from pScreen->CreatePixmap()
+     o  return val added to pBackingStore->RestoreAreas()
+     o  return val added to pGC->CopyArea() and pGC->CopyPlane()
+
+===========================================================
+./doc/bdf/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  sources for the BDF specification now exist
+     o  errors in the font name property have been fixed.
+     o  BDF format is now a Consortium standard for interchange.
+
+
+===========================================================
+./doc/extensions/CHANGES
+
+This directory is new to R3.  It contains documentation on extensions.
+
+
+===========================================================
+./doc/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  a new directory has been added for extensions.
+     o  a new directory has been added for tutorials.
+     o  the BDF specification has been moved to its own directory, bdf.
+     o  Athena Widgets documentation moved to its own directory.
+     o  ICCCM draft removed.
+
+===========================================================
+./doc/tutorials/CHANGES
+
+This directory is new to R3.  It contains tutorials on often asked questions.
+
+
+===========================================================
+./fonts/mkfontdir/CHANGES
+
+This directory is new to R3.  It contains a program for generating the font
+name database that is used by the sample server (font names are no longer
+tied to file names).  Some of the code in this directory is also used by the
+sample server.
+
+
+
+===========================================================
+./fonts/bdftosnf/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  the sample font compiler is now called bdftosnf since other formats
+	will require compilers as well.
+     o  bdftosnf and showsnf now installed as a public utilities.
+     o  terminal emulator fonts now have ink metrics computed.
+     o  numerous bit and byte order problems have been fixed.
+     o  problems with truncation of bits have been fixed.
+     o  padding problems have been fixed.
+     o  additional error checking has been added.
+
+===========================================================
+./fonts/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  the BDF format has been adopted as a non-exclusive, required
+	part of the X standard; server vendors should provide a way of
+	converting BDF files into whatever format their server requires.
+     o  the font compiler and its directory have been renamed bdftosnf since
+	there are other formats that will need compilers.
+     o  a new utility, mkfontdir, has been added for creating the appropriate
+	font name databases for a given directory; some of the routines in
+	this directory are also used in the sample server.
+     o  the separate snf directory has been removed in favor of compiling
+	directly into the bdf directories.
+
+
+
+===========================================================
+./CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  substantially improved the X man page.
+     o  added README file with quick instructions for those in the fast lane.
+     o  added RELEASENOTES file giving overview of what has changed and where
+	to look for more information.
+     o  added STANDARDS file describing what is and is not part of the X
+	Standard.
+     o  removed support for automatically building contrib directory from
+	the Imakefile since it won't work completely on any single platform.
+     o  moved rgb directory here from util.
+     o  added some misc. utility targets to the top-level Makefile.
+
+===========================================================
+./clients/xhost/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  bad cast that caused picky architectures to dump core fixed.
+     o  prints friendlier and more informative messages.
+     o  now takes ConnectionFlags so it will work with DECnet.
+
+===========================================================
+./clients/xterm/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  main.c has been substantially rewritten; it is now much easier to
+	maintain and does the right thing for process groups under both BSD and
+	System V.
+     o  the stuff to save menus was removed because it wasn't being used.
+     o  autorepeat stuff was removed since it is really a global attribute
+	rather than a per-xterm attribute.
+     o  pointerShape resources now work properly.
+     o  reverse video now works properly.
+     o  Tek GIN mode now works more accurately.
+     o  a new resource, titeInhibit, has been added for editting out the ti and
+	te termcap entries.
+     o  two new resources, cutNewLine and cutToBeginningOfLine, now give more
+	control over how triple click line cutting works.
+     o  the translation manager is now used for key events and actions have
+	been added to allow arbitrary rebinding of events in VT100 mode.
+     o  added actions to allow key bindings to be changed dynamically
+	in VT100 mode.
+     o  Selections as well as cut buffers are supported for
+	cut and paste in VT100 mode.
+     o  Atoms.h has been replaced by StringDefs.h.
+     o  a new resource, charClass, has been added to support user-defined
+	character classes for multi-click cutting.
+     o  a new resource, multiClickTime, now controls how quickly the user must
+	press button to have them count as multi-clicks.
+     o  bugs in 132 column mode have been fixed.
+     o  xterm now uses Bcopy for people who want to redefine it to something
+	that is guarranteed to handle overlapping copies.
+     o  text cursor color bugs have been fixed.
+     o  scrollbar color bugs have been fixed.
+     o  scrollbar thumb width problems have been fixed.
+     o  bugs in origin mode resetting have been fixed.
+     o  a new resource, sunFunctionKeys, controls whether or not function
+	keys generate Sun keyboard codes or VT codes.
+     o  =geom is no longer supported.
+     o  problems with -T, -n, and -e have been fixed.
+     o  some bugs in console mode have been fixed.
+     o  utmp overwriting bugs have been fixed.
+     o  overenthusiastic closing of file descriptors has been removed.
+     o  logging now works.
+     o  WINDOWID environment variable is now set properly.
+     o  slave mode terminals now send window id in hex instead of binary.
+     o  stippled text bugs have been fixed.
+     o  menus use now save-unders.
+     o  ascent and descent bugs have been fixed.
+     o  bit gravity is now supported.
+     o  several SIGWINCH problems have been fixed.
+     o  made getty program a compile parameter.
+     o  a new resource, utmpInhibit, now controls whether or not utmp entries
+	are made.
+     o  deeply-nested macros are replaced with checked in definition files and
+	scripts to generate them.
+     o  added termName resource and -tn for setting TERM environment variable.
+     o  added ttyModes resource and -tm for setting initial stty modes.
+     o  encouraged people to use xdm instead of xterm -L.
+     o  elements in menus reordered for convenience.
+     o  use correct font metrics for line height.
+     o  lots of random bugs fixed.
+
+===========================================================
+./clients/bitmap/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  many nits have been fixed.
+     o  ^C or q anywhere in the window is the same as pressing Quit.
+     o  color problems have been fixed.
+     o  the new Xmu miscellaneous utilities library is used to read the 
+	bitmap file.
+
+===========================================================
+./clients/xclock/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  Atoms.h has been replaced by StringDefs.h
+     o  fixed nits in resource names
+     o	several bugs fixed by virtue of fixes to the Clock widget (c.f.)
+
+===========================================================
+./clients/xwd/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  off-screen windows will be clipped to the on-screen portions.
+     o  several memory handling nits have been fixed.
+
+
+===========================================================
+./clients/xpr/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  several compiler nits have been cleaned up.
+     o  better support for LN03+ has been added.
+     o	much improved version of xdpr script from Athena replaces old one
+
+===========================================================
+./clients/xload/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  Atoms.h has been replaced by StringDefs.h.
+     o  added -hl to set highlight color.
+     o	several bugs and other improvements by virtue of fixes
+	to the Load widget (c.f.).
+
+===========================================================
+./clients/xmh/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o	many bugs have been fixed.
+     o	a default initial geometry is now set in app-defaults/Xmh so
+	first-time users are treated a little nicer.
+     o	a new option, ReplyInsertFilter, has been added to allow easy
+	incorporation of the text of the message being replied to.
+     o	the application cursor is now a resource.
+     o	wordWrap mode is now used in all message windows.
+
+===========================================================
+./clients/xlogo/CHANGES
+
+This directory has not changed since R2.
+
+
+===========================================================
+./clients/xrdb/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  spelling mistakes have been corrected.
+     o  new interface to the display resource manager string is now used.
+     o  the bits per rgb bug has been fixed.
+
+
+===========================================================
+./clients/xfd/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  =geom is no longer supported.
+     o  many nits have been cleaned up.
+     o  now encourage use of -fn.
+
+===========================================================
+./clients/xset/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  new options -fp, fp-, +fp, fp+ for editting font path.
+     o  new option fp= path to replace fp path.
+     o  new option fp rehash to cause server to reread font databases.
+
+===========================================================
+./clients/xbiff/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  Atoms.h has been replaced with StringDefs.h
+     o  added a check command
+     o  added volume resource
+     o	several other fixes by virtue of fixes to the Mailbox widget (c.f.)
+
+===========================================================
+./clients/uwm/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  rubberbanding now defines the outer edge of the window, including
+	borders; the sizing box properly lists the inner edge.
+     o  top-level windows have their colormap installed whenever they have
+	the focus.
+     o  a new f.kill function has been added to make nuking windows easier.
+     o  colors and border widths may now be specified for various things.
+     o  relative resizing, ala X10, is now available as an option.
+     o  when pointing to something, the hand2 cursor is used.
+     o  when editting an icon, the arrow cursor is used.
+     o  memory leak of not freeing wmhints fixed.
+     o  problems with multiple menus have been fixed.
+     o  menus no longer warp cursors around rudely.
+     o  deals with resources for all boolean, numeric, and string parameters.
+     o	no longer modifies an application's WM_SIZE_HINTS.
+
+===========================================================
+./clients/xmodmap/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  additional error checking has been added to xmodmap.
+     o  allow NoSymbol and numbers for keysym names.
+     o  provide for changing pointer map.
+     o  xprkbd has been folded into xmodmap -k.
+     o	bugs printing the wrong key mapping for some servers fixed.
+
+===========================================================
+./clients/xedit/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  bad exit status bug fixed.
+     o  nits for picky compilers fixed.
+     o	many bugs fixed by virtue of fixes to the Athena widgets (c.f.).
+
+===========================================================
+./clients/xinit/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  many nits have been cleaned up.
+     o  now supports .xinitrc as default client to run if no client command
+	line arguments are given.
+     o  set the DISPLAY environment variable for the client program.
+     o  prints more informative messages.
+     o  if it can't find the server, it prints a verbose help message
+	describing which servers might be usable on this machine.
+     o  if the user has a .xserverrc, it will be treated as a Bourne shell
+	script to be run as the default server.
+     o  added a sample startx script that has conditionals for the appropriate
+	systems.
+     o  added sample xinitrc, which is NOT installed by default.
+
+===========================================================
+./clients/xwud/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  bit gravity is now used.
+     o  override redirect has been removed
+     o  several memory handling bugs have been removed.
+
+
+===========================================================
+./clients/xsetroot/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  -solid #rgb now accepted.
+     o  various nits have been corrected.
+
+
+===========================================================
+./clients/xlsfonts/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  command line processing has been cleaned up.
+     o  a better help message is now provided.
+     o  various compiler nits have been taken care of.
+     o  add -fn so that people can look at new fonts.
+
+
+===========================================================
+./clients/xwininfo/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  colormap and backing store information is now printed out.
+     o  several memory handling nits have been cleaned up.
+
+
+===========================================================
+./clients/xprop/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  a new option -remove propertyname has been added to help cleaning up.
+
+
+===========================================================
+./clients/xcalc/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  reverse video bugs have been fixed.
+     o  added -fg and -bg.
+     o  unfortunately, hp mode is still very broken.
+
+
+This application should be split into widgets for each of the different 
+styles of calculator.  It is currently almost unmaintainable.
+
+===========================================================
+./clients/xlswins/CHANGES
+
+This utility is new to R3.  It is used to list the window hierarchy.
+
+
+===========================================================
+./clients/xrefresh/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  more booleans are now accepted.
+
+===========================================================
+./clients/xkill/CHANGES
+
+This utility is new to R3.  It is used to remove unwanted windows from the
+screen.
+
+
+===========================================================
+./clients/xmag/CHANGES
+
+This utility is new to R3.  It is used to magnify portions of the screen for
+debugging graphics.
+
+
+===========================================================
+./clients/xclipboard/CHANGES
+
+This directory is new to R3.  It contains the xclipboard client used to
+hold the contents of the CLIP_BOARD selection and the xcutsel client
+used to communicate between applications using only selections and
+applications using only cut buffers.
+
+===========================================================
+./clients/xdpyinfo/CHANGES
+
+This utility is new to R3.  It is used to print out information about the
+display's screens and visuals.
+
+===========================================================
+./clients/xev/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  this application was moved from the examples tree.
+     o  it now selects for all events.
+     o  it has a subwindow for watching crossing and event propagation.
+     o  can optionally turn on backing store and save-unders.
+
+===========================================================
+./clients/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  xdm - the X Display Manager for controlling access and servers.
+     o  xdpyinfo - print information about display, screens, and visuals.
+     o  xev - listens for all events.
+     o  xkill - search out and destroy an unwanted window.
+     o  xlswins - list windows ala xlsfonts.
+     o  xmag - magnify a portion of the screen for debugging graphics.
+     o  xman - a nicer interface for reading manual pages.
+     o  xpseudoroot - prototype of ICCCM pseudoroots; SUBJECT TO CHANGE.
+
+
+===========================================================
+./clients/xman/CHANGES
+
+This directory has been moved from contrib/ in R2.
+
+Here is the list of changes to xman.  Unresolved bug fixes and
+neat features are listed in the TODO file.
+
+------------------------------------------------------------
+Version 3.0 (X11R2 Tape) -> Version 3.0.2
+------------------------------------------------------------
+
+Additional Features:
+
+1) Startup time is now 3 times faster.
+
+2) Manual page searches now SCREAM, speed MUCH improved.
+
+3) -pagesize argument added and documented in manual page.
+
+4) List widget used for directory, may new features of directory
+   a) vertical or horizontal orientation via the "verticalList" resource
+      vertical is now the default.
+      e.g  xman*verticalList:        False
+
+    b) current manual page is highlighted in the directory listing.
+    c) resizing the window now creates more columns in directory 
+       (see bug fix #4).
+    d) Pixmaps no longer created for each directory listing.
+       you people with color workstations should like this one.
+
+5) Xman no longer uses the window widget, and it has been removed from
+   the distribution.  If you want a copy send me e-mail.
+
+Bug Fixes:
+
+1) The height of the directory items was wrong if a different
+   font is used for the directory than for the manual pages.
+
+2) The topBox resource for the initial "Manual Browser" box now 
+   can be specified.  This allows the geometry of this box to be 
+   set with resources.
+
+   e.g xman*topBox.geometry:      =100x100+2+2
+
+3) Xman now handles the case of no help file correctly.
+
+4) Resizing the directory now causes the columns to fill in the new area.
+   This causes more of the directory to be visable in wider windows, and
+   resizing narrower does not lose information.
+
+
+Know bugs yet to be resolved:
+
+1) Resizing the man page causes the directory to grow too big.
+   and the manpage to get real small. (1 pixel).
+	
+------------------------------------------------------------
+Version 3.0.2 -> 3.0.3
+------------------------------------------------------------
+
+Bug Fixes:
+
+1) 	Search Window Improved.
+	a) 	Focus set to text widget if you are any where in window.
+	b) 	prompt changed to:  "Type string to search for"
+	c)      Remove auto popdown feature of this window.
+
+2)      Corrected typo in Xman Options menu: "Open New . . ."
+
+3)      Returned default to horizontal scrolling.
+
+4)      Remember the previous state when going to "Show Both Screens"
+	and return there when show one screen.
+
+5)      Menus changed to Override Redirect due to popular demand, and
+	too many confused window managers.
+
+6)      Help File Proof read.
+
+7)      Descenders no longer get chopped in manual page display.
+
+8) 	Handle out of memory error more gracefully.
+
+9) 	Help File Display Changes.
+	a)	It pops up in a window much more similar to a manual page
+		display.
+	b)      Fix highlighting in manual page, when help file displayed.
+
+10) 	Left over highlight in menu have been fixed.
+
+------------------------------------------------------------
+Version 3.0.3 -> 3.0.4
+------------------------------------------------------------
+
+Bug fixes.
+
+1)  First directory now comes up with all entries when the default
+    size is used.
+
+2)  Command line syntax printed if an argument is not understood.n 
+
+3)  manpage rewritten.
+
+4)  Apropos no longer blows out with very long MANPATH's.
+
+5)  Better handling of mandesc file.
+
+Features:
+
+1) additional command line arguments (see manpage for details):
+   a) -notopbox
+   b) -bothshown
+   c) -helpfile <filename>
+
+------------------------------------------------------------
+Version 3.0.4 -> 3.1 (X11R3)
+------------------------------------------------------------
+
+List widget is part of Xaw and removed from this directory.
+
+
+						Chris D. Peterson     
+						Project Athena     
+						Systems Development
+
+Net:	kit@athena.mit.edu		
+Phone: (617) 253 - 1326			
+USMail: MIT - Room E40-342C		
+	77 Massachusetts Ave.		
+	Cambridge, MA 02139		
+
+
+
+===========================================================
+./clients/xpseudoroot/CHANGES
+
+This is a new utility for R3.  However, it is only a prototype and is subject
+to change without notice.  The ICCCM pseudoroot interfaces that it uses are 
+experimental and no attempt will be made to maintain compatibility should
+changes be required.  This program is provided primarily for people wishing
+to explore how pseudoroots might be used.
+
+===========================================================
+./util/bm-convert/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  the file bm-convert.doc has been renamed README.
+
+
+
+===========================================================
+./util/imake/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  a new make macro BOOTSTRAPCFLAGS has been added to support systems
+	that do not define platform-specific C preprocessor symbols.
+     o  ftruncate on System V bugs have been fixed.
+     o  the correct signal.h is now included.
+     o  fork is now used instead of vfork.
+     o  lines may now contain quoted colons (\:).
+
+
+===========================================================
+./util/imake.includes/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  lint support has been changed so that lint libraries are not installed
+	by default;  people who are interested in creating lint libraries
+	should create and install them once so that non-interface changes
+	do not force regeneration (very slow).
+     o  support for client-only builds has been added.
+     o  support for BOOTSTRAPCFLAGS has been added for systems that do not
+	define platform-specific C preprocessor symbols.
+     o  added endmarkers for makedepend.
+     o  added definitions for new directories and libraries.
+     o  untested support for Mips computers has been contributed.
+     o  hooks for putting in ugly hacks in systems that have broken compilers
+	have reluctantly been added.
+     o  the MakeContributed configuration parameter has been removed from all
+	macros files since the user-contributed section won't completely build
+	on any single platform.
+     o  new flags SystemV, InstallxinitConfig, and InstallxdmConfig.
+     o  Imake.tmpl has been reorganized to be easier to understand.
+     o  support has been added for non-SunOS sun platforms.
+     o  support has been added for building on SunOS 3.2 and SunOS 4.0.
+
+===========================================================
+./util/makedepend/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  support for #eject and #pragma directives has been added.
+     o  endmarkers have been added for fix problems with makedepend
+	misinterpreting compiler switches.
+     o  support for #include SYMBOL has been added.
+     o  the #undef directive has been changed to actually undefine symbols
+     o  a bug in error reporting has been fixed.
+     o  support for the #elif directive has been added 
+
+===========================================================
+./util/checkfn/CHANGES
+
+This directory is new to R3.  It contains a utility for checking filenames
+for portability and is primarily used for building distribution kits.
+
+===========================================================
+./util/patch/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  a more recent version has been supplied.
+
+===========================================================
+./util/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  lndir.sh has been changed slightly so that it doesn't cause some
+	Bourne shells to dump core.
+     o  a new utility, checkfn, has been added for checking filenames for
+	portability; it is generally only used to create distribution kits
+	and is not built by default.
+     o  a new install script, lninst.sh, has been added to do fake
+	installs by creating symlinks; this is useful for development
+	organizations.
+     o  a copy of the public domain C preprocessor written by Martin Minow
+	has been included for systems that can't handle abusive numbers of
+	compiler variables and huge macros.
+     o  a emulation of the soelim program has been provided for machines that
+        need have it.
+     o  the rgb database and program has been into a top-level directory.
+     o  mkdirhier.sh script added for creating directory trees.
+     o  various scripts moved into a scripts directory.
+     o  sources to (un)compress included courtesy of UC Berkeley.
+
+===========================================================
+./util/soelim/CHANGES
+
+This directory is new to R3.  It contains a emulation of the BSD soelim
+program for machines that don't have it.  It might need to be built and
+installed before the doc/ directory.
+
+===========================================================
+./rgb/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  duplicate entries which differed only in case were removed.
+     o  gray0-gray100 were added.
+     o  a few random colors were added.
+     o  better error checking was added.
+
+
+===========================================================
+./examples/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  the xev program has been moved into the clients tree.
+
+
+===========================================================
+./examples/Xaw/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  the widgets have been made to use the R3 Intrinsics.
+
+
+===========================================================
+./demos/ico/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  changed tetra to octa.
+     o  added plane and pyr.
+     o  wait for expose event before drawing.
+
+
+===========================================================
+./demos/xeyes/CHANGES
+
+This directory is new to R3.  It is a fun little toy that was stolen from
+a NeWS demo at SIGGRAPH '88.
+
+===========================================================
+./demos/puzzle/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  if the puzzle isn't on top, it won't solve itself.
+
+
+===========================================================
+./demos/muncher/CHANGES
+
+This directory has not changed since R2.
+
+
+===========================================================
+./demos/plaid/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  uninitialized variable problem fixed.
+     o  new color support.
+
+
+===========================================================
+./demos/maze/CHANGES
+
+This directory is new to R3.
+
+
+===========================================================
+./demos/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  a new toy, xeyes, has been added; try it, you'll like it.
+     o  a rather fun maze program has been added.
+     o  wm has been moved to contrib.
+
+===========================================================
+./extensions/CHANGES
+
+This directory has not changed since R2.  However, support for several new
+sample extensions have been added in various subdirectores.
+
+
+===========================================================
+./extensions/include/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  ANSI preprocessor definitions have been added.
+     o  new video extension from Parallax Graphics has been added.
+     o  new input synthesis extension from the X Testing Consortium has
+	been added.
+
+
+===========================================================
+./extensions/lib/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  ANSI preprocessor definitions have been added.
+     o  new video extension from Parallax Graphics has been added.
+     o  new input synthesis extension from the X Testing Consortium has
+	been added.
+
+
+===========================================================
+./extensions/server/CHANGES
+
+The following changes have been made to this directory since R2:
+
+     o  ANSI preprocessor definitions have been added.
+     o  new video extension from Parallax Graphics has been added.
+     o  new input synthesis extension from the X Testing Consortium has
+	been added.
+
+
+===========================================================
+./extensions/test/CHANGES
+
+This directory has not changed since R2.
+
+
+===========================================================

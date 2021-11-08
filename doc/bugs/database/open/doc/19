@@ -1,0 +1,32 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by expo.lcs.mit.edu; Thu, 7 Apr 88 08:37:30 EDT
+Received: by harvard.harvard.edu; Thu, 7 Apr 88 07:39:03 EST
+Received: from jeeves.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA27561; Thu, 7 Apr 88 08:17:17 EDT
+Received: by jeeves.ksr.com (3.2/SMI-3.2)
+	id AA03001; Thu, 7 Apr 88 08:17:15 EDT
+Message-Id: <8804071217.AA03001@jeeves.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: what's the format of -fp in xinit?
+Reply-To: ksr!benson@harvard.harvard.edu
+Date: Thu, 07 Apr 88 08:17:13 EDT
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   331
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	Xserver documentation fails to describe syntax of -fp
+
+DESCRIPTION:
+	if -fp is of the form dir:dir:dir the man page should say so.
+
+

@@ -1,0 +1,106 @@
+Return-Path: dana@thumper.bellcore.com
+Received: by expo.lcs.mit.edu; Tue, 19 Apr 88 14:40:56 EDT
+Received: by thumper.bellcore.com (5.54/4.7)
+	id AA08773; Tue, 19 Apr 88 14:38:15 EDT
+Received: by dino.bellcore.com (4.12/4.7)
+	id AA06171; Tue, 19 Apr 88 14:36:01 edt
+Date: Tue, 19 Apr 88 14:36:01 edt
+From: dana@thumper.bellcore.com (Dana A. Chee)
+Message-Id: <8804191836.AA06171@dino.bellcore.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: dana@thumper.bellcore.com, ludwig@zippy.lcs.mit.edu
+Subject: fix sizing problems with digital clock
+
+### bug number:   390
+### area:         xclock
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     fixes supplied
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/75
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Sun
+
+SYNOPSIS:
+	xclock does not start up with correct sizes in digital mode.
+
+DESCRIPTION:
+	when xclock is started in digital mode, it comes up with a window
+	sized for analog mode.
+
+REPEAT-BY:
+	run xclock -digital
+
+FIX:
+	Context diffs for Clock.c
+----------------- Clock.diff ---------------------
+*** lib/Xaw/Clock.c	Fri Feb 26 10:25:20 1988
+--- Clock.c	Tue Apr 19 14:22:17 1988
+***************
+*** 49,54 ****
+--- 49,56 ----
+  #define SECOND_WIDTH_FRACT	5
+  #define SECOND_HAND_TIME	30
+  
++ #define	DEFAULT_SIZE		164
++ 
+  #define max(a, b) ((a) > (b) ? (a) : (b))
+  #define min(a, b) ((a) < (b) ? (a) : (b))
+  #define abs(a) ((a) < 0 ? -(a) : (a))
+***************
+*** 61,69 ****
+  
+  static XtResource resources[] = {
+      {XtNwidth, XtCWidth, XtRInt, sizeof(int),
+! 	goffset(width), XtRString, "164"},
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+! 	goffset(height), XtRString, "164"},
+      {XtNupdate, XtCInterval, XtRInt, sizeof(int), 
+          offset(update), XtRString, "60" },
+      {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+--- 63,71 ----
+  
+  static XtResource resources[] = {
+      {XtNwidth, XtCWidth, XtRInt, sizeof(int),
+! 	goffset(width), XtRString, "0"},
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+! 	goffset(height), XtRString, "0"},
+      {XtNupdate, XtCInterval, XtRInt, sizeof(int), 
+          offset(update), XtRString, "60" },
+      {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+***************
+*** 164,171 ****
+         min_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+         if (w->core.width < min_width) w->core.width = min_width;
+!        if (w->core.height < min_height) w->core.width = min_height;
+      }
+  
+      /*
+       * set the colors if reverse video; this is somewhat tricky since there
+--- 166,179 ----
+         min_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+         if (w->core.width < min_width) w->core.width = min_width;
+!        if (w->core.height < min_height) w->core.height = min_height;
+      }
++     else {
++ 	    if(w->core.width == 0 )
++ 		    w->core.width = DEFAULT_SIZE;
++ 	    if(w->core.height == 0 )
++ 		    w->core.height = DEFAULT_SIZE;
++     }
+  
+      /*
+       * set the colors if reverse video; this is somewhat tricky since there
+

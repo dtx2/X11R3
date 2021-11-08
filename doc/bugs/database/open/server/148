@@ -1,0 +1,43 @@
+Return-Path: rusty%velveeta.Berkeley.EDU@berkeley.edu
+Received: from velveeta.Berkeley.EDU by EXPO.LCS.MIT.EDU; Fri, 18 Mar 88 02:25:54 EST
+Received: by velveeta.Berkeley.EDU (5.57/1.26)
+	id AA04386; Thu, 17 Mar 88 22:14:00 PST
+Date: Thu, 17 Mar 88 22:14:00 PST
+From: rusty%velveeta.Berkeley.EDU@berkeley.edu (rusty wright)
+Message-Id: <8803180614.AA04386@velveeta.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: repeat doesn't stay off
+
+### bug number:   170
+### area:         server
+### severity:     
+### assigned to:  
+### status:       
+### comments:     problem with sun ddx; rusty says that it happens to all
+###               windows, not just xterm
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	SUN 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	SUN 3/50
+
+SYNOPSIS:
+	the server forgets that i did an "xset r off"
+
+DESCRIPTION:
+	every so often the terminal windows go back into autorepeat.
+
+REPEAT-BY:
+	it's random and i don't know what causes it or how to
+	duplicate it.
+
+FIX:
+	get used to autorepeat mode?
+

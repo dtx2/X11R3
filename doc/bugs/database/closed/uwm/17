@@ -1,0 +1,356 @@
+Return-Path: kddlab!kitt1.ws.sony.junet!michael@uunet.uu.net
+Message-Id: <8805130019.AA01014@kitt1.ws.sony.junet>
+To: xbugs@expo.lcs.mit.edu
+From: kddlab!uunet.uu.net!ws.sony.junet!michael@uunet.uu.net (Michael Knight)
+Organization: Knight Foundation.
+Return-Receipt-To: kddlab!uunet.uu.net!ws.sony.junet!michael@uunet.uu.net
+Subject: uwm Resize & RubberBand bug.
+Date: Fri, 13 May 88 09:19:42 +0900
+Sender: kddlab!kitt1.ws.sony.junet!michael@uunet.uu.net
+
+### bug number:   488
+### area:         uwm
+### severity:     low
+### comments:     
+
+CLIENT MACHINE:
+	Sony NEWS
+
+CLIENT OPERATING SYSTEM:
+	NEWS-OS 3.0 (4.3BSD)
+
+DISPLAY:
+	NWB-225 (1280X1024X8)
+
+SYNOPSIS:
+
+	 uwm resize bugs.
+
+DESCRIPTION:
+
+	 1. if window size is larger than 999 then uwm don't show correct size.
+	 2. if window size is lager than display size then uwm change window
+	    size to display size.
+	 3. uwm don't include border width to resize box.
+
+REPEAT-BY:
+	any time.
+
+FIX:
+
+*** 1/Resize.c	Fri May 13 09:02:13 1988
+--- 2/Resize.c	Fri May 13 09:02:26 1988
+***************
+*** 87,92 ****
+--- 87,93 ----
+      XWindowChanges values;
+      int width_offset, height_offset;	/* to subtract if resize increments */
+      int x_offset, y_offset;		/* add to pointer to get anchor */
++     int	bwidth;				/* window border size */
+  
+      /*
+       * Do nothing if the event window is the root window.
+***************
+*** 127,136 ****
+  
+      hsize = defwidth = window_info.width; 
+      vsize = defheight = window_info.height;
+      x1 = window_info.x;
+      y1 = window_info.y;
+!     x2 = x1 + hsize;
+!     y2 = y1 + vsize;
+  
+      /*
+       * Get the event window resize hint.
+--- 128,138 ----
+  
+      hsize = defwidth = window_info.width; 
+      vsize = defheight = window_info.height;
++     bwidth = window_info.border_width * 2;
+      x1 = window_info.x;
+      y1 = window_info.y;
+!     x2 = x1 + hsize + bwidth;
+!     y2 = y1 + vsize + bwidth;
+  
+      /*
+       * Get the event window resize hint.
+***************
+*** 312,326 ****
+  	    {
+  	        int Hsize = (hsize - width_offset) / xinc;
+  		int Vsize = (vsize - height_offset) / yinc;
+! 		int pos = 4;
+  
+! 		PText[0] = (Hsize>99) ? (Hsize / 100 + '0')	  : ' ';
+! 		PText[1] = (Hsize>9)  ? ((Hsize / 10) % 10 + '0') : ' ';
+! 		PText[2] = Hsize % 10 + '0';
+  		if (Vsize>99) PText[pos++] = Vsize / 100 + '0';
+  		if (Vsize>9)  PText[pos++] = (Vsize / 10) % 10 + '0';
+  		PText[pos++] = Vsize % 10 + '0';
+! 		while (pos<7) PText[pos++] = ' ';
+  	    }
+  
+  	    /*
+--- 314,330 ----
+  	    {
+  	        int Hsize = (hsize - width_offset) / xinc;
+  		int Vsize = (vsize - height_offset) / yinc;
+! 		int pos = 5;
+  
+! 		PText[0] = (Hsize>999) ? (Hsize / 1000 + '0')	  : ' ';
+! 		PText[1] = (Hsize>99) ? (Hsize / 100 + '0')	  : ' ';
+! 		PText[2] = (Hsize>9)  ? ((Hsize / 10) % 10 + '0') : ' ';
+! 		PText[3] = Hsize % 10 + '0';
+! 		if (Vsize>999) PText[pos++] = Vsize / 1000 + '0';
+  		if (Vsize>99) PText[pos++] = Vsize / 100 + '0';
+  		if (Vsize>9)  PText[pos++] = (Vsize / 10) % 10 + '0';
+  		PText[pos++] = Vsize % 10 + '0';
+! 		while (pos<9) PText[pos++] = ' ';
+  	    }
+  
+  	    /*
+***************
+*** 375,384 ****
+  	}
+  
+  
+! 	hsize = max(min(abs (x2 - x1), maxwidth), minwidth);
+  	hsize = makemult(hsize-minwidth, xinc)+minwidth;
+   
+! 	vsize = max(min(abs(y2 - y1), maxheight), minheight);
+  	vsize = makemult(vsize-minheight, yinc)+minheight; 
+  
+  	if (sizehints.flags & PAspect) {
+--- 379,388 ----
+  	}
+  
+  
+! 	hsize = max(min(abs (x2 - x1 - bwidth), maxwidth), minwidth);
+  	hsize = makemult(hsize-minwidth, xinc)+minwidth;
+   
+! 	vsize = max(min(abs(y2 - y1 - bwidth), maxheight), minheight);
+  	vsize = makemult(vsize-minheight, yinc)+minheight; 
+  
+  	if (sizehints.flags & PAspect) {
+***************
+*** 416,429 ****
+   		  
+        }
+        if (ox == 0)
+!  	x2 = x1 - hsize;
+        else
+! 	x2 = x1 + hsize;
+  
+        if (oy == 0)
+! 	y2 = y1 - vsize;
+        else
+!     	y2 = y1 + vsize;
+  	    
+      }
+      if (x2 < x1) {
+--- 420,433 ----
+   		  
+        }
+        if (ox == 0)
+!  	x2 = x1 - hsize - bwidth;
+        else
+! 	x2 = x1 + hsize + bwidth;
+  
+        if (oy == 0)
+! 	y2 = y1 - vsize - bwidth;
+        else
+!     	y2 = y1 + vsize + bwidth;
+  	    
+      }
+      if (x2 < x1) {
+***************
+*** 449,459 ****
+--- 453,465 ----
+    if (hints->max_height <= 0 || hints->max_width <= 0)
+        hints->flags &= ~PMaxSize;
+  
++ /*
+    hints->min_height = min(DisplayHeight(dpy, scr), hints->min_height);
+    hints->min_width =  min(DisplayWidth(dpy, scr),  hints->min_width);
+  
+    hints->max_height = min(DisplayHeight(dpy, scr), hints->max_height);
+    hints->max_width =  min(DisplayWidth(dpy, scr),  hints->max_width);
++ */
+  
+    if ((hints->flags&PMinSize) && (hints->flags&PMaxSize) && 
+     ((hints->min_height > hints->max_height) ||
+diff -r -c 1/RubberBand.c 2/RubberBand.c
+*** 1/RubberBand.c	Fri May 13 09:02:13 1988
+--- 2/RubberBand.c	Fri May 13 09:02:26 1988
+***************
+*** 106,111 ****
+--- 106,113 ----
+  	char *name;
+  	int width_offset, height_offset; /* to subtract if resize increments */
+  	XSetWindowAttributes attr;	/* for setting save unders flag */
++ 	XWindowAttributes wininfo;	/* for getting border size */
++ 	int bwidth;			/* window border width */
+  
+  	if (hints->flags & USPosition) {
+  	  *x = hints->x;
+***************
+*** 118,123 ****
+--- 120,127 ----
+  	    }
+  	  return;
+  	}
++ 	XGetWindowAttributes(dpy, window, &wininfo);
++ 	bwidth = wininfo.border_width * 2;
+          if (!XFetchName(dpy, window, &name))
+  	  name = "Unnamed Window";
+  
+***************
+*** 145,152 ****
+  	nz = strlen(name);		/* compute number of characters */
+  	text = (char *)malloc( nz + 11 );
+  	(void) strcpy(text, name);
+! 	(void) strcat(text, ": 000x000");
+! 	nz += 9;
+  	popw = XTextWidth (pfont, text, nz) + 2 * IBW;
+  	poph = pfont->ascent+pfont->descent + 2 * IBW;
+  
+--- 149,156 ----
+  	nz = strlen(name);		/* compute number of characters */
+  	text = (char *)malloc( nz + 11 );
+  	(void) strcpy(text, name);
+! 	(void) strcat(text, ": 0000x0000");
+! 	nz += 11;
+  	popw = XTextWidth (pfont, text, nz) + 2 * IBW;
+  	poph = pfont->ascent+pfont->descent + 2 * IBW;
+  
+***************
+*** 220,227 ****
+  	  &rootx, &rooty, &x1, &y1, &mask);
+  	hsize = minwidth; 
+  	vsize = minheight;
+! 	x2 = x1+hsize; 
+! 	y2 = y1+vsize;
+  
+  	while (stop == FALSE) {
+  	    if ( (xb != max (x1, x2)) || (yb != max (y1, y2))
+--- 224,231 ----
+  	  &rootx, &rooty, &x1, &y1, &mask);
+  	hsize = minwidth; 
+  	vsize = minheight;
+! 	x2 = x1+hsize+bwidth; 
+! 	y2 = y1+vsize+bwidth;
+  
+  	while (stop == FALSE) {
+  	    if ( (xb != max (x1, x2)) || (yb != max (y1, y2))
+***************
+*** 242,253 ****
+  	    if (changed) {
+  	        int Hsize = (hsize - width_offset) / xinc;
+  		int Vsize = (vsize - height_offset) / yinc;
+! 		int pos = 3;
+  
+  		changed = FALSE;
+! 		text[nz - 7] = (Hsize>99) ? (Hsize / 100 + zero)	: ' ';
+! 		text[nz - 6] = (Hsize>9)  ? ((Hsize / 10) % 10 + zero)  : ' ';
+! 		text[nz - 5] = Hsize % 10 + zero;
+  		if (Vsize>99) text[nz - pos--] = Vsize / 100 + zero;
+  		if (Vsize>9)  text[nz - pos--] = (Vsize / 10) % 10 + zero;
+  		text[nz - pos--]     = Vsize % 10 + zero;
+--- 246,259 ----
+  	    if (changed) {
+  	        int Hsize = (hsize - width_offset) / xinc;
+  		int Vsize = (vsize - height_offset) / yinc;
+! 		int pos = 4;
+  
+  		changed = FALSE;
+! 		text[nz - 9] = (Hsize>999) ? (Hsize / 1000 + zero)	: ' ';
+! 		text[nz - 8] = (Hsize>99) ? (Hsize / 100 + zero)	: ' ';
+! 		text[nz - 7] = (Hsize>9)  ? ((Hsize / 10) % 10 + zero)  : ' ';
+! 		text[nz - 6] = Hsize % 10 + zero;
+! 		if (Vsize>999) text[nz - pos--] = Vsize / 1000 + zero;
+  		if (Vsize>99) text[nz - pos--] = Vsize / 100 + zero;
+  		if (Vsize>9)  text[nz - pos--] = (Vsize / 10) % 10 + zero;
+  		text[nz - pos--]     = Vsize % 10 + zero;
+***************
+*** 316,324 ****
+  		}
+  	    }
+  
+! 	    dx = max(min(abs (x2 - x1), maxwidth), minwidth);
+  	    dx = makemult(dx-minwidth, xinc)+minwidth; 
+! 	    dy = max(min(abs(y2 - y1), maxheight), minheight);
+  	    dy = makemult(dy-minheight, yinc)+minheight; 
+  	    
+  	    if (hints->flags & PAspect) {
+--- 322,330 ----
+  		}
+  	    }
+  
+! 	    dx = max(min(abs (x2 - x1 - bwidth), maxwidth), minwidth);
+  	    dx = makemult(dx-minwidth, xinc)+minwidth; 
+! 	    dy = max(min(abs(y2 - y1 - bwidth), maxheight), minheight);
+  	    dy = makemult(dy-minheight, yinc)+minheight; 
+  	    
+  	    if (hints->flags & PAspect) {
+***************
+*** 361,371 ****
+--- 367,379 ----
+  		x2 = x1 - dx;
+  	    else
+  		x2 = x1 + dx;
++ 	    x2 += bwidth;
+  
+  	    if (y2 < y1)
+  		y2 = y1 - dy;
+  	    else
+  	    	y2 = y1 + dy;
++ 	    y2 += bwidth;
+  	}
+  	XUngrabPointer(dpy, CurrentTime);
+  
+diff -r -c 1/globals.c 2/globals.c
+*** 1/globals.c	Fri May 13 09:02:14 1988
+--- 2/globals.c	Fri May 13 09:02:26 1988
+***************
+*** 124,130 ****
+  Bool WarpOnDeIconify;           /* Warp to upper right corner on de-iconify. */
+  Bool FocusSetByUser;            /* True if f.focus called */
+   
+! char PText[7] = INIT_PTEXT;	/* Pop-up window dummy text. */
+  int PTextSize = sizeof(PText);	/* Pop-up window dummy text size. */
+   
+  int Lineno = 1;			/* Line count for parser. */
+--- 124,130 ----
+  Bool WarpOnDeIconify;           /* Warp to upper right corner on de-iconify. */
+  Bool FocusSetByUser;            /* True if f.focus called */
+   
+! char PText[9] = INIT_PTEXT;	/* Pop-up window dummy text. */
+  int PTextSize = sizeof(PText);	/* Pop-up window dummy text size. */
+   
+  int Lineno = 1;			/* Line count for parser. */
+diff -r -c 1/uwm.h 2/uwm.h
+*** 1/uwm.h	Fri May 13 09:02:14 1988
+--- 2/uwm.h	Fri May 13 09:02:27 1988
+***************
+*** 78,84 ****
+  #define DEF_VOLUME		4
+  #define DEF_PUSH		5
+   
+! #define INIT_PTEXT		{'0', '0', '0', 'x', '0', '0', '0'}
+  #ifndef TEMPFILE
+  #define TEMPFILE		"/tmp/uwm.XXXXXX"
+  #endif
+--- 78,84 ----
+  #define DEF_VOLUME		4
+  #define DEF_PUSH		5
+   
+! #define INIT_PTEXT		{'0', '0', '0', '0', 'x', '0', '0', '0', '0'}
+  #ifndef TEMPFILE
+  #define TEMPFILE		"/tmp/uwm.XXXXXX"
+  #endif
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ Hideo Irie (Micheal Knight)	JUNET: michael@ws.sony.junet
+				UUNET: michael%ws.sony.junet@uunet.uu.net
+ Work Station Division. SuperMicro Systems Group. Sony Corp.
+ 6-7-35 Kitasinagawa Sinagawa-ku Tokyo JAPAN	TEL: 03(448)2111 ex-2907
+

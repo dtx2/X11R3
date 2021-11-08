@@ -1,0 +1,169 @@
+Return-Path: ekberg@home.csc.ti.com
+Received: from ti.com by expo.lcs.mit.edu; Thu, 7 Apr 88 20:46:18 EDT
+Received: by ti.com id AA24554; Thu, 7 Apr 88 19:43:35 CDT
+Received: from home by tilde id AA08374; Thu, 7 Apr 88 19:37:32 CDT
+Received: by home id AA16171; Thu, 7 Apr 88 19:37:24 CDT
+Date: Thu, 7 Apr 88 19:37:24 CDT
+From: Tom Ekberg <ekberg@home.csc.ti.com>
+Message-Id: <8804080037.AA16171@home>
+To: xbugs@expo.lcs.mit.edu
+Cc: dnichols@home.csc.ti.com
+Subject: ClientTimeToServerTime looks wrong
+
+### bug number:   339
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+This is an attempt to be very descriptive of this bug, so make sure you have
+reserved enough time before you start reading this report.  It would help if
+you could bring up the file server/dix/dixutills.c and look at the function
+ClientTimeToServerTime while you are reading this message.
+
+	VERSION:
+		X11 release 2
+
+	CLIENT MACHINE:
+		Sun4
+
+	CLIENT OPERATING SYSTEM:
+		4.2 BSD UNIX, Sys4-3.2
+
+	DISPLAY:
+		color of some sort
+
+	SYNOPSIS:
+		When client time > server time, the ts.months time should be
+		incremented. 
+
+	DESCRIPTION:
+		I haven't actually verified this problem, but the code looks
+		incorrect.  I would also like to point out that this is the
+		second case of code I have encountered where the case of
+		variable names matters.  Flame on.  THIS KIND OF PRACTICE MAKES
+		CODE EXTREMELY DIFFICULT TO READ AND SHOULD BE AVOIDED AT ALL
+		COST.  Flame off.  The previous flame was in reference to the
+		variable currentTime and the other variable (constant?)
+		named    CurrentTime.
+
+		I contain two descriptions of the problem in case the reader of
+		this message does not really understand the
+		ClientTimeToServerTime function.  The first assumes the
+		knowledge and the second assumes that mine is correct and
+		completely explains what is going on.
+
+		The else clause in that function contains the following
+		statement: 
+			ts.months -= 1L;
+		This should be changed to:
+			ts.months += 1;
+		I have no idea why the 1L is present here since if you look a
+		few lines up in that function you will find the same
+		statement which just uses 1 (and not 1L).  Anyway, the reason
+		for the increment is that the server month assumed before the
+		if/else statement is being determined to be invalid since the
+		else clause is checking for the case where the server time is
+		at the end of one month and the client time is at the start of
+		the next month.  Incrementing the ts.months will make the
+		client milliseconds and ts.months coincide.  The way the code
+		is now, it will make the milliseconds correspond with one month
+		and ts.months will correspond with a month 2 months earlier.
+
+		Now for the more complete description.  If my understanding of
+		this function is correct, would the reader please insert
+		comments describing this into the code for the other poor soul
+		who tries to understand it?  To start with, the CurrentTime
+		symbol is the constant 0, as noted in the protocol encoding
+		specification.  The variable currentTime is a structure which
+		contains two components: months and milliseconds.  The problem
+		is that the client can send a time indication to the server,
+		but that time only contains the number of milliseconds, and no
+		indication of the month.  Normally that isn't a problem, since
+		the months are going to be the same in most of the cases.  This
+		code is supposed to handle the cases where the months are not
+		the same.  The first check (i.e. if (c == CurrentTime) ) is
+		checking to see if we are to use the server time.  If it is
+		true, then we return the server time and we are done.
+		Otherwise, we return the client time indicated by the variable
+		c.  But remember that the variable c only contains the number
+		of milliseconds and has no indication of the month number.  The
+		assignments to the structure ts assume that the months from the
+		currentTime (the server time) structure corresponds with the
+		client's current month and fills in the milliseconds from the
+		variable c (the client time).  So far so good.  The next thing
+		we need to do is to check for the cases where the client is at
+		the end of one month and the server is at the beginning of the
+		next month, or where the server is at the end of one month and
+		the client is at the beginning of the next month.  The `if'
+		part of the if-then-else statement checks for when the client
+		time is after the server time.  Inside of the `if' part, it
+		subsequently checks to see if the difference between them is
+		more than 24.855 days.  If this is true, then we can assume
+		that this difference is much longer than we expect (we
+		shouldn't expect a dalay between a server and a client to be
+		more than 24.855 days), so we must have a case where the client
+		is at the end of one month and the server is at the beginning
+		of the next month (or very near their month boundaries).  For
+		example, the client could be at April 29 (my birthday) and the
+		server could be at May 1.  In this case, since we are trying to
+		determine the month for the client, we must can subtract one
+		from the month of the server (May) to have a correct client
+		month (April).  The `else' part of the if-then-else checks for
+		when the client time is before the server time.  Inside of the
+		`else' part, it subsequently checks to see if the difference
+		between them is more than 24.855 days.  If this is true, then,
+		using the same logic as before, we have a case where the time
+		difference between the server is much longer than expected, so
+		we conclude that we have the case where the server is at the
+		end of one month and the client is at the beginning of the next
+		month.  Remember the whole purpuse of this code is to calculate
+		the proper month for the client.  Earlier we assumed that the
+		client and server month's corresponded, but in this case we
+		have server thinking this is April 29 (for a good example :-)
+		and the client thinking it is May 1.  To adjust the client's
+		month to be correct, we must increment the time stored in
+		ts.month by one so that we move from April (server time) to May
+		(client time).
+
+		Please put something like the following as a comment for the
+		#define for HALFMONTH:
+		  HALFMONTH is an approximation of a half of a month,
+		  represented in milliseconds.  Actually this approximation
+		  isn't really all that good, but it does relate well to the
+		  approximation of a whole month which is (1<<32)-1.  To get a
+		  better idea of what these numbers represent, pull out your
+		  calculator and convert these numbers of milliseconds to days.
+		  That is compute 1<<31 (use the y-->x key) and compute the
+		  following (we you actually don't need to since I have done
+		  that for you :-):
+
+		  2147483648 / 1000 = 2147483.648 seconds
+		  2147483.648 seconds / 60 = 35791.39 minute
+		  35791.39 minutes / 60 = 596.52 hours
+		  596.52 hours / 24 = 24.855 days
+
+		  We can see that 1<<31 milliseconds is a number of days that
+		  is more than 1/2 of the number of days any month and less
+		  than the number of days of any month.  This makes it work
+		  reasonably well in the calculations done in
+		  ClientTimeToServerTime.
+
+	REPEAT-BY:
+		Go into a time warp and change the server and client time such
+		that the client thinks it is May 1 and the server thinks it is
+		April 29 and do a XSetInputFocus with a timestamp using May 1.
+		The server will think that the client time is March 1.
+
+	FIX:
+		In the file /server/dix/dixutils.c in the function
+		ClientTimeToServerTime (about line 79 in the dixutils.c file),
+		change the structure element assignment in the `else' clause (2
+		lines above the second `return') from
+		  ts.months -= 1L;
+		to
+		  ts.months += 1;
+
+  -- tom (aisle C-4L), ekberg@csc.ti.com
+

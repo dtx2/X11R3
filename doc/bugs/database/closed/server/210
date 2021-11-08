@@ -1,0 +1,255 @@
+Return-Path: deboor%dill.Berkeley.EDU@ginger.berkeley.edu
+Received: from dill.Berkeley.EDU by expo.lcs.mit.edu; Sun, 3 Apr 88 17:11:25 EDT
+Received: by dill.Berkeley.EDU (5.57/1.25)
+	id AA02317; Sat, 2 Apr 88 23:00:27 PST
+Date: Sat, 2 Apr 88 23:00:27 PST
+From: deboor%dill.Berkeley.EDU@ginger.berkeley.edu (Adam R de Boor)
+Message-Id: <8804030700.AA02317@dill.Berkeley.EDU>
+To: x11%brie@sun.com, xbugs@expo.lcs.mit.edu
+Subject: bug in previous bug
+
+### bug number:   255
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	 Sorry, folks. Those patches I sent you for properly handling window
+	 and bit gravity had a bug in them -- children of unrealized windows
+	 wouldn't have their winSize regions shifted properly when their
+	 parent was configured.
+
+REPEAT-BY:
+	Run any toolkit client under uwm without specifying a geometry and wait
+	just a second before placing the beast -- the inner window will be left
+	in the upper-left corner of the screen (where you can't, of course,
+	see it).
+
+FIX:
+	These patches are for applying after the other patches I sent you.
+	This is all very complex. Sigh.
+
+*** /tmp/,RCSt1a02275	Sat Apr  2 22:56:20 1988
+--- window.c	Sat Apr  2 22:56:14 1988
+***************
+*** 22,28
+  
+  ******************************************************************/
+  
+! /* $Header: window.c,v 1.203 88/04/01 13:35:08 deboor Exp $ */
+  
+  #include "X.h"
+  #define NEED_REPLIES
+
+--- 22,28 -----
+  
+  ******************************************************************/
+  
+! /* $Header: window.c,v 1.204 88/04/02 22:55:13 deboor Exp $ */
+  
+  #include "X.h"
+  #define NEED_REPLIES
+***************
+*** 1718,1725
+  	cwsx = pSib->clientWinSize.x;
+  	cwsy = pSib->clientWinSize.y;
+  	
+- 	pSib->extra.gravity = (struct gravity *)Xalloc(sizeof(struct gravity));
+- 
+  	switch (pSib->winGravity)
+  	{
+  	    case UnmapGravity: 
+
+--- 1718,1723 -----
+  	cwsx = pSib->clientWinSize.x;
+  	cwsy = pSib->clientWinSize.y;
+  	
+  	switch (pSib->winGravity)
+  	{
+  	    case UnmapGravity: 
+***************
+*** 1774,1780
+  
+  	pSib->oldAbsCorner.x = pSib->absCorner.x;
+  	pSib->oldAbsCorner.y = pSib->absCorner.y;
+- 	pSib->extra.gravity->oldAbsCorner = pSib->oldAbsCorner;
+  	pSib->absCorner.x = x + cwsx;
+  	pSib->absCorner.y = y + cwsy;
+  
+
+--- 1772,1777 -----
+  
+  	pSib->oldAbsCorner.x = pSib->absCorner.x;
+  	pSib->oldAbsCorner.y = pSib->absCorner.y;
+  	pSib->absCorner.x = x + cwsx;
+  	pSib->absCorner.y = y + cwsy;
+  
+***************
+*** 1797,1803
+  	(* pScreen->PositionWindow)(pSib, pSib->absCorner.x, pSib->absCorner.y);
+  
+  	/*
+! 	 * Preserve the border clip for later copying.
+  	 */
+  	pSib->extra.gravity->oldBorderClip =
+  	    (* pScreen->RegionCreate)(NullBox, 1);
+
+--- 1794,1801 -----
+  	(* pScreen->PositionWindow)(pSib, pSib->absCorner.x, pSib->absCorner.y);
+  
+  	/*
+! 	 * Preserve the border clip and window origin for later copying.
+! 	 * Note we only do this if the window is realized.
+  	 */
+  	if (pSib->realized)
+  	{
+***************
+*** 1799,1808
+  	/*
+  	 * Preserve the border clip for later copying.
+  	 */
+! 	pSib->extra.gravity->oldBorderClip =
+! 	    (* pScreen->RegionCreate)(NullBox, 1);
+! 	(* pScreen->RegionCopy) (pSib->extra.gravity->oldBorderClip,
+! 				 pSib->borderClip);
+  
+  	pSib->marked = 1;
+  	if (pSib->firstChild) 
+
+--- 1797,1812 -----
+  	 * Preserve the border clip and window origin for later copying.
+  	 * Note we only do this if the window is realized.
+  	 */
+! 	if (pSib->realized)
+! 	{
+! 	    pSib->extra.gravity =
+! 		(struct gravity *)Xalloc(sizeof(struct gravity));
+! 	    pSib->extra.gravity->oldAbsCorner = pSib->oldAbsCorner;
+! 	    pSib->extra.gravity->oldBorderClip =
+! 		(* pScreen->RegionCreate)(NullBox, 1);
+! 	    (* pScreen->RegionCopy) (pSib->extra.gravity->oldBorderClip,
+! 				     pSib->borderClip);
+! 	}
+  
+  	pSib->marked = 1;
+  	if (pSib->firstChild) 
+***************
+*** 2002,2007
+  	    (* pScreen->Union) (pRegion, pRegion,
+  				pSib->extra.gravity->oldBorderClip);
+  
+  	}
+  	(* pScreen->RegionDestroy)(pSib->extra.gravity->oldBorderClip);
+  	Xfree(pSib->extra.gravity);
+
+--- 2006,2013 -----
+  	    (* pScreen->Union) (pRegion, pRegion,
+  				pSib->extra.gravity->oldBorderClip);
+  
++ 	    (* pScreen->RegionDestroy)(pSib->extra.gravity->oldBorderClip);
++ 	    Xfree(pSib->extra.gravity);
+  	}
+      }
+      (* pScreen->RegionDestroy) (pRegion);
+***************
+*** 2003,2010
+  				pSib->extra.gravity->oldBorderClip);
+  
+  	}
+- 	(* pScreen->RegionDestroy)(pSib->extra.gravity->oldBorderClip);
+- 	Xfree(pSib->extra.gravity);
+      }
+      (* pScreen->RegionDestroy) (pRegion);
+      (* pScreen->RegionDestroy) (pObscured);
+
+--- 2009,2014 -----
+  	    (* pScreen->RegionDestroy)(pSib->extra.gravity->oldBorderClip);
+  	    Xfree(pSib->extra.gravity);
+  	}
+      }
+      (* pScreen->RegionDestroy) (pRegion);
+      (* pScreen->RegionDestroy) (pObscured);
+***************
+*** 2115,2120
+      (* pScreen->PositionWindow)(pWin, x, y);
+  
+      pFirstChange = MoveWindowInStack(pWin, pSib);
+      if (pWin->realized)
+      {
+  #ifdef DO_SAVE_UNDERS
+
+--- 2119,2126 -----
+      (* pScreen->PositionWindow)(pWin, x, y);
+  
+      pFirstChange = MoveWindowInStack(pWin, pSib);
++     oldRegion = Gravitate(pWin, x - oldx, y - oldy, dw, dh);
++ 
+      if (pWin->realized)
+      {
+  #ifdef DO_SAVE_UNDERS
+***************
+*** 2130,2136
+  	    }
+  	}
+  #endif /* DO_SAVE_UNDERS */
+- 	oldRegion = Gravitate(pWin, x - oldx, y - oldy, dw, dh);
+  
+  	/*
+  	 * Postpone the MarkSiblingsBelowMe to here b/c Gravitate may
+
+--- 2136,2141 -----
+  	    }
+  	}
+  #endif /* DO_SAVE_UNDERS */
+  
+  	/*
+  	 * Postpone the MarkSiblingsBelowMe to here b/c Gravitate may
+***************
+*** 2247,2253
+  
+  	    HandleExposures(pParent);
+  	}
+- 	(* pScreen->RegionDestroy)(oldRegion);
+  
+  #ifdef DO_SAVE_UNDERS
+  	if (DO_SAVE_UNDERS(pWin))
+
+--- 2252,2257 -----
+  
+  	    HandleExposures(pParent);
+  	}
+  
+  #ifdef DO_SAVE_UNDERS
+  	if (DO_SAVE_UNDERS(pWin))
+***************
+*** 2256,2261
+  	}
+  #endif /* DO_SAVE_UNDERS */
+      }
+  }
+  
+  /* Keeps the same inside(!) origin */
+
+--- 2260,2266 -----
+  	}
+  #endif /* DO_SAVE_UNDERS */
+      }
++     (* pScreen->RegionDestroy)(oldRegion);
+  }
+  
+  /* Keeps the same inside(!) origin */
+

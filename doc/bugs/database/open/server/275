@@ -1,0 +1,59 @@
+Return-Path: henry@garp.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 13 Oct 88 11:24:36 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA04110; Thu, 13 Oct 88 11:25:06 EDT
+Received: by GARP.MIT.EDU with sendmail-5.54/4.7 
+	id <AA04555@GARP.MIT.EDU>; Thu, 13 Oct 88 11:24:24 EDT
+Message-Id: <8810131524.AA04555@GARP.MIT.EDU>
+From: Henry Mensch <henry@athena.mit.edu>
+To: xbugs@athena.mit.edu
+Subject: [John E Elsbree (6.037 TA): 6.0C (RT) X(?): double- and triple-clicking doesn't work]
+Date: Thu, 13 Oct 88 11:24:22 EDT
+Sender: henry@garp.mit.edu
+
+### bug number:   1071
+### area:         server
+### severity:     low
+### comments:     ibm ddx-specific
+
+this is only the case for RT/PC workstations running X11R2 under 4.3
+AOS.
+
+-- henry mensch / <henry@athena.mit.edu>
+-- project athena quality assurance
+
+------- Forwarded Message
+
+Replied: Mon, 03 Oct 88 17:57:01 EDT
+Replied: "John E Elsbree (6.037 TA) <elsj@ATHENA.MIT.EDU> "
+Received: by E40-PO.MIT.EDU (5.45/4.7) id AA13640; Fri, 23 Sep 88 16:06:46 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA04753; Fri, 23 Sep 88 16:03:15 EDT
+Received: by FOUNTAIN.MIT.EDU (5.45/4.7) id AA01145; Fri, 23 Sep 88 16:03:07 EDT
+Message-Id: <8809232003.AA01145@FOUNTAIN.MIT.EDU>
+To: bugs@ATHENA.MIT.EDU
+Subject: 6.0C (RT) X(?): double- and triple-clicking doesn't work
+Address: 341 Cardinal Medeiros Ave, Cambridge, MA 02141
+Office: MIT room 24-314
+Telephone: +1 617 253 4654
+Date: Fri, 23 Sep 88 16:02:58 EDT
+From: John E Elsbree (6.037 TA) <elsj@ATHENA.MIT.EDU>
+
+
+The problem:
+
+The normal double- and triple-clicking features (to select a word or line
+of text) don't seem to have any effect on the RT.
+
+To reproduce the problem:
+
+In an xterm or an xmh message buffer, double-click (or triple-click) the
+left mouse button.  Observe that the word (or line) is not highlighted.
+
+Suggested fix:
+
+Unknown.
+
+							- John
+
+------- End of Forwarded Message
+
+

@@ -1,0 +1,92 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Sat, 2 Apr 88 17:28:39 EST
+Return-Path: <@LABREA.STANFORD.EDU:edsel!sol@labrea.Stanford.EDU>
+Received: from labrea.Stanford.EDU (LABREA.STANFORD.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 137232; 1 Apr 88 17:05:02 EST
+Received: by labrea.Stanford.EDU; Fri, 1 Apr 88 14:04:14 PST
+Received: from armageddon.lucid.com by edsel id AA07258g; Fri, 1 Apr 88 13:43:48 PST
+Received: by armageddon id AA02378g; Fri, 1 Apr 88 13:44:44 PST
+Date: Fri, 1 Apr 88 13:44:44 PST
+From: Sonia Lyris <edsel!sol@labrea.stanford.edu>
+Message-Id: <8804012144.AA02378@armageddon.lucid.com>
+To: Rick.Busdiecker@CS.CMU.EDU
+Subject: X11R2 CLX Lucid bug fixes
+Cc: bug-clx@zermatt.lcs.mit.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Sat, 2 Apr 88 17:27 EST
+Resent-Message-Id: <880402172751.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   252
+### area:         CLX
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+I have found and fixed two bugs for X11R2 CLX, for both Sun CL 2.1 and
+Lucid CL/Sun 3.0.  Please let me know if you have any problems.
+
+
+1.) I fixed the bug that prevents X11R2.CLX from compiling under Lucid
+Lisp.  The define-setf-method CUT-BUFFER in file MANAGER.LISP produces
+code that that binds keywords to themselves, which Lucid CL does not
+permit, hence the error when compiling CLX.  The fix is simply to remove
+these two lines from CUT-BUFFER:
+
+;; Removed the following two lines which are in error.
+;;(push (car option) temps)
+;;(push (car option) values)
+
+
+
+2.) I fixed the bug in BUFFER-READ-DEFAULT (it errors when you try to
+open a display).  The fix follows.  This code also adds timeout
+capability.
+
+;;; This macro should eventually be rewritten to make use of block
+;;; transfers.  Macro has been modified to support integer timeouts.
+#+lucid
+(defmacro lucid-read-bytes (stream vector start end)
+  `(do* ((i ,start (index+ i 1))
+	 (c nil))
+	((index>= i ,end) nil)
+     (declare (type array-index i)
+	      (type (or null card8) c))
+     (setq c (read-byte ,stream nil nil))
+     (if c
+	 (setf (aref ,vector i) c)
+	 (return t))))
+
+
+;;; BUFFER-READ-DEFAULT -- If timeout is NIL simply read from display
+;;; input stream.  If timeout = 0, look for input and read if there is
+;;; input.  If timeout > 0 then look for input and read (1+ timeout)
+;;; times, sleeping a second in between to allow something to show up in
+;;; the display input stream.
+#+lucid
+(defun buffer-read-default (display vector start end timeout)
+  (declare (type display display)
+	   (type buffer-bytes vector)
+	   (type array-index start end)
+	   (type (or null number) timeout))
+  (declare-buffun)
+  (declare (ignore timeout))
+  (let ((stream (display-input-stream display)))
+    (declare (type stream stream))
+
+    (cond ((null timeout)		; timeout = NIL
+	   (lucid-read-bytes stream vector start end))
+	  ((zerop timeout)		; timeout = 0
+	   (if (listen stream)		; is anything there?
+	       (lucid-read-bytes stream vector start end) ; yes
+	       :timeout			; no
+	       ))
+	  (t				; timeout > 0, so read until time is up.
+	   (dotimes (i (1+ timeout) :timeout)
+	     (if (listen stream)	; is anything there?
+		 (lucid-read-bytes stream vector start end) ; yup
+		 (when (< i timeout)	; no, so wait a second and try again.
+		   (sleep 1)))))
+	  )))
+
+

@@ -1,0 +1,51 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Wed, 3 Aug 88 16:27:45 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA15398; Wed, 3 Aug 88 16:27:46 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 3 Aug 88 12:27:00 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA14555; Wed, 3 Aug 88 13:28:21 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 3 Aug 88 13:29:46 pdt
+Message-Id: <8808032029.AA02126@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm invalid screen
+X-Mailer: mh6.5
+Date: Wed, 03 Aug 88 13:29:41 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   815
+### area:         uwm
+### severity:     high
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	When uwm is given an invalid screen specification, core dumps can
+	happen. (depends on the system, version of uwm, X, etc).
+DESCRIPTION:
+	
+REPEAT-BY:
+	uwm -display host:display.-1
+SUGGESTED FIX:
+*** uwm.c.old	Tue Jul 12 11:12:37 1988
+--- uwm.c	Tue Jul 12 11:13:45 1988
+***************
+*** 209,214
+      if ((dpy = XOpenDisplay(display)) == NULL)
+          Error("Unable to open display");
+      scr = DefaultScreen(dpy); 
+  /*    XSynchronize(dpy, 1); */
+  
+      /*
+
+--- 209,217 -----
+      if ((dpy = XOpenDisplay(display)) == NULL)
+          Error("Unable to open display");
+      scr = DefaultScreen(dpy); 
++     if (scr < 0 || ScreenCount(dpy) <= scr) {
++         Error("Unable to open display");
++     }
+  /*    XSynchronize(dpy, 1); */
+  
+      /*
+

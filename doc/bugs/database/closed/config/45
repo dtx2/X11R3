@@ -1,0 +1,24 @@
+Return-Path: karlton@wsl.dec.com
+Received: by expo.lcs.mit.edu; Wed, 5 Oct 88 13:43:31 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA27216; Wed, 5 Oct 88 10:43:17 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA04048; Wed, 5 Oct 88 10:43:10 PDT
+Message-Id: <8810051743.AA04048@gilroy.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: lib/X/XConnDis.o should depend on Makefile
+Date: Wed, 05 Oct 88 10:43:08 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+
+### bug number:   1053
+### area:         config
+### severity:     low
+### comments:     
+
+If the Makefile is edited (usually indirectly by editing something like
+Vax.macros and remaking the Makefiles) to add or remove something like
+DNETCONN, then this file needs to be recompiled. There needs to be a special
+rule to enforce this.
+
+PK
+

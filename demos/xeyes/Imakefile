@@ -1,0 +1,12 @@
+#ifdef BandAidCompiler
+#include BandAidCompiler
+#endif
+
+INCLUDES = -I$(TOP) -I$(TOP)/X11
+SYS_LIBRARIES = -lm
+LOCAL_LIBRARIES = $(XMULIB) $(XTOOLLIB) $(XLIB)
+
+SRCS = xeyes.c Eyes.c
+OBJS = xeyes.o Eyes.o
+
+ComplexProgramTarget(xeyes)

@@ -1,0 +1,56 @@
+Return-Path: tek@cs.ucla.edu
+Received: from penzance.cs.ucla.edu by expo.lcs.mit.edu; Mon, 11 Apr 88 13:07:46 EDT
+Return-Path: <tek@CS.UCLA.EDU>
+Received: by penzance.cs.ucla.edu (Sendmail 5.58.2/2.00)
+	id AA01196; Mon, 11 Apr 88 10:06:31 PDT
+Date: Mon, 11 Apr 88 10:06:31 PDT
+From: tek@cs.ucla.edu (Ted Kim (ATW))
+Message-Id: <8804111706.AA01196@penzance.cs.ucla.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xsun CG4 screen swap
+
+### bug number:   354
+### area:         misc
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     user misunderstanding?
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:	
+	SUN-3/60
+
+CLIENT OPERATING SYSTEM:
+	SUN OS 3.5
+
+DISPLAY:
+	CG4 (if it matters: 16" FC display)
+
+SYNOPSIS:
+	Xsun does not switch between the mono and color screens for CG4
+
+DESCRIPTION:
+	According to the Xsun man page, you should be able to slide
+	the mouse off the edge of the screen and swap color and mono
+	screens for the CG4. When I try to slide my mouse off the
+	screen, the cursor just goes to the edge and stops.
+
+	I start my server with "-dev /dev/cgfour0" option as
+	recommended by the server/ddx/sun/README. 
+
+REPEAT-BY:
+
+FIX:
+	I leave it to you guys
+
+
+
+
+
+
+
+
+

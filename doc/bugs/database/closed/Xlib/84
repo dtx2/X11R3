@@ -1,0 +1,196 @@
+Return-Path: frame!hpak!dpb@sun.com
+Received: by expo.lcs.mit.edu; Thu, 22 Sep 88 01:00:30 EDT
+Received: from sun.Sun.COM by Sun.COM (4.0/SMI-4.0)
+	id AA13658; Wed, 21 Sep 88 21:58:24 PDT
+Received: from frame.UUCP by sun.Sun.COM (4.0/SMI-4.0)
+	id AA08688; Wed, 21 Sep 88 22:02:29 PDT
+From: frame!hpak!dpb@sun.com
+Received: from hpak by frame.com (3.2/SMI-3.2)
+	id AA05575; Wed, 21 Sep 88 14:04:42 PDT
+Received: from hpak by hpak ; Wed, 21 Sep 88 14:08:41 pdt
+Message-Id: <8809212108.AA26851@hpak>
+To: xbugs@expo.lcs.mit.edu
+Cc: hpak!dpb@sun.com
+Subject: Another XPutImage glitch
+Reply-To: dpb%frame@sun.com
+X-Mailer: mh6.5
+Date: Wed, 21 Sep 88 14:08:31 PDT
+
+### bug number:   994
+### area:         Xlib
+### severity:     high
+### comments:     
+
+Here's another bug in one of my favorita pieces of code...
+
+   Don Bennett           (408)433-3311
+   dpb%frame@sun.com      or, sun!frame!dpb
+   Frame Technology
+
+
+VERSION:
+	X11 release 2  (Probably R3 Beta also)
+
+CLIENT MACHINE:
+	All
+
+SYNOPSIS:
+	XPutImage swaps incorrectly in half of the configurations
+	in which the SwapBitsAndTwoBytes function is invoked.
+	One byte of random garbage sometimes appears in the 
+	last byte of an image.
+
+DESCRIPTION:
+	(The version of XPutImage.c I started with was dated
+	around Sept.6, 1988);
+
+	The SwapBitsAndTwoBytes function makes an attempt to
+	grab only one of the last two bytes in the last line
+	of the source image when it knows there is only one
+	byte worth of data left. However, it only stands a 
+	50-50 chance of actually getting the correct byte.
+	
+	If we consider an image with a bitmap_unit of 16 and
+	a width of 40, we know that:
+	  a) The data will fit in 5 bytes;
+	  b) We will need to swap the first 2 pairs of bytes,
+	     taking care of the first 4 bytes of data.
+	
+	We do NOT know the address of the last byte of data!!!
+	To know that, we need to know the bit order and the
+	byte order of the image.
+	
+	The approach I take in the bug fix is to install two
+	different flavors of the SwapBitsAndTwoBytes in the
+	swap table and have them pass an additional parameter
+	to SwapBitsAndTwoBytes to tell it how to handle the
+	last byte.
+
+FIX:
+
+*** XPutImage.c.old Wed Sep 21 13:07:38 1988
+--- XPutImage.c	Wed Sep 21 12:37:12 1988
+***************
+*** 227,236 ****
+  }
+  
+  static int
+! SwapBitsAndTwoBytes (src, dest, srclen, srcinc, destinc, height)
+      register unsigned char *src, *dest;
+      long srclen, srcinc, destinc;
+      unsigned int height;
+  {
+      long length = ROUNDUP(srclen, 2);
+      register long h, n;
+--- 227,238 ----
+  }
+  
+  static int
+! SwapBitsAndTwoBytes (src, dest, srclen, srcinc, destinc, height,
+! 		     useFirstHalf)
+      register unsigned char *src, *dest;
+      long srclen, srcinc, destinc;
+      unsigned int height;
++     int useFirstHalf;
+  {
+      long length = ROUNDUP(srclen, 2);
+      register long h, n;
+***************
+*** 241,247 ****
+      for (h = height; --h >= 0; src += srcinc, dest += destinc) {
+  	if ((h == 0) && (srclen != length)) {
+  	    length -= 2;
+! 	    *(dest + length + 1) = rev[*(src + length)];
+  	}
+  	for (n = length; n > 0; n -= 2, src += 2) {
+  	    *dest++ = rev[*(src + 1)];
+--- 243,252 ----
+      for (h = height; --h >= 0; src += srcinc, dest += destinc) {
+  	if ((h == 0) && (srclen != length)) {
+  	    length -= 2;
+! 	    if (useFirstHalf)
+! 		*(dest + length + 1) = rev[*(src + length)];
+! 	    else
+! 		*(dest + length) = rev[*(src + length + 1)];
+  	}
+  	for (n = length; n > 0; n -= 2, src += 2) {
+  	    *dest++ = rev[*(src + 1)];
+***************
+*** 251,256 ****
+--- 256,279 ----
+  }
+  
+  static int
++ SwapBitsAndTwoBytes_a (src, dest, srclen, srcinc, destinc, height)
++     register unsigned char *src, *dest;
++     long srclen, srcinc, destinc;
++     unsigned int height;
++ {
++     SwapBitsAndTwoBytes(src, dest, srclen, srcinc, destinc, height, 1);
++ }
++ 
++ static int
++ SwapBitsAndTwoBytes_b (src, dest, srclen, srcinc, destinc, height)
++     register unsigned char *src, *dest;
++     long srclen, srcinc, destinc;
++     unsigned int height;
++ {
++     SwapBitsAndTwoBytes(src, dest, srclen, srcinc, destinc, height, 0);
++ }
++ 
++ static int
+  SwapBitsAndFourBytes (src, dest, srclen, srcinc, destinc, height)
+      register unsigned char *src, *dest;
+      long srclen, srcinc, destinc;
+***************
+*** 366,388 ****
+  #define l SwapFourBytes,
+  #define w SwapWords,
+  #define R SwapBits,
+! #define S SwapBitsAndTwoBytes,
+  #define L SwapBitsAndFourBytes,
+  #define W SwapBitsAndWords,
+  
+  /*         1Mm 2Mm 4Mm 1Ml 2Ml 4Ml 1Lm 2Lm 4Lm 1Ll 2Ll 4Ll   */
+! /* 1Mm */ { n   n   n   R   S   L   n   s   l   R   R   R },
+! /* 2Mm */ { n   n   n   R   S   L   n   s   l   R   R   R },
+! /* 4Mm */ { n   n   n   R   S   L   n   s   l   R   R   R },
+! /* 1Ml */ { R   R   R   n   s   l   R   S   L   n   n   n },
+! /* 2Ml */ { S   S   S   s   n   w   S   R   W   s   s   s },
+  /* 4Ml */ { L   L   L   l   w   n   L   W   R   l   l   l },
+! /* 1Lm */ { n   n   n   R   S   L   n   s   l   R   R   R },
+! /* 2Lm */ { s   s   s   S   R   W   s   n   w   S   S   S },
+  /* 4Lm */ { l   l   l   L   W   R   l   w   n   L   L   L },
+! /* 1Ll */ { R   R   R   n   s   l   R   S   L   n   n   n },
+! /* 2Ll */ { R   R   R   n   s   l   R   S   L   n   n   n },
+! /* 4Ll */ { R   R   R   n   s   l   R   S   L   n   n   n },
+  
+  #undef n
+  #undef s
+--- 389,412 ----
+  #define l SwapFourBytes,
+  #define w SwapWords,
+  #define R SwapBits,
+! #define Sa SwapBitsAndTwoBytes_a,
+! #define Sb SwapBitsAndTwoBytes_b,
+  #define L SwapBitsAndFourBytes,
+  #define W SwapBitsAndWords,
+  
+  /*         1Mm 2Mm 4Mm 1Ml 2Ml 4Ml 1Lm 2Lm 4Lm 1Ll 2Ll 4Ll   */
+! /* 1Mm */ { n   n   n   R   Sa  L   n   s   l   R   R   R },
+! /* 2Mm */ { n   n   n   R   Sa  L   n   s   l   R   R   R },
+! /* 4Mm */ { n   n   n   R   Sa  L   n   s   l   R   R   R },
+! /* 1Ml */ { R   R   R   n   s   l   R   Sa  L   n   n   n },
+! /* 2Ml */ { Sb  Sb  Sb  s   n   w   Sb  R   W   s   s   s },
+  /* 4Ml */ { L   L   L   l   w   n   L   W   R   l   l   l },
+! /* 1Lm */ { n   n   n   R   Sa  L   n   s   l   R   R   R },
+! /* 2Lm */ { s   s   s   Sb  R   W   s   n   w   Sb  Sb  Sb},
+  /* 4Lm */ { l   l   l   L   W   R   l   w   n   L   L   L },
+! /* 1Ll */ { R   R   R   n   s   l   R   Sa  L   n   n   n },
+! /* 2Ll */ { R   R   R   n   s   l   R   Sa  L   n   n   n },
+! /* 4Ll */ { R   R   R   n   s   l   R   Sa  L   n   n   n },
+  
+  #undef n
+  #undef s
+
+

@@ -1,0 +1,6 @@
+/* $XConsortium: Imakefile,v 1.3 88/09/06 17:55:55 jim Exp $ */
+LOCAL_LIBRARIES = $(XLIB)
+SRCS = puzzle.c main.c picture.c
+OBJS = puzzle.o main.o picture.o
+
+ComplexProgramTarget(puzzle)

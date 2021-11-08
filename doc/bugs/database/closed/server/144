@@ -1,0 +1,133 @@
+Return-Path: tom%hpcvxth@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 28 Jul 88 18:41:24 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05307; Thu, 28 Jul 88 18:41:03 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 28 Jul 88 14:40:18 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA26646; Thu, 28 Jul 88 15:41:34 PDT
+Received: from hpcvxth.HP.COM by hpcvlx.HP.COM; Thu, 28 Jul 88 15:39:22 pdt
+Received: by hpcvxth.HP.COM; Thu, 28 Jul 88 15:39:12 mdt
+Date: Thu, 28 Jul 88 15:39:12 mdt
+From: tom%hpcvxth@hplabs.hp.com
+Message-Id: <8807282139.AA01917@hpcvxth.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: miGetPlane woes
+
+### bug number:   798
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+     X11 release 2
+SYNOPSIS:
+     Bug in server mi code.
+DESCRIPTION:
+     In /X11/server/ddx/mi/mibitblt.c the function miGetPlane is
+     incorrect.  There are several problems associated with
+     MSBFirst format, pixel sizes other than 8, and when pCharsOut should
+     get incremented.
+     incremented.
+REPEAT-BY:
+     The following test demonstrates the problem.  It gets a 2x1
+     image from a blank window and puts it back.  One of the bits
+     is incorrectly rendered as the foreground pixel.
+
+         #include <X11/Xlib.h>
+         
+         #define WIDTH 1
+         #define HEIGHT 2
+         main(argc, argv)
+            int argc;
+            char * argv[];
+         {
+            Display * display;
+            int screen;
+            XImage * image;
+            GC gc;
+            Window window;
+            int i, j, shortCount, inc;
+            unsigned short ushortData;
+            unsigned long pixelData;
+            
+         
+            display = XOpenDisplay (argv[1]);
+            screen = DefaultScreen(display);
+            window = XCreateSimpleWindow (display, RootWindow(display, screen),
+                     32, 32, 200, 200, 0, BlackPixel(display, screen),
+                     WhitePixel(display,screen));
+            XMapWindow (display, window);
+         
+            XFlush(display);
+            XSync(display,0);
+            sleep(10);
+         
+            gc = XCreateGC (display, window, 0, 0);
+            XSetForeground (display, gc, WhitePixel(display, screen));
+            XSetBackground (display, gc, BlackPixel(display, screen));
+         
+            image = XGetImage(display,window, 0,0,WIDTH,HEIGHT,AllPlanes,XYPixmap);
+            printf("image->depth = %d\n",image->depth) ;
+            printf("image->xoffset = %d\n",image->xoffset    ) ;
+            printf("image->bitmap_pad = %d\n",image->bitmap_pad) ;
+            printf("image->bitmap_unit = %d\n",image->bitmap_unit) ;
+            printf("image->bits_per_pixel = %d\n",image->bits_per_pixel) ;
+            printf("image->bytes_per_line = %d\n",image->bytes_per_line) ;
+            printf("image->bitmap_bit_order = %d\n",image->bitmap_bit_order) ;
+            printf("image->byte_order = %d\n",image->byte_order) ;
+         
+            for (i=0;i<image->bytes_per_line*image->height*(image->depth);i++)
+             {
+               printf(" %x, ",image->data[i]) ;
+             }
+            printf("\n") ;
+         
+            XPutImage(display,window,gc,image,0,0,128,128,WIDTH,HEIGHT);
+            XFlush(display);
+            XSync(display,0);
+            while (1);
+         }
+
+FIX:
+     
+     Here's the fix:       
+
+         <  old
+         >  new
+         340,344c340,353
+         < 		    shifted_pline = (
+         < 			((*pline&0xff) << 24) +
+         < 			((*pline&0xff00) << 8) +
+         < 			((*pline&0xff0000) >> 8) +
+         < 			((*pline&0xff000000) >> 24));
+         ---
+         >                     switch (bitsPerPixel) {
+         >            	      case 4:
+         >                       case 8: shifted_pline = (
+         > 			      ((*pline&0xff) << 24) +
+         > 			      ((*pline&0xff00) << 8) +
+         > 			      ((*pline&0xff0000) >> 8) +
+         > 			      ((*pline&0xff000000) >> 24));
+         >                               break ;
+         >                       case 16: shifted_pline = (
+         > 			      ((*pline&0xffff) << 16) +
+         > 			      ((*pline&0xffff0000) >> 16));
+         >                               break ;
+         >                       case 32: shifted_pline = *pline ;
+         >                     }
+         352c361
+         < 		    if (k == 8)
+         ---
+         > 		    if (k == 8||j==w-1)
+         362c371
+         < 		    if (k == 16)
+         ---
+         > 		    if (k == 16||j==w-1)
+         372c381
+         < 		    if (k == 32)
+         ---
+         > 		    if (k == 32||j==w-1)
+         
+Tom Houser
+hplabs!tom@hpcvxth
+

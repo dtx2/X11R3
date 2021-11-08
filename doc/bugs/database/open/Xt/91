@@ -1,0 +1,29 @@
+Return-Path: swick@athena.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 8 Sep 88 09:20:38 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA03954; Thu, 8 Sep 88 09:20:44 EDT
+Received: by LYRE.MIT.EDU (5.45/4.7) id AA21401; Thu, 8 Sep 88 09:19:09 EDT
+Message-Id: <8809081319.AA21401@LYRE.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xt enhancement
+Date: Thu, 08 Sep 88 09:19:04 EDT
+From: Ralph R. Swick <swick@athena.mit.edu>
+
+### bug number:   953
+### area:         Xt
+### severity:     enhancement
+### comments:     
+
+What a wonderful idea!
+
+Date: Wed, 7 Sep 88 10:08:07 EDT
+From: necntc!encore!bzs@ames.arc.nasa.gov  (Barry Shein)
+
+I suppose the whole geometry thing has to go out the window (so to
+speak) also, encouraging things like =200x400 anywhere is a wrong
+thought (although applications like xterm take it in row/columns which
+is just fine.) That needs more thinking although the answer will be
+simple (one obvious solution is to go for a troff'like notion of
+units, 2ix4i means 2 by 4 inches, 200px400p means 200 by 400 points
+etc, basically trivia to implement, unlike the font machinery stuff
+which is hard.)
+

@@ -1,0 +1,85 @@
+.TH XLOGO 1 "1 March 1988" "X Version 11"
+.SH NAME
+xlogo - X Window System logo
+.SH SYNOPSIS
+.B xlogo
+[-\fItoolkitoption\fP ...]
+.SH DESCRIPTION
+The
+.I xlogo
+program displays the X Window System logo.  This program is
+nothing more than a wrapper around the Athena Logo widget.
+.SH OPTIONS
+.I Xlogo
+accepts all of the standard X Toolkit command line options, of which the
+following are used most frequently:
+.TP 8
+.B \-bg \fIcolor\fP
+This option specifies the color to use for the background of the window.  
+The default is \fIwhite\fP.
+A correct color for the background is something like \fImaroon\fP.
+.TP 8
+.B \-bd \fIcolor\fP
+This option specifies the color to use for the border of the window.
+The default is \fIblack\fP.
+.TP 8
+.B \-bw \fInumber\fP
+This option specifies the width in pixels of the border surrounding the window.
+.TP 8
+.B \-fg \fIcolor\fP
+This option specifies the color to use for displaying the logo.
+The default is \fIblack\fP.
+A correct color for the background is something like \fIsilver,\fP
+which you can approximate with a shade of gray, like \#aa9.
+.TP 8
+.B \-rv
+This option indicates that reverse video should be simulated by swapping
+the foreground and background colors.
+.TP 8
+.B \-geometry \fIgeometry\fP
+This option specifies the prefered size and position of the logo window.
+.TP 8
+.B \-display \fIdisplay\fP
+This option specifies the X server to contact.
+.TP 8
+.B \-xrm \fIresourcestring\fP
+This option specifies a resource string to be used.  This is especially
+useful for setting resources that do not have separate command line options.
+.SH X DEFAULTS
+This program uses the 
+.I Logo
+widget in the X Toolkit.  It understands all of the core resource names and
+classes as well as:
+.PP
+.TP 8
+.B width (\fPclass\fB Width)
+Specifies the width of the logo.  The default width is 100 pixels.
+.TP 8
+.B height (\fPclass\fB Height)
+Specifies the height of the logo.  The default height is 100 pixels.
+.TP 8
+.B foreground (\fPclass\fB Foreground)
+Specifies the color for the logo.
+The default is \fIblack\fP since the core default for background 
+is \fIwhite\fP.
+.TP 8
+.B reverseVideo (\fPclass\fB ReverseVideo)
+Specifies that the foreground and background should be reversed.
+.SH ENVIRONMENT
+.PP
+.TP 8
+.B DISPLAY
+to get the default host and display number.
+.TP 8
+.B XENVIRONMENT
+to get the name of a resource file that overrides the global resources
+stored in the RESOURCE_MANAGER property.
+.SH SEE ALSO
+X(1), xrdb(1), Athena Logo widget
+.SH COPYRIGHT
+Copyright 1988, Massachusetts Institute of Technology.
+.br
+See \fIX(1)\fP for a full statement of rights and permissions.
+.SH AUTHORS
+Ollie Jones of Apollo Computer wrote the logo graphics routine,
+based on a graphic design by Danny Chong and Ross Chapman of Apollo Computer.

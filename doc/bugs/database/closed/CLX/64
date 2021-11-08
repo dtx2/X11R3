@@ -1,0 +1,38 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: by expo.lcs.mit.edu; Tue, 6 Sep 88 16:26:58 EDT
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 218472; Tue 6-Sep-88 15:44:48 EDT
+Date: Tue, 6 Sep 88 15:44 EDT
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CLX: XLIB:KEYBOARD-MAPPING
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880906194441.4.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   941
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	CLX from Zermatt.
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	The external symbol XLIB:KEYBOARD-MAPPING is referenced by
+DISPLAY-KEYBOARD-MAPPING in translate.lisp even though it is not
+exported until text.lisp is loaded.
+
+REPEAT-BY:
+	Compile CLX.
+
+FIX:
+	Remove the "XLIB:".
+

@@ -1,0 +1,52 @@
+Return-Path: unido!sinix!athen!dorfen!xtest@uunet.uu.net
+Received: by expo.lcs.mit.edu; Thu, 29 Sep 88 10:13:10 EDT
+Received: from unido.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA00859; Thu, 29 Sep 88 10:11:16 EDT
+Received: by unido.uucp with uucp; 
+	  Thu, 29 Sep 88 10:46:59 +0100
+Received: by athen.sp4.siemens.de
+	  at Thu, 29 Sep 88 10:42:48  +0100 (5.52/SIE-0.1)
+From: unido!athen!dorfen!xtest@uunet.uu.net
+Received: by dorfen.sp4.siemens.de
+	  at Thu, 29 Sep 88 10:41:55  +0100 (5.52.1/SIE-1.1)
+Message-Id: <8809290941.AA01156@dorfen.sp4.siemens.de>
+Date: Thu, 29 Sep 88 10:41:55  +0100
+To: xbugs@expo.lcs.mit.edu (Apparently)
+
+### bug number:   1020
+### area:         doc
+### severity:     low
+### comments:     
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	don't care.
+
+CLIENT OPERATING SYSTEM:
+	don't care.
+
+DISPLAY:
+	don't care.
+
+SYNOPSIS:
+	FocusInEvent, NotifyPointerRoot
+
+DESCRIPTION:
+	Sample Server and Xlib c-Library Manual
+	disaggree about the value of Detail Member in some
+	cases.
+	See Page 154 and 155 of the Manual. The Detail Member
+	of the XFocusEvent should be set to NotifyPointerRoot,
+	the Sample Server sets it to NotifyPointer
+
+REPEAT-BY:
+	(What you did to get the error; include test program if appropriate)
+
+FIX:
+	(Preferred, but not necessary)
+
+

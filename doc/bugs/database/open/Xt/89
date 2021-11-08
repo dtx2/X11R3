@@ -1,0 +1,40 @@
+Return-Path: keith
+Received: by expo.lcs.mit.edu; Wed, 7 Sep 88 18:24:24 EDT
+From: keith@expo.lcs.mit.edu (Keith Packard)
+Message-Id: <8809072224.AA01951@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: GraphicsExpose events for Toolkit clients
+Date: Wed, 07 Sep 88 18:24:23 EDT
+
+### bug number:   939
+### area:         Xt
+### severity:     medium
+### comments:     
+
+
+VERSION:
+    R3 from MIT
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    any
+
+
+AREA:
+    Xt
+
+
+SYNOPSIS:
+    GraphicsExposure Events are not supported by the Translation Manager.
+
+
+DESCRIPTION:
+    The Toolkit does not support GraphicsExposure events at all.  This is
+    a difficult problem as it doesn't support events sent to non-windows
+    (e.g. pixmaps) at all.
+
+
+REPEAT BY:
+    Obscure a portion of a Text widget and scroll text from the obscured
+    area to a visible region.
+

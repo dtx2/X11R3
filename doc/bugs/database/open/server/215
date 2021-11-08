@@ -1,0 +1,64 @@
+Return-Path: Richard.Draves@rpd.camelot.cs.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 22 Aug 88 01:46:42 EDT
+Received: from RPD.CAMELOT.CS.CMU.EDU by RPD.CAMELOT.CS.CMU.EDU; 22 Aug 88 01:45:47 EDT
+To: xbugs@expo.lcs.mit.edu
+Cc: zs01+@andrew.cmu.edu
+Subject: bug in aedValidateGC
+Date: Mon, 22 Aug 88 01:45:36 EDT
+Message-Id: <9446.588231936@RPD.CAMELOT.CS.CMU.EDU>
+From: Richard.Draves@rpd.camelot.cs.cmu.edu
+
+### bug number:   895
+### area:         server
+### severity:     high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	Viking/AED
+
+SYNOPSIS:
+	XCopyArea from window to pixmap crashes server
+
+DESCRIPTION:
+	Trying to bring up a menu using the ITC's new menu package
+	crashes the server.  It seg-faults on an adress low in segment 8,
+	which indicates that the server was trying to directly read/write
+	the AED display, which actually isn't accessible.
+
+FIX:
+	The problem is aedValidateGC sets up the CopyArea function
+	to be mfbCopyArea if the destination is a pixmap.  If the source
+	is a window, the mfb code tries to directly read the AED's bitmap.
+	This quick fix just uses miCopyArea instead.  Some of the other
+	assignments in aedValidateGC are suspicious, but I didn't change
+	anything else.
+
+*** /afs/cs/archive/X.V11R2-source/server/ddx/ibm/aed/aedgc.c	Wed Jan 21 19:40:18 1987
+--- server/ddx/ibm/aed/aedgc.c	Wed Aug 17 13:46:01 1988
+***************
+*** 253,259 ****
+  	{
+  	    pGC->SetSpans = mfbSetSpans;
+  	    pGC->PutImage = mfbPutImage;
+! 	    pGC->CopyArea = mfbCopyArea;
+  	    pGC->CopyPlane = mfbCopyPlane;
+  	    pGC->PolyPoint = mfbPolyPoint;
+  	    pGC->PolySegment = miPolySegment;
+--- 253,259 ----
+  	{
+  	    pGC->SetSpans = mfbSetSpans;
+  	    pGC->PutImage = mfbPutImage;
+! 	    pGC->CopyArea = miCopyArea;
+  	    pGC->CopyPlane = mfbCopyPlane;
+  	    pGC->PolyPoint = mfbPolyPoint;
+  	    pGC->PolySegment = miPolySegment;
+

@@ -1,0 +1,77 @@
+Return-Path: deboor%dill.Berkeley.EDU@ginger.berkeley.edu
+Received: from dill.Berkeley.EDU by expo.lcs.mit.edu; Sun, 3 Apr 88 17:11:37 EDT
+Received: by dill.Berkeley.EDU (5.57/1.25)
+	id AA01385; Sat, 2 Apr 88 20:55:05 PST
+Date: Sat, 2 Apr 88 20:55:05 PST
+From: deboor%dill.Berkeley.EDU@ginger.berkeley.edu (Adam R de Boor)
+Message-Id: <8804030455.AA01385@dill.Berkeley.EDU>
+To: x11%brie@sun.com, xbugs@expo.lcs.mit.edu
+Subject: cfbPadPixmap lies 
+
+### bug number:   256
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	cfbPadPixmap claims to pad its pixmaps to be 32 pixels wide.
+	It doesn't.
+
+DESCRIPTION:
+	 An innocuous enough failing, you might say, since all the functions
+	 that use the resulting pixmap for drawing know about cfbPadPixmap's
+	 little exaggerations, white lies, if you will. But there's always
+	 somebody...in this case, cfbXRotatePixmap doesn't know about
+	 cfbPadPixmap's charming ways, so it believes the pixmap is 32
+	 pixels wide (though it only allocates room for devKind * height
+	 when it has to use cfbQuickBlt, since the pixmap isn't PPW pixels
+	 wide, after all) and ends up tromping on pieces of memory it
+	 didn't ought to be playing with (smack!). This all shows up in
+	 a rather amusing tendency of malloc to allow pieces of
+	 already-allocated memory to be reallocated. In this case, a window
+	 got trashed for the sake of a few regions.
+
+REPEAT-BY:
+	I find it rather ironic that this all came about because of
+	Dave Rosenthal's attempt to make Barry Shein's april fools joke
+	work in color...(in case you haven't seen it, it's a mockup of
+	the Macintosh desktop. Pretty cute, actually)
+
+FIX:
+	How does that saying go? Take care of the pennies and the
+	pounds will take care of themselves? Hmmmm.
+*** /tmp/,RCSt1a01299	Sat Apr  2 20:49:35 1988
+--- cfbpixmap.c	Sat Apr  2 20:49:19 1988
+***************
+*** 252,258
+          }
+          p++;
+      }    
+!     pPixmap->width = 32;
+      return(TRUE);
+  }
+  
+
+--- 252,258 -----
+          }
+          p++;
+      }    
+!     pPixmap->width = PPW;
+      return(TRUE);
+  }
+  
+

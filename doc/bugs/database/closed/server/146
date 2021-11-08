@@ -1,0 +1,68 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Wed, 13 Apr 88 08:57:32 EDT
+Date: Wed, 13 Apr 88 08:57 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: max-request-length, and broken pipes
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <880413085756.6.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   367
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	doesn't seem to matter
+
+DISPLAY:
+	doesn't seem to matter
+
+AREA:
+	server
+
+SYNOPSIS:
+	servers don't respect max-request-length
+	connections break with Broken Pipe on large requests
+
+DESCRIPTION:
+	Servers aren't checking incoming requests to make sure
+	that they are no larger than the max-request-length
+	returned in the connection setup info.  The protocol
+	doc says the server should generated a Length error if
+	this value is exceeded.
+
+	Although servers accept over-large requests, there is
+	an apparently magic point, at 131073 bytes (0x20001),
+	where connections break with Broken Pipe.  I haven't
+	delved to figure out why this is so, except to be
+	reasonably certain that it doesn't seem to be
+	intentional.
+
+REPEAT-BY:
+
+	Try invoking the following with arg "131048", then "131049".
+
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+
+main (argc, argv)
+    int argc;
+    char **argv;
+{
+    Display *d;
+
+    d = XOpenDisplay(0);
+    XChangeProperty(d,XDefaultRootWindow(d), XA_STRING, XA_STRING, 8,
+		     PropModeReplace, malloc(atoi(argv[1])), atoi(argv[1]));
+    XSync(d, 0);
+    XDeleteProperty(d,XDefaultRootWindow(d), XA_STRING);
+    XSync(d, 0);
+    XCloseDisplay(d);
+}
+
+

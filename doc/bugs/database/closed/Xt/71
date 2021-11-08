@@ -1,0 +1,52 @@
+Return-Path: stuart@cs.rochester.edu
+Received: by expo.lcs.mit.edu; Fri, 29 Apr 88 06:55:21 EDT
+Received: by cayuga.cs.rochester.edu (5.52/h) id AA18071; Fri, 29 Apr 88 06:54:06 EDT
+Received: by rigel.cs.rochester.edu (3.2/h) id AA07073; Fri, 29 Apr 88 06:53:48 EDT
+Date: Fri, 29 Apr 88 06:53:48 EDT
+From: stuart@cs.rochester.edu
+Message-Id: <8804291053.AA07073@rigel.cs.rochester.edu>
+To: cs.x@cs.rochester.edu, xbugs@expo.lcs.mit.edu
+Subject: XtAugmentTranslations can dump core.
+
+### bug number:   436
+### area:         Xt
+### severity:     high
+### comments:     null pointer deref
+### status:       closed
+                  TMstate.c r 1.61
+
+VERSION:
+        X11 release 2
+
+CLIENT MACHINE:
+        Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+        SunOS 3.4
+
+DISPLAY:
+        Sun
+
+SYNOPSIS:
+        XtAugmentTranslations can dump core.
+
+DESCRIPTION:
+        Xt/TMstate.c, version 1.48, date 88.02.26, author Swick
+
+        When XtAugmentTranslations is called with a widget with a NULL
+        core.tm.translations, _XtAugmentTranslations later dereferences
+	this NULL pointer in
+
+          temp->clickTime = old->clickTime;
+
+REPEAT-BY:
+        label = XtCreateManagedWidget("label", labelWidgetClass, parent,
+                                        (ArgList)NULL, (Cardinal)0);
+        label_translations = XtParseTranslationTable(label_table);
+        XtAugmentTranslations(label, label_translations);
+
+FIX:
+        /* default value provided in _XtInitializeStateTable */
+        if (old != NULL)
+          temp->clickTime = old->clickTime;
+

@@ -1,0 +1,9 @@
+The following changes have been made to this directory since R2:
+
+     o  CopyArea/CopyPlane interface changes.
+     o  backing store support using mi backing store.
+     o  some bitblt optimizations.
+     o  handles colormaps a bit better.
+     o  found and fixed some region leaks.
+     o  handles 24 bit pixels.
+     o  tile and stipple bugs fixed.

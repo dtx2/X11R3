@@ -1,0 +1,51 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 10:04:09 EST
+Date: Thu, 10 Mar 88 10:04:09 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101504.AA00331@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: font compiler
+
+### bug number:   64
+### area:         fc
+### severity:     
+### assigned to:  
+### status:       closed
+
+(Message inbox:38)
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 08:03:24 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 177532; Thu 10-Mar-88 08:02:28 EST
+Date: Thu, 10 Mar 88 08:02 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: font compiler
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com, york@alderaan.scrc.symbolics.com
+Message-Id: <19880310130227.5.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	The font compiler uses invalid C.
+
+DESCRIPTION:
+	The font compiler assumes throughout that it can store (char *)
+values in the "name" and "value" slots of the FontProp structure.  They
+are declared as INT32 and CARD32.  You can't do that in C.
+
+REPEAT-BY:
+	Just compile it.
+
+FIX:
+	I wrote a simple string-interning routine and store the numbers
+that come out of it instead of the raw pointers.

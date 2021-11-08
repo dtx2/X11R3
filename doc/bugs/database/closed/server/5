@@ -1,0 +1,38 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu 
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 7 Mar 88 15:33:43 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA01943; Mon, 7 Mar 88 15:33:12 EST
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Mon, 7 Mar 88 15:31:12 EST
+Date: Mon, 7 Mar 88 15:31 EST
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: Re: Serious bug in MapWindow 
+To: franz!sparky!jdi@ucbarpa.berkeley.edu
+Cc: xbugs@athena.mit.edu
+In-Reply-To: <8803071924.AA04027@sparky>
+Message-Id: <880307153150.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   49
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+    Date: Mon, 07 Mar 88 11:24:54 PST
+    From: John Irwin <franz!sparky!jdi@ucbarpa.berkeley.edu>
+
+    Truly?  I might point out that since the if statement will always return true
+    the else code at the end of the function will never get executed.
+
+It *won't* always return true.  It will return false for root windows.  The
+else code will get executed when initially mapping the root windows.
+
+									If this
+    isn't a bug it surely is bad programming style.
+
+Using assignments in expressions is arguably bad style, but this isn't a bug.
+
+    ps: When I get the core dump adb tells me I was inside MapWindow.
+
+Fine.  Something else must be wrong.  Perhaps memory is getting trashed.
+At any rate, without a stack backtrace and related information, or else
+a deterministic way to cause the problem, there isn't much we can do.
+

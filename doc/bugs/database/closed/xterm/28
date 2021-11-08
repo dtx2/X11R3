@@ -1,0 +1,67 @@
+Return-Path: elsie!ado@ncifcrf.gov
+Received: by expo.lcs.mit.edu; Sat, 25 Jun 88 21:28:39 EDT
+Received: by fcs280s.ncifcrf.gov (4.0/NCIFCRF-1.0)
+	id AA02422; Sat, 25 Jun 88 21:20:29 EDT
+Received: by elsie.UUCP (5.51/4.7)
+	id AA01970; Sat, 25 Jun 88 21:25:14 EDT
+Date: Sat, 25 Jun 88 21:25:14 EDT
+From: elsie!ado@ncifcrf.gov (Arthur David Olson)
+Subject: xterm misses a "feature" of VT100 save/restore cursor sequences
+Message-Id: <8806260125.AA01970@elsie.UUCP>
+Apparently-To: xbugs@expo.lcs.mit.edu
+
+### bug number:   641
+### area:         xterm
+### severity:     low
+### comments:     
+
+-------------------------------------------------------------------------------
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	Sun B&W
+
+SYNOPSIS:
+	xterm misses a "feature" of VT100 save/restore cursor sequences
+
+DESCRIPTION:
+	A real live VT100 saves and restores "origin mode" when you save and
+	restore the cursor.
+
+REPEAT-BY:
+	Run this one-liner. . .
+awk 'BEGIN{printf "%c[10r%c[?6h%c7%c[?6l%c8%c[Hhello\n",27,27,27,27,27,27;exit}'
+	. . .on both a real VT100 and in an xterm window.  Note that on the
+	real VT100 the "hello" ends up in the middle of the screen while on
+	the xterm window it ends up at the top.
+
+FIX:
+*** 1.1/cursor.c	Sat Jun 25 20:40:11 1988
+--- 1.3/cursor.c	Sat Jun 25 20:40:12 1988
+***************
+*** 233,239 ****
+  	bcopy(sc->gsets, screen->gsets, sizeof(screen->gsets));
+  	screen->curgl = sc->curgl;
+  	screen->curgr = sc->curgr;
+! 	term->flags &= ~(BOLD|INVERSE|UNDERLINE);
+! 	term->flags |= sc->flags & (BOLD|INVERSE|UNDERLINE);
+! 	CursorSet(screen, sc->row, sc->col, term->flags);
+  }
+--- 233,239 ----
+  	bcopy(sc->gsets, screen->gsets, sizeof(screen->gsets));
+  	screen->curgl = sc->curgl;
+  	screen->curgr = sc->curgr;
+! 	term->flags &= ~(BOLD|INVERSE|UNDERLINE|ORIGIN);
+! 	term->flags |= sc->flags & (BOLD|INVERSE|UNDERLINE|ORIGIN);
+! 	CursorSet(screen, sc->row - screen->top_marg, sc->col, term->flags);
+  }
+-- 
+	ado@ncifcrf.gov			ADO is a trademark of Ampex.
+

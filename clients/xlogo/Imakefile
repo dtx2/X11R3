@@ -1,0 +1,5 @@
+LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
+           SRCS = xlogo.c
+           OBJS = xlogo.o
+
+ComplexProgramTarget(xlogo)

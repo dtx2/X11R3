@@ -1,0 +1,46 @@
+Return-Path: mcvax!latlog!payne@uunet.uu.net
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Mon, 11 Apr 88 15:20:14 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA19767; Mon, 11 Apr 88 14:19:15 EST
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA22331; Mon, 11 Apr 88 15:19:00 EDT
+Received: by mcvax.cwi.nl; Mon, 11 Apr 88 14:31:48 +0200 (MET)
+Received: from edee.ed.ac.uk by kestrel.Ukc.AC.UK   via Janet (UKC CAMEL FTP)
+           id aa00883; 11 Apr 88 11:56 BST
+Date: Mon, 11 Apr 88 11:45:38 -0100
+Message-Id: <329.8804111045@latlog.co.uk>
+From: mcvax!latlog!PAYNE@uunet.uu.net
+Subject: Xt bug
+To: xbugs@athena.mit.edu
+
+### bug number:   355
+### area:         Xt
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Core dump in lib/Xt/Event.c
+DESCRIPTION:
+	line 546:
+
+	if (widget == NULL) {
+
+	this condition should always return because passing a NULL widget
+	to the following conditions causes an error. However if this
+	condition doesn't find a spring_loaded widget it continues.
+
+REPEAT-BY:
+	Pass events to XtDispatchEvent that are nothing to do with the
+	toolkit when you have no spring_loaded widgets (a valid thing
+	to do I would contend).
+FIX:
+	insert `return;' before line 556
+
+I hope this is clear!
+
+Julian Payne, European Silicon Structures (ES2)
+(payne@latlog.uucp)
+

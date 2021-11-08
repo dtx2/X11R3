@@ -1,0 +1,104 @@
+Return-Path: dana@thumper.bellcore.com
+Received: by expo.lcs.mit.edu; Thu, 9 Jun 88 16:13:13 EDT
+Received: by thumper.bellcore.com (5.54/4.7)
+	id AA28496; Thu, 9 Jun 88 16:09:19 EDT
+Received: by dino.bellcore.com (4.12/4.7)
+	id AA11695; Thu, 9 Jun 88 16:08:34 edt
+Date: Thu, 9 Jun 88 16:08:34 edt
+From: dana@thumper.bellcore.com (Dana A. Chee)
+Message-Id: <8806092008.AA11695@dino.bellcore.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: dana@thumper.bellcore.com, ludwig@zippy.lcs.mit.edu
+Subject: Athena Viewport coredump with forceBars
+
+### bug number:   584
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/75
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	Sun
+
+SYNOPSIS:
+	bugs cause core dump on sun when using forceBars in Viewport
+
+DESCRIPTION:
+	1.) In Initialize, clip widget must be created before scroll
+	bars are added, since CreateScrollbar uses it
+
+	2.) In Initialize, the vertical scrollbar create used True
+	instead of False
+
+	3.) In PreferredSize, reply not set before returning (causes
+	bugs in XtQueryGeometry).
+
+REPEAT-BY:
+	use the widget
+
+FIX:
+*** Viewport.c.orig	Thu Jun  9 16:02:11 1988
+--- Viewport.c	Thu Jun  9 16:02:58 1988
+***************
+*** 210,227 ****
+  
+      w->form.default_spacing = 0;
+  
+      if (w->viewport.forcebars) {
+  	if (w->viewport.allowhoriz)
+  	    clip_args[1].value = (XtArgVal)CreateScrollbar(w, True);
+  
+  	if (w->viewport.allowvert)
+! 	    clip_args[0].value = (XtArgVal)CreateScrollbar(w, True);
+      }
+  
+-     clip_args[2].value = (XtArgVal)Max(w->core.width,1);
+-     clip_args[3].value = (XtArgVal)Max(w->core.height,1);
+-     w->viewport.clip = XtCreateWidget( "clip", widgetClass, new,
+- 				       clip_args, XtNumber(clip_args) );
+      XtManageChild( w->viewport.clip );	/* see ChangeManaged() */
+  }
+  
+--- 210,229 ----
+  
+      w->form.default_spacing = 0;
+  
++     clip_args[2].value = (XtArgVal)Max(w->core.width,1);
++     clip_args[3].value = (XtArgVal)Max(w->core.height,1);
++     w->viewport.clip = XtCreateWidget( "clip", widgetClass, new,
++ 				       clip_args, XtNumber(clip_args) );
++     
+      if (w->viewport.forcebars) {
+  	if (w->viewport.allowhoriz)
+  	    clip_args[1].value = (XtArgVal)CreateScrollbar(w, True);
+  
+  	if (w->viewport.allowvert)
+! 	    clip_args[0].value = (XtArgVal)CreateScrollbar(w, False);
+! 	XtSetValues(w->viewport.clip, clip_args, 2);
+      }
+  
+      XtManageChild( w->viewport.clip );	/* see ChangeManaged() */
+  }
+  
+***************
+*** 691,695 ****
+--- 693,700 ----
+  	return XtQueryGeometry( ((ViewportWidget)w)->viewport.child,
+  			       constraints, reply );
+      else
++     {
++ 	*reply = *constraints; /* give him whatever he wants */
+  	return XtGeometryYes;
++     }
+  }
+
+

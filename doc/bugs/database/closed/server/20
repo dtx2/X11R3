@@ -1,0 +1,52 @@
+Return-Path: wesommer@athena.mit.edu 
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Sat, 5 Mar 88 15:23:41 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA15224; Sat, 5 Mar 88 15:23:08 EST
+Received: by EPIMETHEUS.MIT.EDU (5.45/4.7) id AA27949; Sat, 5 Mar 88 15:20:59 EST
+Date: Sat, 5 Mar 88 15:20:59 EST
+From: Bill Sommerfeld <wesommer@athena.mit.edu>
+Message-Id: <8803052020.AA27949@EPIMETHEUS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: X11R2:server/os/sysV/util.c: stupid comment misspelling.
+
+### bug number:   35
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+[Yes, I know you guys have better things to do with your time than fix
+typos in comments.]
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	There is a typo in a comment in server/os/sysV/util.c
+	
+DESCRIPTION:
+	`BSD' is spelled `BDS'.  Was this guy on `LDS' when he wrote
+this?? :-)
+
+REPEAT-BY:
+	Read the source file.
+
+FIX:
+
+% diff -c server/os/sysV/util.c{.~1~,}
+*** server/os/sysV/util.c.~1~   Fri Sep 11 07:50:57 1987
+--- server/os/sysV/util.c       Sat Mar  5 15:17:31 1988
+***************
+*** 1,6 ****
+  /* $Header: util.c,v 1.1 87/09/11 07:50:56 toddb Exp $ */
+  /*
+!  * These are routines fould in BDS and not found in System V.  They are
+   * included so that some clients can compile.
+   */
+  
+--- 1,6 ----
+  /* $Header: util.c,v 1.1 87/09/11 07:50:56 toddb Exp $ */
+  /*
+!  * These are routines fould in BSD and not found in System V.  They are
+   * included so that some clients can compile.
+   */
+  

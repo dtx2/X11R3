@@ -1,0 +1,89 @@
+Path: mit-vax!bloom-beacon!tut.cis.ohio-state.edu!rutgers!iuvax!pur-ee!uiucdcs!uiucdcsm!grunwald
+From: grunwald@uiucdcsm.cs.uiuc.edu
+Newsgroups: comp.windows.x
+Subject: Color TeXx fix
+Message-ID: <26900030@uiucdcsm>
+Date: 12 Apr 88 14:26:00 GMT
+Lines: 70
+Nf-ID: #N:uiucdcsm:26900030:000:2330
+Nf-From: uiucdcsm.cs.uiuc.edu!grunwald    Apr 12 08:26:00 1988
+
+### bug number:   371
+### area:         contrib
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     
+
+
+Here's a fix to TeXx for color workstations.
+
+The problem is that the GC's used inherit the plane depth of the root window,
+e.g., 8 bits for a Sun, while the pixmaps are only a single bit deep.
+
+There are two solutions
+	1) Change the GC's to use a single bit plane (would use less memory)
+	2) Change the bitmaps to use multiple bitplanes (included below)
+
+Now, there's another reason why this latter approach might be nice -- the
+``shrinkGlyph'' routine in file 'dvistuff.c' could be duplicated & named
+``shrinkGrayGlyph'' in TeXx.c.
+
+shrinkGlyph computes the number of ``on pixels'' in a N by N area. If they
+pass some threshold, it turns that ``shrunk bit'' on, else off. There'd be
+no problem in making that be a grey scale. You'd need to scale things 
+to fit you bitplane (i.e. if I'm shrinking a 2x2 area, there's 2**4
+possibilities)
+
+This would give better aliasing on color & grey scale monitors. The routine
+should be duplicated & renamed instead of changing the copy in 'dvistuff.c'.
+The modified routine would be a little special because it would need to know
+more details about the X-11 data structures, and things in 'dvistuff.c' are
+supposed to be general purpose.
+
+So, anyone with a color monitor want to try it & post the diffs?
+
+Here's the fix....
+
+Date: Sun, 10 Apr 88 20:23:28 EDT
+From: clayton@thumper.bellcore.com (R. Clayton)
+To: grunwald@m.cs.uiuc.edu
+Subject: A color texx problem
+Cc: dana@faline
+
+There is a problem with texx on color displays: the page pixmaps are
+created with a depth of one, but the graphics contexts inherit the
+depth of the root window, which is, in this case, eight.  Trying to
+use one of the graphics contexts with a leaf pixmap results in a
+parameter mismatch error (in XFillRectangle).
+
+I fixed the problem by changing
+
+   allocatePixmaps()
+   {
+       int i;
+
+       for (i = 0; i < Leaves; i++ ) {
+	   pasteUpPixmap[SHRINK_NORMAL][i] =
+	       XCreatePixmap(DISP, win, leaf_w[SHRINK_NORMAL],
+			     page_h[SHRINK_NORMAL], 1);
+
+to
+
+   allocatePixmaps()
+   {
+       int i;
+!      XWindowAttributes wa;
+!
+!      XGetWindowAttributes(DISP, root_window, &wa);
+
+       for (i = 0; i < Leaves; i++ ) {
+	   pasteUpPixmap[SHRINK_NORMAL][i] =
+	       XCreatePixmap(DISP, win, leaf_w[SHRINK_NORMAL],
+!			     page_h[SHRINK_NORMAL], wa.depth);
+
+
+Rich Clayton
+clayton@thumper.bellcore.com
+
+

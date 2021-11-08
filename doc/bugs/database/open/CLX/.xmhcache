@@ -1,0 +1,43 @@
+   1  03/04 jim@expo.lcs.mit.  missing file from R2  <<### bug number: 3 ### area: ### severity: ##
+   2  03/04 jim@expo.lcs.mit.  XLIB:CARD32->INT32  <<### bug number: 20 ### area: ### severity: ###
+   3  03/04 hornig@alderaan.s  image.lisp  <<### bug number: 31 ### area: ### severity: ### assigne
+   4  03/04 hornig@alderaan.s  XLIB:GET-IMAGE  <<### bug number: 32 ### area: ### severity: ### ass
+   5  03/10 jim@expo.lcs.mit.  with-gcontext-bindings  <<### bug number: 68 ### area: CLX ### sever
+   6  03/10 jim@expo.lcs.mit.  CLX event code scramble  <<### bug number: 69 ### area: CLX ### seve
+   7  03/10 jim@expo.lcs.mit.  CLX pixarray-depth bug.  <<### bug number: 70 ### area: CLX ### seve
+   8  03/10 oren@home.csc.ti.  CLX keymap-notify and query-keymap bug fixes  <<### bug number: 84 #
+   9  03/10 apollo!bowbeer@ed  buffer-read-default bug on lucid  <<### bug number: 88 ### area: CLX
+  10  03/13 rws@zermatt.lcs.m  off by one on draw-rectangle  <<Date: Sat, 05 Mar 88 16:58:15 PST Fr
+  11  03/11 oren@home.csc.ti.  [LaMott Oren <Oren@home.csc.ti.com>: CLX Problems/Fixes]  <<### bug 
+  12  03/11 oren@home.csc.ti.  GCONTEXT bugs  <<### bug number: 100 ### area: CLX ### severity: ###
+  13  03/11 roman@athena.mit.  timeout type problem in R2  <<### bug number: 101 ### area: CLX ### 
+  14  03/11 oren@home.csc.ti.  CLX event-case otherwise bug fix  <<### bug number: 102 ### area: CL
+  15  03/12 james.healy@spice  CLX and CMU Common Lisp.  <<### bug number: 103 ### area: CLX ### se
+  16  03/13 esunix!toad.dnet!  More on CLX and VaxLisp  <<### bug number: 104 ### area: CLX ### sev
+  17  03/11 franz!sparky!jdi@  documentation for event-case incorrect  <<### bug number: 105 ### ar
+  18  03/16 james.healy@spice  Some minor things.  <<### bug number: 126 ### area: CLX ### severity
+  19  03/16 hornig@alderaan.s  CLX and max-request-length  <<### bug number: 137 ### area: CLX ### 
+  20  03/16 hornig@alderaan.s  CLX COPY-AREA and COPY-PLANE  <<### bug number: 138 ### area: CLX ##
+  21  03/17 hornig@alderaan.s  lib/CLX/defsystem.lisp  <<### bug number: 155 ### area: CLX ### seve
+  22  03/17 hornig@alderaan.s  XLIB::EVENT-DISPATCH  <<### bug number: 161 ### area: CLX ### severi
+  23  03/17 hornig@alderaan.s  XLIB:PUT-IMAGE  <<### bug number: 167 ### area: CLX ### severity: ##
+  24  03/17 oren@home.csc.ti.  CLX Gcontext nit  <<### bug number: 173 ### area: CLX ### severity: 
+  25  03/17 oren@home.csc.ti.  CLX trace fixes  <<### bug number: 174 ### area: CLX ### severity: #
+  26  03/18 oren@home.csc.ti.  CLX write-simple-array-x performance  <<### bug number: 175 ### area
+  27  03/19 james.healy@spice  Another minor portability fix.  <<### bug number: 188 ### area: CLX 
+  28  03/22 mcvax!delphi!sm@u  bug in defmetod-setf-method cut-buffer  <<### bug number: 191 ### ar
+  29  03/24 oren@home.csc.ti.  CLX lispm performance hack  <<### bug number: 208 ### area: CLX ### 
+  30  03/24 oren@home.csc.ti.  CLX sys:%store-conditional  <<### bug number: 211 ### area: CLX ### 
+  31  03/27 franz!sparky!jdi@  get-image  <<### bug number: 249 ### area: CLX ### severity: ### ass
+  32  03/29 franz!sparky!jdi@  possible bug in auto font open  <<### bug number: 250 ### area: CLX 
+  33  04/01 edsel!sol@labrea.  X11R2 CLX Lucid bug fixes  <<### bug number: 252 ### area: CLX ### s
+  34  04/04 oren@home.csc.ti.  Re: X11R2 CLX Lucid bug fixes  <<### bug number: 259 ### area: CLX #
+  35  04/05 malcolm@spar-20.s  copy-area and force-gcontext-changes  <<### bug number: 310 ### area
+  36  04/06 hornig@alderaan.s  CLX use of Symbolics Generic Network System  <<### bug number: 317 #
+  37  04/06 hornig@alderaan.s  XLIB:OPEN-DISPLAY  <<### bug number: 318 ### area: CLX ### severity:
+  38  04/06 oren@home.csc.ti.  Type error in Draw-Glyphs  <<### bug number: 320 ### area: CLX ### s
+  39  04/07 hornig@alderaan.s  XLIB:WAIT-FOR-EVENT deadlock  <<### bug number: 335 ### area: CLX ##
+  40  04/11 oren@home.csc.ti.  CLX image export bug  <<### bug number: 368 ### area: CLX ### severi
+  41  04/08 oren@home.csc.ti.  CLX event-dispatch bug  <<### bug number: 369 ### area: CLX ### seve
+  42  04/13 edsel!sol@labrea.  make-sequence-patch removed for Lucid CL/Sun 3.0  <<### bug number: 
+  43  04/13 franz!sparky!jdi@  Re: mail etc  <<### bug number: 382 ### area: CLX ### severity: ### 

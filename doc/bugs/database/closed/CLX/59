@@ -1,0 +1,60 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 9 Aug 88 10:46:54 EDT
+Return-Path: <Bill.Chiles@chiles.slisp.cs.cmu.edu>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 182399; 8 Aug 88 17:31:37 EDT
+Received: by expo.lcs.mit.edu; Mon, 8 Aug 88 17:29:41 EDT
+Received: from CHILES.SLISP.CS.CMU.EDU by CHILES.SLISP.CS.CMU.EDU;  8 Aug 88 17:28:53 EDT
+To: bug-clx@expo.lcs.mit.edu
+Subject: 
+Date: Mon, 08 Aug 88 17:28:31 EDT
+Message-Id: <2859.587078911@CHILES.SLISP.CS.CMU.EDU>
+From: Bill.Chiles@wb1.cs.cmu.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Tue, 9 Aug 88 10:47 EDT
+Resent-Message-Id: <19880809144710.7.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   837
+### area:         CLX
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	Moniterm (apa16)
+
+SYNOPSIS:
+	An XLIB::EVENT-CASE that has a branch for every event type plus a
+	otherwise branch signals an error in the compiler that nil is not an
+	event type.  This is very misleading when trying to figure out what
+	XLIB:EVENT-CASE really wants.
+
+DESCRIPTION:
+	This is not so much a bug as a great misinformation pocket in
+	XLIB::EVENT-DISPATCH.  I wrote an XLIB:EVENT-CASE that had a branch for
+	every event type.  Then for my own safety's sake, I added an otherwise
+	branch that signaled an error stating that an unknown event type had
+	come through.  I could have assumed CLX would do something sensible
+	here, but it doesn't hurt to add such random safety routes in code
+	(sometimes they are even helpful way down the road).
+
+	When I compiled this, I got a totally bogus error relative to what I
+	saw a user of CLX -- nil is not an event key (or something).  I think
+	XLIB:EVENT-DISPATCH should notice that there are not any left over
+	event keys and not generate an otherwise branch that generates an
+	error.  Probably it should issue a warning and ignore the otherwise
+	case.  NOTE, the error is actually generated due to
+	XLIB:BINDING-EVENT-VALUES, so XLIB:EVENT-DISPATCH really must not
+	generate the bad code in addition to reporting a warning.
+
+Bill
+

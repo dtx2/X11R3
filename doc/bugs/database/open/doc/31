@@ -1,0 +1,61 @@
+Return-Path: deboor%rosemary.Berkeley.EDU@berkeley.edu
+Received: by EXPO.LCS.MIT.EDU; Sat, 14 May 88 16:18:57 EDT
+Received: by rosemary.Berkeley.EDU (5.57/1.25)
+	id AA21641; Fri, 13 May 88 18:04:52 PDT
+Date: Fri, 13 May 88 18:04:52 PDT
+From: deboor%rosemary.Berkeley.EDU@berkeley.edu (Adam R de Boor)
+Message-Id: <8805140104.AA21641@rosemary.Berkeley.EDU>
+To: x11%brie@sun.com, xbugs@expo.lcs.mit.edu
+Subject: Selection owner badly defined in protocol spec
+
+### bug number:   494
+### area:         doc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	 An artificial distinction is made in the V11 Release 2 protocol spec
+	 between a selection's "owner" and its "owner window". This distinction
+	 is unnecessary and makes life rather difficult.
+
+DESCRIPTION:
+	 Given that the ownership of a selection is associated with a window ID
+	 and this ownership may pass at any time from one window to another,
+	 regardless of what actual client owns the windows, I can think of no
+	 good reason for the real ownership of a selection to be associated
+	 with a client, rather than a window. This distinction, rather, causes
+	 sizeable difficulties in an object-oriented toolkit environment.
+
+	 Ideally, when one widget takes control of a selection, the previous
+	 owner should be notified, regardless of in which client that widget
+	 is. This is one of the important aspects of the Xt toolkit --
+	 modularity and all that. Because of the distinction between
+	 selected window and selected client, however, a client wishing to
+	 adhere to these principles must go through some fairly complex
+	 gyrations. For example, one could write an XtSetSelectionOwner
+	 that would maintain state with the selection atom (using the
+	 XContext facilities) and select on the owner window for SelectionClear
+	 events to track when another client takes the selection away. Then,
+	 if the selection is actually owned by a widget internal to the
+	 client, XtSetSelectionOwner could manufacture and dispatch a
+	 SelectionClear event to the previous owner.
+
+	 HOWEVER, this is all rather a lot of work to get around a distinction
+	 that shouldn't have been made in the first place: ownership should
+	 be tied to a window ID and when the ownership changes, the previous
+	 owner should *always* receive a SelectionClear event, regardless of
+	 which client owns the new owner-window.
+
+

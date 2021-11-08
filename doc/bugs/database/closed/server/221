@@ -1,0 +1,74 @@
+Return-Path: @po3.andrew.cmu.edu:dba+@andrew.cmu.edu
+Received: by expo.lcs.mit.edu; Mon, 26 Sep 88 16:47:33 EDT
+Received: by po3.andrew.cmu.edu (5.54/3.15) id <AA02758> for xbugs@expo.lcs.mit.edu; Mon, 26 Sep 88 16:46:57 EDT
+Received: via switchmail; Mon, 26 Sep 88 16:46:54 -0400 (EDT)
+Received: from po5.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/service/mailqs/q001/QF.po5.andrew.cmu.edu.233eac72.f43be>;
+          Mon, 26 Sep 88 16:45:41 -0400 (EDT)
+Received: from kane.andrew.cmu.edu via qmail
+          ID </afs/andrew.cmu.edu/usr3/dba/.Outgoing/QF.kane.andrew.cmu.edu.233e58e0.6451500>;
+          Mon, 26 Sep 88 10:49:04 -0400 (EDT)
+Received: from Version.6.23.N.CUILIB.3.44.SNAP.NOT.LINKED.kane.andrew.cmu.edu.rt.r3
+          via MS.5.5.kane.andrew.cmu.edu.rt_r3;
+          Mon, 26 Sep 88 10:49:03 -0400 (EDT)
+Message-Id: <YXDZXTy00UkRAJ01UE@andrew.cmu.edu>
+Date: Mon, 26 Sep 88 10:49:03 -0400 (EDT)
+From: David Anderson <dba+@andrew.cmu.edu>
+X-Andrew-Message-Size: 759+0
+To: xbugs@expo.lcs.mit.edu
+Subject: polyfillrect w/ bs on RT apa16
+Cc: ibmuupa!erik.UUCP@harvard.harvard.edu
+
+### bug number:   1010
+### area:         server
+### severity:     high
+### comments:     ibm ddx-specific
+
+VERSION:
+
+    R3beta
+
+CLIENT MACHINE and OPERATING SYSTEM:
+
+    RT APC running ACIS 4.3
+
+DISPLAY:
+
+    IBM apa16
+
+WINDOW MANAGER:
+
+    uwm (any)
+
+AREA:
+
+    apa16 ddx
+
+SYNOPSIS:
+
+    Windows with backing store don't get filled correctly.
+
+DESCRIPTION:
+
+    MIBS_POLYFILLRECT was overlooked.
+
+REPEAT BY:
+
+    Use backing store with an application that uses polyfillrect
+    to clear its window.
+
+SAMPLE FIX:
+
+*** apa16gc.c.lnk       Fri Sep  2 14:58:36 1988
+--- apa16gc.c   Thu Sep 15 22:34:49 1988
+***************
+*** 635,640 ****
+--- 635,641 ----
+        }
+        else /* deal with solids and natural stipples and tiles */
+          {
++             bsChanges |= MIBS_POLYFILLRECT;
+            pGC->PolyFillRect = mfbPolyFillRect;
+
+            if ((pGC->fillStyle == FillSolid) ||
+

@@ -1,0 +1,72 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 15:49:21 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA03178; Wed, 29 Jun 88 14:47:19 CDT
+Date: Wed, 29 Jun 88 14:47:19 CDT
+From: wtg@uc.msc.umn.edu
+Subject: Cray compiler troubles with XtOffset
+Message-Id: <8806291947.AA03178@uc.msc.umn.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   657
+### area:         Xt
+### severity:     low
+### comments:     Is this obviously a compiler bug?
+
+VERSION:
+	X11 release 2 Xaw
+
+CLIENT MACHINE:
+	Cray XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 4.0
+
+DISPLAY:
+	Sun3/50
+
+SYNOPSIS:
+	 XtOffset macro gives incorrect offset
+
+DESCRIPTION:
+	 On the Cray-XMP and Cray2 compilers, the XtOffset macro
+gives a word offset instead of a byte offset of a field in a structure.
+Although there is a problem in the Cray compiler that  these offsets
+cannot be determined at compile time, the macro itself seems to
+assume byte addressability, which is not true of a Cray.  So,
+
+#define XtOffset(type,field)    ((unsigned int)&(((type)NULL)->field))
+
+yields a word offset.
+
+REPEAT-BY:
+	Compile any of the widgets in the Xaw library.
+
+FIX:
+	Calculate the offsets at run time (class_initialize routine)
+	with a different macro:
+
+********************** Box.c ************************
+69,71d68
+< #ifdef CRAY
+< static void BoxCalcOffsets();
+< #endif
+79,81d75
+< #ifdef CRAY
+<     /* class_initialize   */    BoxCalcOffsets,
+< #else
+83d76
+< #endif
+125,134d117
+< #ifdef CRAY
+< static void BoxCalcOffsets()
+< {
+< #define BoxOffset(e) ( (char *) &BoxREC.e - (char *) &BoxREC)
+<     BoxRec BoxREC;
+<     XtResourceList resp = resources;
+<     resp++->resource_offset = BoxOffset(box.h_space);
+<     resp++->resource_offset = BoxOffset(box.v_space);
+< }
+< #endif
+
+

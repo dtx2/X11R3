@@ -1,0 +1,71 @@
+Return-Path: bugs@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Wed, 9 Mar 88 11:01:02 EST
+From: bugs@expo.lcs.mit.edu (Bug Reports)
+Message-Id: <8803091601.AA08855@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: X11 R2 Xmh Bug Report
+Date: Wed, 09 Mar 88 11:01:02 EST
+
+### bug number:   60
+### area:         xmh
+### severity:     
+### assigned to:  ralph
+### status:       closed
+### see also:     85, 97, 129, 206
+
+
+------- Forwarded Message
+
+Return-Path: jim
+Received: by EXPO.LCS.MIT.EDU; Wed, 9 Mar 88 10:58:24 EST
+Date: Wed, 9 Mar 88 10:58:24 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803091558.AA08743@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: X11 R2 Xmh Bug Report
+
+(Message inbox:7)
+Return-Path: becker@cs.rochester.edu
+Received: from cayuga.cs.rochester.edu by EXPO.LCS.MIT.EDU; Wed, 9 Mar 88 10:46:04 EST
+Received: by cayuga.cs.rochester.edu (5.52/h) id AA27362; Wed, 9 Mar 88 10:45:26 EST
+Received: from loopback by teak.cs.rochester.edu (3.2/h) id AA08303; Wed, 9 Mar 88 10:45:13 EST
+Message-Id: <8803091545.AA08303@teak.cs.rochester.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: X11 R2 Xmh Bug Report
+Date: Wed, 09 Mar 88 10:45:11 -0500
+From: Tim Becker <becker@cs.rochester.edu>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/60
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4 (and 3.5)
+
+DISPLAY:
+	Monochrome (not hires)
+
+SYNOPSIS:
+	Xmh behaves strangely on startup.
+
+DESCRIPTION:
+	Sometimes on startup, xmh won't paint text into the boxes.
+	Othertimes it does put in the text.  All the time, it paints a long
+	rectangular box that is as tall as the screen (ok), but only 2 inches
+	wide.  In addition, it doesn't leave any space for the messages
+	TOC box.  I could try to send a window dump if that would help - 
+	let me know.
+
+	It's reading the default app-defaults file.  So, unlike a posting to
+	xpert, that's not my problem.
+
+REPEAT-BY:
+	Ran xmh.
+
+FIX:
+	None, sorry.
+
+------- End of Forwarded Message
+

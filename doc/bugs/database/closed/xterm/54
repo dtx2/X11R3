@@ -1,0 +1,166 @@
+Return-Path: @XX.LCS.MIT.EDU,@neat.ai.toronto.edu:moraes@bay.csri.toronto.edu
+Received: by EXPO.LCS.MIT.EDU; Fri, 15 Jul 88 09:59:56 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Fri 15 Jul 88 09:57:11-EDT
+Received: from neat.ai.toronto.edu by RELAY.CS.NET id al00989;
+          15 Jul 88 9:00 EDT
+Received: from bay.csri.toronto.edu by neat.ai.toronto.edu with SMTP id 450; Fri, 15 Jul 88 00:46:43 EDT
+Received: by bay.csri.toronto.edu id 20393; Fri, 15 Jul 88 00:50:05 EDT
+From: Mark Moraes <moraes@csri.toronto.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm tek mode bug 2
+Message-Id: <88Jul15.005005edt.20393@bay.csri.toronto.edu>
+Date: 	Fri, 15 Jul 88 00:49:50 EDT
+
+### bug number:   723
+### area:         xterm
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50, Sun 3/60, Sun 3/110, Sun 4/110, Sun 3/260
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.3, SunOS 3.5
+
+DISPLAY:
+	bw2, cg2, cg4
+
+SYNOPSIS:
+	Tektronix GIN mode returns wrong coordinates.
+
+DESCRIPTION:
+	Instead of returning the coordinates of the mouse (suitably
+	scaled) in the window, it returns the root window coordinates.
+	This is *BAD*.
+
+REPEAT-BY:
+	The program below puts the terminal into GIN mode. No apologies
+	are made for the code quality. Compile with
+		cc -o tektest tektest.c -l4014 -lm
+	and run with
+		stty cbreak ; ./tektest (clear the screen before hitting return)
+	Note that the stty is important. (It doesn't reset the terminal -
+	your shell will hopefully do that)
+	
+FIX:
+*** /tmp/,RCSt1a12111	Fri Jul 15 00:33:04 1988
+--- clients/xterm/Tekproc.c	Fri Jul 15 00:33:05 1988
+***************
+*** 951,957
+  	XQueryPointer(
+  	    screen->display, TWindow(screen), 
+  	    &root, &subw,
+- 	    &mousex, &mousey,
+  	    &winx, &winy,
+  	    &mask);
+  	if((mousex = (mousex - screen->border) / TekScale(screen)) < 0)
+
+--- 951,956 -----
+  	XQueryPointer(
+  	    screen->display, TWindow(screen), 
+  	    &root, &subw,
+  	    &winx, &winy,
+  	    &mousex, &mousey,
+  	    &mask);
+***************
+*** 953,958
+  	    &root, &subw,
+  	    &mousex, &mousey,
+  	    &winx, &winy,
+  	    &mask);
+  	if((mousex = (mousex - screen->border) / TekScale(screen)) < 0)
+  		mousex = 0;
+
+--- 952,958 -----
+  	    screen->display, TWindow(screen), 
+  	    &root, &subw,
+  	    &winx, &winy,
++ 	    &mousex, &mousey,
+  	    &mask);
+  	if((mousex = (mousex - screen->border) / TekScale(screen)) < 0)
+  		mousex = 0;
+
+
+---------------------------------------------------------------------------
+/* tektest.c - Greg Dudek's (dudek@ai.toronto.edu) simple Tek GIN program */
+main(argc,argv)
+char **argv;
+{
+int c,x,y;
+myspace(0,0,100,100);
+for (;;) {
+    c=getcoord(&x,&y);
+    printf("\n...\n $%x(%c) at %d %d\n", c,c, x,y);
+    }
+}
+#include <stdio.h>
+
+static int tekt,tekb,tekl,tekr;
+
+myspace(minx,miny,maxx,maxy)
+int miny,maxy,minx,maxx;
+{
+    tekt=maxy;
+    tekb=miny;
+    tekl=minx;
+    tekr=maxx;
+    space(minx,miny,maxx,maxy);
+    }
+
+getcoord(x,y)
+int *x, *y;
+{
+    static int top=0, bottom, left, right;
+    static float xscale, yscale;
+    int code;
+    if (!top) {
+#       ifdef HARDCONFIG
+	/* hacked in values for x10 tek window 				*/
+	/* these numbers seem a bit strange, are all Tek's like this?	*/
+	top = 767;
+	bottom = 0;
+	left = 0;
+	right = 776;
+	line(tekl,tekb,tekl,tekt);
+	closepl();
+#	else
+	line(tekl,tekb,tekr,tekt);
+	closepl();
+	printf("Please calibrate. Hit bottom-left (%d,%d)\n",tekb,tekl);
+	basicgetpoint(&left,&bottom);
+	printf("Hit top-right\n");
+	basicgetpoint(&right,&top);
+	printf("\n");
+#	endif 
+	xscale = (tekr-tekl)/(float)(right-left);
+	yscale = (tekt-tekb)/(float)(top-bottom);
+	}
+    code=basicgetpoint(x,y);
+    *x = (int)((*x+left)*xscale+0.5 + tekl);
+    *y = (int)((*y+bottom)*yscale+0.5 + tekb);
+    return(code);
+    }
+
+basicgetpoint(x,y)
+int *x,*y;
+{
+    char a,b,c,d,e;
+
+    write(1,"\033\032",2); /* Tek GIN mode*/
+    e=getchar();	   /* key code */
+    a=getchar()-32;
+    b=getchar()-32;
+    c=getchar()-32;
+    d=getchar()-32;
+    *x= 32*a; *x += b;
+    *y= 32*c; *y += d;
+    write(1,"\033\037",2); /* Tek Alpha mode*/
+    printf("0x%x (%d) 0x%x (%d) 0x%x (%d) 0x%x (%d) 0x%x \n", 
+     a, a, b, b, c, c, d, d, e);
+    return(e);
+    }
+
+

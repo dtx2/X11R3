@@ -1,0 +1,70 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Fri, 30 Sep 88 10:39:07 EDT
+Return-Path: <James.Healy@lisp-rt1.slisp.cs.cmu.edu>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 188518; 24 Aug 88 15:21:29 EDT
+Received: by expo.lcs.mit.edu; Wed, 24 Aug 88 15:20:31 EDT
+Received: from LISP-RT1.SLISP.CS.CMU.EDU by LISP-RT1.SLISP.CS.CMU.EDU; 24 Aug 88 13:58:19 EDT
+To: bug-clx@expo.lcs.mit.edu
+Reply-To: healy@spice.cs.cmu.edu
+Subject: Questionable with-gcontext behavior?
+Date: Wed, 24 Aug 88 13:56:58 EDT
+Message-Id: <13171.588448618@LISP-RT1.SLISP.CS.CMU.EDU>
+From: James.Healy@spice.cs.cmu.edu
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Fri, 30 Sep 88 10:42 EDT
+Resent-Message-Id: <19880930144253.8.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   1025
+### area:         CLX
+### severity:     medium
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT and Sun 3.
+
+CLIENT OPERATING SYSTEM:
+	Mach on both machines.
+
+DISPLAY:
+	Moniterm (apa16) and Sun monochrome.
+
+SYNOPSIS:
+        The with-gcontext macro doesn't evaluate all it's keyword arguments
+        before making changes.
+
+DESCRIPTION:
+        Shouldn't with-gcontext be evaluating all of its arguments before making
+        any changes to the gcontext?  That's the way we expected it to work but
+        apparently it just globs all the changes into a big list of setf's and
+        evaluates them serially.  This causes some of the values to get changed
+        before the argument forms of others are evaluated.
+
+        Maybe this is really what with-gcontext was intended to do but it isn't 
+        documentated?
+
+REPEAT-BY:
+
+        We were trying to temporarily switch the foreground and background
+        pixels of the gcontext by doing something like this:
+
+       .
+       .
+       .
+
+    (xlib:with-gcontext (gcontext :foreground (xlib:gcontext-background gcontext)
+				  :background (xlib:gcontext-foreground gcontext)
+				  :font default-font)
+      (xlib:draw-image-glyphs blah blah-blah blah  .....))
+       .
+       .
+       .
+
+        But the foreground and background always get assigned to the same pixel
+        value instead of being swapped.
+
+

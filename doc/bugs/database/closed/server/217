@@ -1,0 +1,112 @@
+Return-Path: dmm@apollo.com
+Received: by expo.lcs.mit.edu; Tue, 13 Sep 88 15:27:22 EDT
+Received: from apollo.UUCP by apollo.com id AA06460; Tue, 13 Sep 88 15:23:30 EDT    
+Received: by apollo.UUCP id AA09821; Tue, 13 Sep 88 15:22:53 EDT
+Message-Id: <8809131922.AA09821@apollo.UUCP>
+From: apollo!dmm
+Date: Tue, 13 Sep 88 14:52:51 EDT 
+Subject: Fix for apcfillsp.c
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   967
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Apollo
+
+CLIENT OPERATING SYSTEM:
+	SR9.7
+
+DISPLAY:
+	
+
+SYNOPSIS:
+    apcfillsp.c wasn't initializing a clipping test variable
+    inside the depth loop, which caused funny behaviour.
+
+DESCRIPTION:
+    Initialize pboxTest inside depth loop, in tile and stipple fillsp
+    routines.
+
+
+REPEAT-BY:
+	
+
+FIX:
+*** server/ddx/apollo/apc/apcfillsp.c/17	Mon Jun 20 17:10:23 1988
+--- server/ddx/apollo/apc/apcfillsp.c/18	Tue Jun 21 12:12:48 1988
+***************
+*** 207,213
+    while ((depth--) && ((pGC->planemask >> depth) &1)) {
+      if (pDrawable->type == DRAWABLE_WINDOW) gpr_$remap_color_memory(depth, status);
+      else addrlBase = (int *)(mainmemoffset*depth+BaseBase);
+!     
+      pwidth = pwidthInit;
+      ppt = pptInit;
+      tbase = psrcT + (tsize.y_size * tlwidth * depth);
+
+--- 207,213 -----
+    while ((depth--) && ((pGC->planemask >> depth) &1)) {
+      if (pDrawable->type == DRAWABLE_WINDOW) gpr_$remap_color_memory(depth, status);
+      else addrlBase = (int *)(mainmemoffset*depth+BaseBase);
+!     pboxTest = ((apcPrivGC *) (pGC->devPriv))->pCompositeClip->rects;
+      pwidth = pwidthInit;
+      ppt = pptInit;
+      
+***************
+*** 210,215
+      
+      pwidth = pwidthInit;
+      ppt = pptInit;
+      tbase = psrcT + (tsize.y_size * tlwidth * depth);
+      
+      /* this replaces rotating the tile. Instead we just adjust the offset
+
+--- 210,216 -----
+      pboxTest = ((apcPrivGC *) (pGC->devPriv))->pCompositeClip->rects;
+      pwidth = pwidthInit;
+      ppt = pptInit;
++     
+      tbase = psrcT + (tsize.y_size * tlwidth * depth);
+      
+      /* this replaces rotating the tile. Instead we just adjust the offset
+***************
+*** 410,415
+      
+      pwidth = pwidthInit;
+      ppt = pptInit;
+      
+      if( (pGC->fgPixel >> depth) &1 ) {
+        rop = 0x4 | ( pGC->alu & 3 );
+
+--- 411,417 -----
+      
+      pwidth = pwidthInit;
+      ppt = pptInit;
++     pboxTest = ((apcPrivGC *) (pGC->devPriv))->pCompositeClip->rects;
+      
+      if( (pGC->fgPixel >> depth) &1 ) {
+        rop = 0x4 | ( pGC->alu & 3 );
+***************
+*** 628,633
+      
+      pwidth = pwidthInit;
+      ppt = pptInit;
+      
+      frgrnd = (pGC->fgPixel >> depth)&1;
+      bckgrnd = (pGC->bgPixel >> depth)&1;
+
+--- 630,636 -----
+      
+      pwidth = pwidthInit;
+      ppt = pptInit;
++     pboxTest = ((apcPrivGC *) (pGC->devPriv))->pCompositeClip->rects;
+      
+      frgrnd = (pGC->fgPixel >> depth)&1;
+      bckgrnd = (pGC->bgPixel >> depth)&1;***************
+

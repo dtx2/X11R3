@@ -1,0 +1,60 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:38 EST
+Date: Fri, 4 Mar 88 16:13:38 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA05044@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: miSubtractO in server/ddx/mi/miregion.c
+
+### bug number:   19
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 16:55:00 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 175913; Thu 3-Mar-88 16:54:14 EST
+Date: Thu, 3 Mar 88 16:54 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: miSubtractO in server/ddx/mi/miregion.c
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com
+Message-Id: <19880303215400.6.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	There are three places in miSubtractO of
+server/ddx/mi/miregion.c where it references past the end of the box
+list.
+
+DESCRIPTION:
+	The cliche
+
+		r1++;
+		x1 = r1->x1;
+
+occurs 3 times in miSubstractO at the bottom of the main loop.  If r1
+points to the last box, the assignment to x1 will reference beyond
+validly allocated storage.
+
+REPEAT-BY:
+	Running the server.
+
+FIX:
+	Replace the cliche with:
+
+		r1++;
+		if (r1 != r1End)
+		  x1 = r1->x1;

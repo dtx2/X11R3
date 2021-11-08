@@ -1,0 +1,60 @@
+Return-Path: bilbo.rick@SEAS.UCLA.EDU
+Received: by EXPO.LCS.MIT.EDU; Tue, 10 May 88 12:48:27 EDT
+Message-Id: <8805101648.AA00431@EXPO.LCS.MIT.EDU>
+Date:           Tue, 10 May 88 09:43:36 PDT
+From: Richard Petkiewicz <bilbo.rick@SEAS.UCLA.EDU>
+Received:       from BILBO (193.255.1.3) by FRODO
+                id smtp.82927; Tue, 10 May 88 09:43:13 PDT
+To: xbugs@EXPO.LCS.MIT.EDU
+Subject:        Xcalc bug
+
+### bug number:   481
+### area:         xcalc
+### severity:     very low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Prime EXL 316
+
+CLIENT OPERATING SYSTEM:
+	SVR3
+
+DISPLAY:
+	PC XSight
+
+SYNOPSIS:
+	 Roll down doesn't work properly in xcalc
+
+DESCRIPTION:
+	 The roll down and roll up operations in xcalc are backwards.
+
+REPEAT-BY:
+	Press "1", "Enter", "2", "Enter", "3", "Enter", "4", then
+	press the "R v" key three times.  You should see "3", "2",
+	"1".  Instead you see "1", "2", "3".
+
+FIX:
+*** xcalc.c	Tue May 10 09:56:02 1988
+--- /usr/src/x11r2.cmc/clients/xcalc/xcalc.c	Mon May  9 17:31:48 1988
+***************
+*** 1521,1527
+  {
+      double tmp;
+  
+!     if (!dir) {
+  	tmp         = dnum;
+  	dnum        = numstack[2];
+  	numstack[2] = numstack[1];
+
+--- 1521,1527 -----
+  {
+      double tmp;
+  
+!     if (dir) {
+  	tmp         = dnum;
+  	dnum        = numstack[2];
+  	numstack[2] = numstack[1];
+

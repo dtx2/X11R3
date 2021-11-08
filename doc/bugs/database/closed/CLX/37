@@ -1,0 +1,61 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Sat, 2 Apr 88 16:45:44 EST
+Return-Path: <@UCBARPA.BERKELEY.EDU:franz!sparky!jdi@ucbarpa.Berkeley.EDU>
+Received: from ucbarpa.Berkeley.EDU (UCBARPA.BERKELEY.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 136375; 29 Mar 88 17:18:00 EST
+Received: by ucbarpa.Berkeley.EDU (5.59/1.26)
+	id AA02837; Tue, 29 Mar 88 14:18:03 PST
+Received: from sparky by franz (5.5/3.14)
+	id AA11869; Tue, 29 Mar 88 13:30:25 PST
+Received: by sparky (4.0/3.14)
+	id AA01205; Tue, 29 Mar 88 13:29:38 PST
+Return-Path: <sparky!jdi>
+Message-Id: <8803292129.AA01205@sparky>
+To: bug-clx@zermatt.lcs.mit.edu
+Subject: possible bug in auto font open
+Date: Tue, 29 Mar 88 13:29:37 PST
+From: John Irwin <franz!sparky!jdi@ucbarpa.berkeley.edu>
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Sat, 2 Apr 88 16:44 EST
+Resent-Message-Id: <880402164456.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   250
+### area:         CLX
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+
+If I use:
+
+(setq fonts (xlib:list-fonts dis "*"))
+(setq two (cadr fonts))
+(xlib:char-width two 66)
+
+I get:
+
+[1] <user 13> (char-width two 66)
+Error: X-Error: length-error in current request  Code 45.0 [OpenFont]
+[2] <user 14> :zoom
+Evaluation stack:
+
+ ->(error "X-Error: ~a" "length-error in current request  Code 45.0 [OpenFont]")
+   (xlib::x-error length-error :display #<DISPLAY sparky 0> :error-key length-error :major ...)
+   (default-error-handler #<DISPLAY sparky 0> length-error :major 45 :minor 0 ...)
+   (xlib::report-error #<DISPLAY sparky 0> #s(xlib::reply-buffer :size 4096 :ibuf8 #(0 16 0 14 0 224 0 ...)))
+   (xlib::wait-for-reply #<DISPLAY sparky 0> nil)
+   (xlib::query-font #s(font :id-internal 14680066 :display #<DISPLAY sparky 0> :reference-count 1 :name "6x12" :font-info-internal #s(xlib::font-info :direction # :min-char # :max-char # :min-byte1 # :max-byte1 # :min-byte2 # ...) :char-infos-internal nil ...))
+   (xlib::font-char-infos #s(font :id-internal 14680066 :display #<DISPLAY sparky 0> :reference-count 1 :name "6x12" :font-info-internal #s(xlib::font-info :direction # :min-char # :max-char # :min-byte1 # :max-byte1 # :min-byte2 # ...) :char-infos-internal nil ...))
+   (char-width #s(font :id-internal 14680066 :display #<DISPLAY sparky 0> :reference-count 1 :name "6x12" :font-info-internal #s(xlib::font-info :direction # :min-char # :max-char # :min-byte1 # :max-byte1 # :min-byte2 # ...) :char-infos-internal nil ...) 66)
+
+If I just use:
+
+(setq two (open-font dis "6x12"))
+(xlib:char-width two 66)
+
+I get the expected result of 6.
+
+	-- John
+
+

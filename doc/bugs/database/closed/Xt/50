@@ -1,0 +1,53 @@
+Return-Path: ileaf!io!penguin!hds@eddie.mit.edu
+Received: by EXPO.LCS.MIT.EDU; Tue, 19 Jul 88 22:23:15 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA16359@EDDIE.MIT.EDU>; Tue, 19 Jul 88 22:23:23 EDT
+Received: by ileaf.uucp (1.1/SMI-3.0DEV3)
+	id AA05075; Tue, 19 Jul 88 18:43:33 EDT
+Received: from penguin.io.uucp by io.uucp (1.1/SMI-3.0DEV3)
+	id AA07029; Tue, 19 Jul 88 18:42:25 EDT
+Received: by penguin.io.uucp (3.2/SMI-3.2)
+	id AA01279; Tue, 19 Jul 88 18:41:02 EDT
+Date: Tue, 19 Jul 88 18:41:02 EDT
+From: ileaf!io!penguin!hds@eddie.mit.edu (H.David Scarbro)
+Message-Id: <8807192241.AA01279@penguin.io.uucp>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug report
+
+### bug number:   753
+### area:         Xt
+### severity:     low
+### comments:     
+
+The following is from Marvin Solomon's recent netnews message:
+
+>One final problem is how to make the popup menu go way if the user doesn't
+>choose any of its options.  I still haven't got that to work, but I have
+>one more trick I might try:  Define a translation for LeaveWindow on the
+>Box widget containing the menu.  Right now, if I pop up the menu with a button
+>press and then release the button somewhere other than one of the menu items,
+>the menu stays popped up.  If I go back and click in one of the menu items,
+>the corresponding action is taken and the menu goes away.  Curiously enough,
+>there doesn't seem to be any grab active:  I can still activate other buttons
+>in the menu bar.  All this despite that fact that the builtin action for
+>MenuPopup() sets "spring-loaded" and (so far as I can make out) does an
+>exclusive grab.  The same thing happend if I use XtCallbackExclusive()
+>instead of MenuPopup() to raise the menu.  Only in this case, the menu does
+>not "feel" the mouse until I release the button for the first time.
+
+The MenuPopup() part of his problem is caused by a bug in the routine
+XtConvertStringToBoolean() in TMstate.c.  The line:
+
+    *bP = (Boolean) *(int *)toVal.addr;
+
+should read:
+
+    *bP = *(Boolean*)toVal.addr;
+
+---
+H. David Scarbro                       UUCP: ..!{sun!sunne,mit-eddie}!ileaf!hds
+Interleaf, Inc.                        Internet: hds@ileaf.com
+Ten Canal Park                         Phone: (617)577-9800 x6608
+Cambridge, MA 02141
+
+
+

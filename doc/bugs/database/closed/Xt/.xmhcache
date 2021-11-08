@@ -1,0 +1,65 @@
+   1  03/04 jim@expo.lcs.mit.  X.V11R2 bug report  <<### bug number: 22 ### area: ### severity: ###
+   2  03/10 jim@expo.lcs.mit.  toolkit bug  <<### bug number: 73 ### area: Xt ### severity: ### ass
+   3  04/27 davidsc@shark.gwd  X11 R2 bug report: XtInitialize() 'shell_name' parm incorrectly used
+   4  04/26 davidsc@shark.gwd  X11 R2 bug report: incorrect use of XtRealloc()  <<### bug number: 4
+   5  03/20 richard.draves@rp  bug in Xt  <<### bug number: 184 ### area: Xt ### severity: ### assi
+   6  03/24 mcvax!doc.ic.ac.u  syntax error in Intrinsics.h  <<### bug number: 209/212 ### area: Xt
+   7  03/24 mcvax!doc.ic.ac.u  Syntax error in lib/Xt/Intrinsic.h  <<### bug number: 209/212 ### ar
+   8  03/25 mcvax!doc.ic.ac.u  syntax error in enum in Xaw/Form.h  <<### bug number: 214 ### area: 
+   9  04/04 fred%hpcvxft@hpla  CoreSetValues() bug.  <<### bug number: 260 ### area: Xt ### severit
+  10  03/30 dcooper%esdsdf.de  Dialog Widget bug  <<### bug number: 301 ### area: Xt ### severity: 
+  11  04/07 sun!tsunami!joe!c   <<### bug number: 338 ### area: Xt ### severity: ### assigned to: s
+  12  04/11 mcvax!latlog!payn  Xt bug  <<### bug number: 356 ### area: Xt ### severity: ### assigne
+  13  04/23 deboor%nutmeg.ber  ShellDestroy broken  <<### bug number: 410 ### area: Xt ### severity
+  14  04/25 fred%hpcvxft@hpla  Bug in shell destroy  <<### bug number: 413 ### area: Xt ### severit
+  15  04/20 sun!tsunami!larab  XtNextEvent nil pointer bug in timer handling  <<### bug number: 399
+  16  04/28 ric@rioja.cc.umic  XtAddTimeOut and XtNextEvent bug  <<### bug number: 435 ### area: Xt
+  17  05/17 schoch@trident.ar  X11 Toolkit can indirect through a NULL pointer  <<### bug number: 5
+  18  04/11 mcvax!latlog!payn  Xt bug  <<### bug number: 355 ### area: Xt ### severity: ### assigne
+  19  04/13 dcooper%esdsdf.de  Toolkit bug  <<### bug number: 373 ### area: Xt ### severity: ### as
+  20  05/03 sun!tsunami!larab   <<### bug number: 468 ### area: Xt ### severity: medium high ### co
+  21  05/03 sun!tsunami!larab   <<### bug number: 449 ### area: Xt ### severity: medium ### comment
+  22  05/23 schoch@trident.ar  XtAddInput does not save file descriptor  <<### bug number: 533 ### 
+  23  07/12 hrp%rothko.cray.c  Xtk dumps core while destroying top-level widget  <<### bug number: 
+  24  05/26 fred%hpcvxrm@hpla  Another segmentation fault when destroying a widget with shell child
+  25  03/13 rusty%velveeta.be  x toolkit, missing type?  <<### bug number: 95 ### area: Xt ### seve
+  26  03/21 rusty%velveeta.be  bug in X Toolkit Intrinsics doc  <<### bug number: 190 ### area: Xt 
+  27  03/27 deboor%nutmeg.ber  suggested fix for callbacks in subclasses  <<### bug number: 236 ###
+  28  04/04 deboor%nutmeg.ber  there's no way to force widget destruction  <<### bug number: 264 ##
+  29  04/20 deboor%nutmeg.ber  input source callback args don't match doc  <<### bug number: 406 ##
+  30  04/25 vix@ubvax.ub.com   Toolkit documentation error  <<### bug number: 416 ### area: Xt ### 
+  31  04/26 fred%hpcvxft@hpla  Bug in CoreDestroy()  <<### bug number: 420 ### area: Xt ### severit
+  32  04/28 unisoft!hadar.tdd  second phase of XtDestroyWidget has to be forcable  <<### bug number
+  33  06/20 davidsc@shark.gwd  X11 R2 bug report: two globals multiply defined in Xt  <<### bug num
+  34  07/13 sjg@elrond.calcom  Atoms.h bug  <<### bug number: 751 ### area: Xt ### severity: low ##
+  35  08/13 keith@expo.lcs.mi  lib/Xt/Converters.c should be split up  <<### bug number: 866 ### ar
+  36  08/19 fred%hpcvxrm@sde.  Bug in XtConvertStringToBoolean()  <<### bug number: 893 ### area: X
+  37  08/27 mcvax!ukc.ac.uk!r  X Toolkit bug .. in TMstate.c  <<### bug number: 915 ### area: Xt ##
+  38  06/29 wtg@uc.msc.umn.ed  sizeof int assumed 4 in Xt macros  <<### bug number: 666 ### area: X
+  39  07/29 dcooper%esdsdf.de  toolkit intrinsics bug on sun 4  <<### bug number: 800 ### area: Xt 
+  40  03/18 fred%hpcvxft@hpla  Xtk R2 bugs  <<### bug number: 179 ### area: XT ### severity: ### as
+  41  04/04 fred%hpcvxft@hpla  Global translation bug  <<### bug number: 258 ### area: Xt ### sever
+  42  04/12 fred%hpcvxft@hpla  Translation manager bug  <<### bug number: 363 ### area: Xt ### seve
+  43  04/21 fred%hpcvxft@hpla  Bug in XtGetValues()  <<### bug number: 402 ### area: Xt ### severit
+  44  05/19 fred%hpcvxft@hpla  Bug in Xtk's InsertKeyboardGrab()  <<### bug number: 518 ### area: X
+  45  05/23 fred%hpcvxft@hpla  XtTranslateCoords() doesn't work with reparenting window manager.  <
+  46  05/31 fred%hpcvxrm@hpla  A widget's Destroy() handler cannot destroy another widget.  <<### b
+  47  08/15 fred%hpcvxrm@sde.  Xtk memory leak in CoreDestroy()  <<### bug number: 872 ### area: Xt
+  48  08/16 fred%hpcvxft@sde.  Xtk bug: AddForwardingHandler()  <<### bug number: 880 ### area: Xt 
+  49  06/20 tnt@adea-att.arpa  XtNameToWidget problem  <<### bug number: 649 ### area: Xt ### sever
+  50  07/19 ileaf!io!penguin!  bug report  <<### bug number: 753 ### area: Xt ### severity: low ###
+  51+ 07/20 solomon@cs.wisc.e  bug in XtTranslateCoords  <<### bug number: 754 ### area: Xt ### sev
+  52  08/15 fred%hpcvxrm@sde.  HP's fixes to the Xtk intrinsics  <<### bug number: 877 ### area: Xt
+  53  04/27 dave@cs.wisc.edu   Problems with the Text widget on a Sun4  <<### bug number: 462 ### a
+  54  05/26 deboor%nutmeg.ber  resources shared through Xrm get doubly-freed  <<### bug number: 541
+  55  06/29 wtg@uc.msc.umn.ed  Cray compiler troubles with XtOffset  <<### bug number: 657 ### area
+  56  06/29 wtg@uc.msc.umn.ed  DestroyList and toplevelDisplay multiply defined  <<### bug number: 
+  57  06/29 wtg@uc.msc.umn.ed  Need to include <sys/time.h> in NextEvent.c  <<### bug number: 664 #
+  58  07/26 gregh@bilbo.locus  XToolKit name resource bug  <<### bug number: 782 ### area: XT ### s
+  59  03/13 rusty%velveeta.be  x toolkit documentation deficient  <<### bug number: 96 ### area: Xt
+  60  03/15 sybase!webster!je  Re: How do I set an icon's pixmap?  <<### bug number: 121 ### area: 
+  61  03/17 rusty%velveeta.be  X Toolkit bug  <<### bug number: 171 ### area: Xt ### severity: ### 
+  62  03/17 mikew@wyse1.wyse.  bug in viewport widget  <<### bug number: 181 ### area: Xt ### sever
+  63  03/24 rusty%velveeta.be   <<### bug number: 210 ### area: ### severity: ### assigned to: ### 
+  64  09/16 swick@athena.mit.  r3b CompositeWidget does not have an insert_position resource  <<###
+  65  09/09 swick@expo.lcs.mi  r3b Xt cached resources won't get default value when conversion fail

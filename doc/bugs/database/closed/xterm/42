@@ -1,0 +1,53 @@
+Return-Path: karlton@decwrl.dec.com
+Received: from sonora.dec.com by expo.lcs.mit.edu; Tue, 5 Apr 88 13:01:51 EDT
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA09288; Tue, 5 Apr 88 10:00:35 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA08315; Tue, 5 Apr 88 10:00:33 PDT
+Message-Id: <8804051700.AA08315@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm and "-e" vs. "-n" vs. "-T"
+Date: Tue, 05 Apr 88 10:00:30 -0700
+From: Phil Karlton <karlton@decwrl.dec.com>
+
+### bug number:   266
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     very useful; duplicate of xterm/4 (#66), xterm/5 (#80), 
+###               xterm/8 (#116), xterm/17 (#266), xterm/24 (#412), and 
+###               xterm/28 (#560)
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VAX
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.2,
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+	 If -e is speicified, the -n switch is ignored unless the -T is
+	also specified.
+
+DESCRIPTION:
+	 The logic in main.c that is trying to figure out what to name
+	the main  window as well as the icon name seems to be dependent
+	on command_to_exec. I suspect mostly the test
+        	if ((get_ty || command_to_exec) && !title) {
+	It seems that iconName should be treated similarly to title.
+
+
+REPEAT-BY:
+	Try "xterm -n foo -e sh".
+
+FIX:
+	(Preferred, but not necessary)
+

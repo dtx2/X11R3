@@ -1,0 +1,51 @@
+SRCS = \
+	1x1 \
+	2x2 \
+	black \
+	boxes \
+	cntr_ptr \
+	cntr_ptrmsk \
+	cross_weave \
+	dimple1 \
+	dimple3 \
+	dot \
+	flagdown \
+	flagup \
+	flipped_gray \
+	gray \
+	gray1 \
+	gray3 \
+	icon \
+	left_ptr \
+	left_ptrmsk \
+	light_gray \
+	mensetmanus \
+	opendot \
+	opendotMask \
+	right_ptr \
+	right_ptrmsk \
+	root_weave \
+	scales \
+	sipb \
+	star \
+	starMask \
+	stipple \
+	target \
+	tie_fighter \
+	weird_size \
+	wide_weave \
+	wingdogs \
+	woman \
+	xfd_icon \
+	xlogo16 \
+	xlogo32 \
+	xlogo64 
+
+all::
+
+MakeDirectories(install,$(INCDIR)/bitmaps)
+InstallMultiple($(SRCS),$(INCDIR)/bitmaps)
+
+depend::
+	@echo "skipping make depend in ./X11/bitmaps"
+

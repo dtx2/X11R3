@@ -1,0 +1,62 @@
+Return-Path: jg@src.dec.com
+Received: by expo.lcs.mit.edu; Sat, 8 Oct 88 17:06:16 EDT
+Received: from jumbo.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA01078; Sat, 8 Oct 88 14:05:48 PDT
+Received: from localhost by jumbo.pa.dec.com (5.54.4/4.7.34)
+	id AA15633; Sat, 8 Oct 88 14:06:07 PDT
+Message-Id: <8810082106.AA15633@jumbo.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: xdpp script.
+Date: Sat, 08 Oct 88 14:06:06 -0700
+From: jg@src.dec.com
+
+### bug number:   1063
+### area:         xpr
+### severity:     medium
+### comments:     
+
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    any
+
+
+DISPLAY:
+     any
+
+
+WINDOW MANAGER:
+     n.a. 
+
+
+AREA:
+    xpr
+
+
+SYNOPSIS:
+    xdpp script never gets installed.
+
+
+DESCRIPTION:
+    the Imakefile for xpr never attempts to install the xdpp script, though
+    it is clear it should be.  Also, the xpr man page does not reference the
+    script.
+
+
+REPEAT BY:
+    inspection
+
+
+SAMPLE FIX:
+    I leave it to Imake hackers, which I'm not particularly good at.
+
+

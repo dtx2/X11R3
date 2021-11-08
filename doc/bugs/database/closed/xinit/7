@@ -1,0 +1,40 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Mon, 7 Mar 88 17:36:19 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803072236.AA22961@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: more on xinit
+Date: Mon, 07 Mar 88 17:36:18 EST
+
+### bug number:   52
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+
+------- Forwarded Message
+
+Return-Path: ardent!jkh%scrod@uunet.uu.net
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 7 Mar 88 17:34:30 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA03438; Mon, 7 Mar 88 16:27:41 EST
+Received: from ardent.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA14645; Mon, 7 Mar 88 16:27:23 EST
+Received: by ardent.ardent.ether (5.51/SMI-3.0DEV3)
+	id AA16544; Mon, 7 Mar 88 12:55:23 PST
+Received: by scrod.ardent.ether (1.1/SMI-3.0DEV3)
+	id AA00264; Mon, 7 Mar 88 12:55:32 PST
+Date: Mon, 7 Mar 88 12:55:32 PST
+From: ardent!jkh%scrod@uunet.uu.net (Jordan Hubbard)
+Message-Id: <8803072055.AA00264@scrod.ardent.ether>
+To: uunet!xpert%athena.mit.edu@uunet.uu.net
+Subject: argh.
+
+I really should test this stuff before opening my big mouth. The
+xinit patch will probably cause xinit to puke on FIONBIO, I forgot
+to diff in an #include of <sys/ioctl.h>. Add one to the top of xinit.c
+
+						Jordan
+
+------- End of Forwarded Message
+

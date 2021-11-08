@@ -1,0 +1,40 @@
+#define IHaveSubdirs
+#define PassCDebugFlags 'CDEBUGFLAGS=$(CDEBUGFLAGS)'
+SUBDIRS = apc
+SRCS = ap_curs.c ap_gc.c ap_input.c apclr_cmap.c \
+       apclr_curs.c apclr_init.c apk2_input.c apmon_cmap.c \
+       apmon_curs.c apmon_init.c gpr_tmgr.c
+
+OBJS = ap_curs.o ap_gc.o ap_input.o apclr_cmap.o \
+       apclr_curs.o apclr_init.o apk2_input.o apmon_cmap.o \
+       apmon_curs.o apmon_init.o gpr_tmgr.o
+
+OFILES = ap_init.o
+
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+INCLUDES = -I. -I./include -I../../include -I../mfb -I../mi -I$(INCLUDESRC) -I$(TOP)
+LINTLIBS = ../../dix/llib-ldix.ln ../../os/4.2bsd/llib-los.ln ../mi/llib-lmi.ln \
+           ../mfb/llib-lmfb.ln
+
+NormalLibraryObjectRule()
+
+all:: $(OFILES) todm tox
+
+MakeSubdirs($(SUBDIRS))
+
+NormalLibraryTarget(apollo,$(OBJS))
+
+SingleProgramTarget(todm,todm.o,,)
+SingleProgramTarget(tox,tox.o,$(XLIB),)
+InstallProgram(todm,$(BINDIR))
+InstallProgram(tox,$(BINDIR))
+InstallManPage(todm,$(MANDIR))
+InstallManPage(tox,$(MANDIR))
+
+DependTarget()
+InstallManPage(Xapollo,$(MANDIR))
+
+lintlib:
+
+NormalLintTarget($(SRCS))

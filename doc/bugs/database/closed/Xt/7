@@ -1,0 +1,69 @@
+Return-Path: mcvax!doc.ic.ac.uk!lmjm@uunet.uu.net
+Received: from uunet.UU.NET by EXPO.LCS.MIT.EDU; Thu, 24 Mar 88 23:59:26 EST
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA16866; Thu, 24 Mar 88 23:58:13 EST
+Received: by mcvax.cwi.nl; Thu, 24 Mar 88 21:18:35 +0100 (MET)
+Received: from doc.ic.ac.uk by kestrel.Ukc.AC.UK   via Janet (UKC CAMEL FTP)
+           id aa10675; 24 Mar 88 13:44 GMT
+From: Lee McLoughlin <mcvax!doc.ic.ac.uk!lmjm@uunet.uu.net>
+Date: Thu, 24 Mar 88 13:38:48 GMT
+Message-Id: <13588.8803241338@oriona.doc.ic.ac.uk>
+To: xbugs@expo.lcs.mit.edu
+Subject: Syntax error in lib/Xt/Intrinsic.h
+Cc: lmjm@doc.imperial.ac.uk
+
+### bug number:   209/212
+### area:         Xt
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     Includes fix?
+
+[[ Previous report was wrong. I hit the wrong keys while waiting for the test
+   compilation to finish ]]
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	HLH Orion
+
+CLIENT OPERATING SYSTEM:
+	4.2 BSD
+
+DISPLAY:
+	StarPoint
+
+SYNOPSIS:
+	 Syntax error in enum in core/lib/Xt/Intrinsic.h
+
+DESCRIPTION:
+	Compiled Xt under a non-pcc C compiler (but very K&R compatiable)
+	enum definitions must not have trailing ','s before the }.  The update
+	that describes enums gives this syntax.
+
+REPEAT-BY:
+	compile anything that uses it.
+
+FIX:
+*** Intrinsic.h.orig	Thu Mar 24 13:04:38 1988
+--- Intrinsic.h	Thu Mar 24 13:29:28 1988
+***************
+*** 419,425
+      XtGeometryYes,        /* Request accepted. */
+      XtGeometryNo,         /* Request denied. */
+      XtGeometryAlmost,     /* Request denied, but willing to take replyBox. */
+!     XtGeometryDone,	  /* Request accepted and done. */
+  } XtGeometryResult;
+  
+  extern XtGeometryResult XtMakeGeometryRequest();
+
+--- 419,425 -----
+      XtGeometryYes,        /* Request accepted. */
+      XtGeometryNo,         /* Request denied. */
+      XtGeometryAlmost,     /* Request denied, but willing to take replyBox. */
+!     XtGeometryDone	  /* Request accepted and done. */
+  } XtGeometryResult;
+  
+  extern XtGeometryResult XtMakeGeometryRequest();
+

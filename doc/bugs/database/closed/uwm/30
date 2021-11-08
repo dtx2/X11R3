@@ -1,0 +1,132 @@
+Return-Path: eichin@athena.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 2 Aug 88 15:47:23 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA27928; Tue, 2 Aug 88 15:47:35 EDT
+Received: by KREMVAX.MIT.EDU (5.45/4.7) id AA17358; Tue, 2 Aug 88 15:47:24 EDT
+Date: Tue, 2 Aug 88 15:47:24 EDT
+From: Mark W. Eichin <eichin@athena.mit.edu>
+Message-Id: <8808021947.AA17358@KREMVAX.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: XCreateWindow vs. XSetNormalHints
+
+### bug number:   809
+### area:         uwm
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	VS2000, Athena 4.3BSD release 6.0B
+
+DISPLAY:
+	VS2000 sm display
+
+WINDOW MANAGER:
+	uwm
+
+AREA:
+	Xlib, uwm(?)
+
+SYNOPSIS:
+	XCreateWindow args are used when instead of Normal SizeHints
+when USPosition is set.
+
+DESCRIPTION:
+	User specified position (registered with XSetNormalHints)
+causes uwm to map the window without user intervention. However, it
+maps it to the position and size specified by XCreateWindow, not the
+actual value of the hints.
+	
+
+REPEAT BY:
+        Using the Saber C Interpreter, I was able to demonstrate the
+problem very clearly:
+
+% /mit/kaufer/saber -lX
+                        Saber-C - Version 2.0 
+
+	Copyright (C) 1986, 1987, 1988 by Saber Software, Inc.
+
+	This software is licensed for use only at the
+	Massachusetts Institute of Technology
+
+Attaching: /lib/libc.a
+(int) 0
+Attaching: /usr/lib/libX.a
+1 -> #include <X11/Xlib.h>
+2 -> Display *d;
+3 -> d = XOpenDisplay("");
+Linking from '/usr/lib/libX.a' ...... Linking completed.
+Linking from '/lib/libc.a' ..................... Linking completed.
+(struct _XDisplay *) 0xfb408 /* (allocated) */
+4 -> Window w;
+5 -> w = XCreateWindow(d, RootWindow(d,0), 50, 70, 150, 170, 3, 0, InputOutput, CopyFromParent, 0, NULL);
+Error #277:  'NULL' is undefined.
+6 -> #include <stdio.h>
+7 -> w = XCreateWindow(d, RootWindow(d,0), 50, 70, 150, 170, 3, 0, InputOutput, CopyFromParent, 0, NULL);
+Linking from '/usr/lib/libX.a' ... Linking completed.
+(unsigned int) 0x600001
+8 -> XSizeHints hints;
+Unknown command `XSizeHints'.
+9 -> #include <X11/Xutil.h>
+10 -> XSizeHints hints;     
+11 -> hints.width = 99; hints.height = 77;
+(int) 99
+(int) 77
+12 -> hints.x = 33; hints.y = 193;
+(int) 33
+(int) 193
+13 -> hints.flags = (USPosition|USSize);
+(int) 3
+14 -> XSetNormalHints(d, w, &hints);
+Linking from '/usr/lib/libX.a' ... Linking completed.
+(int) 60
+15 -> XMapWindow(d, w);
+Linking from '/usr/lib/libX.a' ... Linking completed.
+(int) 1213572
+16 -> XFlush(d);
+Linking from '/usr/lib/libX.a' ... Linking completed.
+(int) 124
+17 ->  
+
+	Then, examining the window, it is clear that the arguments to
+XCreateWindow are being obeyed while those to XSetNormalHints are not.
+Note that the window did appear without user intervention.
+
+% xwininfo
+
+xwininfo ==> Please select the window about which you
+         ==> would like information by clicking the
+         ==> mouse in that window.
+
+xwininfo ==> Window id: 0x600001 (has no name)
+
+         ==> Upper left X: 50
+         ==> Upper left Y: 70
+         ==> Width: 150
+         ==> Height: 170
+         ==> Depth: 1
+         ==> Border width: 3
+         ==> Window class: InputOutput
+         ==> Window Map State: IsViewable
+         ==> Corners:  +50+70  -818+70  -818-618  +50-618
+
+% xprop
+WM_NORMAL_HINTS(WM_SIZE_HINTS):
+                user specified location: 33, 193
+                user specified size: 99 by 77
+
+
+
+FIX:
+	No clue, I haven't really looked. A lot of programs seem not
+to have this problem, since they do the create with the values given
+by the user; I discovered this trying to debug a problem reported with
+the -geometry option to x11r3dvi.
+
+				Mark Eichin
+			<eichin@athena.mit.edu>
+		SIPB Member & Project Athena ``Watchmaker'' 
+
+

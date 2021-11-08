@@ -1,0 +1,52 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 19:19:05 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05556; Wed, 16 Mar 88 19:18:15 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 15:00:35 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA17988; Wed, 16 Mar 88 15:04:08 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 15:04:49 pst
+Message-Id: <8803162304.AA25015@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xsetroot bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 15:04:45 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   139
+### area:         xsetroot
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	-mod option on xsetroot not working.
+DESCRIPTION:
+	Specify a -mod <x> <y> in xsetroot. The resulting background is
+	not a nice grid but a broken set of lines.
+REPEAT-BY:
+	
+FIX:
+*** xsetroot.c.R2	Wed Mar 16 10:42:46 1988
+--- xsetroot.c	Wed Mar 16 10:42:46 1988
+***************
+*** 356,362
+  	if (i % mod_x == 0) pattern_line |= 0x0001;
+      }
+      for (i=0; i<16; i++) {
+! 	if (i % mod_y) {
+  	    modula_data[i*2] = 0xff;
+  	    modula_data[i*2+1] = 0xff;
+  	} else {
+
+--- 356,362 -----
+  	if (i % mod_x == 0) pattern_line |= 0x0001;
+      }
+      for (i=0; i<16; i++) {
+! 	if ((i % mod_y) == 0) {
+  	    modula_data[i*2] = 0xff;
+  	    modula_data[i*2+1] = 0xff;
+  	} else {
+

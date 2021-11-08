@@ -1,0 +1,337 @@
+Return-Path: harry%hpcvxhp@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 19:33:01 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA01562; Tue, 5 Jul 88 19:31:09 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 15:31:23 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA14352; Tue, 5 Jul 88 16:31:19 PDT
+Received: from hpcvxhp.HP.COM by hpcvlx.HP.COM; Tue, 5 Jul 88 16:28:08 pdt
+Received: by hpcvxhp.HP.COM; Tue, 5 Jul 88 16:30:21 pdt
+Date: Tue, 5 Jul 88 16:30:21 pdt
+From: Harry Phinney <harry%hpcvxhp@hplabs.hp.com>
+Message-Id: <8807052330.AA09302@hpcvxhp.HP.COM>
+To: -s%hpcvxhp@hplabs.hp.com, bug%hpcvxhp@hplabs.hp.com,
+        fix?%hpcvxhp@hplabs.hp.com, win_Gravity%hpcvxhp@hplabs.hp.com,
+        xbugs%expo.lcs.mit.edu@athena.mit.edu
+
+### bug number:   698
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Any (found on HP9000)
+
+CLIENT OPERATING SYSTEM:
+	Any (found on HP-UX)
+
+DISPLAY:
+	Any (found on all HP displays)
+
+SYNOPSIS:
+	 Window gravity does not preserve the bits in the windows
+
+DESCRIPTION:
+	 Even with window gravity set, the window contents are lost
+	 when the parent is resized.  Adding Adam De Boor's backing
+	 store/save under code made it worse, in that the window
+	 background no longer was painted leaving previous screen bits
+	 visible.
+
+REPEAT-BY:
+
+This program was originally written to test something else, so please forgive.
+After running this program, use a suitable window manager to resize the outer
+most window.  The contents of the inner windows will be gone.
+
+#include <stdio.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+static int	display;
+Display *Xdisplay;
+Window grand_parent_window;
+Window parent_window;
+Window window;
+
+main(argc, argv)
+char	*argv[];
+{
+	char *device;
+	XEvent event;     /* holds X server events */
+	XSizeHints  xsh;		/* Size hints for window manager */
+	GC mygc;
+	XSetWindowAttributes attr;
+
+	if ((Xdisplay = XOpenDisplay(NULL)) == NULL) {
+	    fprintf(stderr, "%s: can't open %s\n", argv[0], XDisplayName(NULL));
+	    exit(1);
+	}
+
+	mygc = DefaultGC(Xdisplay, 0);
+	XSetState(Xdisplay, mygc, 0, 1, GXcopy, ~0);
+	grand_parent_window = XCreateSimpleWindow(Xdisplay,
+		DefaultRootWindow(Xdisplay),
+		205, 5,
+		150, 150,
+		2,
+		WhitePixel(Xdisplay, DefaultScreen(Xdisplay)),
+		BlackPixel(Xdisplay, DefaultScreen(Xdisplay)));
+
+	XSelectInput(Xdisplay, grand_parent_window, ExposureMask);
+
+	XMapWindow(Xdisplay, grand_parent_window);
+
+	parent_window = XCreateSimpleWindow(Xdisplay,
+		grand_parent_window,
+		5, 5,
+		130, 130,
+		2,
+		WhitePixel(Xdisplay, DefaultScreen(Xdisplay)),
+		BlackPixel(Xdisplay, DefaultScreen(Xdisplay)));
+
+	attr.win_gravity = NorthWestGravity;
+	XChangeWindowAttributes(Xdisplay, parent_window,
+				CWWinGravity, &attr);
+	XMapWindow(Xdisplay, parent_window);
+
+	window = XCreateSimpleWindow(Xdisplay,
+		parent_window,
+		5, 5,
+		100, 100,
+		2,
+		BlackPixel(Xdisplay, DefaultScreen(Xdisplay)),
+		WhitePixel(Xdisplay, DefaultScreen(Xdisplay)));
+
+	attr.win_gravity = NorthWestGravity;
+	XChangeWindowAttributes(Xdisplay, window,
+				CWWinGravity, &attr);
+	XMapWindow(Xdisplay, window);
+	XNextEvent(Xdisplay, &event);
+	/* yes, I know I should look for an event on "window" instead */
+	printf("got an event\n");
+	XDrawLine(Xdisplay, window, mygc, 0,0, 90,90);
+	XSync(Xdisplay, 0);
+
+	do {
+		XNextEvent(Xdisplay, &event);
+		printf("got an event\n");
+	} while (1);
+
+	/* Close the X server. */
+	XCloseDisplay(Xdisplay);
+}
+FIX:
+
+Unfortunately, these patches assume that the backing store/save under
+code has been installed, so the line numbers and context will be 
+different for those who are not using that code.  Also, these fixes 
+are not the worlds cleanest, but they were quick to do.  Someone more
+familier can probably find much more elegant approaches.
+
+*** old_window	Tue Jul  5 16:08:20 1988
+--- window.c	Tue Jul  5 16:11:52 1988
+***************
+*** 22,28
+  
+  ******************************************************************/
+  
+! /* $Header: window.c,v 1.15 88/06/08 15:02:11 craig Exp $ */
+  
+  #include "X.h"
+  #define NEED_REPLIES
+
+--- 22,28 -----
+  
+  ******************************************************************/
+  
+! /* $Header: window.c,v 1.16 88/07/05 16:10:18 harry Exp $ */
+  
+  #include "X.h"
+  #define NEED_REPLIES
+***************
+*** 61,66
+      BYTE      blanked;
+  } ScreenSaverStuffRec;
+  
+  #define SCREEN_IS_BLANKED   0
+  #define SCREEN_IS_TILED     1
+  #define SCREEN_ISNT_SAVED   2
+
+--- 61,72 -----
+      BYTE      blanked;
+  } ScreenSaverStuffRec;
+  
++ typedef struct _childRegions { 
++     RegionPtr pReg;
++     struct _childRegions *next;
++     DDXPointRec pt;
++ } childRegionsRec;
++ 
+  #define SCREEN_IS_BLANKED   0
+  #define SCREEN_IS_TILED     1
+  #define SCREEN_ISNT_SAVED   2
+***************
+*** 73,78
+  extern WindowRec WindowTable[];
+  extern void (* ReplySwapVector[256]) ();
+  
+  static void ResizeChildrenWinSize();
+  extern void CheckCursorConfinement();
+  extern void DeleteWindowFromAnySelections();
+
+--- 79,86 -----
+  extern WindowRec WindowTable[];
+  extern void (* ReplySwapVector[256]) ();
+  
++ static childRegionsRec *BuildChildRegions();
++ static void MoveChildren();
+  static void ResizeChildrenWinSize();
+  extern void CheckCursorConfinement();
+  extern void DeleteWindowFromAnySelections();
+***************
+*** 1818,1823
+      register ScreenPtr pScreen;
+      BoxPtr pBox;
+      WindowPtr pFirstChange;
+  
+      /* if this is a root window, can't be resized */
+      if (!(pParent = pWin->parent)) 
+
+--- 1826,1832 -----
+      register ScreenPtr pScreen;
+      BoxPtr pBox;
+      WindowPtr pFirstChange;
++     childRegionsRec *pChildRegs;
+  
+      /* if this is a root window, can't be resized */
+      if (!(pParent = pWin->parent)) 
+***************
+*** 1828,1833
+      {
+          if (pWin->bitGravity != ForgetGravity)
+              oldRegion = NotClippedByChildren(pWin);
+          pBox = (* pScreen->RegionExtents)(pWin->borderSize);
+  	anyMarked = MarkSiblingsBelowMe(pWin, pBox);
+      }
+
+--- 1837,1843 -----
+      {
+          if (pWin->bitGravity != ForgetGravity)
+              oldRegion = NotClippedByChildren(pWin);
++ 	pChildRegs = BuildChildRegions(pWin);
+          pBox = (* pScreen->RegionExtents)(pWin->borderSize);
+  	anyMarked = MarkSiblingsBelowMe(pWin, pBox);
+      }
+***************
+*** 1897,1902
+  #endif notdef
+   
+  	    DoObscures(pParent); 
+  	    HandleExposures(pParent);
+  	}
+  	else
+
+--- 1907,1913 -----
+  #endif notdef
+   
+  	    DoObscures(pParent); 
++ 	    MoveChildren(pWin, pChildRegs);
+  	    HandleExposures(pParent);
+  	}
+  	else
+***************
+*** 1954,1959
+  							      y - oldy,
+  							      pRegion);
+  	    }
+              oldpt.x = oldx - x + pWin->absCorner.x;
+  	    oldpt.y = oldy - y + pWin->absCorner.y;
+  	    (* pWin->CopyWindow)(pWin, oldpt, oldRegion);
+
+--- 1965,1973 -----
+  							      y - oldy,
+  							      pRegion);
+  	    }
++ 
++ 	    MoveChildren(pWin, pChildRegs);
++ 
+              oldpt.x = oldx - x + pWin->absCorner.x;
+  	    oldpt.y = oldy - y + pWin->absCorner.y;
+  	    (* pWin->CopyWindow)(pWin, oldpt, oldRegion);
+***************
+*** 1981,1986
+  	    DoChangeSaveUnder(pFirstChange);
+  	}
+  #endif /* DO_SAVE_UNDERS */
+      }
+  }
+  
+
+--- 1995,2057 -----
+  	    DoChangeSaveUnder(pFirstChange);
+  	}
+  #endif /* DO_SAVE_UNDERS */
++     }
++ }
++ 
++ static childRegionsRec *
++ BuildChildRegions(pWin)
++     WindowPtr pWin;
++ {
++     WindowPtr pSib; 
++     childRegionsRec *pChildRegs, *pListHead;
++ 
++     pChildRegs = (childRegionsRec *) xalloc(sizeof(childRegionsRec));
++     pChildRegs->pReg = (RegionPtr) NULL;
++     pChildRegs->next = (childRegionsRec *) NULL;
++     pListHead = pChildRegs;
++ 
++     for (pSib = pWin->firstChild; pSib; pSib = pSib->nextSib) {
++ 	if ((pSib->winGravity != ForgetGravity) && 
++ 	    (pSib->winGravity != StaticGravity)) {
++ 	    pChildRegs->pReg = NotClippedByChildren(pSib);
++ 	    pChildRegs->pt.x = pSib->absCorner.x;
++ 	    pChildRegs->pt.y = pSib->absCorner.y;
++ 	    pChildRegs->next = (childRegionsRec *) 
++ 				xalloc(sizeof(childRegionsRec));
++ 	    pChildRegs = pChildRegs->next;
++             pChildRegs->pReg = (RegionPtr) NULL;
++             pChildRegs->next = (childRegionsRec *) NULL;
++ 	}
++     }
++     return pListHead;
++ }
++ 
++ static void
++ MoveChildren(pWin, pListHead)
++     WindowPtr pWin;
++     childRegionsRec *pListHead;
++ {
++     WindowPtr pSib;
++     childRegionsRec *pChildReg = pListHead, *pNext;
++     ScreenPtr pScreen = pWin->drawable.pScreen;
++     
++     for (pSib = pWin->firstChild; 
++ 	 pSib; 
++ 	 pSib = pSib->nextSib, pChildReg = pChildReg->next) {
++ 	if ((pSib->winGravity != ForgetGravity) && 
++ 	    (pSib->winGravity != StaticGravity)) {
++ 	    if (pChildReg->pReg) {
++ 		(* pSib->CopyWindow)(pSib, pChildReg->pt, pChildReg->pReg);
++ 	    }
++ 	}
++     }
++     /*
++      * now free up the list
++      */
++     for (pChildReg = pListHead; pChildReg; pChildReg = pNext) {
++ 	pNext = pChildReg->next;
++ 	if(pChildReg->pReg) (* pScreen->RegionDestroy)(pChildReg->pReg);
++ 	xfree(pChildReg);
+      }
+  }
+  
+

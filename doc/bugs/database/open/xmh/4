@@ -1,0 +1,64 @@
+Return-Path: rgcote@koppel.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 4 Oct 88 15:13:31 EDT
+Received: from KOPPEL.LCS.MIT.EDU by koppel.LCS.MIT.EDU via TCP with SMTP
+	id AA01540; Tue, 4 Oct 88 15:13:31 EDT
+Message-Id: <8810041913.AA01540@koppel.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Cc: rgcote@koppel.lcs.mit.edu
+Subject: xmh bugs
+Date: Tue, 04 Oct 88 15:13:24 -0400
+From: Robert G. Cote <rgcote@koppel.lcs.mit.edu>
+
+### bug number:   1046
+### area:         xmh
+### severity:     
+### comments:     text widget problems
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	Vaxstation 2000 running 4.3 BSD with LCS 5th floor additions
+
+
+DISPLAY:
+	Vaxstation 2000, 4 plane color (I think), using an Xserver named Xsg
+
+
+WINDOW MANAGER:
+	uwm
+
+
+AREA: 
+	Xmh  Athena version 2.0.5
+			
+
+SYNOPSIS:
+
+	- text running off screen does not wrap around
+
+DESCRIPTION:
+
+	The text in the various text widget windows (compose and message
+	viewing specifically) does not wrap around when it runs off of the
+	edge of the text window. This might be a feature, but if it is, I 
+	think it is a misfeature since I can't guarantee that messages sent 
+	to me will have only 80 characters a line. This requires me to resize 
+	my xmh window to the length of the longest line in the message (which 
+	isn't always possible if the longest line is longer than the width of 
+	my screen).
+
+	I could demo this for you if you would like and if you don't mind
+	popping up here for a minute or two (NE43-406).
+
+REPEAT BY:
+	... just running xmh. Try viewing a mail message which has an 
+	excessively long line.
+
+SAMPLE FIX:
+
+	How about adding the wordBreak option to XtNtextOptions of all
+	the text widgets used in xmh? 
+
+

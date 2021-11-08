@@ -1,0 +1,54 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 15:49:38 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA03192; Wed, 29 Jun 88 14:47:43 CDT
+Date: Wed, 29 Jun 88 14:47:43 CDT
+From: wtg@uc.msc.umn.edu
+Message-Id: <8806291947.AA03192@uc.msc.umn.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   659
+### area:         Xaw
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2   Xaw
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	 duplicate definitions when compiling StringSrc.c
+
+DESCRIPTION:
+	 StringSrc.c includes <sys/types.h> and <X11/IntrinsicP.h>.
+	 IntrinsicP.h includes <X11/Intrinsic.h>, which includes
+	 <sys/types.h>.  This causes duplicate definitions.
+
+REPEAT-BY:
+	Compile StringSrc.c
+
+FIX:
+	Only include sys/types.h once.
+
+********************* StringSrc.c ********************************
+
+  /* File: StringSource.c */
+
+- #ifndef __TYPES__
+- #define __TYPES__
+  #include <sys/types.h>
+- #endif
+  #include <sys/stat.h>
+  #include <X11/IntrinsicP.h>
+  #include <X11/StringDefs.h>
+  #include <X11/Text.h>
+  #include <X11/TextP.h>
+

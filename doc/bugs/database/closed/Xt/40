@@ -1,0 +1,188 @@
+Return-Path: fred%hpcvxft@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Fri, 18 Mar 88 16:56:12 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA27574; Fri, 18 Mar 88 16:54:19 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Fri, 18 Mar 88 13:52:17 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA05326; Fri, 18 Mar 88 13:55:46 PST
+Received: from hpcvxft by hpcvxft.HP.COM; Fri, 18 Mar 88 13:54:00 pst
+Message-Id: <8803182154.AA25666@hpcvxft.HP.COM>
+To: intrinsics%expo.lcs.mit.edu@athena.mit.edu,
+        xbugs%expo.lcs.mit.edu@athena.mit.edu
+Cc: frank_group%hpcvlx@hplabs.hp.com
+Subject: Xtk R2 bugs
+X-Mailer: mh6.5
+Date: Fri, 18 Mar 88 13:53:54 PST
+From: fred%hpcvxft@hplabs.hp.com
+
+### bug number:   179
+### area:         XT
+### severity:     
+### assigned to:  swick
+### status:       closed
+### comments:     
+
+
+Since moving to the R2 version of the X Toolkit, we have encountered a
+handful of bugs, some of which have catastrophic effects, and some which 
+are just inconvenient.  Each problem is outlined below:
+
+
+1) I want to be able to set up a translation which causes a widget's select
+   action to be invoked when a particular key is pressed.  However, instead
+   of using a standard alphanumeric key, I want to use one of the special
+   keys on my keyboard (such as keypad function key 1).  Since this is
+   supposed to be supported (but is undocumented), I studied TMparse.c to
+   determine how I specified a special key.  TMparse.c uses the call
+   XStringToKeysym() to convert a key symbol string into a key symbol
+   value.  Knowing this, I looked at the Xlib source for XStringToKeysym(),
+   to determine the string format it wanted; it did not want the key symbol
+   string as it was defined in keysymdef.h (XK_KP_F1), but rather it wanted
+   it in some other (arbitrary?) format: KP_F1.  Having collected what I
+   thought was all the necessary information, I set up the following
+   translation for one of my widgets:
+
+         "<Key>KP_F1:     select()"
+
+   Much to my surprise, it did not work!  So I took another look at TMparse.c .
+   Turns out that they had defined their own version of XStringToKeysym(),
+   and had not used the one supplied by X!!  Their version expected me to
+   pass in a string representing the numeric value of the key symbol; not
+   the key symbol itself.  Once I changed my translation to the following,
+   everything worked fine:
+
+         "<Key>0xFF91:     select()"
+
+   Why is the toolkit not using the XStringToKeysym() function provided by
+   Xlib?  For that matter, why does the Xlib version of XStringToKeysym() 
+   not use the key symbol names defined in keysymdef.h, and why isn't it 
+   documented as such?
+
+   If the toolkit wants to support both key symbol names and key symbol
+   values, then they should modify (and rename) their private version of
+   XStringToKeysym() to handle both cases.
+
+   [fixed in rev 1.61 of TMparse.c -rrs]
+   
+2) Apparently, right before the R2 toolkit was released, some new functionality
+   was added to the toolkit, to support keyboard focus.  Unfortunately, the
+   way in which this was added broke XtDispatchEvent() in several ways.
+   
+   First off, a new function, OnlyKeyboardGrabs() was added to Event.c ; this
+   is a Boolean function which searchs the grab list to see if only a
+   keyboard grab (versus button grabs) is in effect.  Unfortunately, it
+   uses a "!=" instead of a "==" when doing its testing, and always returns
+   the wrong value.
+
+   The second way in which XtDispatchEvent() was broken deals with the
+   way in which OnlyKeyboardGrabs() is invoked; instead of invoking it
+   as:
+
+         OnlyKeyboardGrabs()
+
+   it is invoked as:
+
+         OnlyKeyboardGrabs
+
+   As many of you know, instead of invoking the procedure and returning its
+   boolean value, this simple evaluates to the address of the function, and
+   is hence always interpreted as returning TRUE.
+
+   [fixed -rrs]
+
+3) In Event.c, the RemoveGrab() function, which is invoked by XtRemoveGrab(),
+   was also broken.  According to the document, and previous version of Xt,
+   when a request was made to remove a widget from the grab list, all widgets
+   on the grab list upto and including the specified widget were removed.
+   The new RemoveGrab() removes only the specified widget.
+
+   [fixed -rrs]
+
+4) Attempting to override a translation for a widget is flakey.  It appears
+   that you can normally (but I'm not sure always) override a translation
+   before the widget is realized; however, once we realized the widget, any
+   attempts to override a translation on that widget caused all of the widget's
+   translations to get garbaged.  Has anyone tried this?  Are there any
+   things we need to watch out for?  Is the translation manager just getting
+   confused?  After an override, does the widget need to have its translations
+   rebound (as is done at realize time)?
+
+   [see also bugs 258 and 363 -rrs]
+
+5) Several months ago, I reported a discrepancy in how XtGetValues() worked,
+   versus how it was documented.  I received a message that the problem was
+   being fixed, yet I notice that it is still present in the R2 toolkit,
+   to a degree anyways.  According to the documentation, when you issue a 
+   GetValue request, you pass in an arglist composed of an argument 
+   name/address pair; the address indicates where the return value should be 
+   placed.  If I don't supply a pointer (i.e. I pass in a NULL address),
+   when I query a Boolean value, the value is always returned in the arglist;
+   I noticed that CopyToArg() specifically tested for this case; I can live
+   with this, since it allows old clients to continue to run.  However, if
+   I do pass in an address, then the returned boolean value was always 0
+   (FALSE).  
+
+   After further investigation, I believe the problem lies in the following
+   line of code which had been added to CopyToArg() to fix the original
+   problem:
+
+        if (*dst != NULL)
+           dst = *(XtArgVal **)dst;
+
+   The above statement treats everything as a pointer to a long variable;
+   XtArgVal is typedef'ed to a long.  In the days where the values were
+   always returned in the arglist, treating the destination as a long was 
+   fine since the value field really was a long.  However, since the
+   value now pointed to by dst can be a char, a short, a long, etc, this
+   assumption is no longer valid.  For instance, assume the following:
+
+     dst ----> arglist value entry ----> a boolean variable
+
+        ("---->" denotes 'pointing to')
+
+   When the buggy statement shown above is executed, the picture now
+   looks like the following:
+
+     dst ----> a boolean variable
+
+   Since the argument being queried is a char, the following is used to
+   copy the value into the specified destinatioin:
+
+     *dst = (XtArgVal) *((char *) src);
+
+   Since the value pointed to by dst is assumed to be a long, the following
+   four bytes are copied into the location we specified:
+
+      0x00, 0x00, 0x00, 0x01
+
+   Unfortunately, at least for those of us using 68000 architecture, the
+   first 0x00 is copied into our destination, instead of the 0x01.
+
+
+   There is an easy way to fix this, I believe.  If (*dst == NULL) then
+   use the copy statements, as they currently are defined.  If, however,
+   *dst really points to a valid address, then use a different set of
+   copy statements, which don't assume that dst always points to a long;
+   i.e.  
+
+       else if (size == sizeof(char))
+          (char *)*dst = *((char *) src);
+
+   [see also bug 402 -rrs]
+
+6) In the previous release of the toolkit, a widget normally defined a
+   resouce which allowed a user to set/override the translations supported
+   by that widget.  With R2, the translations are no longer a resource. What
+   is the reasoning behind this?  How can a user modify the translations for
+   a widget?
+
+
+===============
+
+
+   That's it for now!
+
+   Fred Taft
+   Corvallis Workstation Operation
+   Hewlett-Packard Co
+   (503)750-2861
+

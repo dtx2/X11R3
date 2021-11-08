@@ -1,0 +1,45 @@
+Return-Path: shep@allspice.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Mon, 27 Jun 88 10:15:54 EDT
+Received: from shep.sage by PTT.LCS.MIT.EDU via PCMAIL with DMSP
+	id AA01703; Mon, 27 Jun 88 10:14:34 EDT
+Date: Mon, 27 Jun 88 10:14:34 EDT
+Message-Id: <8806271414.AA01703@PTT.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Cc: rws@expo.lcs.mit.edu
+Subject: X11/Xqdss is too slow
+Sender: shep@ALLSPICE.LCS.MIT.EDU
+From: shep@ALLSPICE.LCS.MIT.EDU
+Repository: PTT
+Originating-Client: sage
+
+### bug number:   647
+### area:         server
+### severity:     very low
+### comments:     
+
+
+VERSION:
+        X11 release 2
+
+CLIENT MACHINE:
+        MicroVax II (KA630 processor), MicorVax III (KA650 processor)
+
+CLIENT OPERATING SYSTEM:
+        MIT-LCS's 4.3 BSD
+
+DISPLAY:
+	QDSS
+
+SYNOPSIS:
+	X11/Xqdss is too slow.
+
+DESCRIPTION:
+	X11/Xqdss is so noticebly slower (main-CPU intensive) than
+X10/Xqdss that I doubt anyone with an QDSS (who runs more than just
+xterm/xclock/xload/gnuemacs) will ever want to switch to X11.
+
+REPEAT-BY:
+	Feel free to arange with me a time for some demos.
+
+FIX:
+

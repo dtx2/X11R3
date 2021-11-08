@@ -1,0 +1,328 @@
+.de EX		\"Begin example
+.ne 5
+.if n .sp 1
+.if t .sp .5
+.nf
+.in +.5i
+..
+.de EE
+.fi
+.in -.5i
+.if n .sp 1
+.if t .sp .5
+..
+.TH XCALC 1 "26 October 1988" "X Version 11"
+.SH NAME
+xcalc \- scientific calculator for X
+.SH SYNOPSIS
+.B xcalc
+[-display \fIdisplay\fP]  [-bw \fIpixels\fP] [-stip] [-rv] [-rpn] [-analog] 
+[-geometry \fIgeometry\fP]
+.SH DESCRIPTION
+.I Xcalc
+is a scientific calculator desktop accessory that can emulate a TI-30,
+an HP-10C, and a slide rule.
+.SH OPTIONS
+.PP
+.TP 8
+.B \-display \fIdisplayname\fP
+This option specifies the X server to contact.
+.PP
+.TP 8
+.B \-geometry \fIgeometry\fP
+This option specifies the size and placement of the top level window.  By 
+default, the minimum size will be used.  Note that your window manager may 
+require you to place it explicitly anyway.
+.PP
+.TP 8
+.B \-fg \fIcolor\fP
+This option specifies the foreground color to use.
+.PP
+.TP 8
+.B \-bg \fIcolor\fP
+This option specifies the background color to use.
+.PP
+.TP 8
+.B \-bw \fIpixels\fP
+This option specifies the border width in pixels.
+.PP
+.TP 8
+.B \-stip
+This option indicates that the background of the calculator should be 
+drawn using a stipple of the foreground and background colors.  On monochrome
+displays this makes for a nicer display.
+.PP
+.TP 8
+.B \-rv
+This option indicates that reverse video should be used.
+.PP
+.TP 8
+.B \-rpn
+This option indicates that Reverse Polish Notation should be used.  In this
+mode the calculator will look and behave like an HP-10C.  Without this flag,
+it will emulate a TI-30.
+.PP
+.TP 8
+.B \-analog
+This option indicates that a slide rule should be used.
+.SH OPERATION
+.PP
+.I Pointer Usage:
+Most operations are done with the Button1 (usually leftmost button on the
+pointer).  The only exception is that pressing the AC key on the TI calculator
+with Button3 (usually on the right) will exit the calculator.
+.PP
+.I Key Usage (Normal mode):
+The number keys, the +/- key, and the +, -, *, /, and = keys all do exactly 
+what you would expect them to.  It should be noted that the operators obey
+the standard rules of precedence.  Thus, entering "3+4*5=" results in "23",
+not "35".  The parentheses can be used to override this.  For example, 
+"(1+2+3)*(4+5+6)=" results in "6*15=90".  The non-obvious keys are detailed
+below.
+.PP
+.B 1/x
+replaces the number in the display with its reciprocal.
+.PP
+.B x^2
+squares the number in the display.
+.PP
+.B SQRT
+takes the square root of the number in the display.
+.PP
+.B CE/C
+when pressed once, clears the number in the display without clearing the state
+of the machine.  Allows you to re-enter a number if you screw it up.  
+Pressing it twice clears the state, also.
+.PP
+.B AC
+clears everything, the display, the state, the memory, everything.  Pressing
+it with the right button 'turns off' the calculator, in that it exits the
+program.  Somewhat more equivalent to throwing the calculator in the trash,
+if we were to pursue the analogy.
+.PP
+.B INV
+inverts the meaning of the function keys.  See the individual function keys
+for details.
+.PP
+.B sin
+computes the sine of the number in the display, as interpreted by the current
+DRG mode (see DRG, below).  If inverted, it computes the arcsine.
+.PP
+.B cos
+computes the cosine, or arccosine when inverted.
+.PP
+.B tan
+computes the tangent, or arctangent when inverted.
+.PP
+.B DRG
+changes the DRG mode, as indicated by 'DEG', 'RAD', or 'GRAD' at the bottom of
+number window of
+the calculator.  When in 'DEG' mode, numbers in the display are taken as being
+degrees.  In 'RAD' mode, numbers are in radians, and in 'GRAD' mode, numbers
+are in gradians.  When inverted, the DRG key has the nifty feature of 
+converting degrees to radians to gradians and vice-versa.  Example:  put the 
+calculator into 'DEG' mode, and type "45 INV DRG".  The display should now
+show something along the lines of ".785398", which is 45 degrees converted to
+radians.
+.PP
+.B e
+the constant 'e'.  (2.7182818...)
+.PP
+.B EE
+used for entering exponential numbers.  For example, to enter "-2.3E-4" you'd
+type "2 . 3 +/- EE 4 +/-"
+.PP
+.B log
+calculates the log (base 10) of the number in the display.  When inverted,
+it raises "10.0" to the number in the display.  For example, typing "3 INV log"
+should result in "1000".
+.PP
+.B ln
+calcuates the log (base e) of the number in the display.  When inverted, 
+it raises "e" to the number in the display.  For example, typing "e ln" should
+result in "1"
+.PP
+.B y^x
+raises the number on the left to the power of the number on the right.  For 
+example "2 y^x 3 =" results in "8", which is 2^3.  For a further example,
+"(1+2+3) y^x (1+2) =" equals "6 y^x 3" which equals "216".
+.PP
+.B PI
+the constant 'pi'.  (3.1415927....)
+.PP
+.B x!
+computes the factorial of the number in the display.  The number in the display
+must be an integer in the range 0-500, though, depending on your math library,
+it might overflow long before that.
+.PP
+.B STO
+copies the number in the display to the memory location.
+.PP
+.B RCL
+copies the number from the memory location to the display.
+.PP
+.B SUM
+adds the number in the display to the number in the memory location.
+.PP
+.B EXC
+swaps the number in the display with the number in the memory location.
+.PP
+.I Key Usage (RPN mode):
+The number keys, CHS (change sign), +, -, *, /, and ENTR keys all do exactly 
+what you would expect them to do.  Many of the remaining keys are the same as
+in normal mode.  The differences are detailed below.
+.PP
+.B <-
+is a backspace key that can be used while typing a number.  It will erase
+digits from the display.
+.PP
+.B ON
+clears everything, the display, the state, the memory, everything.  Pressing
+it with the right button 'turns off' the calculator, in that it exits the
+program.  Somewhat more equivalent to throwing the calculator in the trash,
+if we were to pursue the analogy.
+.PP
+.B INV
+inverts the meaning of the function keys.  This would be the  "f" key
+on an HP calculator, but xcalc does not have the resolution to display
+multiple legends on each key.  See the individual function keys
+for details.
+.PP
+.B 10^x
+raises "10.0" to the number in the top of the stack.  When inverted, it calculates
+the log (base 10) of the number in the display.
+.PP
+.B e^x
+raises "e" to the number in the top of the stack.  When inverted, it calcuates the
+log (base e) of the number in the display.  
+.PP
+.B STO
+copies the number in the top of the stack to a memory location.  There are 10
+memory locations.  The desired memory is specified by following this
+key with pressing a digit key.
+.PP
+.B RCL
+pushes the number from the specified memory location onto the stack.
+.PP
+.B SUM
+adds the number on top of the stack to the number in the specified
+memory location.
+.PP
+.B x:y
+exchanges the numbers in the top two stack positions.
+.PP
+.B R v
+rolls the stack downward.  When inverted, it rolls the stack upward.
+.PP
+.I blank
+these keys were used for programming functions on the HP11-C.  Their
+functionality has not been duplicated here.
+.PP
+.SH KEYBOARD EQUIVALENTS
+If you have the pointer in the xcalc window, you can use the keyboard to speed
+entry, as almost all of the calculator keys have a keyboard equivalent.  The
+number keys, the operator keys, and the parentheses all have the obvious
+equivalent.  The less-obvious equivalents are as follows:
+.PP
+.EX
+n:  +/-            !:  x!
+p:  PI             e:  EE
+l:  ln             ^:  y^x
+i:  INV            s:  sin
+c:  cos            t:  tan
+d:  DRG            BS, DEL:  CE/C ("<-" in RPN mode)
+CR: ENTR           q: quit
+.EE
+.PP
+.SH COLOR USAGE
+.I Xcalc
+uses a lot of colors, given the opportunity.  In the default case, it will 
+just use two colors (Foreground and Background) for everything.  This works out
+nicely.  However, if you're a color fanatic you can specify the colors used 
+for the number keys, the operator (+-*/=) keys, the function keys, the display,
+and the icon.
+.SH X DEFAULTS
+.PP
+The
+program uses the routine 
+.I XGetDefault(3X)
+to read defaults, so its resource names are all capitalized.
+.PP
+.TP 8
+.B BorderWidth
+Specifies the width of the border.  The default is 2.
+.PP
+.TP 8
+.B ReverseVideo
+Indicates that reverse video should be used.
+.PP
+.TP 8
+.B Stipple
+Indicates that the background should be stippled.  The default is ``on''
+for monochrome displays, and ``off'' for color displays.
+.PP
+.TP 8
+.B Mode
+Specifies the default mode.  Allowable values are \fIrpn\fP, \fIanalog\fP.
+.PP
+.TP 8
+.B Foreground
+Specifies the default color used for borders and text.
+.PP
+.TP 8
+.B Background
+Specifies the default color used for the background.
+.TP 8
+.B NKeyFore, NKeyBack
+Specifies the colors used for the number keys.
+.PP
+.TP 8
+.B OKeyFore, OKeyBack
+Specifies the colors used for the operator keys.
+.PP
+.TP 8
+.B FKeyFore, FKeyBack
+Specifies the colors used for the function keys.
+.TP 8
+.B DispFore, DispBack
+Specifies the colors used for the display.
+.TP 8
+.B IconFore, IconBack
+Specifies the colors used for the icon.
+.SH EXAMPLES
+If you're running on a monochrome display, you shouldn't need any .Xdefaults
+entries for xcalc.  On a color display, you might want to try the
+following in normal mode:
+
+.EX
+xcalc.Foreground:               Black
+xcalc.Background:               LightSteelBlue
+xcalc.NKeyFore:                 Black
+xcalc.NKeyBack:                 White
+xcalc.OKeyFore:                 Aquamarine
+xcalc.OKeyBack:                 DarkSlateGray
+xcalc.FKeyFore:                 White
+xcalc.FKeyBack:                 #900
+xcalc.DispFore:                 Yellow
+xcalc.DispBack:                 #777
+xcalc.IconFore:                 Red
+xcalc.IconBack:                 White
+.EE
+.SH "SEE ALSO"
+X(1), xrdb(1)
+.SH BUGS
+.PP
+The calculator doesn't resize.
+.PP
+The slide rule and HP mode may or may not work correctly.
+.PP
+This application should really be implemented with the X Toolkit.  It would 
+make a very good example of a compound widget.
+.SH COPYRIGHT
+Copyright 1988, Massachusetts Institute of Technology.
+.br
+See \fIX(1)\fP for a full statement of rights and permissions.
+.SH AUTHORS
+John Bradley, University of Pennsylvania
+.br
+Mark Rosenstein, MIT Project Athena

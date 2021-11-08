@@ -1,0 +1,49 @@
+Return-Path: henry@garp.mit.edu
+Received: by EXPO.LCS.MIT.EDU; Fri, 6 May 88 14:13:56 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA28121; Fri, 6 May 88 13:12:50 EST
+Posted-Date: Fri, 06 May 88 14:12:40 EDT
+Message-Id: <8805061812.AA07586@garp.mit.edu>
+To: xbugs@athena.mit.edu
+Subject: [<kit@ATHENA.MIT.EDU: Key Click on RT workstations]
+Date: Fri, 06 May 88 14:12:40 EDT
+From: Henry Mensch <henry@garp.mit.edu>
+
+### bug number:   475
+### area:         server
+### severity:     low
+### comments:     bug caused by Athena not running standard IBM kernel
+
+imagine being in a workstation cluster full of RTs, with a user at
+each keyboard.  imagine all those keyclicks.  billions and billions of
+keyclicks.  i only have to listen to one other person's keyclicks
+daily, and it's driving me insane.
+
+PLease fix ... before a large part of campus loses their collective
+mind.
+
+-- Henry
+--------
+
+------- Forwarded Message
+
+Received: by E40-PO.MIT.EDU (5.45/4.7) id AA27717; Thu, 5 May 88 12:44:17 EDT
+From: <kit@ATHENA.MIT.EDU>
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA00176; Thu, 5 May 88 11:43:10 EST
+Received: by MYCROFT (5.45/4.7)
+	id AA10623; Thu, 5 May 88 12:39:24 EDT
+Message-Id: <8805051639.AA10623@MYCROFT>
+To: bugs@ATHENA.MIT.EDU
+Subject: Key Click on RT workstations
+Date: Thu, 05 May 88 12:39:13 EDT
+
+
+'xset c' does not seem to work on either a 5.5T or 6.0A RT workstations. I
+find the RT keyclick quite loud and would like to be able to turn it down.  
+Is there a way to get this fixed before 6.0 gets to the field? a number of 
+users have been complaining about this.
+
+						Chris
+
+------- End of Forwarded Message
+
+

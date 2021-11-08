@@ -1,0 +1,33 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by EXPO.LCS.MIT.EDU; Sat, 12 Mar 88 08:34:14 EST
+Received: by harvard.harvard.edu; Sat, 12 Mar 88 08:36:11 EST
+Received: from phantom.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA00562; Sat, 12 Mar 88 08:20:13 EST
+Received: by phantom.ksr.com (3.2/SMI-3.2)
+	id AA02136; Sat, 12 Mar 88 08:20:10 EST
+Message-Id: <8803121320.AA02136@phantom.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: lint
+Reply-To: ksr!benson@harvard.harvard.edu
+Date: Sat, 12 Mar 88 08:20:06 EST
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   93
+### area:         config
+### severity:     
+### assigned to:  
+### status:       closed
+
+
+(XV11R2 - SunOS 3.5)
+
+1) I would think that it was far preferable to create lint libraries
+as part of make rather than make install. They take quite a long time.
+
+2) I am getting piles of messages like: 
+
+XEvToWire.c(241): warning: long assignment may lose accuracy
+
+
+--benson
+

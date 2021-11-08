@@ -1,0 +1,116 @@
+Return-Path: orgovan%star.DEC@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Wed, 27 Jul 88 11:23:26 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA00370; Wed, 27 Jul 88 08:23:32 PDT
+Date: Wed, 27 Jul 88 08:23:32 PDT
+Message-Id: <8807271523.AA00370@decwrl.dec.com>
+From: orgovan%star.DEC@decwrl.dec.com (Vince Orgovan)
+To: xbugs@expo.lcs.mit.edu, ORGOVAN%star.DEC@decwrl.dec.com
+Subject: XrmPutFileDatabase bug
+
+### bug number:   789
+### area:         Xlib
+### severity:     low
+### comments:     
+### status:       closed
+
+VERSION:
+
+    X11 Release 2
+
+SYNOPSIS:
+    
+    XrmPutFileDatabase does not properly format multiline resources. 
+
+DESCRIPTION:
+
+    Multiline Xrm resources are separated by the single character 
+    newline '/n' when stored in memory, and this should be converted to 
+    the 3 character sequence \n\ when stored as a file. However no
+    formatting is currently being done.
+
+REPEAT-BY:
+
+  Use this program: 
+
+    #include <X11/Xlib.h>
+    #include <X11/Xresource.h>
+    #include <stdio.h>
+    int main()
+    {
+	Display *dpy;
+	XrmDatabase db;
+	if ((dpy = XOpenDisplay("")) == NULL) {
+            printf ("XOpenDisplay failed.\n");
+            exit (-1);
+	}
+	db = XrmGetFileDatabase("Xdefaults");
+	if (db == NULL) {
+	    printf("XrmGetFileDatabase failed\n");
+	    exit (-1);
+	}
+	XrmPutFileDatabase(db, "Xdefaults2");
+	exit(1);
+    }
+
+  On this Xdefaults file:
+
+    SText.Translations_two: \
+	Shift<Key>0xff53:	forward-word()\n\
+	<Key>0xff92:		forward-word()\n
+
+
+Suggested Fix:
+
+  Modify the DumpEntry routine in module Xrm.c as follows:
+
+static void DumpEntry(bindings, quarks, type, value, stream)
+    XrmBindingList      bindings;
+    XrmQuarkList	quarks;
+    XrmRepresentation   type;
+    XrmValuePtr		value;
+    FILE		*stream;
+{
+
+    register unsigned int	i;
+
+    PrintBindingQuarkList(bindings, quarks, stream);
+    if (type == XrmQString) {
++	if (index(value->addr, '\n') == NULL)
+!	    (void) fprintf(stream, ":\t%s\n", value->addr);
++	else {
++	    register char *s1, *s2;
++	    (void) fprintf(stream, ":\t\\\n");
++	    s1 = value->addr;
++	    while ((s2 = index(s1, '\n')) != NULL) {
++		*s2 = '\0';
++		if (s2[1] == '\0') {
++		    (void) fprintf(stream, "%s\\n\n", s1);
++		} else {
++		    (void) fprintf(stream, "%s\\n\\\n", s1);
++		}
++		s1 = s2 + 1;
++		*s2 = '\n';
++	    }		
++	}
+    } else {
+	(void) fprintf(stream, "!%s:\t", XrmRepresentationToString(type));
+	for (i = 0; i < value->size; i++)
+	    (void) fprintf(stream, "%02x", (int) value->addr[i]);
+        if (index(value->addr, '\n')) {
+           (void) fprintf(stream, ":\t\\\n");
+           for (i = 0; value->addr[i]; i++) {
+               if (value->addr[i] == '\n') {
+                   (void) fprintf(stream, "\\n");
+                   if (value->addr[i+1]) (void) fprintf(stream, "\\");
+                   (void) fprintf(stream, "\n");
+               } else {
+                   (void) putc(value->addr[i], stream);
+               }
+           }
+        } else {
+           (void) fprintf(stream, ":\t%s\n", value->addr);
+        }
+     }
+}
+

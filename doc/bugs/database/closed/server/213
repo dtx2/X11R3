@@ -1,0 +1,43 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Return-Path: <Hornig@alderaan.scrc.symbolics.com>
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by expo.lcs.mit.edu; Wed, 30 Mar 88 12:05:40 EST
+Received: from MAMA-CASS.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 182150; Wed 30-Mar-88 12:04:29 EST
+Date: Wed, 30 Mar 88 12:04 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: miZeroLine
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880330170421.6.HORNIG@MAMA-CASS.SCRC.Symbolics.COM>
+
+### bug number:   294
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	Bad return value.
+
+DESCRIPTION:
+	miZeroLine is defined to return an int, but has no return
+statements.
+
+REPEAT-BY:
+	Compile it.
+
+FIX:
+	Define it to return void.
+

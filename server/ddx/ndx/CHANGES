@@ -1,0 +1,3 @@
+This directory is new for R3.  It is a DDX for a device-less server,
+no input and no tubes.  Has an MFB and a CFB screen.  Useful for testing
+drawing code or other server whacking without using a real display.

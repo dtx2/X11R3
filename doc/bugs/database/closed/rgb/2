@@ -1,0 +1,52 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 23 Jun 88 23:29:25 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23796; Thu, 23 Jun 88 23:28:03 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 23 Jun 88 19:28:12 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA08635; Thu, 23 Jun 88 20:27:53 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 23 Jun 88 20:29:40 pdt
+Message-Id: <8806240329.AA06702@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: rgb Xos
+X-Mailer: mh6.5
+Date: Thu, 23 Jun 88 20:29:36 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   630
+### area:         rgb
+### severity:     very low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	rgb does not use the system file 'Xos.h'.
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** util/rgb/rgb.c.old	Tue Jun 21 12:30:00 1988
+--- util/rgb/rgb.c	Tue Jun 21 12:30:13 1988
+***************
+*** 11,20
+  #include <dbm.h>
+  #undef NULL
+  #include <stdio.h>
+! #include <sys/file.h>
+! #ifdef SYSV
+! #include <fcntl.h>
+! #endif /* SYSV */
+  #include "rgb.h"
+  #include "site.h"
+  #include <ctype.h>
+
+--- 11,17 -----
+  #include <dbm.h>
+  #undef NULL
+  #include <stdio.h>
+! #include "X11/Xos.h"
+  #include "rgb.h"
+  #include "site.h"
+  #include <ctype.h>
+

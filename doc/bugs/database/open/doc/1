@@ -1,0 +1,70 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:12:12 EST
+Date: Fri, 4 Mar 88 16:12:12 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042112.AA04847@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: XtInputCallbackProc interface broken
+
+### bug number:   1
+### area:         Xt
+### severity:     
+### assigned to:  ralph
+### status:       
+
+Return-Path: dshr@sun.com
+Received: from Sun.COM by EXPO.LCS.MIT.EDU; Wed, 2 Mar 88 13:30:00 EST
+Received: from snail.sun.com by Sun.COM (4.0/SMI-4.0)
+	id AA06878; Wed, 2 Mar 88 10:28:12 PST
+Received: from devnull.sun.com by snail.sun.com (4.0/SMI-3.2)
+	id AA27792; Wed, 2 Mar 88 10:29:21 PST
+Received: by devnull.sun.com (4.0/SMI-4.0Beta)
+	id AA07273; Wed, 2 Mar 88 10:15:44 PST
+Message-Id: <8803021815.AA07273@devnull.sun.com>
+Date: Wed 2 Mar 1988 10:06:06 EST
+From: David Rosenthal <dshr@sun.com>
+Subject: XtInputCallbackProc interface broken
+To: x11bugs%brie@sun.com, xbugs@expo.lcs.mit.edu
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Observed on Sun3/160 (client) uVAX GPX (server)
+
+CLIENT OPERATING SYSTEM:
+	SunOS4.0
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+	 Code which invokes XtInputCallbackProc doesn't match
+	 documentation.
+
+DESCRIPTION:
+	 The documentation for the intrinsics specifies the interface
+	for XtInputCallbackProc as:
+
+	typedef void (* XtInputCallbackProc)();
+	/* Opaque closure;          */
+	/* int    source;           */
+	/* XtInputId  id;           */
+
+	The code specifies it as:
+
+	typedef void (* XtInputCallbackProc)();
+    /* Opaque closure;          */
+    /* int    *source;           */
+    /* XtInputId  *id;           */
+
+
+
+REPEAT-BY:
+	As usual with the toolkit,  what you do to get the
+	error is to believe the documentation.
+
+FIX:
+	Proofread it.
+

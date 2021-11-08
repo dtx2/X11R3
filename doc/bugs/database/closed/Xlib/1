@@ -1,0 +1,74 @@
+Return-Path: karlton@decwrl.dec.com
+Received: from sonora.dec.com by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 14:04:42 EST
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA01796; Wed, 16 Mar 88 11:03:47 PST
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA24353; Wed, 16 Mar 88 11:03:44 PST
+Message-Id: <8803161903.AA24353@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: orgovan%star.DEC@decwrl.dec.com, rao@flume.dec.com, karlton@decwrl.dec.com
+Subject: XConnDis.c and constructing the expanded name
+Date: Wed, 16 Mar 88 11:03:42 -0800
+From: Phil Karlton <karlton@decwrl.dec.com>
+
+### bug number:   132
+### area:         Xlib
+### severity:     high
+### assigned to:  
+### status:       closed
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE: VS2000 (actually any)
+
+CLIENT OPERATING SYSTEM:  Ultrix 2.2 (actually any)
+
+DISPLAY: QDSS (actually any)
+
+SYNOPSIS:
+	The expanded_name return value was an empty string if the
+	display_name argument started with a colon.
+
+DESCRIPTION:
+	When constructing the expanded name near the end of the procedure
+	_XConnectDisplay, the possibility that the first character was NUL
+	was overlooked. This happens when the display_name argument is of
+	the form ":0", such as is often specified in /etc/ttys.
+
+	Xterm now uses the macro XDisplayString to get the value for the
+	environment variable. This is used when the tty is not a slave.
+
+	Also note that the Instanllation Guide and Release Notes has the
+	/etc/ttys entry missing the "-display" on the command line.
+
+REPEAT-BY:
+	I ran xterm from init with the argument "-display :0" and when
+	it got started the DISPLAY environment variable was 0 characters
+	long.
+
+FIX:
+*** XConnDis.c.orig	Wed Mar 16 10:38:42 1988
+--- XConnDis.c	Wed Mar 16 10:42:41 1988
+***************
+*** 228,235
+  	 * spec and return it in the result parameter.
+  	 */
+  	display_ptr = displaybuf;
+! 	while (*(++display_ptr) != '\0')
+! 	    ;
+  	*(display_ptr++) = ':';
+  #ifdef DNETCONN
+  	if (dnet)
+
+--- 228,235 -----
+  	 * spec and return it in the result parameter.
+  	 */
+  	display_ptr = displaybuf;
+! 	while (*display_ptr != '\0')
+! 	    display_ptr++;
+  	*(display_ptr++) = ':';
+  #ifdef DNETCONN
+  	if (dnet)
+

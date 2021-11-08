@@ -1,0 +1,67 @@
+Return-Path: schoch@trident.arc.nasa.gov
+Received: by expo.lcs.mit.edu; Mon, 23 May 88 21:19:47 EDT
+Received: Mon, 23 May 88 18:19:37 PDT by trident.arc.nasa.gov (5.59/1.2)
+Date: Mon, 23 May 88 18:19:37 PDT
+From: Steve Schoch <schoch@trident.arc.nasa.gov>
+Message-Id: <8805240119.AA07090@trident.arc.nasa.gov>
+X-Mailer: Mail User's Shell (Vers 6.0b) Tue Jan  5 17:40:17 PST 1988
+To: xbugs@expo.lcs.mit.edu
+Subject: XtAddInput does not save file descriptor
+
+### bug number:   533
+### area:         Xt
+### severity:     low
+### comments:     duplicate of 184
+
+Subject: XtAddInput does not save file descriptor
+Index:	NextEvent.c
+
+Description:
+	If you call XtAddInput with anything other than XtInputReadMask,
+	it will not save the file descriptor in the InputEvent
+	structure.  This causes much problems.
+Repeat-By:
+	Call XtAddInput() with XtInputWriteMask as the condition.
+	Then try to remove it with XtRemoveInput().
+Fix:
+	Apply the following diff:
+RCS file: NextEvent.c,v
+retrieving revision 1.1
+diff -c -r1.1 NextEvent.c
+*** /tmp/,RCSt1007083	Mon May 23 18:19:02 1988
+--- NextEvent.c	Mon May 23 18:14:42 1988
+***************
+*** 343,349
+  	if(condition == XtInputReadMask){
+  	    sptr = (struct InputEvent *)XtMalloc((unsigned) sizeof (*sptr));
+  	    sptr->ie_next = Select_rqueue[source];
+- 	    sptr->ie_source = source;
+  	    Select_rqueue[source] = sptr;
+  	    XFD_SET(source, &composite.rmask);
+  	} else if(condition == XtInputWriteMask) {
+
+--- 343,348 -----
+  	if(condition == XtInputReadMask){
+  	    sptr = (struct InputEvent *)XtMalloc((unsigned) sizeof (*sptr));
+  	    sptr->ie_next = Select_rqueue[source];
+  	    Select_rqueue[source] = sptr;
+  	    XFD_SET(source, &composite.rmask);
+  	} else if(condition == XtInputWriteMask) {
+***************
+*** 360,365
+  	  XtError("invalid condition passed to XtAddInput");
+  	sptr->ie_proc = proc;
+  	sptr->ie_closure =closure;
+  
+  	if (composite.nfds < (source+1))
+  	    composite.nfds = source+1;
+
+--- 359,365 -----
+  	  XtError("invalid condition passed to XtAddInput");
+  	sptr->ie_proc = proc;
+  	sptr->ie_closure =closure;
++ 	sptr->ie_source = source;
+  
+  	if (composite.nfds < (source+1))
+  	    composite.nfds = source+1;
+

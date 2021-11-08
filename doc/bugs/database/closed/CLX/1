@@ -1,0 +1,26 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:12:22 EST
+Date: Fri, 4 Mar 88 16:12:22 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042112.AA04873@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: missing file from R2
+
+### bug number:   3
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+Return-Path: roman@athena.mit.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 12:07:02 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA22013; Thu, 3 Mar 88 12:06:37 EST
+Received: by JAREK.MIT.EDU (5.45/4.7) id AA05581; Thu, 3 Mar 88 12:06:35 EST
+Message-Id: <8803031706.AA05581@JAREK.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: missing file from R2
+Date: Thu, 03 Mar 88 12:06:29 EST
+From: Roman J. Budzianowski <roman@athena.mit.edu>
+
+The C file kcltcp.c being part of the support for kcl (tcpinit.l tcp.l kcltcp.c)
+is missing from the CLX directory in V11R2.

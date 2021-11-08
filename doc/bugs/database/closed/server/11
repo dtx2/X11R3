@@ -1,0 +1,59 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:12:38 EST
+Date: Fri, 4 Mar 88 16:12:38 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042112.AA04909@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: misc.h
+
+### bug number:   7
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 13:43:58 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 175831; Thu 3-Mar-88 13:16:50 EST
+Date: Thu, 3 Mar 88 13:16 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: misc.h
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880303181645.6.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	 The definition of NULL in misc.h makes C unhappy.
+
+DESCRIPTION:
+	 The macro NULL is not defined until <stddef.h> is included.
+This means that the conditional definition in server/include/misc.h is
+used.  This definition is incompatible with the Symbolics C definition
+of NULL.
+
+REPEAT-BY:
+	Compile the server. 
+
+FIX:
+	Put:
+
+#ifdef __STDC__
+#include <stddef.h>
+#endif
+
+	before the
+
+#ifndef NULL
+
+	line.

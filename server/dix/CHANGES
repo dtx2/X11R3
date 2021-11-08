@@ -1,0 +1,28 @@
+The following changes have been made to this directory since R2:
+
+     o  fix AllocColorPlanes to allow allocation of all planes at once
+     o  pGC->CopyArea/CopyPlane now return RegionPtr, DIX now calls
+	new pWindow->SendGraphicsExpose with this region to dispatch
+	GrapicsExposure events.
+     o  QueryFont now returns font Ink metrics correctly now.  Ink metrics
+	are an additional element of the DIX font structure which must
+	be set up by the font loader
+     o  Obeys Length restriction for client connections.
+     o  CopyGC now has an error return to indicate whether bits
+	outside the set of valid GC change bits were set -- this
+	now generates a Value error.  Many other specious requests
+	also generate Value errors now.
+     o  CopyPlane checks it's bit-plane argument for legality
+     o  Delayed/Buffered writes for client events implemented,
+	which required minor DIX changes.
+     o  GetImage checks pWindow->viewable
+     o  SelectionClear now sent to selection owner, not window creator
+     o  new utility function in dixutils.c CopyISOLatin1Lowered to
+	convert mixed case Latin1 strings to lower case.  Used by
+	the font routines and by the color-name lookup routines.
+     o  bug with keysym map width fixed
+     o  many bugs with cursor reference counts in grabs fixed
+     o  DIX save under support.  This code supplies save unders to
+	any DDX which advertises backing store but not save unders.
+     o  mixing window gravity and bit gravity fixed.
+     o  a host of minor bugs fixed

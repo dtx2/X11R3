@@ -1,0 +1,96 @@
+Return-Path: jlf%sierra.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Thu, 28 Jul 88 17:11:57 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA10829; Thu, 28 Jul 88 13:39:35 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA25827; 3.2/CRI-3.1; Thu, 28 Jul 88 13:45:15 CDT
+Received: by jlf.cray.com
+	id AA09380; 3.2/CRI-3.1; Thu, 28 Jul 88 13:45:12 CDT
+Date: Thu, 28 Jul 88 13:45:12 CDT
+From: jlf%sierra.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8807281845.AA09380@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: cray Xlib bug
+Cc: bobo@sierra.cray.com, hrp@sierra.cray.com, joel@uf.msc.umn.edu,
+        wtg@sierra.cray.com
+
+### bug number:   797
+### area:         Xlib
+### severity:     low
+### comments:     [done -- jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	XGetWindowProperty fails
+DESCRIPTION:
+	In reading the XGetWindowProperty reply from the input buffer,
+	the code does not unpack the data or the correct number of bytes
+	of data.
+
+REPEAT-BY:
+	Running the Xlib test for XGetWindowProperty
+
+FIX:
+	Use XRead32 and XRead16 to unpack.  Calculate correct number of 
+	bytes to unpack from input buffer to user.
+
+	I don't know what to do about the format=8 case.  These fixes
+	are for format=16 and format=32 cases.  I have no machine to
+	test the format=16 case.
+
+*** XGetProp.c	Thu Jul 28 13:18:25 1988
+--- /usr/yafs1/X/X11/XDIST/X.V11R2/lib/X/XGetProp.c	Thu Feb 25 21:55:17 1988
+***************
+*** 58,96 ****
+  
+        case 16:
+          /* XXX needs rethinking for BIGSHORTS */
+- #ifdef CRAY
+- 	{
+- 	long nbytes2;
+-         nbytes2 = reply.nItems * sizeof(Atom);
+-         *prop = Xmalloc (nbytes2 + 1);
+- 	nbytes = reply.nItems * 2;
+-         _XRead16 (dpy, (char *) *prop, nbytes);
+- 	(*prop)[nbytes2] = '\0';
+- 	}
+- #else
+          nbytes = (long)reply.nItems << 1;
+          *prop = (unsigned char *) Xmalloc ((unsigned)nbytes + 1);
+          _XReadPad (dpy, (char *) *prop, nbytes);
+  	(*prop)[nbytes] = '\0';
+- #endif
+          break;
+  
+        case 32:
+- #ifdef CRAY
+- 	{
+- 	long nbytes2;
+- 	nbytes2 = reply.nItems * sizeof(Atom);
+- 	*prop = Xmalloc(nbytes2 + 1);
+- 	nbytes = reply.nItems * 4;
+- 	_XRead32(dpy, (char *) *prop, nbytes);
+- 	(*prop)[nbytes2] = '\0';
+- 	}
+- #else
+          nbytes = (long)reply.nItems << 2;
+          *prop = (unsigned char *) Xmalloc ((unsigned)nbytes + 1);
+          _XRead (dpy, (char *) *prop, (long)nbytes);
+  	(*prop)[nbytes] = '\0';
+- #endif
+          break;
+  
+        default:
+--- 58,74 ----
+

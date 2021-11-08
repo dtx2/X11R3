@@ -1,0 +1,44 @@
+Return-Path: franz!frozen!jdi@ucbarpa.berkeley.edu 
+Received: from ucbarpa.Berkeley.EDU by EXPO.LCS.MIT.EDU; Sat, 5 Mar 88 19:14:45 EST
+Received: by ucbarpa.Berkeley.EDU (5.58/1.26)
+	id AA29308; Sat, 5 Mar 88 16:14:52 PST
+Received: from frozen by franz (5.5/3.14)
+	id AA01622; Sat, 5 Mar 88 15:56:10 PST
+Received: by frozen (3.2/3.14)
+	id AA17206; Sat, 5 Mar 88 15:49:44 PST
+Date: Sat, 5 Mar 88 15:49:44 PST
+From: franz!frozen!jdi@ucbarpa.berkeley.edu (John Irwin)
+Return-Path: <frozen!jdi>
+Message-Id: <8803052349.AA17206@frozen>
+To: xbugs@expo.lcs.mit.edu
+Subject: Serious bug in MapWindow
+
+### bug number:   36
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun
+
+CLIENT OPERATING SYSTEM:
+	Sun 3.2 (compiled with Sun 3.4)
+
+DISPLAY:
+	(e.g. QVSS, GPX, CG4, HP TOPCAT, etc.)
+
+SYNOPSIS:
+	 Look at line 2437 of window.c (in MapWindow)
+
+DESCRIPTION:
+	 You don't *really* want a single = sign, do you?  :-)
+
+REPEAT-BY:
+	 Occasional core dumps when bringing up menu windows in uwm
+
+FIX:
+	 Obvious.

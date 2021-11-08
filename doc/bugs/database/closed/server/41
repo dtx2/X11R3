@@ -1,0 +1,71 @@
+Return-Path: keith
+Received: by expo.lcs.mit.edu; Thu, 5 May 88 15:14:19 EDT
+From: keith@expo.lcs.mit.edu (Keith Packard)
+Message-Id: <8805051914.AA28585@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: qdss doesn't reinstall default colormap when uninstalling another.
+Date: Thu, 05 May 88 15:14:16 EDT
+
+### bug number:   461
+### area:         server
+### severity:     medium high
+### comments:     
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	Microvax III running Ultrix 2.2
+
+DISPLAY:
+	QDSS
+
+AREA:
+	server
+
+SYNOPSIS:
+	when qdUninstallColormap is called, it fails to reinstall
+	the default colormap
+
+DESCRIPTION:
+	qdUninstallColormap sets the InstalledMap to the default and
+	calls qdInstallColormap -- that routine dutifully checks to
+	see if the currently installed map is the same as the new one.
+	As qdUninstallColormap has already incorrectly set
+	InstalledMap, qdInstallColormap returns immediately.
+
+REPEAT-BY:
+	run any program which creates a new colormap and terminate it
+	abnormally (i.e. kill -9) so that it doesn't get a chance to
+	reinstall the default colormap by itself.  
+
+FILES:
+	ddx/dec/qdss/qdcolor.c
+
+FIX:
+*** /tmp/,RCSt1a28532	Thu May  5 15:12:34 1988
+--- qdcolor.c	Thu May  5 14:09:46 1988
+***************
+*** 161,171 ****
+          return;
+  
+      WalkTree(pcmap->pScreen, TellLostMap, &pcmap->mid);
+!     pInstalledMap = (ColormapPtr) LookupID( pcmap->pScreen->defColormap,
+! 			RT_COLORMAP, RC_CORE);
+!     qdInstallColormap(  pInstalledMap);
+!     WalkTree(pcmap->pScreen, TellGainedMap, &pInstalledMap->mid);
+! 
+  }
+  
+  #define EXTRACTCOLOR( c )	(((Nplanes == 4) && Vaxstar)\
+--- 161,168 ----
+          return;
+  
+      WalkTree(pcmap->pScreen, TellLostMap, &pcmap->mid);
+!     qdInstallColormap ((ColormapPtr) LookupID( pcmap->pScreen->defColormap,
+! 			RT_COLORMAP, RC_CORE));
+  }
+  
+  #define EXTRACTCOLOR( c )	(((Nplanes == 4) && Vaxstar)\
+

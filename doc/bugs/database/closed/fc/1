@@ -1,0 +1,78 @@
+Return-Path: xpert-request@athena.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 19 Apr 88 11:12:38 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA01867; Tue, 19 Apr 88 09:53:29 EST
+Received: by ucbvax.Berkeley.EDU (5.59/1.28)
+	id AA09717; Tue, 19 Apr 88 01:52:39 PDT
+Received: from USENET by ucbvax.Berkeley.EDU with netnews
+	for xpert@athena.mit.edu (xpert@athena.mit.edu)
+	(contact usenet@ucbvax.Berkeley.EDU if you have questions)
+Date: 19 Apr 88 06:09:15 GMT
+From: ut-emx!mic@sally.utexas.edu  (Mic (... K[a-z]+) Kaczmarczik)
+Organization: UT Austin Computation Center, User Services Unix Support Group
+Subject: Man page for fonts/compiler/fc.1
+Message-Id: <1763@ut-emx.UUCP>
+Sender: xpert-request@athena.mit.edu
+To: xpert@athena.mit.edu
+
+### bug number:   392
+### area:         fc
+### severity:     low
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+Our local installation policy "encourages" (um, requires) us to have a
+man page for every user-accessible program we install, so here's the
+man page we created for the X 11 font compiler, in order to install it
+along with the other font programs in the contributed distribution.
+It's pretty short, so here it is...
+
+Mic Kaczmarczik			If you drink, don't drill.
+UT Austin Computation Center			-- Matt Groening
+mic@emx.utexas.edu	
+MIC@UTAIVC.BITNET
+
+--------------------------------cut here-------------------------------------
+#	This is a shell archive.
+#	Remove everything above and including the cut line.
+#	Then run the rest of the file through sh.
+-----cut here-----cut here-----cut here-----cut here-----
+#!/bin/sh
+# shar:	Shell Archiver
+#	Run the following text with /bin/sh to create:
+#	fc.1
+# This archive created: Tue Apr 19 01:06:07 1988
+sed 's/^X//' << \SHAR_EOF > fc.1
+X.TH FC 1 "11 April 1988" "X Version 11"
+X.SH NAME
+Xfc - X 11 font compiler
+X.SH SYNOPSIS
+X.B "fc"
+X<BDF-file >SNF-file
+X.SH DESCRIPTION
+X.PP
+X.B fc
+Xis the font compiler distributed with the core X 11 distribution from MIT.
+XIt reads a Adobe Character Bitmap Distribution Format (BDF) font file from
+Xstandard input and writes an X11 server normal font (SNF) to standard output.
+X.SH OPTIONS
+X.B fc
+Xis a pure filter; no options are available.
+X.SH "SEE ALSO"
+XX(1), Xserver(1)
+X.br
+X"Character Bitmap Distribution Format 2.1", Adobe Systems, Inc.
+X.SH BUGS
+X.PP
+XNot much thought has been given to error checking.
+X
+X
+SHAR_EOF
+#	End of shell archive
+exit 0
+-- 
+Mic Kaczmarczik			If you drink, don't drill.
+UT Austin Computation Center			-- Matt Groening
+mic@emx.utexas.edu	
+MIC@UTAIVC.BITNET

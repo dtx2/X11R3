@@ -1,0 +1,106 @@
+Return-Path: edmond@cs.ucla.edu
+Received: from oahu.cs.ucla.edu ([128.97.28.25]) by EXPO.LCS.MIT.EDU; Fri, 11 Mar 88 18:58:10 EST
+Return-Path: <edmond@CS.UCLA.EDU>
+Received: by oahu.cs.ucla.edu (Sendmail 5.58.2/2.00)
+	id AA25649; Fri, 11 Mar 88 15:56:50 PST
+Date: Fri, 11 Mar 88 15:56:50 PST
+From: edmond@cs.ucla.edu (Edmond Mesrobian)
+Message-Id: <8803112356.AA25649@oahu.cs.ucla.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Problems compiling X11 R2 on and IBM RT
+Cc: edmond@cs.ucla.edu
+
+### bug number:   91
+### area:         server
+### severity:     
+### assigned to:  
+### status:       
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	IBM 6155, Megapel, etc.
+
+SYNOPSIS:
+	Missing struct defs and constants?
+
+DESCRIPTION:
+	Ran into a real problem when compiling rtscreen.c (located in 
+	server/ddx/ibm/rt subdirectory). 
+
+	The complier error messages include:
+
+E "rtscreen.c",L146/C22:	bounds:
+|	This can be of an incomplete type only if it is "extern" or has an
+|	initializer supoplying its size.
+
+E "rtscreen.c",L180/C2:	bounds: Incomplete type:
+|	The type 'struct x_screen_size' (at "rtscreen.c",L146/C8) must be
+|	completed before it can be used.
+
+E "rtscreen.c",L181/C2:	bounds: Incomplete type:
+|	The type 'struct x_screen_size' (at "rtscreen.c",L146/C8) must be
+|	completed before it can be used.
+
+E "rtscreen.c",L182/C2:	bounds: Incomplete type:
+|	The type 'struct x_screen_size' (at "rtscreen.c",L146/C8) must be
+|	completed before it can be used.
+
+E "rtscreen.c",L183/C2:	bounds: Incomplete type:
+|	The type 'struct x_screen_size' (at "rtscreen.c",L146/C8) must be
+|	completed before it can be used.
+
+E "rtscreen.c",L184/C25:	QIOCSETSIZE: This is undeclared.
+
+
+	We looked all over for x_screen_size and QIOCSETSIZE without any luck.
+
+	Also, the compliation of the file mpelio.c (located in 
+	server/ddx/ibm/mpel) failed beacuse:
+
+E "mpelio.c",L108/C17:	CONS_MPEL: This is undeclared.
+
+	Am I doing something wrong? Am I missing some files?
+
+thanks for any help,
+Edmond Mesrobian
+UCLA Machine Perception Lab
+
+
+Return-Path: swick@athena.mit.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 12:34:35 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA29271; Mon, 14 Mar 88 12:33:51 EST
+Received: by LYRE.MIT.EDU (5.45/4.7) id AA05376; Mon, 14 Mar 88 12:34:13 EST
+Message-Id: <8803141734.AA05376@LYRE.MIT.EDU>
+To: edmond@cs.ucla.edu
+Cc: us@expo.lcs.mit.edu, xbugs@athena.mit.edu
+Subject: Re: XBUG: Problems compiling X11 R2 on and IBM RT 
+In-Reply-To: Your message of Fri, 11 Mar 88 15:56:50 PST
+	<8803112356.AA25649@oahu.cs.ucla.edu>
+Date: Mon, 14 Mar 88 12:34:06 EST
+From: Ralph R. Swick <swick@athena.mit.edu>
+
+### bug number:   91
+### area:         server
+
+     CLIENT MACHINE:
+	     IBM PC/RT
+
+     CLIENT OPERATING SYSTEM:
+	     4.3bsd
+
+     SYNOPSIS:
+	     Missing struct defs and constants?
+
+You need ACIS 4.3 plus 2-Feb update (IBM part number 5799-WZQ).  The
+missing declarations are in new header files on that update.

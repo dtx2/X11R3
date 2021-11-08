@@ -1,0 +1,49 @@
+Return-Path: sequent!michael@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 20 Sep 88 18:37:44 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA11542; Tue, 20 Sep 88 18:37:39 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA05389; Tue, 20 Sep 88 15:37:28 PDT
+Message-Id: <8809202237.AA05389@decwrl.dec.com>
+To: xbugs@athena.mit.edu
+Subject: R3B - some Xaw widgets honor "reverseVideo" without documenting it
+Cc: michael@decwrl.dec.com, len@decwrl.dec.com
+Date: Tue, 20 Sep 88 14:49:50 PDT
+From: Michael Squires <sequent!michael@decwrl.dec.com>
+
+### bug number:   987
+### area:         doc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 3 (pre-release)
+SYNOPSIS:
+	Some Xaw widgets honor "reverseVideo" but Xaw documentation doesn't
+	reflect that option.
+DESCRIPTION:
+	Configuration:
+		server:	Sun 3/50, SunOS3.2
+		client: Symmetry S81, Dynix 3.0.12
+
+	These are the widgets which DO honor the option:
+	    Clock.c
+	    Load.c
+	    Logo.c
+	    Mailbox.c
+	    Scroll.c
+
+REPEAT-BY:
+	Look through the code; fire up "examples/Xaw/xwidgets -reverse" and
+	observe the results.
+FIX:
+
+	Document the option in the Xaw document (and upcoming man pages???)
+
+			Michael Squires
+			Sequent Computer Systems, Inc.
+			15450 SW Koll Parkway
+			Beaverton, OR  97006
+			(503) 626-5700 x9891
+			sequent!michael@decwrl.dec.com
+			michael%sequent.uucp@tektronix.tek.com@relay.cs.net
+

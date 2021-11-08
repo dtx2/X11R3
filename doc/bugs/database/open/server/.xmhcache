@@ -1,0 +1,63 @@
+   8  03/04 jim@expo.lcs.mit.  NoopDDA  <<### bug number: 10 ### area: ### severity: ### assigned t
+  27  03/10 jim@expo.lcs.mit.  XMoveArea with IncludeInferiors on the root doesn't work.  <<### bug
+  28  03/10 jim@expo.lcs.mit.  A couple of Sun X11 fixes  <<### bug number: 77 ### area: server ###
+  38  03/15 ibmuupa!erik@ucbv  screen switching is broken  <<### bug number: 124 ### area: server #
+  48  03/25 schwartz@psusun03  Lint vs X11 (not really a bug report)  <<### bug number: 213 ### are
+  52  03/25 biggers@edsel.sie  XGrabKey / XGrabButton activation conflict  <<### bug number: 219 ##
+  53  03/25 jonnyg@rover.umd.  Security bug (may not be a bug...)  <<### bug number: 221 ### area: 
+  58  03/28 hornig@alderaan.s  DoChangeGC (in server/dix/gc.c)  <<### bug number: 238 ### area: ser
+  69  03/28 shep@allspice.lcs  Small movment of mouse cursor when I type the first character of my 
+  74  03/28 sundar@wheaties.a  console idle time is impossible to get in X 11, Release 2  <<### bug
+ 102  04/11 rws@zermatt.lcs.m  huge tiles and stipples on QDSS  <<### bug number: 347 ### area: ser
+ 109  04/14 dan%yktvmv.bitnet  bug report  <<### bug number: 383 ### area: server ### severity: ###
+ 113  04/19 reilly@atari.dec.  Xqdss [or generic server] doesn't free memory it mallocs  <<### bug 
+ 115  04/21 mcvax!cwi.nl!guid  unexpected MotionNotify events  <<### bug number: 401 ### area: serv
+ 121  04/26 rws@zermatt.lcs.m  tiling, and default colormap reinstallation  <<### bug number: 422 #
+ 122  04/26 karlton@wsl.dec.c  Xqdss does not support CopyPlanes  <<### bug number: 423 ### area: s
+ 123  04/27 ellis@athena.mit.  Xqdss GC clipmask bug  <<### bug number: 425 ### area: server ### se
+ 129  05/04 ellis@athena.mit.  2 Xqdss bugs  <<### bug number: 451 ### area: server ### severity: l
+ 130  05/05 erin@austin.lockh  Bug Report  <<### bug number: 458 ### area: server ### severity: low
+ 131  04/28 jensen@granite.de  stipples don't work with wide lines  <<### bug number: 463 ### area:
+ 138  05/10 salzman@bytor.rdl  Server on Sun CG4 device options, troubles with suntools  <<### bug 
+ 143  05/17 rusty%math.berkel  screen saver troubles  <<### bug number: 504 ### area: server ### se
+ 148  03/17 rusty%velveeta.be  repeat doesn't stay off  <<### bug number: 170 ### area: server ### 
+ 153  05/29 tek@cs.ucla.edu    X11 R2 and SUN 3/60(F)C (long)  <<### bug number: 548 ### area: serv
+ 154  05/31 kubitron@athena.m  Xibm and the Caps lock problem  <<### bug number: 551 ### area: serv
+ 165  05/27 jim@expo.lcs.mit.  keysyms for hp non-US keyboards  <<### bug number: 607 ### area: ser
+ 174  06/27 shep@allspice.lcs  X11/Xqdss is too slow  <<### bug number: 647 ### area: server ### se
+ 188  07/14 keith@expo.lcs.mi  QDSS zero width lines on screen don't match zero width offscreen  <<
+ 192  07/15 jbs@wonko.mit.edu  Machine independant optimizations to mfb bitblt  <<### bug number: 7
+ 194  07/21 galvin-peter@yale  Problem with X11R2 on Suns  <<### bug number: 715 ### area: server #
+ 195  07/20 richard.draves@m.   <<### bug number: 716 ### area: server ### severity: very high ### 
+ 196  07/20 qjb@athena.mit.ed  BlackPixel/WhitePixel swapped in RT server?  <<### bug number: 717 #
+ 200  06/28 rws@zermatt.lcs.m  various bugs  <<### bug number: 648 ### area: server ### severity: m
+ 202  07/27 jeff@dandelion.ci   <<### bug number: 791 ### area: server ### severity: low ### commen
+ 204  08/01 solomon@cs.wisc.e  Xqdss server has storage leak.  <<### bug number: 803 ### area: serv
+ 205  08/03 mrmarx!davep@uune  bug with Xqdss filled arc rendering  <<### bug number: 825 ### area:
+ 212  08/17 amsdsg!jeff@uunet   <<### bug number: 882 ### area: server ### severity: low ### commen
+ 213  08/19 keith@expo.lcs.mi  image text on qdss doesn't fill background correctly  <<### bug numb
+ 215  08/22 richard.draves@rp  bug in aedValidateGC  <<### bug number: 895 ### area: server ### sev
+ 217  08/22 richard.draves@rp  font bugs with AEDs  <<### bug number: 897 ### area: server ### seve
+ 219  08/23 richard.draves@m.  multi-screen cursor bug on RTs  <<### bug number: 899 ### area: serv
+ 220  08/23 richard.draves@m.  strangely-colored cursors on RT AEDs  <<### bug number: 900 ### area
+ 224  03/10 jim@expo.lcs.mit.  X11R1 bug  <<### bug number: 71 ### area: server ### severity: ### a
+ 225  08/28 hkbirke@media-lab  X11R2, HP9000s300, mixed monitors, Conn#5 broken  <<### bug number: 
+ 226  08/28 rfrench@athena.mi  X11R2: Xqdss server bug  <<### bug number: 918 ### area: server ### 
+ 229  09/07 keith@expo.lcs.mi  wide arcs in mi code  <<### bug number: 937 ### area: server ### sev
+ 230  09/07 keith@expo.lcs.mi  mi backing store clip types  <<### bug number: 938 ### area: server 
+ 234  09/09 scotthe@shark.gwd  r3b FlushClient kills innocent client  <<### bug number: 961 ### are
+ 235  09/11 kubitron@athena.m  r3b Infinite cursor problems in Xibm  <<### bug number: 962 ### area
+ 236  09/11 kubitron@athena.m  Default settings of caps-lock and control  <<### bug number: 963 ###
+ 237  09/11 kubitron@athena.m  r3b Caps lock functionality in Xibm  <<### bug number: 964 ### area:
+ 243  09/21 mcvax!unido!sinix  X11R2 bug filling arcs with pie-mode  <<### bug number: 991 ### area
+ 253  09/26 dba+@andrew.cmu.e  can't compile server/ddx/ibm/BSDrt/rtInitEmul.c  <<### bug number: 1
+ 255  09/26 scotthe@shark.gwd  X11 R3 bug report: Clipmasking in mibstore.c  <<### bug number: 1014
+ 262  08/16 karlton@wsl.dec.c  mfbscreeninit takes too few arguments by one  <<### bug number: 1047
+ 263  10/04 henry@garp.mit.ed  [Chris VanHaren (Athena User Consultant): 6.0C RT uwm]  <<### bug nu
+ 266  10/05 karlton@wsl.dec.c  server/ddx/cfb/cfbbitblt.c does not compile on a Vax  <<### bug numb
+ 269  10/06 jg@src.dec.com     Bug in connection setup information.  <<### bug number: 1061 ### are
+ 271  10/10 joel@wsl.dec.com   Server-crashing bug in mibstore.c  <<### bug number: 1067 ### area: 
+ 274  10/12 peters@ginsu.appl  BUG: Sample server croaks on sixth screen.  <<### bug number: 1070 #
+ 275  10/13 henry@athena.mit.  [John E Elsbree (6.037 TA): 6.0C (RT) X(?): double- and triple-click
+ 276  10/15 hania@wsl.dec.com  bug in dix/window.c  <<### bug number: 1075 ### area: server ### sev
+ 277  10/15 rws@zermatt.lcs.m  CopyArea, XY GetImage and backing store problems  <<### bug number: 

@@ -1,0 +1,42 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 16:10:22 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 179021; Wed 16-Mar-88 15:44:18 EST
+Date: Wed, 16 Mar 88 15:44 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CLX COPY-AREA and COPY-PLANE
+To: xbugs@expo.lcs.mit.edu
+Cc: William M. York <York@alderaan.scrc.symbolics.com>,
+        hornig@alderaan.scrc.symbolics.com
+In-Reply-To: <19880315234009.1.YORK@CALVARY.ILA.Dialnet.Symbolics.COM>
+Message-Id: <19880316204415.2.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   138
+### area:         CLX
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	The CLX COPY-AREA and COPY-PLANE functions are not updating the
+GC properly.
+
+DESCRIPTION:
+	They should be supplying the :GC-FORCE option to
+WITH-BUFFER-REQUEST.
+
+REPEAT-BY:
+	Do a COPY-AREA with a recently-changed GC.
+

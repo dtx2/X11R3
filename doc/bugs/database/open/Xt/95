@@ -1,0 +1,61 @@
+Return-Path: sequent!michael@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Wed, 21 Sep 88 22:20:35 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA14084; Wed, 21 Sep 88 22:20:29 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA21468; Wed, 21 Sep 88 19:20:09 PDT
+Message-Id: <8809220220.AA21468@decwrl.dec.com>
+To: xbugs@athena.mit.edu
+Subject: R3B - lib/Xt #includes need cleanup
+Cc: michael@decwrl.dec.com, len@decwrl.dec.com
+Bcc: swick@athena.mit.edu
+Date: Wed, 21 Sep 88 18:33:13 PDT
+From: Michael Squires <sequent!michael@decwrl.dec.com>
+
+### bug number:   993
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 3 (pre-release)
+SYNOPSIS:
+	The references to "StringDefs.h" in lib/Xt should be <X11/StringDefs.h>
+DESCRIPTION:
+	Configuration:
+		server:	Sun 3/50, SunOS3.2
+		client: Symmetry S81, Dynix 3.0.12
+
+	Here is a list of files with this problem:
+
+	CompObj.c
+	Composite.c
+	Constraint.c
+	Create.c
+	Event.c
+	Initialize.c
+	Intrinsic.c
+	Object.c
+	Popup.c
+	RectObj.c
+	Resources.c
+	Selection.c
+	Shell.c
+	TMparse.c
+	TMstate.c
+	Vendor.c
+	WindowObj.c
+
+REPEAT-BY:
+	Look at the code.
+
+FIX:
+
+
+			Michael Squires
+			Sequent Computer Systems, Inc.
+			15450 SW Koll Parkway
+			Beaverton, OR  97006
+			(503) 626-5700 x9891
+			sequent!michael@decwrl.dec.com
+			michael%sequent.uucp@tektronix.tek.com@relay.cs.net
+

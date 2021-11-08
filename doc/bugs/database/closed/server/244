@@ -1,0 +1,209 @@
+Return-Path: jupiter!bob@cad.berkeley.edu
+Received: by expo.lcs.mit.edu; Mon, 15 Aug 88 18:49:15 EDT
+Received: by cad.Berkeley.EDU (5.58/1.28)
+	id AA11247; Mon, 15 Aug 88 15:49:12 PST
+Received: by jupiter.IS (4.12/6.0.GT)
+	id AA11698; Mon, 15 Aug 88 15:48:00 pdt
+Date: Mon, 15 Aug 88 15:48:00 pdt
+From: Bob Schulman <jupiter!bob%jupiter@cad.berkeley.edu>
+Posted-Date: Mon, 15 Aug 88 15:48:00 pdt
+Message-Id: <8808152248.AA11698@jupiter.IS>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in cfbUnnaturalTileFS().
+Cc: bob@cad.berkeley.edu
+
+### bug number:   875
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Jupiter System's Sun Satellite
+
+SYNOPSIS:
+	 cfbUnnaturalTileFS() is wrong.
+
+DESCRIPTION:
+	 cfbUnnaturalTileFS() doesn't accurately keep track of the psrc and
+	 pdst pointers. Moreover, in its innermost loop (i.e.
+	 "while(nlMiddle--) ... "), it incorrectly assumes that the pixel
+	 to write into is pixel zero.
+
+REPEAT-BY:
+	Well, if you had a Sun Satellite from us, you could repeat it
+	by setting up a root window in pseduo color mode, 8 bits deep,
+	then setting up a screen with a variety of windows placed randomly
+	on it, then setting the root's background bitmap to Jef
+	Poskanazer's (sp?) sun2.xbm pixmap (which is a very odd size, 25x25).
+	You'll see oddness. I tried doing this on our B&W sun server,
+	but it works OK. Perhaps with someone else's 8 bit display...
+
+FIX:
+*** cfbfillsp.c.core	Mon Aug 15 15:44:02 1988
+--- cfbfillsp.c.fixed	Mon Aug 15 15:30:56 1988
+***************
+*** 248,254 ****
+      register int startmask;
+      register int nlMiddle;
+      PixmapPtr	pTile;		/* pointer to tile we want to fill with */
+!     int		w, width, x, tmpSrc, srcStartOver, nstart, nend;
+      int 	endmask, tlwidth, rem, tileWidth, *psrcT, rop;
+      int *pwidthFree;		/* copies of the pointers to free */
+      DDXPointPtr pptFree;
+--- 248,254 ----
+      register int startmask;
+      register int nlMiddle;
+      PixmapPtr	pTile;		/* pointer to tile we want to fill with */
+!     int		xo, w, width, x, tmpSrc, srcStartOver, nstart, nend;
+      int 	endmask, tlwidth, rem, tileWidth, *psrcT, rop;
+      int *pwidthFree;		/* copies of the pointers to free */
+      DDXPointPtr pptFree;
+***************
+*** 322,389 ****
+  		psrc = psrcT + rem / PPW;
+  	        w = min(tileWidth, width);
+  		w = min(w,tileWidth-rem);
+- #ifdef notdef
+- 		if((rem = x % tileWidth) != 0)
+- 		{
+- 		    w = min(min(tileWidth - rem, width), PPW);
+- 		    /* we want to grab from the end of the tile.  Figure
+- 		     * out where that is.  In general, the start of the last
+- 		     * word of data on this scanline is tlwidth -1 words 
+- 		     * away. But if we want to grab more bits than we'll
+- 		     * find on that line, we have to back up 1 word further.
+- 		     * On the other hand, if the whole tile fits in 1 word,
+- 		     * let's skip the work */ 
+- 		    endinc = tlwidth - 1 - (tileWidth-rem) / PPW;
+- 
+- 		    if(endinc)
+- 		    {
+- 			if((rem & pim) + w > tileWidth % PPW)
+- 			    endinc--;
+- 		    }
+- 
+- 		    getbits(psrc + endinc, rem & pim, w, tmpSrc);
+- 		    putbitsrop(tmpSrc, (x & pim), w, pdst, 
+- 			pGC->planemask, rop);
+- 		    if((x & pim) + w >= PPW)
+- 			pdst++;
+- 		}
+- 		else
+- #endif notdef
+  		if(((rem & pim) + w) <= PPW)
+  		{
+  		    getbits(psrc, (rem & pim), w, tmpSrc);
+  		    putbitsrop(tmpSrc, x & pim, w, pdst, 
+  			pGC->planemask, rop);
+! 		    ++pdst;
+  		}
+  		else
+  		{
+! 		    maskbits(x, w, startmask, endmask, nlMiddle);
+  
+  	            if (startmask)
+! 		        nstart = PPW - (x & pim);
+  	            else
+  		        nstart = 0;
+  	            if (endmask)
+! 	                nend = (x + w)  & pim;
+  	            else
+  		        nend = 0;
+  
+- 	            srcStartOver = nstart > PLST;
+- 
+  		    if(startmask)
+  		    {
+  			getbits(psrc, rem & pim, nstart, tmpSrc);
+  			putbitsrop(tmpSrc, x & pim, nstart, pdst, 
+  			    pGC->planemask, rop);
+! 			pdst++;
+  			psrc++;
+  		    }
+! 		     
+  		    while(nlMiddle--)
+  		    {
+  			    getbits(psrc, 0, PPW, tmpSrc);
+! 			    putbitsrop( tmpSrc, 0, PPW,
+  				pdst, pGC->planemask, rop );
+  			    pdst++;
+  			    psrc++;
+--- 322,368 ----
+  		psrc = psrcT + rem / PPW;
+  	        w = min(tileWidth, width);
+  		w = min(w,tileWidth-rem);
+  		if(((rem & pim) + w) <= PPW)
+  		{
+  		    getbits(psrc, (rem & pim), w, tmpSrc);
+  		    putbitsrop(tmpSrc, x & pim, w, pdst, 
+  			pGC->planemask, rop);
+! 		    if ((rem & pim) + w >= PPW)
+! 			psrc++;
+! 		    if ((x & pim) + w >= PPW)
+! 			pdst++;
+  		}
+  		else
+  		{
+! 		    maskbits(rem, w, startmask, endmask, nlMiddle);
+  
+  	            if (startmask)
+! 		        nstart = PPW - (rem & pim);
+  	            else
+  		        nstart = 0;
+  	            if (endmask)
+! 	                nend = (rem + w)  & pim;
+  	            else
+  		        nend = 0;
+  
+  		    if(startmask)
+  		    {
+  			getbits(psrc, rem & pim, nstart, tmpSrc);
+  			putbitsrop(tmpSrc, x & pim, nstart, pdst, 
+  			    pGC->planemask, rop);
+! 			xo = (x + nstart) & pim;
+! 			/* advanced to next word? */
+! 			if (xo <= (x & pim))
+! 				pdst++;
+  			psrc++;
+  		    }
+! 		    else
+! 			xo = (x & pim);
+! 
+  		    while(nlMiddle--)
+  		    {
+  			    getbits(psrc, 0, PPW, tmpSrc);
+! 			    putbitsrop( tmpSrc, xo, PPW,
+  				pdst, pGC->planemask, rop );
+  			    pdst++;
+  			    psrc++;
+***************
+*** 391,398 ****
+  		    if(endmask)
+  		    {
+  			getbits(psrc, 0, nend, tmpSrc);
+! 			putbitsrop(tmpSrc, 0, nend, pdst, 
+  			    pGC->planemask, rop);
+  		    }
+  		 }
+  		 x += w;
+--- 370,379 ----
+  		    if(endmask)
+  		    {
+  			getbits(psrc, 0, nend, tmpSrc);
+! 			putbitsrop(tmpSrc, xo, nend, pdst, 
+  			    pGC->planemask, rop);
++ 			if (xo + nend >= PPW)
++ 				pdst++;
+  		    }
+  		 }
+  		 x += w;
+

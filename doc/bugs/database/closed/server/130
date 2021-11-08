@@ -1,0 +1,123 @@
+Return-Path: toddb
+Received: by expo.lcs.mit.edu; Mon, 25 Jul 88 20:45:52 EDT
+Message-Id: <8807260045.AA28159@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: region struct not big enough for complex clipmasks
+Date: Mon, 25 Jul 88 20:45:50 EDT
+From: Todd Brunhoff <toddb@EXPO.LCS.MIT.EDU>
+
+### bug number:   779
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	All
+
+CLIENT OPERATING SYSTEM:
+	All
+
+DISPLAY:
+	All
+
+SYNOPSIS:
+	Given a very complex clipmask, the region code will break.
+
+DESCRIPTION:
+	Given a very complex clipmask, the region code will break
+	(or should break).  For instance, if the clipmask is a staggered
+	set of ones:
+
+		01010101010101010101010101010101
+		10101010101010101010101010101010
+		01010101010101010101010101010101
+		10101010101010101010101010101010
+			etc.
+	then when the region code begins to break it up into rectangles,
+	there will be one rectangle for each bit.  A clipmask like this
+	whose size is greater than 256 X 256 will overflow the size
+	and numRects element in the RegionRec structure found in
+	server/include/regionstr.h.
+
+	They should be longs.
+
+REPEAT-BY:
+	Create a GC and change the clipmask to one like what's described
+	above.
+
+FIX:
+	Changes include server/include/regionstr.h and lib/X/region.h
+
+*** /tmp/,RCSt1011759	Mon Jul 25 20:41:12 1988
+--- server/include/regionstr.h	Fri Jul 15 16:23:29 1988
+***************
+*** 1,4
+! /* $Header: regionstr.h,v 1.1 87/09/11 07:50:10 toddb Exp $ */
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+
+--- 1,4 -----
+! /* $Header: regionstr.h,v 1.2 88/07/15 16:25:38 toddb Exp $ */
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+***************
+*** 32,39
+   */
+  
+  typedef struct _Region {
+!     short	size;
+!     short 	numRects;
+      BoxPtr	rects;
+      BoxRec 	extents;
+  } RegionRec;
+
+--- 32,39 -----
+   */
+  
+  typedef struct _Region {
+!     long	size;
+!     long 	numRects;
+      BoxPtr	rects;
+      BoxRec 	extents;
+  } RegionRec;
+
+*** /tmp/,RCSt1011776	Mon Jul 25 20:45:13 1988
+--- lib/X/region.h	Mon Jul 25 20:42:47 1988
+***************
+*** 1,4
+! /* $Header: region.h,v 11.8 87/09/03 17:20:11 newman Exp $ */
+  /************************************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+
+--- 1,4 -----
+! /* $Header: region.h,v 11.9 88/07/25 20:43:06 toddb Exp $ */
+  /************************************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+***************
+*** 50,57
+   */
+  
+  typedef struct _XRegion {
+!     short size;
+!     short numRects;
+      BOX *rects;
+      BOX extents;
+  } REGION;
+
+--- 50,57 -----
+   */
+  
+  typedef struct _XRegion {
+!     long size;
+!     long numRects;
+      BOX *rects;
+      BOX extents;
+  } REGION;
+

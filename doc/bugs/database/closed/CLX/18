@@ -1,0 +1,74 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Tue, 22 Mar 88 07:56:02 EST
+Return-Path: <@UUNET.UU.NET:mcvax!delphi!sm@uunet.UU.NET>
+Received: from uunet.UU.NET (UUNET.UU.NET) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 134492; 22 Mar 88 07:34:56 EST
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA19623; Tue, 22 Mar 88 07:34:27 EST
+Received: by mcvax.cwi.nl; Tue, 22 Mar 88 13:10:04 +0100 (MET)
+Received: by cernvax.uucp (1.2/Ultrix2.0-B)
+	id AA25100; Tue, 22 Mar 88 12:14:34 +0100
+Received: by delphi.uucp (3.2/SMI-3.2)
+	id AA04576; Tue, 22 Mar 88 10:28:40 +0100
+Date: Tue, 22 Mar 88 10:28:40 +0100
+From: mcvax!delphi!sm@uunet.uu.net (Silvia Mazzini)
+Message-Id: <8803220928.AA04576@delphi.uucp>
+To: bug-clx@zermatt.lcs.mit.edu
+Cc: cernvax!sd@uunet.uu.net, cernvax!bonini@uunet.uu.net,
+        cernvax!sm@uunet.uu.net
+Subject: bug in defmetod-setf-method cut-buffer
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Tue, 22 Mar 88 07:55 EST
+Resent-Message-Id: <880322075544.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   191
+### area:         CLX
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+I'm trying to compile CLX for KCL.
+I discovered a bug in manager.l
+The macro define-setf-method for cut-buffer produces  wrong temporary variables
+list and value forms list.
+
+For example:
+
+>(macroexpand '(setf (cut-buffer 'display :buffer 1) ""))
+(LET* ((#:G1201 'DISPLAY) (:BUFFER :BUFFER) (#:G1202 1) (#:G1200 ""))
+  (SET-CUT-BUFFER #:G1200 #:G1201 :BUFFER #:G1202))
+T
+
+>(LET* ((#:G1201 'DISPLAY) (:BUFFER :BUFFER) (#:G1202 1) (#:G1200 ""))
+  (SET-CUT-BUFFER #:G1200 #:G1201 :BUFFER #:G1202))
+
+Error: :BUFFER is not a variable.
+Error signalled by LET*.
+
+Here is the fix:
+
+(define-setf-method cut-buffer (display &rest option-list)
+  (do* ((options (copy-list option-list))
+	(option options (cddr option))
+	(store (gensym))
+	(dtemp (gensym))
+	(temps (list dtemp))
+	(values (list display)))
+       ((endp option)
+	(values (nreverse temps)
+		(nreverse values)
+		(list store)
+		`(set-cut-buffer ,store ,dtemp ,@options)
+		`(cut-buffer ,@options)))
+    (unless (member (car option) '(:buffer :type :format :start :end :transform))
+      (error "Keyword arg ~s isn't recognized" (car option)))
+;   (push (car option) temps)
+;   (push (car option) values)
+    (let ((x (gensym)))
+      (push x temps)
+      (push (cadr option) values)
+      (setf (cadr option) x))))
+
+

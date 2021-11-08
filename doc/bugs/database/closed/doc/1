@@ -1,0 +1,31 @@
+Return-Path: ardent!jkh@uunet.uu.net
+Received: by EXPO.LCS.MIT.EDU; Thu, 12 May 88 20:56:00 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA19331; Thu, 12 May 88 19:54:52 EST
+Received: from ardent.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA02485; Thu, 12 May 88 20:54:41 EDT
+Received: by ardent.ardent.com (5.51/SMI-3.0DEV3)
+	id AA19715; Thu, 12 May 88 18:39:00 PDT
+Received: by sim.ardent.com (1.1/SMI-3.0DEV3)
+	id AA28002; Thu, 12 May 88 17:36:53 PDT
+Date: Thu, 12 May 88 17:36:53 PDT
+From: ardent!jkh@uunet.uu.net (Jordan Hubbard)
+Message-Id: <8805130036.AA28002@sim.ardent.com>
+To: uunet!athena.mit.edu!xbugs@uunet.uu.net
+Subject: typo in Xlib.h
+
+### bug number:   487
+### area:         doc
+### severity:     low
+### comments:     
+
+.... in XFontStruct declaration ...
+...
+    XCharStruct min_bounds;     /* minimum bounds over all existing char*/
+    XCharStruct max_bounds;     /* minimum bounds over all existing char*/
+..
+				     ^
+				     should be "maximum"...
+
+
+						Jordan
+

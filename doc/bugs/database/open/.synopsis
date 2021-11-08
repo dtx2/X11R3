@@ -1,0 +1,865 @@
+CLX/19	137	CLX does not respect (XLIB:DISPLAY-MAX-REQUEST-LENGTH
+		display).
+
+CLX/20	564	structures can be sequences
+
+CLX/5	68	with-gcontext-bindings
+
+Xaw/1	552	Scroll.c call_data botch?
+
+Xaw/2	567	scrollbars instead of one horizontal and one vertical
+		scrollbar.
+
+Xaw/3	568	
+Xaw/4	569	uninitialized variable in Box.c causes its width or heigh
+		to be incorrectly reset
+
+Xaw/5	584	bugs cause core dump on sun when using forceBars in
+		Viewport
+
+Xlib/1	50	Missing macros for min_keycode and max_keycode in Display structure
+
+Xlib/10	361	Forwarded: Random Xlib "bugs"
+
+Xlib/11	385	bugs in Xlib region code
+
+Xlib/12	388	Setting a line width of -1 in a program results in the
+		server using a 65535 for a line width.  (any negative
+		number will do this, this is just one case.)
+
+Xlib/13	403	Keysyms ... The Saga Continues ...
+
+Xlib/14	407	XChangeGC doesn't check whether font, tile, stipple have
+		changed before flushing gc cache
+
+Xlib/15	426	X*Event flushing too soon
+
+Xlib/16	444	XLookupString does not handle ^2 through ^8.
+
+Xlib/17	445	The protocol spec defines KEYPAD SPACE as 0xff80 --
+		XLookupString return nul for KEYPAD SPACE.
+
+Xlib/18	446	XLookupString will not change non-ascii alphabetic
+		characters to the upper case equivalent when a Caps Lock is
+		on.
+
+Xlib/19	452	An image which was obtained using XGetImage and then
+		restored to the screen using XPutImage is often skewed
+		horizontally.  Also, occasionally get the error "XIO: bad
+		address" when using XPutImage.
+
+Xlib/20	467	Xlib 'Xfree' doesn't check for NULL pointer.
+
+Xlib/23	509	XLookupColor can't handle hexadecimally-specified colors.
+
+Xlib/24	512	XParseColor return values documented incorrectly
+
+Xlib/25	532	In the toolkit usage of the resource manager, "*" takes
+		priority over "."
+
+Xlib/26	537	XGetClassHint returns an incorrect status
+
+Xlib/27	603	Attempts to store a resource with a nil value will
+		frequently store a non-nil value.  Blank lines in a line
+		resource will cause extra resource names to be stored.
+		Extra odd resources may be stored into the resource
+		database,
+
+Xlib/28	604	
+Xlib/3	71	xor mode in XPutImage does not work
+
+Xlib/4	110	There needs to be a generic way to bind arbitrary strings
+		to keysyms.
+
+Xlib/7	243	C-/ doesn't type a C-_
+
+Xlib/9	305	Xlib should provide a non-exiting version of
+		_XDefaultError.
+
+Xt/10	190	In the _X Toolkit Intrinsics -- C Language X Interface_
+		documentation there is a recurring bug.
+
+Xt/12	210	The following reasonable program dumps core.
+
+Xt/15	236	XtRCallback resources couldn't be redefined in a subclass,
+		as reported earlier.  FIX:  in lib/Xt/Core.c:  ***
+		/tmp/,RCSt1a28609   Sun Mar 27 20:45:03 1988 ---
+		Core.c      Sun Mar 27 20:47:03 1988 *************** ***
+		145,151 { register Cardinal i; register XrmResourceList
+		resourceList; !     register _XtOffsetList newItem;
+		XrmQuark xtQCallback = XrmStringToQuark(XtRCallback); if
+		(widgetClass->core_class.superclass != NULL) --- 145,151
+		----- { register Cardinal i; register XrmResourceList
+		resourceList; !     register _XtOffsetList newItem,
+		oldItem; XrmQuark xtQCallback =
+		XrmStringToQuark(XtRCallback); register long int offset;
+		*************** *** 147,152 register XrmResourceList
+		resourceList; register _XtOffsetList newItem; XrmQuark
+		xtQCallback = XrmStringToQuark(XtRCallback); if
+		(widgetClass->core_class.superclass != NULL)
+		widgetClass->core_class.callback_private = --- 147,153
+		----- register XrmResourceList resourceList; register
+		_XtOffsetList newItem, oldItem; XrmQuark xtQCallback =
+		XrmStringToQuark(XtRCallback); +     register long int
+		offset; if (widgetClass->core_class.superclass != NULL)
+		widgetClass->core_class.callback_private = ***************
+		*** 155,165 resourceList = (XrmResourceList)
+		widgetClass->core_class.resources; i != 0; i--) if
+		(resourceList[i-1].xrm_type == xtQCallback) { !
+		newItem = XtNew(XtOffsetRec); !           newItem->next   =
+		widgetClass->core_class.callback_private; !
+		widgetClass->core_class.callback_private = newItem;
+		!           newItem->offset = resourceList[i-1].xrm_offset;
+		!           newItem->name   = resourceList[i-1].xrm_name; }
+		} --- 156,181 ----- resourceList = (XrmResourceList)
+		widgetClass->core_class.resources; i != 0; i--) if
+		(resourceList[i-1].xrm_type == xtQCallback) { !
+		/* !            * Make sure this callback isn't already on
+		the list by checking !            * for a duplicate offset
+		in the previous entries.  !            */ !
+		offset = resourceList[i-1].xrm_offset; !           for
+		(oldItem = widgetClass->core_class.callback_private;
+		!               oldItem != NULL; !               oldItem =
+		oldItem->next) !           { !               if
+		(oldItem->offset == offset) { !                   break;
+		!               } !           } !           if (oldItem ==
+		NULL) { !               newItem = XtNew(XtOffsetRec);
+		!               newItem->next   =
+		widgetClass->core_class.callback_private; !
+		widgetClass->core_class.callback_private = newItem;
+		!               newItem->offset =
+		resourceList[i-1].xrm_offset; !
+		newItem->name   = resourceList[i-1].xrm_name; !           }
+		} }
+
+Xt/16	258	Attaching a translation to a realized widget, where the
+		action is a global action, messes up all translations for
+		that widget.
+
+Xt/18	264	Because of the postponement of widget destruction until
+		XtNextEvent is called, there's no documented way to force
+		widget destruction, and subsequent state cleanup, without
+		getting another event.
+
+Xt/19	282	Re: icons, conventions.
+
+Xt/21	304	ShellWidget and non-unity resize increments
+
+Xt/23	345	Text widget does many, many extraneous XClear's, doesn't
+		set firstPos correctly in its XtTextBlocks at all times and
+		doesn't handle wordBreak on the final line correctly.
+
+Xt/24	346	When VPaned receives a geometry request from a child whose
+		allowResize resource is True, it responds to the requesting
+		widget correctly, but leaves the other panes in the widget
+		unaltered.
+
+Xt/27	358	XtDialogCreate doesn't exist
+
+Xt/28	363	Adding a global translation to a realized widget destroys
+		the widget's translations.
+
+Xt/3	95	Why is there an XtRInt but no Int type?
+
+Xt/30	396	Shells without a managed child cannot be realized
+
+Xt/32	400	_XtTranslateEvent() drops enter and leave events which have
+		a detail of NotifyInferior
+
+Xt/33	402	XtGetValues() returns bogus information on 68000
+		architecture machines, if the application queries a short
+		or char value, and it also specifies within the arglist  a
+		pointer to a short or char variable, into which the result
+		is to be placed.
+
+Xt/34	406	The toolkit intrinsics document says the 'source' argument
+		to an InputCallbackProc (as called when a source specified
+		by XtAddInput is ready) is passed by value, when it is
+		actually passed by reference.
+
+Xt/37	414	FocusOut events are not dispatched to insensitive widgets.
+
+Xt/38	416	This is a documentation error in the Toolkit.
+
+Xt/39	420	CoreDestroy() frees up resources owned by the application
+
+Xt/4	96	x toolkit documentation is VERY weak.
+
+Xt/41	436	XtAugmentTranslations can dump core.
+
+Xt/42	437	There is no way to get the second phase of
+		XtDestroyWidget() to happen on demand without possibly
+		blocking in XtNextEvent().
+
+Xt/44	462	Text widget does not understand all of the events it should
+		using the default translation table.
+
+Xt/45	465	A more flexible mechanism is needed by clients to provide
+		hints to the window manager for specifiying information
+		about icons.  Specifically, icon pixmap, icon title, icon
+		geometry. These facilities exist, though they are not
+		readily accessable via the resource manager or from the
+		clients command line. Window managers may use these hints
+		or completely ignore them providing their own icons.
+
+Xt/47	469	Inconsistent use of cursor
+
+Xt/48	491	Several clients and contribs that use the Toolkit give a
+		bad class and/or a bad instance name.
+
+Xt/5	121	Re: How do I set an icon's pixmap?
+
+Xt/50	518	Under certain conditions, it is possible for a widget to
+		have more than one keyboard focus entry on the grablist,
+		when in fact only one should have been present.
+
+Xt/51	519	The Xtk keyboard focus mechanism overrides X key grabs.
+
+Xt/52	520	Popping up a spring loaded widget causes the current
+		keyboard focus widget to not get a LeaveNotify event.
+
+Xt/53	521	LeaveNotify events occasionally are not generated.
+
+Xt/54	531	XtTranslateCoords() is useless if used in conjunction with
+		a reparenting window manager
+
+Xt/55	541	Because of the resource caching done in the resource
+		manager, there are times when a resource will be freed
+		twice.
+
+Xt/56	542	Destroying a widget with shell children STILL dumps core
+		under certain circumstances.
+
+Xt/57	549	Xtk will not allow a widget (during its phase 2 destroy) to
+		destroy another, unrelated, widget.
+
+Xt/58	554	Because of the way the loop was written, only a single
+		input-source event will be handled per XtNextEvent. In
+		addition, the input-source event handler cannot call
+		XtNextEvent without being called again.
+
+Xt/59	572	Similar problems in XtPending as were in XtNextEvent.
+
+Xt/6	171	using XtManage and XtUnmanage doesn't work
+
+Xt/7	179	Xtk R2 bugs
+
+Xt/8	181	When a viewport widget is created with the force scroll
+		bars option, it core dumps.
+
+bitmap/1	579	Plus signs left on grid after move/copy or overlay.
+
+bitmap/2	581	Negative border widths make no sense and cause problems.
+
+bitmap/3	582	bitmap should set max hints to be a good client
+
+bitmap/4	585	The hotspot is covered.
+
+bitmap/5	586	enhancement
+
+bitmap/6	596	No error or warning when colors invalid or colormap full.
+
+config/1	12	Release files
+
+config/10	93	lint
+
+config/11	108	Running make install multiple times can fail to install
+		files that were originally installed readonly.
+
+config/12	112	If /usr/man does not exist (for example, if you have a
+		machine freashly installed, but without any manual pages,
+		install fails.
+
+config/13	117	Misc uncleanliness
+
+config/14	119	making X11R2 on Apollo DN3000
+
+config/15	125	Out of the box release 2 doesn't compile on the RT (Release
+		2 IBM TCS bug #1)
+
+config/16	131	x11 installation layout
+
+config/17	165	imake.rules generates a bad makefile when no servers are
+		defined
+
+config/18	166	installation of release 2 on HP
+
+config/19	172	Xlib man pages should install into man3
+
+config/2	16	X.V11R2 on the RT
+
+config/20	177	Make install rebuilds lint library at drop of a hat.  This
+		takes a LONG time.
+
+config/21	180	complaint about Imake.tmpl vs. site.h
+
+config/22	262	There should be a configuration parameter for common link
+		libraries.
+
+config/23	307	Documentation and possibly configuration stuff should point
+		out that SunOS 3.2 has a broken C optimizer.
+
+config/24	329	fc is not a good name for the font compiler.
+
+config/25	366	40 files in the contrib and core distributions have names
+		that are too long for System V.
+
+config/26	442	make install fails because it doesn't create/check all the
+		directories that it needs
+
+config/27	498	the imake utility uses ftruncate() which is not a SVr2
+		system function.
+
+config/29	507	"make depend" in dix directory doesn't make initatoms.c
+
+config/3	24	Some Makefiles not remade by 'make Makefiles'
+
+config/30	511	makedepend fails on #if directives unless you have cpp
+		sources
+
+config/31	517	Use of source code control in distributed files is
+		inconsistent and occasionally troublesome.
+
+config/32	530	the imake utility uses ftruncate() which is not a SVr2
+		system function.
+
+config/4	30	query about #if defined()
+
+config/5	43	InstallManPages macro doesn't work
+
+config/6	44	makedepend clashes with some CDEBUGFLAGS
+
+config/7	45	Can't make World without any servers.
+
+config/8	67	Some hints/experience/bugs bringing up X.V11R2
+
+config/9	90	install makefile for x11 disagrees with RCS
+
+contrib/1	53	./contrib/paint uses keycodes!
+
+contrib/10	233	XMenu; fix for un-selectable entries on multiple panes
+
+contrib/11	316	TeXx patches
+
+contrib/12	371	Color TeXx fix
+
+contrib/13	411	X/snwm/wmsubs.c; fix for ANSI C
+
+contrib/14	535	The Imakefile for Xr11 appears to be incomplete. No install
+		is actually performed when a "make install" command is
+		executed.
+
+contrib/15	543	patches to contrib/texx
+
+contrib/16	555	patches for contrib/paint
+
+contrib/2	56	patch for X.V11R2 xmore
+
+contrib/3	58	uninitialized variable being used "char * display"
+
+contrib/5	107	xshell does not support -geometry
+
+contrib/6	109	TeX (dvi) Previewers for X11, the next chapter...
+
+contrib/7	182	bug fix for contrib/xcalendar
+
+contrib/8	195	[Chet Wood: emacs X-window mouse bugs]
+
+contrib/9	223	perfmon goes wild and soaks up all available cpu cycles.
+
+doc/1	1	Code which invokes XtInputCallbackProc doesn't match
+		documentation.
+
+doc/10	160	The xterm manual page seems to have an error in the icon
+		geometry description.
+
+doc/11	162	Re: Using and Specifying X Resources 
+
+doc/12	204	missing document
+
+doc/13	207	Documentation for X(1) and xrdb(1) and .Xdefaults format.
+		(From a general users point of view)
+
+doc/14	244	Xlib document makefile enhancement
+
+doc/15	265	The description of -S in the xterm manual page leave
+		something to be desired.
+
+doc/16	278	The PEX PostScript documentation in /hardcopy/doc/PEX all
+		have filenames of more than 14 chars and cannot be loaded
+		without overlay or a lot of pain.
+
+doc/17	309	0, :0, 1, :1    which are right?
+
+doc/18	325	.../doc/bdf.PS has an extra LF in it
+
+doc/19	331	Xserver documentation fails to describe syntax of -fp
+
+doc/2	17	Declaration and documentation of XtCallbackRec don't
+		match.
+
+doc/20	332	the man page Xserver seems to disagree on precisely what
+		the syntax of client and server program names is supposed
+		to be.
+
+doc/21	350	on "make install", Xlib man pages are installed with suffix
+		"3X"
+
+doc/22	351	xclock man page is wrong
+
+doc/23	352	xterm man page is wrong/misleading
+
+doc/24	357	XGContextFromGC is listed in the middle of section 6.5.1
+		(Loading and Parsing Fonts) of the Xlib manual
+		XLoadFont(3X) man page has a reference to XGContextFromGC
+
+doc/25	430	A slight inconsistency exists between the Xlib document and
+		the behavior of DIX.  In the Xlib document it states in
+		reference to XDefineCursor:  >  XDefineCursor(display, w,
+		cursor) >        Display *display; >        Window w;
+		>        Cursor cursor; > > >  display   Specifies the
+		connection to the X server.  > >  w         Specifies the
+		window ID.  > >  cursor    Specifies the cursor that is to
+		be displayed when >            the pointer is in the
+		specified window.  You can <**** >            pass None if
+		no cursor is to be displayed.       <**** Which leads one
+		to believe that this is the mechanism used to turn a
+		window's cursor off.  In the protocol document, under
+		ChangeWindowAttributes it says:  Changing the cursor of a
+		root window to None restores the default cursor.  And
+		nothing more.  In the sample DIX layer, when an
+		XDefineCursor call is made with the cursor set to None, DIX
+		climbs the window hierarchy until it finds a window with a
+		non-null cursor, and uses that for the request.  Which is
+		correct?  DIX or the Xlib document?  Keith Marchington HP
+		Corvallis, Oregon
+
+doc/26	433	Various documentation errors.
+
+doc/27	438	manual page for XWarpPointer has strange name description
+
+doc/28	460	Description of copy-area needs clarification.
+
+doc/29	466	InputCallbackProc
+
+doc/3	18	Section 11.7.1 uses XtInt and XtPixel where it means XtRInt
+		and XtRPixel.
+
+doc/30	484	[<geer@ATHENA.MIT.EDU: man page for xterm]
+
+doc/31	494	An artificial distinction is made in the V11 Release 2
+		protocol spec between a selection's "owner" and its "owner
+		window". This distinction is unnecessary and makes life
+		rather difficult.
+
+doc/32	508	XLookupColor documentation doesn't match code
+
+doc/33	516	Documentation Bug report
+
+doc/34	546	X(1), Xlib, xclock documentation nits
+
+doc/35	570	Extraneous semicolon in definition of a CallbackProc
+
+doc/36	571	missing *
+
+doc/4	42	Missing Hardcopy files?
+
+doc/5	99	release note comments
+
+doc/6	106	slight documentation problems
+
+doc/7	111	MotionNotifyHints don't work.  Not even once.  Doing a
+		querypointer does not help.
+
+doc/8	133	bad sentence in Xlib manual
+
+doc/9	154	Xlib Doc. Error
+
+fc/1	62	fonts/Makefile assumes bdf files contain only one period,
+		something not true for fonts converted from X10 (e.g.
+		cour.r.10).
+
+fc/2	64	The font compiler uses invalid C.
+
+fc/3	302	
+fc/5	394	bug in error message of fc.c
+
+fc/6	395	more fixups to error routines in fc.c [overrides previous bug]
+
+fonts/1	65	Seimens cursors
+
+fonts/2	79	Re: Proposed clarification/fix to XCharStruct information
+
+fonts/3	128	sun fonts versus Xfonts
+
+fonts/4	218	X10 fonts
+
+fonts/5	276	fonts are spaced funny?
+
+fonts/6	545	Font compiler in X11 release 2 still doesn't work for
+		systems where IMAGE_BYTE_ORDER != BITMAP_BIT_ORDER.
+
+fonts/7	590	"Variable" font has zero width spaces.
+
+misc/1	273	Focus 1, Me Zero
+
+misc/2	328	Focus dosen't get inherited by pop-ups.
+
+misc/3	354	Xsun does not switch between the mono and color screens for
+		CG4
+
+server/102	347	huge tiles and stipples have problems
+
+server/103	349	xsetroot -gray seems to screw up suceeding requests
+
+server/104	359	 getimage bug
+
+server/106	367	servers don't respect max-request-length connections break
+		with Broken Pipe on large requests
+
+server/107	374	bug in toolkit intrinsics does not allow > 819 widgets
+
+server/108	375	XMapRaised
+
+server/109	383	IBM Megapel bitmaps are broken
+
+server/111	387	running xmag results in a black window, even though the
+		area selected with the cross-hair cursor has green and red
+		circles in it.
+
+server/113	393	The Xqdss server grows in size as X is being used.  It does
+		not seem to ever get smaller.
+
+server/115	401	unexpected MotionNotify events
+
+server/116	405	SelectionClear can be sent to the wrong client
+
+server/118	415	Horizontal odd width double dashed lines don't match up.
+
+server/119	417	When drawing text (XDrawString, XDrawImageString), the text
+		will not appear unless the plane_mask in the GC is >=
+		0x100.
+
+server/121	422	Tiling bugs, colormap bugs.
+
+server/122	423	CopyPlanes is not supported.
+
+server/123	425	Setting then unsetting a clipmask causes output lossage
+		using Xqdss
+
+server/124	432	Configure-window makes diagonal windows
+
+server/125	439	XPutImage displays scrambled images from time to time.
+
+server/128	448	Wide Dashed lines are drawn incorrect.  Doglegs.
+
+server/129	451	1) text does not appear on screen with planemask set 2)
+		dashed line does not appear when function set to GXinvert
+
+server/130	458	When drawing a filled primitive (eg rectangle, arc) using a
+		stipple pattern and with fill style set to FillStippled,
+		the background of the pattern is not transparent.
+
+server/131	463	setting a stipple in the GC does not work with wide lines
+
+server/138	483	The Sun CG4 X Server does not work properly when given
+		certain -dev options. X won't run on top of suntools under
+		certain conditions.
+
+server/139	485	Dash value not checked in CreateGC or ChangeGC
+
+server/140	489	X server writes on tail of rgb.dir
+
+server/141	492	SaveSet processing is putting window down off by BW of
+		window.
+
+server/143	504	screen flashes as strange times or goes blank and never
+		comes back.
+
+server/146	510	mfbValidateGC checks font boundaries incorrectly
+
+server/147	527	stipple glitches
+
+server/148	170	the server forgets that i did an "xset r off"
+
+server/149	534	Calls to miGetPlane place successive scanlines data in same
+		unsigned long output word if width isn't large enough.
+
+server/150	538	array size too small
+
+server/151	544	Illegal C code in qdpushpxl.c:qdPPPix1chan: null storage
+		definition
+
+server/152	547	bad #define in maskbits.h for GETLEFTBITS_ALIGNMENT == 1
+
+server/153	548	X11 R2 and SUN 3/60(F)C  (long)
+
+server/154	551	shift-lock not handled correctly
+
+server/155	553	The MSBFirst version of getstipplepixels() doesn't work
+		with 24 bit pixels.
+
+server/158	559	InitExtensions() in the sample server is in the wrong
+		place.
+
+server/160	563	mfbGetSpans() screws up when (x % 32) == 0 && (width % 32)
+		== 0
+
+server/161	565	SendConnectionSetupInfo() walk the various available
+		visuals incorrectly.
+
+server/162	583	Background-colored part of double dashes drawn with wrong
+		coordinates.
+
+server/163	600	a slow no-op of painting background to self in DrawLogo.
+
+server/164	602	When tiling on a color sun, the tile doesn't start at 0,0
+
+server/27	74	XMoveArea with IncludeInferiors on the root doesn't work.
+
+server/28	77	A couple of Sun X11 fixes
+
+server/38	124	Cursor movement from screen to screen is broken.  (Release
+		2 IBM TCS bug #4)
+
+server/48	213	Lint complains about many many assignments of unsigned ints
+		to longs.
+
+server/50	216	When ForgetGravity is in effect in SlideAndSizeWindow,
+		ExposeAll is called for an entire tree, even though the
+		bitGravity of the parent isn't supposed to affect
+		inferiors.
+
+server/51	217	bitGravity can be hazardous to your winGravity
+
+server/52	219	If a GrabKey has been activated as a result of pressing
+		(and holding down) modifier key(s) in some window, then a
+		ButtonPress event following the KeyPress event(s) will not
+		have the modifier key(s) properly indicated in the
+		xbutton.state field.  This is true for at least the case of
+		GrabKey and GrabButton passive grabs set for the parent of
+		a window.
+
+server/53	221	Screen locks up if someone connects to port 6000.
+
+server/54	225	alloca for local_alloc in the server.
+
+server/55	226	TraverseTree(ExposeAll) in window.c *is* according to spec
+
+server/58	238	Passing pointers (fPointer = 1) doesn't work.
+
+server/63	248	4 bit pixels
+
+server/64	251	Invalid cast of pointer to integer.
+
+server/65	254	Windows with winGravity that are children of windows with
+		bitGravity != ForgetGravity lose big-time.
+
+server/66	255	Sorry, folks. Those patches I sent you for properly
+		handling window and bit gravity had a bug in them --
+		children of unrealized windows wouldn't have their winSize
+		regions shifted properly when their parent was configured.
+
+server/69	267	Small movment of mouse cursor when I type the first
+		character of my user name to login.
+
+server/70	268	cfbDestroyPixmap is passed an extra argument (the resource
+		ID) by FreeClientResources.  This causes it to fail due to
+		an argument mismatch.
+
+server/71	269	cfmUnmapWindow has the wrong arguments.
+
+server/73	271	Some static function declarations are missing.
+
+server/74	272	console idle time is impossible to get in X 11, Release 2
+
+server/75	283	Static functions are misdeclared.
+
+server/76	284	Missing static declarations.
+
+server/77	285	Missing static declaration.
+
+server/78	286	Missing static declaration.
+
+server/79	287	Type mismatch.
+
+server/8	10	NoopDDA is defined in server/dix/dixutils.c to accept no
+		arguments, but it is called in various places with
+		arguments.
+
+server/80	288	Unsafe comparison.
+
+server/81	289	Missing static declaration.
+
+server/82	290	Missing static declaration.
+
+server/83	291	Missing static declaration.
+
+server/84	292	Calls miGetPlane with bad argument.
+
+server/85	293	Bad definition.
+
+server/86	294	Bad return value.
+
+server/87	295	Bogosity is too bogus.
+
+server/88	296	mfbFreeVisual declares the wrong return type.
+
+server/89	297	Missing return statement.
+
+server/90	298	HACK ALERT to hacky.
+
+server/91	299	Missing return statements.
+
+server/92	300	Bogosity alert.
+
+server/93	308	GetImage leaves cursor turned on
+
+server/94	321	GetImage should cause BadMatch if a window isn't viewable,
+		but doesn't.
+
+server/95	326	Having problem running X.V11R2 on a GPX
+
+server/99	341	Getimage returning incorrect bits.
+
+uwm/1	224	Once an icon is placed with uwm it cannot be moved using
+		the WMHints structure and XSetWMHints().
+
+uwm/2	488	uwm resize bugs.
+
+uwm/3	524	uninitialized variable being used "Bool local;"
+
+uwm/4	550	uwm crashes if a window has a null name
+
+uwm/5	587	Attempting to free non-existant memory.
+
+uwm/6	589	Uwm - icon text can get eaten due to the icon window not
+		being refreshed at times.
+
+uwm/7	598	No bounds on icon padding causes 'disappearing' icons.
+
+uwm/8	599	With large menupads, menu unusable.
+
+x10tox11/3	130	x10tox11 problems
+
+x10tox11/4	575	x10tox11 and fancy window managers don't mix
+
+x10tox11/5	576	sometimes x10tox11 clients have garbage characters after
+		their name
+
+x10tox11/6	577	x10tox11 doesn't handle X10 X{Bit,Pix}mapBits{Put,Get}
+		calls correctly
+
+xcalc/1	478	There are stack problems with xcalc in HP mode
+
+xcalc/2	481	Roll down doesn't work properly in xcalc
+
+xclock/11	397	If one manages to expose part of the Clock widget just as
+		the minute changes, the old hands are not erased.
+
+xclock/12	418	xclock update period automagically decreases
+
+xclock/13	428	Usage message for xclock incorrect with respect to -display
+		& -geometry
+
+xclock/14	455	When an analog clock is of an even value height/width, the
+		padding pixel count on the right/lower border is one less
+		than on the left/upper border.
+
+xclock/15	594	Very small analog clocks eat cpu time.
+
+xclock/16	595	When a large font digital clock is displayed and update
+		equals one second, the system can become bogged down.
+
+xclock/5	199	When an update time of less than or equal to zero is
+		specified for 'xclock', the clock updates the second hand
+		several times.
+
+xinit/10	378	Recieve an XIO error when a <shift><cntrl><reset> is done.
+		clients hang around when a <shift><cntrl><reset> is done.
+
+xinit/11	404	xinit gets "Alarm Call" error when server too slow
+
+xinit/12	580	hpux has difficulty with unix domain sockets.  xinit does
+		not look for the user's DISPLAY variable.
+
+xinit/8	193	No Synopsis
+
+xinit/9	377	Eliminate setgrp calls for SYSV because it breaks the
+		affiliation with the controlling terminal, therefore the
+		terminal emulators were not inheriting the terminal
+		emulation modes.
+
+xload/1	597	'label' in .Xdefaults not used.
+
+xlsfonts/1	471	xlsfonts will display bad information if pattern is before
+		"-l"
+
+xmh/7	274	Bug or documentation omission for xmh
+
+xmh/8	474	The BSD utimes() call does not allow it's second argument
+		to be NULL.  Passing it a NULL can result in a crash of
+		xmh.
+
+xpr/1	76	xpr bug
+
+xterm/1	28	xterm dumps core if compiled with GNU gcc.
+
+xterm/10	168	xterm suggestion
+
+xterm/17	266	If -e is speicified, the -n switch is ignored unless the -T
+		is also specified.
+
+xterm/18	277	xterm scrollbar's seem to sometimes get confused if you
+		resize a window.
+
+xterm/20	280	WM_NORMAL_HINTS did not set true after ScrollBar on.
+
+xterm/22	314	function calls using non-indirected pointer to function
+
+xterm/23	364	xterm draws its 'open rectangle' cursor at the wrong place
+
+xterm/24	412	Xterm does not handle the -L option, window resize, wtmp,
+		and lastlog properly.
+
+xterm/25	419	Bug in xterm DECCOLM handling
+
+xterm/26	501	proposed xterm feature
+
+xterm/27	525	xterm cursor color wrong when not focus
+
+xterm/28	560	-e option bashes *iconName even if you've used -xrm
+		"*iconName: foo"
+
+xterm/29	578	The pointerShape resource is declared wrong; also, xterm
+		bashes the pointerShape resource so people can't override
+		it.
+
+xterm/3	63	xterm: window resizes don't make it to rlogins
+
+xterm/30	591	problem reading gin requests in xterm tek emulator
+
+xterm/31	592	xterm handling of some DEC special keys broken
+
+xterm/32	593	WINDOWID in the env and the windowid sent back by a slave
+		xterm are both wrong.
+
+xterm/33	601	Running xterm, then editing a file with vi would cause the
+		characters under the cursor to be incorrect, and sometimes
+		the last line would be duplicated.
+
+xterm/4	66	Re: iconName 
+
+xterm/5	80	Re: Is XTERM done, finally? 
+
+xterm/8	116	When using the -e flag with xterm you can't specify the
+		icon name with -n.
+
+xterm/9	134	In xterm, -i option is listed in in usage but isn't
+		implemented.  However, it is not shown in the man page.
+		There is no facility for using icon bitmaps.
+
+xtext/1	473	Ascii text widget mishandles spaces in courier fonts
+
+xwd/1	232	xwd file format
+

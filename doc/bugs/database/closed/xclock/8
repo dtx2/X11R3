@@ -1,0 +1,186 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Wed, 13 Apr 88 17:38:20 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08832; Wed, 13 Apr 88 16:37:01 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 13 Apr 88 13:36:20 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA20903; Wed, 13 Apr 88 13:36:46 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 13 Apr 88 14:39:16 pdt
+Message-Id: <8804132139.AA01451@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: clock widget size
+X-Mailer: mh6.5
+Date: Wed, 13 Apr 88 14:39:12 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   381
+### area:         xclock
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     fix provided
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	digital clock is placed in an analog sized window.
+DESCRIPTION:
+	The toolkit document suggests that if the width and height of a
+	widget is zero and the values have not been changed by a parent or
+	the user, the widget should suggest an ideal size. Therefore, wait
+	until the Initialize routine to set the width and height, but only
+	if the 'request' and 'new' values are still zero.
+REPEAT-BY:
+	xclock -digital
+FIX:
+*** lib/Xaw/Clock.c.old	Tue Mar 22 13:25:21 1988
+--- lib/Xaw/Clock.c	Tue Mar 22 13:22:56 1988
+***************
+*** 50,55
+  #define SECOND_WIDTH_FRACT	5
+  #define SECOND_HAND_TIME	30
+  #define	DEFAULT_UPDATE_TIME	60
+  
+  #define	DEFAULT_UPDATE_STR	"60"
+  
+
+--- 50,56 -----
+  #define SECOND_WIDTH_FRACT	5
+  #define SECOND_HAND_TIME	30
+  #define	DEFAULT_UPDATE_TIME	60
++ #define DEFAULT_ANALOG_SIZE	164
+  
+  #define	DEFAULT_UPDATE_STR	"60"
+  
+***************
+*** 64,70
+  #define goffset(field) XtOffset(Widget,core.field)
+  
+  static XtResource resources[] = {
+!     {XtNwidth, XtCWidth, XtRInt, sizeof(int),
+  	goffset(width), XtRString, "164"},
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+  	goffset(height), XtRString, "164"},
+
+--- 65,71 -----
+  #define goffset(field) XtOffset(Widget,core.field)
+  
+  static XtResource resources[] = {
+! /*    {XtNwidth, XtCWidth, XtRInt, sizeof(int),
+  	goffset(width), XtRString, "164"},
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+  	goffset(height), XtRString, "164"}, */
+***************
+*** 67,73
+      {XtNwidth, XtCWidth, XtRInt, sizeof(int),
+  	goffset(width), XtRString, "164"},
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+! 	goffset(height), XtRString, "164"},
+      {XtNupdate, XtCInterval, XtRInt, sizeof(int), 
+          offset(update), XtRString, DEFAULT_UPDATE_STR },
+      {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+
+--- 68,74 -----
+  /*    {XtNwidth, XtCWidth, XtRInt, sizeof(int),
+  	goffset(width), XtRString, "164"},
+      {XtNheight, XtCHeight, XtRInt, sizeof(int),
+! 	goffset(height), XtRString, "164"}, */
+      {XtNupdate, XtCInterval, XtRInt, sizeof(int), 
+          offset(update), XtRString, DEFAULT_UPDATE_STR },
+      {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+***************
+*** 145,150
+      ClockWidget w = (ClockWidget)new;
+      XtGCMask		valuemask;
+      XGCValues	myXGCV;
+  
+      valuemask = GCForeground | GCBackground | GCFont | GCLineWidth;
+      if (w->clock.font != NULL)
+
+--- 146,153 -----
+      ClockWidget w = (ClockWidget)new;
+      XtGCMask		valuemask;
+      XGCValues	myXGCV;
++     int def_height = DEFAULT_ANALOG_SIZE;
++     int def_width = DEFAULT_ANALOG_SIZE;
+  
+      valuemask = GCForeground | GCBackground | GCFont | GCLineWidth;
+      if (w->clock.font != NULL)
+***************
+*** 156,162
+         char *str;
+         struct tm tm, *localtime();
+         long time_value;
+-        int min_height, min_width;
+         (void) time(&time_value);
+         tm = *localtime(&time_value);
+         str = asctime(&tm);
+
+--- 159,164 -----
+         char *str;
+         struct tm tm, *localtime();
+         long time_value;
+         (void) time(&time_value);
+         tm = *localtime(&time_value);
+         str = asctime(&tm);
+***************
+*** 163,169
+         if (w->clock.font == NULL)
+            w->clock.font = XQueryFont( XtDisplay(w),
+  				      DefaultGCOfScreen(XtScreen(w)) );
+!        min_width = XTextWidth(w->clock.font, str, strlen(str)) +
+  	  2 * w->clock.padding;
+         min_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+
+--- 165,171 -----
+         if (w->clock.font == NULL)
+            w->clock.font = XQueryFont( XtDisplay(w),
+  				      DefaultGCOfScreen(XtScreen(w)) );
+!        def_width = XTextWidth(w->clock.font, str, strlen(str)) +
+  	  2 * w->clock.padding;
+         def_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+***************
+*** 165,171
+  				      DefaultGCOfScreen(XtScreen(w)) );
+         min_width = XTextWidth(w->clock.font, str, strlen(str)) +
+  	  2 * w->clock.padding;
+!        min_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+         if (w->core.width < min_width) w->core.width = min_width;
+         if (w->core.height < min_height) w->core.height = min_height;
+
+--- 167,173 -----
+  				      DefaultGCOfScreen(XtScreen(w)) );
+         def_width = XTextWidth(w->clock.font, str, strlen(str)) +
+  	  2 * w->clock.padding;
+!        def_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+      }
+      /* Only use the default sizes if the user or a superclass has not changed
+***************
+*** 167,174
+  	  2 * w->clock.padding;
+         min_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+!        if (w->core.width < min_width) w->core.width = min_width;
+!        if (w->core.height < min_height) w->core.height = min_height;
+      }
+  
+      /*
+
+--- 169,181 -----
+  	  2 * w->clock.padding;
+         def_height = w->clock.font->ascent +
+  	  w->clock.font->descent + 2 * w->clock.padding;
+!     }
+!     /* Only use the default sizes if the user or a superclass has not changed
+! 	my size. */
+!     if (!new->core.width && !request->core.width &&
+! 	!new->core.height && !request->core.height) {
+! 		w->core.width = def_width;
+! 		w->core.height = def_height;
+      }
+  
+      /*
+

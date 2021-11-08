@@ -1,0 +1,31 @@
+Return-Path: swick@athena.mit.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 11:12:52 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA02271; Mon, 28 Mar 88 11:12:05 EST
+Received: by LYRE.MIT.EDU (5.45/4.7) id AA16464; Mon, 28 Mar 88 11:12:03 EST
+Message-Id: <8803281612.AA16464@LYRE.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: xterm hardcodes scrollbar attributes
+Date: Mon, 28 Mar 88 11:11:56 EST
+From: Ralph R. Swick <swick@athena.mit.edu>
+
+### bug number:   234
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+Version;
+	X11R2
+
+Synopsis:
+	The arglist in CreateScrollBar in scrollbar.c explicitly forces
+	several attributes that should be left for retrieval from the
+	resource database.  In particular, the width (thickness) is
+	#defined, so that the computation of the total window width can
+	be simplified.  Until the much-needed rewrite happens, we
+	should at least drop the #define and query the width after
+	creating the scrollbar, caching it as now so the various column
+	computations don't have to be modified.
+
+

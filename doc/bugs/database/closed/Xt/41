@@ -1,0 +1,140 @@
+Return-Path: fred%hpcvxft@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Mon, 4 Apr 88 12:37:10 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA14959; Mon, 4 Apr 88 11:36:05 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Mon, 4 Apr 88 08:35:34 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA21041; Mon, 4 Apr 88 08:35:55 PST
+Received: from hpcvxft by hpcvxft.HP.COM; Mon, 4 Apr 88 09:36:26 pdt
+Message-Id: <8804041636.AA14217@hpcvxft.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: Global translation bug
+X-Mailer: mh6.5
+Date: Mon, 04 Apr 88 09:36:20 PDT
+From: fred%hpcvxft@hplabs.hp.com
+
+### bug number:   258
+### area:         Xt
+### severity:     
+### assigned to:  swick/asente
+### status:       closed
+### comments:     am investigating; see also 363
+
+
+
+VERSION:
+	Xtk release 2
+
+SYNOPSIS:
+	Attaching a translation to a realized widget, where the action
+        is a global action, messes up all translations for that widget.
+
+DESCRIPTION:
+	If an application registers a set of global action routines, using
+        XtAddActions(), and then attempts to assign a translation to a
+        REALIZED widget using one of these global actions, all of the 
+        translations for that widget now become garbled.  The key appears
+        to be that the widget is already realized.  When this is done to
+        a widget which is not realized, everything works as expected.
+
+REPEAT-BY:
+	Use the following test program, which uses one of the Athena widgets:
+
+
+#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+#include <X11/TopLevel.h>
+#include <X11/Command.h>
+
+Widget toplevel, button;
+
+void action1();
+void action2();
+void action3();
+
+
+static Arg buttonArgs [] = {
+   {XtNlabel, (XtArgVal) "test"}
+};
+
+String newSet = "Ctrl<Btn2Down>: action1()";
+
+XtActionsRec myActions[] = {
+   {"action1", action1},
+   {"action2", action2},
+   {"action3", action3}
+};
+
+/*******************************/
+
+void action1()
+{
+   printf ("action1()\n");
+}
+
+
+
+void action2()
+{
+   printf ("action2()\n");
+}
+
+
+
+void action3()
+{
+   printf ("action3()\n");
+}
+
+
+
+/*******************************/
+
+   
+void 
+main(argc, argv)
+    int argc;
+    char **argv;
+{
+   XtTranslations translation;
+
+   /*******************************/
+   /* Create the top level widget */
+   /*******************************/
+
+   toplevel = XtInitialize (argv[0], "test", NULL, 0, &argc, argv);
+
+
+   /****************************************/
+   /* A button  will be our primary widget */
+   /****************************************/
+
+   button = XtCreateManagedWidget("button", commandWidgetClass, toplevel,
+				buttonArgs, XtNumber(buttonArgs));
+
+
+   /***************************/
+   /* Add some global actions */
+   /***************************/
+
+   XtAddActions (myActions, XtNumber (myActions));
+
+   /********************************************************/
+   /* Realize the widget tree, and start processing events */
+   /********************************************************/
+
+   XtRealizeWidget (toplevel);
+
+
+   /********************************************************/
+   /* Modify the translation list for the realized widget  */
+   /********************************************************/
+
+   translation = XtParseTranslationTable (newSet);
+   XtOverrideTranslations (button, translation);
+   printf ("After\n");
+
+   XtMainLoop();
+}
+
+

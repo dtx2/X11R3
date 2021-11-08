@@ -1,0 +1,111 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Wed, 9 Mar 88 09:27:33 EST
+Date: Wed, 9 Mar 88 09:27:33 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803091427.AA07853@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: cursor from bitmap from data invisible on qdss
+
+### bug number:   57
+### area:         server/ddx/dec/qdss
+### severity:     
+### assigned to:  bob
+### status:       
+
+(Message inbox:10)
+Return-Path: sherouse@godot.radonc.unc.edu
+Received: from godot.radonc.unc.edu by EXPO.LCS.MIT.EDU; Wed, 9 Mar 88 09:20:50 EST
+Received: by godot.radonc.unc.edu (5.51/1.1)
+	id AA16276; Wed, 9 Mar 88 09:19:38 EST
+From: sherouse@godot.radonc.unc.edu (George W. Sherouse)
+Message-Id: <8803091419.AA16276@godot.radonc.unc.edu>
+To: xbugs@expo.lcs.mit.edu
+Date: Wed, 9 Mar 88 9:19:36 EDT
+Subject: cursor from bitmap from data invisible on qdss
+X-Mailer: ELM [version 1.2a]
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VAX 11/750
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	qdss on VAXstation-II running Ultrix 2.0
+
+SYNOPSIS:
+	If a cursor is defined from a data-derived bitmap, the cursor
+	is not displayed properly (at all) in the associated window.
+
+DESCRIPTION:
+	1. Clients compiled and linked with V11R1 and run using the
+	V11R2 server display a solid color block cursor.  Those
+	same clients work properly with the R1 server.
+
+	2. The same clients compiled and linked with R2 display *NO*
+	cursor at all when run against the R2 server, but do run
+	properly with the R1 server.
+
+REPEAT-BY:
+	Build a bitmap from data and use it to create and define a
+	cursor.  A code fragment follows.
+{
+    Pixmap	fore,
+    		mask;
+    XColor	scolor,
+		mcolor;
+/*
+  Cursor for protractor
+*/
+#define pro_bitmap_width 16
+#define pro_bitmap_height 16
+#define pro_bitmap_x_hot 8
+#define pro_bitmap_y_hot 7
+    static char pro_bitmap_bits[] = {
+	0x00, 0x00, 0xc0, 0x07, 0x30, 0x19, 0x08, 0x21, 0x08, 0x21, 0x04, 0x41,
+	0x04, 0x41, 0x04, 0x41, 0x04, 0x40, 0x04, 0x40, 0x08, 0x20, 0x08, 0x20,
+	0x30, 0x18, 0xc0, 0x07, 0x00, 0x00, 0x00, 0x00};
+    static char pro_bitmask_bits[] = {
+	0xc0, 0x07, 0xf0, 0x1f, 0xf8, 0x3f, 0xbc, 0x7b, 0x9c, 0x73, 0x8e, 0xe3,
+	0x8e, 0xe3, 0x8e, 0xe3, 0x8e, 0xe3, 0x0e, 0xe0, 0x1c, 0x70, 0x3c, 0x78,
+	0xf8, 0x3f, 0xf0, 0x1f, 0xc0, 0x07, 0x00, 0x00};
+
+    if (widget->user_cursor)
+	XDefineCursor (widget->display, widget->self, widget->cursor);
+    else
+    {
+	scolor.pixel = widget->cursor_pixel;
+	mcolor.pixel = widget->background_pixel;
+	XQueryColor (widget->display, widget->colormap, &scolor);
+	XQueryColor (widget->display, widget->colormap, &mcolor);
+
+	switch (widget->type)
+	{
+	case XMT_PROTRACTOR:
+	    fore = XCreateBitmapFromData (widget->display, widget->self,
+					  pro_bitmap_bits,
+					  pro_bitmap_width,
+					  pro_bitmap_height);
+	    mask = XCreateBitmapFromData (widget->display, widget->self,
+					  pro_bitmask_bits,
+					  pro_bitmap_width,
+					  pro_bitmap_height);
+
+	    XDefineCursor (widget->display, widget->self,
+			   XCreatePixmapCursor (widget->display,
+						fore,
+						mask,
+						&scolor,
+						&mcolor,
+						pro_bitmap_x_hot,
+						pro_bitmap_y_hot));
+	    break;
+
+
+FIX:
+	Use the R1 server? :-)
+

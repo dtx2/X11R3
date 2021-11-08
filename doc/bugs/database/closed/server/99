@@ -1,0 +1,37 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 15:21:39 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 181673; Mon 28-Mar-88 15:20:34 EST
+Date: Mon, 28 Mar 88 15:20 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: cfbDestroyPixmap
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880328202037.0.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   268
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	cfbDestroyPixmap is passed an extra argument (the resource ID)
+by FreeClientResources.  This causes it to fail due to an argument
+mismatch.
+
+REPEAT-BY:
+	Destroy a client.
+

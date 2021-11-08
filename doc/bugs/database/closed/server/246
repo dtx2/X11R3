@@ -1,0 +1,89 @@
+Return-Path: @XX.LCS.MIT.EDU,@neat.ai.toronto.edu:jdd@db.toronto.edu
+Received: by expo.lcs.mit.edu; Fri, 15 Jul 88 14:20:49 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Fri 15 Jul 88 13:38:22-EDT
+Received: from neat.ai.toronto.edu by RELAY.CS.NET id ab01841;
+          15 Jul 88 10:24 EDT
+Received: from blues.db.toronto.edu by neat.ai.toronto.edu with SMTP id 363; Fri, 15 Jul 88 10:16:20 EDT
+Received: from jdd by blues.db.toronto.edu via UNIX id AA01490; Fri, 15 Jul 88 10:11:30 EDT
+Date: 	Fri, 15 Jul 88 10:11:30 EDT
+From: "John D. DiMarco" <jdd@db.toronto.edu>
+Message-Id: <8807151411.AA01490@blues.db.toronto.edu>
+To: widgets%hpcvlx@hplabs.hp.com, xbugs@expo.lcs.mit.edu
+
+### bug number:   714
+### area:         server
+### severity:     very high
+### comments:     
+
+X Bug Report:
+
+VERSION:
+	X11 release 2 -- X server with fixes 1-10
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	BW2
+
+SYNOPSIS:
+	When a Hewlett Packard Pushbutton Widget is created/resized such that
+	its height is too small for the text it contains, the server crashes.
+
+DESCRIPTION:
+	When a pushbutton is created as the child of another widget, if
+	XtNheight is too small for the text inside the pushbutton, the following
+	happens:
+
+	When the pushbutton is realized, it is only half drawn. A band of the
+	screenextending from the pushbutton to the bottom of the screen is 
+	cleared. The X server is killed, the keyboard locks up, and the user
+	is logged off. It becomes necessary to execute kbd_mode -a to
+	re-establish keyboard functionality.
+
+
+REPEAT-BY:
+	The following program:
+
+#include <stdio.h>
+#include <X11/StringDefs.h>
+#include <X11/Intrinsic.h>
+#include <Xw/Xw.h>
+#include <Xw/PButton.h>
+#include <Xw/BBoard.h>
+
+main(argc, argv)
+int argc;
+char *argv[];
+{
+	static Arg arglist[] = {
+		{ XtNheight,	1},
+		{ XtNlabel, (XtArgVal)"I Crash the Server"},
+	};
+	Widget root, bulletin;
+
+	root = XtInitialize(argv[0], "SErverBug", NULL, 0, &argc, argv);
+	bulletin = XtCreateManagedWidget(argv[0], XwbulletinWidgetClass, root,
+					 NULL, 0);
+	(void)XtCreateManagedWidget(argv[0], XwpushButtonWidgetClass, bulletin,
+					arglist, XtNumber(arglist));
+	XtRealizeWidget(root);
+	XtMainLoop();
+}
+	
+
+FIX:
+	N/A
+
+Thanks,
+John
+
+--------------------------------------------------------------------------------
+    John DiMarco           Hard work never killed a man ...
+jdd@csri.toronto.edu          ... but it sure has scared lots of them! 
+{uunet!utai,watmath!utai,decvax,decwrl,ihnp4}!utcsri!jdd      jdd@utcsri.UUCP
+--------------------------------------------------------------------------------
+

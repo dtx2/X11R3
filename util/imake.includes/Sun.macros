@@ -1,0 +1,86 @@
+/*
+ * SET VERSION NUMBERS BEFORE MAKING MAKEFILES
+ *
+ * If you change either of the following numbers, you will need to do a 
+ * full build (make World) at the top of the sources....
+ */
+#define SunOSPlatform     YES		/* set to NO if not running SunOS */
+#define OSName            SunOS 3.4
+#define OSMajorVersion    3
+#define OSMinorVersion    4
+
+
+/*
+ ****************************************************************************
+ */
+
+/**/# platform:  $XConsortium: Sun.macros,v 1.52 88/10/23 11:00:55 jim Exp $
+/**/# operating system:  OSName
+
+#if SunOSPlatform && OSMajorVersion == 3 && OSMinorVersion <= 2
+#define OptimizedCDebugFlags /* as nothing */
+#endif
+
+BOOTSTRAPCFLAGS = 
+             AS = as
+             CC = cc
+            CPP = /lib/cpp
+             LD = ld
+           LINT = lint
+        INSTALL = install
+           TAGS = ctags
+             RM = rm -f
+             MV = mv
+             LN = ln -s
+         RANLIB = ranlib
+RANLIBINSTFLAGS = -t
+             AR = ar clq
+             LS = ls
+       LINTOPTS = -axz
+    LINTLIBFLAG = -C
+           MAKE = make
+STD_CPP_DEFINES = 
+    STD_DEFINES = 
+
+/* This defines the server you want */
+#define XsunServer Xsun
+/* #define Xplx Xplx */
+
+/* define this as you like for normal library compilation */
+#define LibraryDefines
+
+/* define this as you like for server font support */
+#define FontDefines	-DFONT_SNF -DFONT_BDF -DCOMPRESSED_FONTS
+
+
+/*
+ * link in SunWindows support?
+ */
+#define UseSunWindowsInServer	NO
+
+#if UseSunWindowsInServer
+#define SunWindowsDefines -DSUN_WINDOWS
+#else
+#define SunWindowsDefines /* as nothing */
+#endif
+
+/* define this as you like for server compilation */
+#if SunOSPlatform && OSMajorVersion >= 4
+#define ServerDefines SunWindowsDefines -DINCLUDE_ALLOCA_H
+#else
+#define ServerDefines SunWindowsDefines
+#endif
+
+/* -DTCPCONN allows TCP connections */
+/* -DUNIXCONN allows Unix domain connections */
+/* -DDNETCONN allows DECnet connections */
+
+#define ConnectionFlags		-DTCPCONN -DUNIXCONN
+
+/*
+ * override any parameters from site.def
+ */
+#define ExpandManNames		YES	/* expand Xlib man page filenames */
+
+
+

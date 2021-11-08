@@ -1,0 +1,58 @@
+Return-Path: jg@src.dec.com
+Received: by expo.lcs.mit.edu; Fri, 30 Sep 88 19:44:57 EDT
+Received: from jumbo.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA02629; Fri, 30 Sep 88 16:44:53 PDT
+Received: from localhost by jumbo.pa.dec.com (5.54.4/4.7.34)
+	id AA11330; Fri, 30 Sep 88 16:44:46 PDT
+Message-Id: <8809302344.AA11330@jumbo.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: orgovan%star.DEC@jumbo.dec.com
+Subject: additional declaration in Xlib.h
+Date: Fri, 30 Sep 88 16:44:43 -0700
+From: jg@src.dec.com
+
+### bug number:   1035
+### area:         Xlib
+### severity:     low
+### comments:     
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    all
+
+
+DISPLAY:
+     n.a.
+
+
+WINDOW MANAGER:
+     n.a.
+
+
+AREA:
+     Xlib.h
+
+
+SYNOPSIS:
+     declaration of non-existant routine.
+
+
+DESCRIPTION:
+    XGetIconWindow is declared to be of type window in Xlib.h.  The routine,
+however, does not exist, it having been superceded during V11 beta by
+newer routines with more general semantics.
+	Unfortunately the declaration was not removed when the routine
+was deleted from the library.
+
+
+REPEAT BY:
+    inspection
+
+
+SAMPLE FIX:
+    delete the declaration.
+
+

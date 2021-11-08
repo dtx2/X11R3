@@ -1,0 +1,2003 @@
+Return-Path: schoch@trident.arc.nasa.gov
+Received: by expo.lcs.mit.edu; Mon, 25 Apr 88 11:51:05 EDT
+Received: Mon, 25 Apr 88 08:49:37 PDT by trident.arc.nasa.gov (5.58/1.2)
+Date: Mon, 25 Apr 88 08:49:37 PDT
+From: Steve Schoch <schoch@trident.arc.nasa.gov>
+Message-Id: <8804251549.AA02025@trident.arc.nasa.gov>
+X-Mailer: Mail User's Shell (Vers 6.0b) Tue Jan  5 17:40:17 PST 1988
+To: xbugs@expo.lcs.mit.edu
+Subject: xterm bugs
+
+### bug number:   412
+### area:         xterm
+### severity:     low
+### comments:     many very questionable diffs supplied; see message inserted
+###               before fix; duplicate of xterm/4 (#66), xterm/5 (#80), 
+###               xterm/8 (#116), xterm/17 (#266), xterm/24 (#412), and 
+###               xterm/28 (#560)
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 2/120
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4 with 4.3bsd ttys, init, getty, and login
+
+DISPLAY:
+	bwtwo
+
+SYNOPSIS:
+	 Xterm does not handle the -L option, window resize,
+	 wtmp, and lastlog properly.
+
+DESCRIPTION:
+	 The -L option to xterm did not work.  The -ls option also
+	 had some bugs.  Xterm tends to disassociate itself from
+	 the terminal on which it is started and does not handle
+	 utmp properly.  There was also some problem with the
+	 TIOCSWINSZ ioctl call.
+
+REPEAT-BY:
+	Run the 4.3bsd getty on your sun and attempt to use xterm
+	as a login window.
+
+[I sent him a message saying that I needed more explanations.]
+
+Return-Path: schoch@trident.arc.nasa.gov
+Received: by expo.lcs.mit.edu; Wed, 18 May 88 20:33:26 EDT
+Received: Wed, 18 May 88 17:33:33 PDT by trident.arc.nasa.gov (5.59/1.2)
+Date: Wed, 18 May 88 17:33:33 PDT
+From: Steve Schoch <schoch@trident.arc.nasa.gov>
+Message-Id: <8805190033.AA09370@trident.arc.nasa.gov>
+X-Mailer: Mail User's Shell (Vers 6.0b) Tue Jan  5 17:40:17 PST 1988
+To: jim@expo.lcs.mit.edu (Jim Fulton)
+Subject: Re: re: xterm bugs
+
+I didn't fix the problems separately so I don't have separate diffs
+for them.  If you want, I can send you the whole main.c file.
+
+The -L option seemed to assume the name of the tty was /dev/ttyp*,
+and we use /dev/ttyv0 here (I could be mistaken).
+
+The utmp problems were this:
+
+When UTMP was defined, xterm always put you in /etc/utmp.  This should
+be done only if you have a shell on that tty, because otherwise,
+you wouldn't be able to use write or talk.  I make it add you only
+when the "-ls" option was given.
+
+It didn't change the wtmp or lastlog files.  Since I rarely use
+anything other than xterm to login, last and finger didn't say
+when I really was last on the system.
+
+/bin/login on 4.3 BSD systems takes a "-f" argument when means if
+the user id is the same as the uid running the process, don't ask
+for a password.  This option was put there especially for xterm.
+It is handy becuase then login worries about things like utmp
+and motd.  My version uses this option to login when given the
+"-ls" option.
+
+The "-ls" option didn't make any difference in the stock xterm.
+That's because it didn't change the login_shell variable.
+
+Do you want the entire main.c?
+
+        Steve
+
+[and my response]
+
+To: Steve Schoch <schoch@trident.arc.nasa.gov>
+Subject: Re: xterm bugs 
+In-reply-to: Your message of Wed, 18 May 88 17:33:33 PDT.
+             <8805190033.AA09370@trident.arc.nasa.gov> 
+Organization:  X Consortium, MIT Laboratory for Computer Science
+--------
+
+I assume you used RCS, given the name of the diff files.  Did you check things
+in periodically, or is the diff that you gave one rev up from R2?  By getting
+main.c,v I was hoping to see the steps you went by to fix the problem.
+
+Just about everyone uses /dev/ttyv* when running xterm -L from init (including
+us).  Here is the line I use on one of my machines (merge the two lines):
+
+    ttyv0  "/usr/bin/X11/xterm -display unix:0 -L"  xterm  on  secure \
+	window="/usr/bin/X11/X :0"
+
+> When UTMP was defined, xterm always put you in /etc/utmp.  This should
+> be done only if you have a shell on that tty, because otherwise,
+> you wouldn't be able to use write or talk.
+
+I don't understand.  Unless you say "xterm -e otherprogram" you will always
+have a shell on the tty.
+
+> I make it add you only when the "-ls" option was given.
+
+In my experience, very few people use -ls, or would want to.  If you've already
+logged into the machine, you already have your environment variables set.  If
+you do other things in your .login, chances are you don't want them done for
+every instance of xterm that you run.  I will agree that there couple perhaps
+be a compile-time option of whether or not to make a utmp entry if -ls or -L
+isn't given (it can't be a run-time switch or resource since this is something
+that the system administrator will need to control, not the user).
+
+> It didn't change the wtmp or lastlog files.
+
+Hmm, utmp stuff must have been broken, case it is there.  I used to always use
+"last", so I know it used to work.  I'll check on it.
+
+We fixed the login_shell bug.  The -f login argument sounds interesting.
+
+Anyway, I'll be gone for a week, so I won't be able to do anything before then.
+Could you send me your main.c,v file?
+
+Jim
+
+
+
+
+FIX:
+	Apply the following patches:
+*** /tmp/,RCSt1001917	Mon Apr 25 08:45:25 1988
+--- main.c	Fri Apr 22 13:31:58 1988
+***************
+*** 67,72
+  #endif
+  
+  #include <utmp.h>
+  #include <sys/param.h>	/* for NOFILE */
+  
+  #include "ptyx.h"
+
+--- 67,73 -----
+  #endif
+  
+  #include <utmp.h>
++ #include <lastlog.h>
+  #include <sys/param.h>	/* for NOFILE */
+  
+  #include "ptyx.h"
+***************
+*** 128,133
+  extern void setutent();
+  extern void endutent();
+  extern void utmpname();
+  
+  extern struct passwd *getpwent();
+  extern struct passwd *getpwuid();
+
+--- 129,137 -----
+  extern void setutent();
+  extern void endutent();
+  extern void utmpname();
++ static char *utmp_getty = "GETTY";
++ static char etc_wtmp[] = "/etc/wtmp";
++ static char etc_lastlog[] = "/usr/adm/lastlog";
+  
+  extern struct passwd *getpwent();
+  extern struct passwd *getpwuid();
+***************
+*** 137,142
+  extern struct passwd *fgetpwent();
+  #else	/* SYSV */
+  static char etc_utmp[] = "/etc/utmp";
+  #endif	/* SYSV */
+  static char *get_ty;
+  static int inhibit;
+
+--- 141,148 -----
+  extern struct passwd *fgetpwent();
+  #else	/* SYSV */
+  static char etc_utmp[] = "/etc/utmp";
++ static char etc_wtmp[] = "/usr/adm/wtmp";
++ static char etc_lastlog[] = "/usr/adm/lastlog";
+  #endif	/* SYSV */
+  static int utmp_fd = -1, wtmp_fd = -1;
+  static char *get_ty;
+***************
+*** 138,143
+  #else	/* SYSV */
+  static char etc_utmp[] = "/etc/utmp";
+  #endif	/* SYSV */
+  static char *get_ty;
+  static int inhibit;
+  static int log_on;
+
+--- 144,150 -----
+  static char etc_wtmp[] = "/usr/adm/wtmp";
+  static char etc_lastlog[] = "/usr/adm/lastlog";
+  #endif	/* SYSV */
++ static int utmp_fd = -1, wtmp_fd = -1;
+  static char *get_ty;
+  static int inhibit;
+  static int log_on;
+***************
+*** 366,373
+  #endif	/* TIOCCONS */
+  	     case 'L':
+  		{
+! 		static char *t_ptydev = PTYDEV;
+! 		static char *t_ttydev = TTYDEV;
+  
+  		L_flag = 1;
+  		get_ty = argv[--argc];
+
+--- 373,379 -----
+  #endif	/* TIOCCONS */
+  	     case 'L':
+  		{
+! 		char *cpp, *cpt;
+  
+  		L_flag = 1;
+  		get_ty = argv[--argc];
+***************
+*** 371,382
+  
+  		L_flag = 1;
+  		get_ty = argv[--argc];
+! 		t_ptydev[strlen(t_ptydev) - 2] =
+! 			t_ttydev[strlen(t_ttydev) - 2] =
+! 			get_ty[strlen(get_ty) - 2];
+! 		t_ptydev[strlen(t_ptydev) - 1] =
+! 			t_ttydev[strlen(t_ttydev) - 1] =
+! 			get_ty[strlen(get_ty) - 1];
+  #ifdef SYSV
+  		/* use the same tty name that everyone else will use
+  		** (from ttyname)
+
+--- 377,389 -----
+  
+  		L_flag = 1;
+  		get_ty = argv[--argc];
+! 		if (cpt = rindex(get_ty, '/'))
+! 			get_ty = cpt + 1;
+! 		cpp = ptydev + strlen(ptydev) - 5;
+! 		cpt = ttydev + strlen(ttydev) - 5;
+! 		strcpy(cpt, get_ty);
+! 		strcpy(cpp, get_ty);
+! 		*cpp = 'p';
+  #ifdef SYSV
+  		/* use the same tty name that everyone else will use
+  		** (from ttyname)
+***************
+*** 384,390
+  		{
+  			char *ptr;
+  
+! 			if (ptr = ttyname(t_ptydev)) {
+  				/* it may be bigger! */
+  				t_ptydev = malloc((unsigned) (strlen(ptr) + 1));
+  				(void) strcpy(t_ptydev, ptr);
+
+--- 391,397 -----
+  		{
+  			char *ptr;
+  
+! 			if (ptr = ttyname(ptydev)) {
+  				/* it may be bigger! */
+  				ptydev = malloc((unsigned) (strlen(ptr) + 1));
+  				(void) strcpy(ptydev, ptr);
+***************
+*** 386,393
+  
+  			if (ptr = ttyname(t_ptydev)) {
+  				/* it may be bigger! */
+! 				t_ptydev = malloc((unsigned) (strlen(ptr) + 1));
+! 				(void) strcpy(t_ptydev, ptr);
+  			}
+  		}
+  #endif	/* SYSV */
+
+--- 393,400 -----
+  
+  			if (ptr = ttyname(ptydev)) {
+  				/* it may be bigger! */
+! 				ptydev = malloc((unsigned) (strlen(ptr) + 1));
+! 				(void) strcpy(ptydev, ptr);
+  			}
+  		}
+  #endif	/* SYSV */
+***************
+*** 391,397
+  			}
+  		}
+  #endif	/* SYSV */
+! 		loginpty = open( t_ptydev, O_RDWR, 0 );
+  		dup2( loginpty, 4);
+  		close( loginpty );
+  		loginpty = 4;
+
+--- 398,406 -----
+  			}
+  		}
+  #endif	/* SYSV */
+! 		loginpty = open( ptydev, O_RDWR, 0 );
+! 		if (loginpty < 0)
+! 			SysError(ERROR_OPDEVTTY2);
+  		dup2( loginpty, 4);
+  		close( loginpty );
+  		loginpty = 4;
+***************
+*** 395,429
+  		dup2( loginpty, 4);
+  		close( loginpty );
+  		loginpty = 4;
+! 		chown(t_ttydev, 0, 0);
+! 		chmod(t_ttydev, 0622);
+! 		if (open(t_ttydev, O_RDWR, 0) < 0) {
+! 			consolepr("open(%s) failed\n", t_ttydev);
+! 		}
+! 		signal(SIGHUP, SIG_IGN);
+! #ifdef SYSV
+! #ifdef JOBCONTROL
+! 		{
+! 			/* kind of do a vhangup */
+! 			int tty_pgrp;
+! 
+! 			if (!ioctl(0, TIOCGPGRP, &tty_pgrp)) {
+! 				(void) kill (-tty_pgrp, SIGHUP);
+! 			}
+! 		}
+! 		setpgrp2(0,0);
+! #else	/* !JOBCONTROL */
+! 		setpgrp();
+! #endif	/* !JOBCONTROL */
+! #else	/* !SYSV */
+! 		vhangup();
+! 		setpgrp(0,0);
+! #endif	/* !SYSV */
+! 		signal(SIGHUP, SIG_DFL);
+! 		(void) close(0);
+! 		open(t_ttydev, O_RDWR, 0);
+! 		dup2(0, 1);
+! 		dup2(0, 2);
+  		continue;
+  		}
+  	     case 'S':
+
+--- 404,411 -----
+  		dup2( loginpty, 4);
+  		close( loginpty );
+  		loginpty = 4;
+! 		chown(ttydev, 0, 0);
+! 		chmod(ttydev, 0622);
+  		continue;
+  		}
+  	     case 'S':
+***************
+*** 465,470
+  
+  	term->initflags = term->flags;
+  
+  	if ((get_ty || command_to_exec) && !title) {
+  	    char window_title[1024];
+  	    static Arg args[] = {
+
+--- 447,454 -----
+  
+  	term->initflags = term->flags;
+  
++ 	if (term->misc.login_shell && !get_ty && !command_to_exec && !am_slave)
++ 		login_shell = True;
+  	if ((get_ty || command_to_exec) && !title) {
+  	    char window_title[1024];
+  	    static Arg args[] = {
+***************
+*** 528,534
+  
+  		dup2(fileno(stderr), (NOFILE - 1));
+  		old_bufend = (unsigned char *) _bufend(stderr);
+! 		if(fileno(stderr) >= 3)
+  			close(fileno(stderr));
+  		fileno(stderr) = (NOFILE - 1);
+  		(unsigned char *) _bufend(stderr) = old_bufend;
+
+--- 512,518 -----
+  
+  		dup2(fileno(stderr), (NOFILE - 1));
+  		old_bufend = (unsigned char *) _bufend(stderr);
+! 		if(fileno(stderr) >= 3) {
+  			close(fileno(stderr));
+  			fileno(stderr) = 2;
+  		}
+***************
+*** 530,535
+  		old_bufend = (unsigned char *) _bufend(stderr);
+  		if(fileno(stderr) >= 3)
+  			close(fileno(stderr));
+  		fileno(stderr) = (NOFILE - 1);
+  		(unsigned char *) _bufend(stderr) = old_bufend;
+  #else	/* !SYSV */
+
+--- 514,521 -----
+  		old_bufend = (unsigned char *) _bufend(stderr);
+  		if(fileno(stderr) >= 3) {
+  			close(fileno(stderr));
++ 			fileno(stderr) = 2;
++ 		}
+  		fileno(stderr) = (NOFILE - 1);
+  		(unsigned char *) _bufend(stderr) = old_bufend;
+  #else	/* !SYSV */
+***************
+*** 645,651
+  	exit (1);
+  }
+  
+! get_pty (pty, tty)
+  /*
+     opens a pty, storing fildes in pty and tty.
+   */
+
+--- 631,637 -----
+  	exit (1);
+  }
+  
+! get_pty()
+  /*
+     opens a pty, returning its fdes.
+   */
+***************
+*** 647,653
+  
+  get_pty (pty, tty)
+  /*
+!    opens a pty, storing fildes in pty and tty.
+   */
+  int *pty, *tty;
+  {
+
+--- 633,639 -----
+  
+  get_pty()
+  /*
+!    opens a pty, returning its fdes.
+   */
+  {
+  	int devindex, letter = 0;
+***************
+*** 649,655
+  /*
+     opens a pty, storing fildes in pty and tty.
+   */
+- int *pty, *tty;
+  {
+  	int devindex, letter = 0;
+  
+
+--- 635,640 -----
+  /*
+     opens a pty, returning its fdes.
+   */
+  {
+  	int devindex, letter = 0;
+  	register char *cpt, *cpp;
+***************
+*** 652,657
+  int *pty, *tty;
+  {
+  	int devindex, letter = 0;
+  
+  	while (letter < 11) {
+  	    ttydev [strlen(ttydev) - 2]  = ptydev [strlen(ptydev) - 2] =
+
+--- 637,644 -----
+   */
+  {
+  	int devindex, letter = 0;
++ 	register char *cpt, *cpp;
++ 	int pty;
+  
+  	cpt = ttydev + strlen(ttydev);
+  	cpp = ptydev + strlen(ptydev);
+***************
+*** 653,658
+  {
+  	int devindex, letter = 0;
+  
+  	while (letter < 11) {
+  	    ttydev [strlen(ttydev) - 2]  = ptydev [strlen(ptydev) - 2] =
+  		    PTYCHAR1 [letter++];
+
+--- 640,647 -----
+  	register char *cpt, *cpp;
+  	int pty;
+  
++ 	cpt = ttydev + strlen(ttydev);
++ 	cpp = ptydev + strlen(ptydev);
+  	while (letter < 11) {
+  	    cpt[-2] = cpp[-2] = PTYCHAR1[letter++];
+  	    devindex = 0;
+***************
+*** 654,661
+  	int devindex, letter = 0;
+  
+  	while (letter < 11) {
+! 	    ttydev [strlen(ttydev) - 2]  = ptydev [strlen(ptydev) - 2] =
+! 		    PTYCHAR1 [letter++];
+  	    devindex = 0;
+  
+  	    while (devindex < 16) {
+
+--- 643,649 -----
+  	cpt = ttydev + strlen(ttydev);
+  	cpp = ptydev + strlen(ptydev);
+  	while (letter < 11) {
+! 	    cpt[-2] = cpp[-2] = PTYCHAR1[letter++];
+  	    devindex = 0;
+  
+  	    while (devindex < 16) {
+***************
+*** 659,667
+  	    devindex = 0;
+  
+  	    while (devindex < 16) {
+! 		ttydev [strlen(ttydev) - 1] = ptydev [strlen(ptydev) - 1] =
+! 			PTYCHAR2 [devindex++];
+! 		if ((*pty = open (ptydev, O_RDWR)) < 0)
+  			continue;
+  		if ((*tty = open (ttydev, O_RDWR)) < 0) {
+  			close(*pty);
+
+--- 647,654 -----
+  	    devindex = 0;
+  
+  	    while (devindex < 16) {
+! 		cpt[-1] = cpp[-1] = PTYCHAR2[devindex++];
+! 		if ((pty = open (ptydev, O_RDWR, 0)) < 0)
+  			continue;
+  		return pty;
+  	    }
+***************
+*** 663,673
+  			PTYCHAR2 [devindex++];
+  		if ((*pty = open (ptydev, O_RDWR)) < 0)
+  			continue;
+! 		if ((*tty = open (ttydev, O_RDWR)) < 0) {
+! 			close(*pty);
+! 			continue;
+! 		}
+! 		return;
+  	    }
+  	}
+  	
+
+--- 650,656 -----
+  		cpt[-1] = cpp[-1] = PTYCHAR2[devindex++];
+  		if ((pty = open (ptydev, O_RDWR, 0)) < 0)
+  			continue;
+! 		return pty;
+  	    }
+  	}
+  	
+***************
+*** 777,783
+  	char buf[32];
+  	char *TermName = NULL;
+  	int ldisc = 0;
+! #ifdef sun
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+
+--- 760,768 -----
+  	char buf[32];
+  	char *TermName = NULL;
+  	int ldisc = 0;
+! #ifdef TIOCSWINSZ
+! 	struct winsize ws;
+! #else	/* TIOCSWINSZ */
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+***************
+*** 781,789
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+- #else	/* sun */
+- #ifdef TIOCSWINSZ
+- 	struct winsize ws;
+  #endif	/* TIOCSWINSZ */
+  #endif	/* sun */
+  	struct passwd *pw = NULL;
+
+--- 766,771 -----
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+  #endif	/* TIOCSWINSZ */
+  	struct passwd *pw = NULL;
+  	extern int Exit();
+***************
+*** 785,791
+  #ifdef TIOCSWINSZ
+  	struct winsize ws;
+  #endif	/* TIOCSWINSZ */
+- #endif	/* sun */
+  	struct passwd *pw = NULL;
+  #ifdef UTMP
+  	struct utmp utmp;
+
+--- 767,772 -----
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+  #endif	/* TIOCSWINSZ */
+  	struct passwd *pw = NULL;
+  	extern int Exit();
+  	char *getenv();
+***************
+*** 787,795
+  #endif	/* TIOCSWINSZ */
+  #endif	/* sun */
+  	struct passwd *pw = NULL;
+- #ifdef UTMP
+- 	struct utmp utmp;
+- #endif	/* UTMP */
+  	extern int Exit();
+  	char *getenv();
+  	char *index (), *rindex (), *strindex ();
+
+--- 768,773 -----
+  #endif	/* TIOCSSIZE */
+  #endif	/* TIOCSWINSZ */
+  	struct passwd *pw = NULL;
+  	extern int Exit();
+  	char *getenv();
+  	char *index (), *rindex (), *strindex ();
+***************
+*** 805,811
+  	if (get_ty) {
+  		screen->respond = loginpty;
+  #ifndef SYSV
+! 		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT);
+  #endif	/* SYSV */
+  	} else if (am_slave) {
+
+--- 783,789 -----
+  	if (get_ty) {
+  		screen->respond = loginpty;
+  #ifndef SYSV
+! 		if((tslot = Ttyslot(get_ty)) <= 0)
+  			SysError(ERROR_TSLOT);
+  #endif	/* SYSV */
+  	} else if (am_slave) {
+***************
+*** 815,828
+  		ptydev[strlen(ptydev) - 1] = ttydev[strlen(ttydev) - 1] =
+  			passedPty[1];
+  
+- 		/* use the same tty name that everyone else will use
+- 		** (from ttyname)
+- 		*/
+- 		if (ptr = ttyname(ttydev)) {
+- 			/* it may be bigger! */
+- 			ttydev = malloc((unsigned) (strlen(ptr) + 1));
+- 			(void) strcpy(ttydev, ptr);
+- 		}
+  #ifndef SYSV
+  		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT2);
+
+--- 793,798 -----
+  		ptydev[strlen(ptydev) - 1] = ttydev[strlen(ttydev) - 1] =
+  			passedPty[1];
+  
+  #ifndef SYSV
+  		if((tslot = Ttyslot(ttydev)) <= 0)
+  			SysError(ERROR_TSLOT2);
+***************
+*** 824,830
+  			(void) strcpy(ttydev, ptr);
+  		}
+  #ifndef SYSV
+! 		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT2);
+  #endif	/* !SYSV */
+  		setgid (screen->gid);
+
+--- 794,800 -----
+  			passedPty[1];
+  
+  #ifndef SYSV
+! 		if((tslot = Ttyslot(ttydev)) <= 0)
+  			SysError(ERROR_TSLOT2);
+  #endif	/* !SYSV */
+  		setgid (screen->gid);
+***************
+*** 894,910
+  #endif	/* !SYSV */
+  			close (tty);
+  
+- 			/* close all std file descriptors */
+- 			for (index1 = 0; index1 < 3; index1++)
+- 				close (index1);
+- #ifndef SYSV
+- 			if ((tty = open ("/dev/tty", O_RDWR, 0)) < 0)
+- 				SysError (ERROR_OPDEVTTY2);
+- 
+- 			if (ioctl (tty, TIOCNOTTY, (char *) NULL) == -1)
+- 				SysError (ERROR_NOTTY);
+- 			close (tty);
+- #endif	/* !SYSV */
+  		}
+  
+  		get_pty (&screen->respond, &tty);
+
+--- 864,869 -----
+  #endif	/* !SYSV */
+  			close (tty);
+  
+  		}
+  
+  		screen->respond = get_pty ();
+***************
+*** 907,913
+  #endif	/* !SYSV */
+  		}
+  
+! 		get_pty (&screen->respond, &tty);
+  
+  		/* use the same tty name that everyone else will use
+  		** (from ttyname)
+
+--- 866,872 -----
+  
+  		}
+  
+! 		screen->respond = get_pty ();
+  
+  		tslot = Ttyslot(ttydev);
+  
+***************
+*** 909,922
+  
+  		get_pty (&screen->respond, &tty);
+  
+! 		/* use the same tty name that everyone else will use
+! 		** (from ttyname)
+! 		*/
+! 		if (ptr = ttyname(tty)) {
+! 			/* it may be bigger */
+! 			ttydev = malloc((unsigned) (strlen(ptr) + 1));
+! 			(void) strcpy(ttydev, ptr);
+! 		}
+  		if (screen->respond != Xsocket + 1) {
+  			dup2 (screen->respond, Xsocket + 1);
+  			close (screen->respond);
+
+--- 868,875 -----
+  
+  		screen->respond = get_pty ();
+  
+! 		tslot = Ttyslot(ttydev);
+! 
+  		if (screen->respond != Xsocket + 1) {
+  			dup2 (screen->respond, Xsocket + 1);
+  			close (screen->respond);
+***************
+*** 923,930
+  			screen->respond = Xsocket + 1;
+  		}
+  
+! 		/* change ownership of tty to real group and user id */
+! 		chown (ttydev, screen->uid, screen->gid);
+  
+  		/* change protection of tty */
+  		chmod (ttydev, 0622);
+
+--- 876,884 -----
+  			screen->respond = Xsocket + 1;
+  		}
+  
+! 		if (login_shell) {
+! 			/* change ownership of tty to real group and user id */
+! 			chown (ttydev, screen->uid, screen->gid);
+  
+  			/* change protection of tty */
+  			chmod (ttydev, 0622);
+***************
+*** 926,933
+  		/* change ownership of tty to real group and user id */
+  		chown (ttydev, screen->uid, screen->gid);
+  
+! 		/* change protection of tty */
+! 		chmod (ttydev, 0622);
+  
+  		if (tty != Xsocket + 2)	{
+  			dup2 (tty, Xsocket + 2);
+
+--- 880,898 -----
+  			/* change ownership of tty to real group and user id */
+  			chown (ttydev, screen->uid, screen->gid);
+  
+! 			/* change protection of tty */
+! 			chmod (ttydev, 0622);
+! #if defined(UTMP) || defined(NEW_LOGIN)
+! 			if(pw = getpwuid(screen->uid))
+! 				add_utmp(pw->pw_name, screen);
+! #endif
+! 		} else {
+! 			/* Do these only if not login_shell.  That way
+! 			 * the user can't kill the xterm and leave
+! 			 * utmp messed up. */
+! 			setgid (screen->gid);
+! 			setuid (screen->uid);
+! 		}
+  
+  	}
+  
+***************
+*** 929,936
+  		/* change protection of tty */
+  		chmod (ttydev, 0622);
+  
+! 		if (tty != Xsocket + 2)	{
+! 			dup2 (tty, Xsocket + 2);
+  			close (tty);
+  			tty = Xsocket + 2;
+  		}
+
+--- 894,948 -----
+  			setuid (screen->uid);
+  		}
+  
+! 	}
+! 
+!         /* Realize the Tek or VT widget, depending on which mode we're in.
+!            If VT mode, this calls VTRealize (the widget's Realize proc) */
+!         XtRealizeWidget (screen->TekEmu ? tekWidget->core.parent :
+! 			 term->core.parent);
+! 
+! 	if(screen->TekEmu) {
+! 		envnew = tekterm;
+! 		ptr = newtc;
+! 	} else {
+! 		envnew = vtterm;
+! 		ptr = termcap;
+! 	}
+! 	while(*envnew) {
+! 		if(tgetent(ptr, *envnew) == 1) {
+! 			TermName = *envnew;
+! 			if(!screen->TekEmu)
+! 			    resize(screen, TermName, termcap, newtc);
+! 			break;
+! 		}
+! 		envnew++;
+! 	}
+! 
+!             
+! 	if (!am_slave) {
+! 	    if ((screen->pid = fork ()) == -1)
+! 		SysError (ERROR_FORK);
+! 		
+! 	    if (screen->pid == 0) {
+! 		extern char **environ;
+! #ifdef SYSV
+! 		char numbuf[12];
+! #endif	/* SYSV */
+! 
+! 		setpgrp(0, 0);
+! 
+! 		/* close all std file descriptors */
+! 		for (index1 = 0; index1 < 3; index1++)
+! 			close (index1);
+! 		close (Xsocket);
+! 		close (screen->respond);
+! 		(void)close (utmp_fd);
+! 		(void)close (wtmp_fd);
+! #ifndef SYSV
+! 		if ((tty = open ("/dev/tty", O_RDWR, 0)) >= 0) {
+! 
+! 			if (ioctl (tty, TIOCNOTTY, (char *) NULL) == -1)
+! 				SysError (ERROR_NOTTY);
+  			close (tty);
+  		}
+  #endif	/* !SYSV */
+***************
+*** 932,938
+  		if (tty != Xsocket + 2)	{
+  			dup2 (tty, Xsocket + 2);
+  			close (tty);
+- 			tty = Xsocket + 2;
+  		}
+  
+  		/* set the new terminal's state to be the old one's 
+
+--- 944,949 -----
+  			if (ioctl (tty, TIOCNOTTY, (char *) NULL) == -1)
+  				SysError (ERROR_NOTTY);
+  			close (tty);
+  		}
+  #endif	/* !SYSV */
+  		if(fileno(stderr) >= 3) {
+***************
+*** 934,939
+  			close (tty);
+  			tty = Xsocket + 2;
+  		}
+  
+  		/* set the new terminal's state to be the old one's 
+  		   with minor modifications for efficiency */
+
+--- 945,955 -----
+  				SysError (ERROR_NOTTY);
+  			close (tty);
+  		}
++ #endif	/* !SYSV */
++ 		if(fileno(stderr) >= 3) {
++ 			close (fileno(stderr));
++ 			fileno(stderr) = 2;
++ 		}
+  
+  		/* Open terminal */
+  		if (open(ttydev, O_RDWR)) {
+***************
+*** 935,940
+  			tty = Xsocket + 2;
+  		}
+  
+  		/* set the new terminal's state to be the old one's 
+  		   with minor modifications for efficiency */
+  
+
+--- 951,964 -----
+  			fileno(stderr) = 2;
+  		}
+  
++ 		/* Open terminal */
++ 		if (open(ttydev, O_RDWR)) {
++ 			consolepr("%s: open failed", ttydev);
++ 			sleep(5);
++ 			exit(1);
++ 		}
++ 		dup(0);
++ 		dup(0);
+  		/* set the new terminal's state to be the old one's 
+  		   with minor modifications for efficiency */
+  #ifdef SYSV
+***************
+*** 937,943
+  
+  		/* set the new terminal's state to be the old one's 
+  		   with minor modifications for efficiency */
+- 
+  #ifdef SYSV
+  		/* input: nl->nl, don't ignore cr, cr->nl */
+  		tio.c_iflag &= ~(INLCR|IGNCR);
+
+--- 961,966 -----
+  		dup(0);
+  		/* set the new terminal's state to be the old one's 
+  		   with minor modifications for efficiency */
+  #ifdef SYSV
+  		/* input: nl->nl, don't ignore cr, cr->nl */
+  		tio.c_iflag &= ~(INLCR|IGNCR);
+***************
+*** 962,968
+  		tio.c_cc[VEOL] = '@' & 0x3f;		/* '^@'	*/
+  		/* certain shells (ksh & csh) change EOF as well */
+  		tio.c_cc[VEOF] = 'D' & 0x3f;		/* '^D'	*/
+! 		if (ioctl (tty, TCSETA, &tio) == -1)
+  			SysError (ERROR_TIOCSETP);
+  #ifdef TIOCSLTC
+  		if (ioctl (tty, TIOCSLTC, &ltc) == -1)
+
+--- 985,991 -----
+  		tio.c_cc[VEOL] = '@' & 0x3f;		/* '^@'	*/
+  		/* certain shells (ksh & csh) change EOF as well */
+  		tio.c_cc[VEOF] = 'D' & 0x3f;		/* '^D'	*/
+! 		if (ioctl (0, TCSETA, &tio) == -1)
+  			SysError (ERROR_TIOCSETP);
+  #ifdef TIOCSLTC
+  		if (ioctl (0, TIOCSLTC, &ltc) == -1)
+***************
+*** 965,971
+  		if (ioctl (tty, TCSETA, &tio) == -1)
+  			SysError (ERROR_TIOCSETP);
+  #ifdef TIOCSLTC
+! 		if (ioctl (tty, TIOCSLTC, &ltc) == -1)
+  			SysError (ERROR_TIOCSETC);
+  #endif	/* TIOCSLTC */
+  #ifdef TIOCLSET
+
+--- 988,994 -----
+  		if (ioctl (0, TCSETA, &tio) == -1)
+  			SysError (ERROR_TIOCSETP);
+  #ifdef TIOCSLTC
+! 		if (ioctl (0, TIOCSLTC, &ltc) == -1)
+  			SysError (ERROR_TIOCSETC);
+  #endif	/* TIOCSLTC */
+  #ifdef TIOCLSET
+***************
+*** 969,975
+  			SysError (ERROR_TIOCSETC);
+  #endif	/* TIOCSLTC */
+  #ifdef TIOCLSET
+! 		if (ioctl (tty, TIOCLSET, (char *)&lmode) == -1)
+  			SysError (ERROR_TIOCLSET);
+  #endif	/* TIOCLSET */
+  #else	/* !SYSV */
+
+--- 992,998 -----
+  			SysError (ERROR_TIOCSETC);
+  #endif	/* TIOCSLTC */
+  #ifdef TIOCLSET
+! 		if (ioctl (0, TIOCLSET, (char *)&lmode) == -1)
+  			SysError (ERROR_TIOCLSET);
+  #endif	/* TIOCLSET */
+  #else	/* !SYSV */
+***************
+*** 981,987
+  		/* reset t_brkc to default value */
+  		tc.t_brkc = -1;
+  
+! 		if (ioctl (tty, TIOCSETP, (char *)&sg) == -1)
+  			SysError (ERROR_TIOCSETP);
+  		if (ioctl (tty, TIOCSETC, (char *)&tc) == -1)
+  			SysError (ERROR_TIOCSETC);
+
+--- 1004,1010 -----
+  		/* reset t_brkc to default value */
+  		tc.t_brkc = -1;
+  
+! 		if (ioctl (0, TIOCSETP, (char *)&sg) == -1)
+  			SysError (ERROR_TIOCSETP);
+  		if (!get_ty) {
+  			if (ioctl (0, TIOCSETC, (char *)&tc) == -1)
+***************
+*** 983,1001
+  
+  		if (ioctl (tty, TIOCSETP, (char *)&sg) == -1)
+  			SysError (ERROR_TIOCSETP);
+! 		if (ioctl (tty, TIOCSETC, (char *)&tc) == -1)
+! 			SysError (ERROR_TIOCSETC);
+! 		if (ioctl (tty, TIOCSETD, (char *)&discipline) == -1)
+! 			SysError (ERROR_TIOCSETD);
+! 		if (ioctl (tty, TIOCSLTC, (char *)&ltc) == -1)
+! 			SysError (ERROR_TIOCSLTC);
+! 		if (ioctl (tty, TIOCLSET, (char *)&lmode) == -1)
+! 			SysError (ERROR_TIOCLSET);
+! #ifdef TIOCCONS
+! 		if (Console) {
+! 			int on = 1;
+! 			if (ioctl (tty, TIOCCONS, (char *)&on) == -1)
+! 				SysError(ERROR_TIOCCONS);
+  		}
+  #endif	/* TIOCCONS */
+  #endif	/* !SYSV */
+
+--- 1006,1020 -----
+  
+  		if (ioctl (0, TIOCSETP, (char *)&sg) == -1)
+  			SysError (ERROR_TIOCSETP);
+! 		if (!get_ty) {
+! 			if (ioctl (0, TIOCSETC, (char *)&tc) == -1)
+! 				SysError (ERROR_TIOCSETC);
+! 			if (ioctl (0, TIOCSETD, (char *)&discipline) == -1)
+! 				SysError (ERROR_TIOCSETD);
+! 			if (ioctl (0, TIOCSLTC, (char *)&ltc) == -1)
+! 				SysError (ERROR_TIOCSLTC);
+! 			if (ioctl (0, TIOCLSET, (char *)&lmode) == -1)
+! 				SysError (ERROR_TIOCLSET);
+  		}
+  #endif	/* !SYSV */
+  
+***************
+*** 997,1003
+  			if (ioctl (tty, TIOCCONS, (char *)&on) == -1)
+  				SysError(ERROR_TIOCCONS);
+  		}
+- #endif	/* TIOCCONS */
+  #endif	/* !SYSV */
+  
+  		close (open ("/dev/null", O_RDWR, 0));
+
+--- 1016,1021 -----
+  			if (ioctl (0, TIOCLSET, (char *)&lmode) == -1)
+  				SysError (ERROR_TIOCLSET);
+  		}
+  #endif	/* !SYSV */
+  
+  #ifndef SYSV
+***************
+*** 1000,1009
+  #endif	/* TIOCCONS */
+  #endif	/* !SYSV */
+  
+- 		close (open ("/dev/null", O_RDWR, 0));
+- 
+- 		for (index1 = 0; index1 < 3; index1++)
+- 			dup2 (tty, index1);
+  #ifndef SYSV
+  		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT3);
+
+--- 1018,1023 -----
+  		}
+  #endif	/* !SYSV */
+  
+  #ifndef SYSV
+  		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT3);
+***************
+*** 1008,1045
+  		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT3);
+  #endif	/* !SYSV */
+! #ifdef UTMP
+! #ifdef SYSV
+! 		if(pw = getpwuid(screen->uid)) {
+! 			(void) setutent ();
+! 
+! 			/* set up entry to search for */
+! 			(void) strncpy(utmp.ut_id,ttydev + strlen(ttydev) - 2,
+! 			 sizeof (utmp.ut_id));
+! 			utmp.ut_type = DEAD_PROCESS;
+! 
+! 			/* position to entry in utmp file */
+! 			(void) getutid(&utmp);
+! 
+! 			/* set up the new entry */
+! 			utmp.ut_type = USER_PROCESS;
+! 			utmp.ut_exit.e_exit = 2;
+! 			(void) strncpy(utmp.ut_user, pw->pw_name,
+! 			 sizeof(utmp.ut_user));
+! 			(void) strncmp(utmp.ut_id, ttydev + strlen(ttydev) - 2,
+! 			 sizeof(utmp.ut_id));
+! 
+! 			(void) strncpy (utmp.ut_line,
+! 			 ttydev + strlen("/dev/"), sizeof (utmp.ut_line));
+! 			utmp.ut_pid = getpid();
+! 			utmp.ut_time = time ((long *) 0);
+! 
+! 			/* write out the entry */
+! 			(void) pututline(&utmp);
+! 			added_utmp_entry = True;
+! 
+! 			/* close the file */
+! 			(void) endutent();
+  		}
+  #else	/* !SYSV */
+  		if((pw = getpwuid(screen->uid)) &&
+
+--- 1022,1032 -----
+  		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT3);
+  #endif	/* !SYSV */
+! #ifdef TIOCCONS
+! 		if (Console) {
+! 			int on = 1;
+! 			if (ioctl (0, TIOCCONS, (char *)&on) == -1)
+! 				SysError(ERROR_TIOCCONS);
+  		}
+  #endif	/* TIOCCONS */
+  
+***************
+*** 1041,1064
+  			/* close the file */
+  			(void) endutent();
+  		}
+! #else	/* !SYSV */
+! 		if((pw = getpwuid(screen->uid)) &&
+! 		 (i = open(etc_utmp, O_WRONLY)) >= 0) {
+! 			bzero((char *)&utmp, sizeof(struct utmp));
+! 			(void) strcpy(utmp.ut_line, ttydev + strlen("/dev/"));
+! 			(void) strcpy(utmp.ut_name, pw->pw_name);
+! 			(void) strcpy(utmp.ut_host, 
+! 				      XDisplayString (screen->display));
+! 			time(&utmp.ut_time);
+! 			lseek(i, (long)(tslot * sizeof(struct utmp)), 0);
+! 			write(i, (char *)&utmp, sizeof(struct utmp));
+! 			added_utmp_entry = True;
+! 			close(i);
+! 		} else
+! 			tslot = -tslot;
+! #endif	/* !SYSV */
+! #endif	/* UTMP */
+! 	}
+  
+          /* Realize the Tek or VT widget, depending on which mode we're in.
+             If VT mode, this calls VTRealize (the widget's Realize proc) */
+
+--- 1028,1034 -----
+  			if (ioctl (0, TIOCCONS, (char *)&on) == -1)
+  				SysError(ERROR_TIOCCONS);
+  		}
+! #endif	/* TIOCCONS */
+  
+  #ifdef TIOCSWINSZ
+  		/* tell tty how big window is */
+***************
+*** 1060,1083
+  #endif	/* UTMP */
+  	}
+  
+!         /* Realize the Tek or VT widget, depending on which mode we're in.
+!            If VT mode, this calls VTRealize (the widget's Realize proc) */
+!         XtRealizeWidget (screen->TekEmu ? tekWidget->core.parent :
+! 			 term->core.parent);
+! 
+! 	if(screen->TekEmu) {
+! 		envnew = tekterm;
+! 		ptr = newtc;
+! 	} else {
+! 		envnew = vtterm;
+! 		ptr = termcap;
+! 	}
+! 	while(*envnew) {
+! 		if(tgetent(ptr, *envnew) == 1) {
+! 			TermName = *envnew;
+! 			if(!screen->TekEmu)
+! 			    resize(screen, TermName, termcap, newtc);
+! 			break;
+  		}
+  		envnew++;
+  	}
+
+--- 1030,1047 -----
+  		}
+  #endif	/* TIOCCONS */
+  
+! #ifdef TIOCSWINSZ
+! 		/* tell tty how big window is */
+! 		if(screen->TekEmu) {
+! 			ws.ws_row = 38;
+! 			ws.ws_col = 81;
+! 			ws.ws_xpixel = TFullWidth(screen);
+! 			ws.ws_ypixel = TFullHeight(screen);
+! 		} else {
+! 			ws.ws_row = screen->max_row + 1;
+! 			ws.ws_col = screen->max_col + 1;
+! 			ws.ws_xpixel = FullWidth(screen);
+! 			ws.ws_ypixel = FullHeight(screen);
+  		}
+  		ioctl (0, TIOCSWINSZ, (char *)&ws);
+  #else	/* TIOCSWINSZ */
+***************
+*** 1079,1089
+  			    resize(screen, TermName, termcap, newtc);
+  			break;
+  		}
+! 		envnew++;
+! 	}
+! 
+! 
+! #ifdef sun
+  #ifdef TIOCSSIZE
+  	/* tell tty how big window is */
+  	if(screen->TekEmu) {
+
+--- 1043,1050 -----
+  			ws.ws_xpixel = FullWidth(screen);
+  			ws.ws_ypixel = FullHeight(screen);
+  		}
+! 		ioctl (0, TIOCSWINSZ, (char *)&ws);
+! #else	/* TIOCSWINSZ */
+  #ifdef TIOCSSIZE
+  		/* tell tty how big window is */
+  		if(screen->TekEmu) {
+***************
+*** 1085,1099
+  
+  #ifdef sun
+  #ifdef TIOCSSIZE
+! 	/* tell tty how big window is */
+! 	if(screen->TekEmu) {
+! 		ts.ts_lines = 38;
+! 		ts.ts_cols = 81;
+! 	} else {
+! 		ts.ts_lines = screen->max_row + 1;
+! 		ts.ts_cols = screen->max_col + 1;
+! 	}
+! 	ioctl  (screen->respond, TIOCSSIZE, &ts);
+  #endif	/* TIOCSSIZE */
+  #else	/* sun */
+  #ifdef TIOCSWINSZ
+
+--- 1046,1060 -----
+  		ioctl (0, TIOCSWINSZ, (char *)&ws);
+  #else	/* TIOCSWINSZ */
+  #ifdef TIOCSSIZE
+! 		/* tell tty how big window is */
+! 		if(screen->TekEmu) {
+! 			ts.ts_lines = 38;
+! 			ts.ts_cols = 81;
+! 		} else {
+! 			ts.ts_lines = screen->max_row + 1;
+! 			ts.ts_cols = screen->max_col + 1;
+! 		}
+! 		ioctl  (0, TIOCSSIZE, &ts);
+  #endif	/* TIOCSSIZE */
+  #endif	/* TIOCSWINSZ */
+  
+***************
+*** 1095,1115
+  	}
+  	ioctl  (screen->respond, TIOCSSIZE, &ts);
+  #endif	/* TIOCSSIZE */
+- #else	/* sun */
+- #ifdef TIOCSWINSZ
+- 	/* tell tty how big window is */
+- 	if(screen->TekEmu) {
+- 		ws.ws_row = 38;
+- 		ws.ws_col = 81;
+- 		ws.ws_xpixel = TFullWidth(screen);
+- 		ws.ws_ypixel = TFullHeight(screen);
+- 	} else {
+- 		ws.ws_row = screen->max_row + 1;
+- 		ws.ws_col = screen->max_col + 1;
+- 		ws.ws_xpixel = FullWidth(screen);
+- 		ws.ws_ypixel = FullHeight(screen);
+- 	}
+- 	ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+  #endif	/* TIOCSWINSZ */
+  #endif	/* sun */
+              
+
+--- 1056,1061 -----
+  		}
+  		ioctl  (0, TIOCSSIZE, &ts);
+  #endif	/* TIOCSSIZE */
+  #endif	/* TIOCSWINSZ */
+  
+  		signal (SIGCHLD, SIG_DFL);
+***************
+*** 1111,1132
+  	}
+  	ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+  #endif	/* TIOCSWINSZ */
+- #endif	/* sun */
+-             
+- 	if (!am_slave) {
+- #ifdef SYSV
+- 	    (void) setpgrp();
+- 	    (void) close(open(ttydev, O_RDWR, 0));
+- #endif	/* SYSV */
+- 	    if ((screen->pid = fork ()) == -1)
+- 		SysError (ERROR_FORK);
+- 		
+- 	    if (screen->pid == 0) {
+- 		extern char **environ;
+- 		int pgrp = getpid();
+- #ifdef SYSV
+- 		char numbuf[12];
+- #endif	/* SYSV */
+  
+  		close (Xsocket);
+  		close (screen->respond);
+
+--- 1057,1062 -----
+  		ioctl  (0, TIOCSSIZE, &ts);
+  #endif	/* TIOCSSIZE */
+  #endif	/* TIOCSWINSZ */
+  
+  		signal (SIGCHLD, SIG_DFL);
+  		signal (SIGHUP, SIG_IGN);
+***************
+*** 1128,1140
+  		char numbuf[12];
+  #endif	/* SYSV */
+  
+- 		close (Xsocket);
+- 		close (screen->respond);
+- 		if(fileno(stderr) >= 3)
+- 			close (fileno(stderr));
+- 
+- 		if (tty >= 0) close (tty);
+- 
+  		signal (SIGCHLD, SIG_DFL);
+  		signal (SIGHUP, SIG_IGN);
+  		/* restore various signals to their defaults */
+
+--- 1058,1063 -----
+  #endif	/* TIOCSSIZE */
+  #endif	/* TIOCSWINSZ */
+  
+  		signal (SIGCHLD, SIG_DFL);
+  		signal (SIGHUP, SIG_IGN);
+  		/* restore various signals to their defaults */
+***************
+*** 1171,1184
+  		Setenv ("DISPLAY=", XDisplayString (screen->display));
+  
+  		signal(SIGTERM, SIG_DFL);
+- #if !defined(SYSV) || defined(JOBCONTROL)
+- 		ioctl(0, TIOCSPGRP, (char *)&pgrp);
+- 		setpgrp (0, 0);
+- #endif	/* !defined(SYSV) || defined(JOBCONTROL) */
+- 		close(open(ttyname(0), O_WRONLY, 0));
+- #if !defined(SYSV) || defined(JOBCONTROL)
+- 		setpgrp (0, pgrp);
+- #endif	/* !defined(SYSV) || defined(JOBCONTROL) */
+  
+  		setgid (screen->gid);
+  		setuid (screen->uid);
+
+--- 1094,1099 -----
+  		Setenv ("DISPLAY=", XDisplayString (screen->display));
+  
+  		signal(SIGTERM, SIG_DFL);
+  
+  		setgid (screen->gid);
+  		setuid (screen->uid);
+***************
+*** 1191,1198
+  		}
+  		signal(SIGHUP, SIG_IGN);
+  		if (get_ty) {
+- #ifdef SYSV
+- 			int fd;
+  
+  			(void) setutent ();
+  			/* set up entry to search for */
+
+--- 1106,1111 -----
+  		}
+  		signal(SIGHUP, SIG_IGN);
+  		if (get_ty) {
+  
+  #ifdef SYSV
+  			execlp ("/etc/getty", "getty", get_ty, "Xwindow", 0);
+***************
+*** 1194,1233
+  #ifdef SYSV
+  			int fd;
+  
+! 			(void) setutent ();
+! 			/* set up entry to search for */
+! 			(void) strncpy(utmp.ut_id,ttydev + strlen(ttydev) - 2,
+! 			 sizeof (utmp.ut_id));
+! 			utmp.ut_type = DEAD_PROCESS;
+! 
+! 			/* position to entry in utmp file */
+! 			(void) getutid(&utmp);
+! 
+! 			/* set up the new entry */
+! 			utmp.ut_type = LOGIN_PROCESS;
+! 			(void) strncpy(utmp.ut_user, "GETTY",
+! 			 sizeof(utmp.ut_user));
+! 			(void) strncmp(utmp.ut_id, ttydev + strlen(ttydev) - 2,
+! 			 sizeof(utmp.ut_id));
+! 			(void) strncpy (utmp.ut_line,
+! 			 ttydev + strlen("/dev/"), sizeof (utmp.ut_line));
+! 			utmp.ut_pid = getpid();
+! 			utmp.ut_time = time ((long *) 0);
+! 
+! 			/* write out the entry */
+! 			(void) pututline(&utmp);
+! 			added_utmp_entry = True;
+! 
+! 			/* close the file */
+! 			(void) endutent();
+! 
+! 			/* set wtmp entry if wtmp file exists */
+! 			if (fd = open("/etc/wtmp", O_WRONLY | O_APPEND)) {
+! 				(void) write(fd, &utmp, sizeof(utmp));
+! 				(void) close(fd);
+! 			}
+! 
+! 			ioctl (0, TIOCTTY, &zero);
+  			execlp ("/etc/getty", "getty", get_ty, "Xwindow", 0);
+  
+  #else	/* !SYSV */
+
+--- 1107,1113 -----
+  		signal(SIGHUP, SIG_IGN);
+  		if (get_ty) {
+  
+! #ifdef SYSV
+  			execlp ("/etc/getty", "getty", get_ty, "Xwindow", 0);
+  #else	/* !SYSV */
+  			execl("/etc/getty", "+", "Xwindow", get_ty, 0);
+***************
+*** 1229,1235
+  
+  			ioctl (0, TIOCTTY, &zero);
+  			execlp ("/etc/getty", "getty", get_ty, "Xwindow", 0);
+- 
+  #else	/* !SYSV */
+  			ioctl (0, TIOCNOTTY, (char *) NULL);
+  			execlp ("/etc/getty", "+", "Xwindow", get_ty, 0);
+
+--- 1109,1114 -----
+  
+  #ifdef SYSV
+  			execlp ("/etc/getty", "getty", get_ty, "Xwindow", 0);
+  #else	/* !SYSV */
+  			execl("/etc/getty", "+", "Xwindow", get_ty, 0);
+  #endif	/* !SYSV */
+***************
+*** 1231,1238
+  			execlp ("/etc/getty", "getty", get_ty, "Xwindow", 0);
+  
+  #else	/* !SYSV */
+! 			ioctl (0, TIOCNOTTY, (char *) NULL);
+! 			execlp ("/etc/getty", "+", "Xwindow", get_ty, 0);
+  #endif	/* !SYSV */
+  		}
+  		signal(SIGHUP, SIG_DFL);
+
+--- 1110,1116 -----
+  #ifdef SYSV
+  			execlp ("/etc/getty", "getty", get_ty, "Xwindow", 0);
+  #else	/* !SYSV */
+! 			execl("/etc/getty", "+", "Xwindow", get_ty, 0);
+  #endif	/* !SYSV */
+  			consolepr("cannot execute getty");
+  			sleep(5);
+***************
+*** 1234,1239
+  			ioctl (0, TIOCNOTTY, (char *) NULL);
+  			execlp ("/etc/getty", "+", "Xwindow", get_ty, 0);
+  #endif	/* !SYSV */
+  		}
+  		signal(SIGHUP, SIG_DFL);
+  
+
+--- 1112,1120 -----
+  #else	/* !SYSV */
+  			execl("/etc/getty", "+", "Xwindow", get_ty, 0);
+  #endif	/* !SYSV */
++ 			consolepr("cannot execute getty");
++ 			sleep(5);
++ 			exit(1);
+  		}
+  		signal(SIGHUP, SIG_DFL);
+  
+***************
+*** 1237,1243
+  		}
+  		signal(SIGHUP, SIG_DFL);
+  
+! #ifdef UTMP
+  		if(((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+  		 ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
+  		 *(ptr = pw->pw_shell) == 0))
+
+--- 1118,1124 -----
+  		}
+  		signal(SIGHUP, SIG_DFL);
+  
+! #if defined(UTMP) || defined(NEW_LOGIN)
+  		if(((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+  		 ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
+  		 *(ptr = pw->pw_shell) == 0))
+***************
+*** 1259,1264
+  		 NTTYDISC : 0;
+  		ioctl(0, TIOCSETD, (char *)&ldisc);
+  #endif	/* !SYSV */
+  		execlp (ptr, login_shell ? shname_minus : shname, 0);
+  		fprintf (stderr, "%s: Could not exec %s!\n", xterm_name, ptr);
+  		sleep(5);
+
+--- 1140,1150 -----
+  		 NTTYDISC : 0;
+  		ioctl(0, TIOCSETD, (char *)&ldisc);
+  #endif	/* !SYSV */
++ #ifdef NEW_LOGIN
++ 		if (login_shell && pw && added_utmp_entry)
++ 			execl("/bin/login", "login", "-p", "-f",
++ 			    pw->pw_name, 0);
++ #endif
+  		execlp (ptr, login_shell ? shname_minus : shname, 0);
+  		fprintf (stderr, "%s: Could not exec %s!\n", xterm_name, ptr);
+  		exit(ERROR_EXEC);
+***************
+*** 1261,1267
+  #endif	/* !SYSV */
+  		execlp (ptr, login_shell ? shname_minus : shname, 0);
+  		fprintf (stderr, "%s: Could not exec %s!\n", xterm_name, ptr);
+- 		sleep(5);
+  		exit(ERROR_EXEC);
+  	    }
+  	}
+
+--- 1147,1152 -----
+  #endif
+  		execlp (ptr, login_shell ? shname_minus : shname, 0);
+  		fprintf (stderr, "%s: Could not exec %s!\n", xterm_name, ptr);
+  		exit(ERROR_EXEC);
+  	    }
+  	}
+***************
+*** 1266,1287
+  	    }
+  	}
+  
+- 	if(tty >= 0) close (tty);
+- #ifdef SYSV
+- 	/* the parent should not be associated with tty anymore */
+- 	for (index1 = 0; index1 < 3; index1++)
+- 		close(index1);
+- #endif	/* SYSV */
+- 	signal(SIGHUP,SIG_IGN);
+- 
+- 	if (!no_dev_tty) {
+- 		if ((tty = open ("/dev/tty", O_RDWR, 0)) < 0)
+- 			SysError(ERROR_OPDEVTTY3);
+- 		for (index1 = 0; index1 < 3; index1++)
+- 			dup2 (tty, index1);
+- 		if (tty > 2) close (tty);
+- 	}
+- 
+  #if !defined(SYSV) || defined(JOBCONTROL)
+  
+  	signal(SIGINT, Exit); 
+
+--- 1151,1156 -----
+  	    }
+  	}
+  
+  #if !defined(SYSV) || defined(JOBCONTROL)
+  
+  	signal(SIGINT, Exit); 
+***************
+*** 1299,1335
+  {
+  	register TScreen *screen = &term->screen;
+          int pty = term->screen.respond;  /* file descriptor of pty */
+! #ifdef UTMP
+! #ifdef SYSV
+! 	struct utmp utmp;
+! 	struct utmp *utptr;
+! 
+! 	/* cleanup the utmp entry we forged earlier */
+! 	/* unlike BSD, go ahead and cream any entries we didn't make */
+! 	utmp.ut_type = USER_PROCESS;
+! 	(void) strncpy(utmp.ut_id, ttydev + strlen(ttydev) - 2,
+! 	 sizeof(utmp.ut_id));
+! 	(void) setutent();
+! 	utptr = getutid(&utmp);
+! 	if (utptr) {
+! 		utptr->ut_type = DEAD_PROCESS;
+! 		utptr->ut_time = time((long *) 0);
+! 		(void) pututline(utptr);
+! 	}
+! 	(void) endutent();
+! #else	/* !SYSV */
+! 	register int i;
+! 	struct utmp utmp;
+! 
+! 	if (added_utmp_entry &&
+! 	    (!am_slave && tslot > 0 && (i = open(etc_utmp, O_WRONLY)) >= 0)) {
+! 		bzero((char *)&utmp, sizeof(struct utmp));
+! 		lseek(i, (long)(tslot * sizeof(struct utmp)), 0);
+! 		write(i, (char *)&utmp, sizeof(struct utmp));
+! 		close(i);
+! 	}
+! #endif	/* !SYSV */
+! #endif	/* UTMP */
+          close(pty); /* close explicitly to avoid race with slave side */
+  	if(screen->logging)
+  		CloseLog(screen);
+
+--- 1168,1177 -----
+  {
+  	register TScreen *screen = &term->screen;
+          int pty = term->screen.respond;  /* file descriptor of pty */
+! #if defined(UTMP) || defined(NEW_LOGIN)
+! 	if (added_utmp_entry)
+! 		add_utmp(NULL, screen);
+! #endif
+          close(pty); /* close explicitly to avoid race with slave side */
+  	if(screen->logging)
+  		CloseLog(screen);
+***************
+*** 1473,1476
+  	setuid(pw->pw_uid);
+  	L_flag = 0;
+  	return(TRUE);
+  }
+
+--- 1315,1424 -----
+  	setuid(pw->pw_uid);
+  	L_flag = 0;
+  	return(TRUE);
++ }
++ 
++ add_utmp(name, screen)
++ char *name;
++ TScreen *screen;
++ {
++ 	struct utmp utmp;
++ 	struct utmp *utptr;
++ 	struct lastlog lastlog;
++ 	int i;
++ 
++ #ifdef SYSV
++ 	(void) setutent ();
++ 
++ 	/* set up entry to search for */
++ 	(void) strncpy(utmp.ut_id,ttydev + strlen(ttydev) - 2,
++ 	 sizeof (utmp.ut_id));
++ 	/* Find new entry / one we did earlier */
++ 	utmp.ut_type = name ? DEAD_PROCESS : USER_PROCESS;
++ 
++ 	/* position to entry in utmp file */
++ 	utptr = getutid(&utmp);
++ 
++ 	if (name) {
++ 		utptr = &utmp;
++ 
++ 		utmp.ut_exit.e_exit = 2;
++ 		(void) strncpy(utmp.ut_user, name, sizeof(utmp.ut_user));
++ 
++ 		(void) strncpy (utmp.ut_line,
++ 		 ttydev + strlen("/dev/"), sizeof (utmp.ut_line));
++ 		utmp.ut_pid = getpid();
++ 		if (name == utmp_getty)
++ 			utmp.ut_type = LOGIN_PROCESS;
++ 		else
++ 			utmp.ut_type = USER_PROCESS;
++ 
++ 	}
++ 
++ 	if (utptr) {
++ 		utptr->ut_time = time ((long *) 0);
++ 		if (!name)
++ 			utptr->ut_type = DEAD_PROCESS;
++ 		(void) pututline(utptr);
++ 	}
++ 	added_utmp_entry = True;
++ 
++ 	/* close the file */
++ 	(void) endutent();
++ 
++ 	if (wtmp_fd >= 0 ||
++ 	    (wtmp_fd = open(etc_wtmp, O_WRONLY|O_APPEND, 0)) >= 0) {
++ 		write(wtmp_fd, (char *)&utmp, sizeof(struct utmp));
++ 	}
++ 
++ #else	/* !SYSV */
++ 	 if (tslot <= 0)
++ 		return;
++ 	 if (utmp_fd >= 0 ||
++ 	     (utmp_fd = open(etc_utmp, O_WRONLY)) >= 0) {
++ 		bzero((char *)&utmp, sizeof(struct utmp));
++ 		(void) strncpy(utmp.ut_line, ttydev + strlen("/dev/"),
++ 			sizeof utmp.ut_line);
++ 		if (name) {
++ 			(void) strncpy(utmp.ut_name, name, sizeof utmp.ut_name);
++ 			(void) strncpy(utmp.ut_host, 
++ 				      XDisplayString (screen->display),
++ 				      sizeof utmp.ut_host);
++ 			time(&utmp.ut_time);
++ 		}
++ 		lseek(utmp_fd, (long)(tslot * sizeof(struct utmp)), 0);
++ 		write(utmp_fd, (char *)&utmp, sizeof(struct utmp));
++ 		if (wtmp_fd < 0)
++ 		    wtmp_fd = open(etc_wtmp, O_WRONLY|O_APPEND, 0);
++ 
++ 		if (wtmp_fd >= 0
++ #ifdef NEW_LOGIN
++ 		    && (!login_shell || added_utmp_entry)
++ #endif
++ 		    ) {
++ 			time(&utmp.ut_time);
++ 			write(wtmp_fd, (char *)&utmp, sizeof(struct utmp));
++ 		}
++ 		added_utmp_entry = True;
++ #ifdef NEW_LOGIN
++ 		/* If we run the new login, then it will take care of
++ 		 * wtmp and lastlog for us.  We still do utmp because
++ 		 * login will read ut_host and preserve it. */
++ 		if (login_shell)
++ 			return;
++ #endif
++ 		if (name && (i = open(etc_lastlog, O_WRONLY)) >= 0) {
++ 			bzero((char *)&lastlog, sizeof lastlog);
++ 			lastlog.ll_time = utmp.ut_time;
++ 			strncpy(lastlog.ll_line, utmp.ut_line,
++ 			    sizeof utmp.ut_line);
++ 			strncpy(lastlog.ll_host, utmp.ut_host,
++ 			    sizeof utmp.ut_host);
++ 			lseek(i, (long)screen->uid *
++ 			    sizeof (struct lastlog), 0);
++ 			write(i, (char *)&lastlog, sizeof lastlog);
++ 			close(i);
++ 		}
++ 	} else
++ 		tslot = -tslot;
++ #endif	/* !SYSV */
+  }
+*** /tmp/,RCSt1001925	Mon Apr 25 08:45:49 1988
+--- util.c	Fri Apr 22 08:06:58 1988
+***************
+*** 953,955
+  	    TekExpose((XExposeEvent *) NULL);
+  	}
+  }
+
+--- 953,1019 -----
+  	    TekExpose((XExposeEvent *) NULL);
+  	}
+  }
++ 
++ #ifndef	SYSV
++ #ifdef	OLD_TTYS
++ char	*rindex(), *index();
++ 
++ Ttyslot(line)
++ char *line;
++ {
++ 	FILE *fp;
++ 	register char *p;
++ 	register s;
++ 	char buf[1024];
++ 
++ 	if ((p = rindex(line, '/')) == NULL)
++ 		p = line;
++ 	else
++ 		p++;
++ 	fp = fopen("/etc/ttys", "r");
++ 	if (fp == NULL)
++ 		return 0;
++ 	s = 0;
++ 	while (fgets(line, sizeof line, fp) != NULL) {
++ 		register char *cp;
++ 
++ 		if (cp = index(line, '\n'))
++ 			*cp = '\0';
++ 		s++;
++ 		if (strcmp(&line[2], p) == 0) {
++ 			fclose(fp);
++ 			return (s);
++ 		}
++ 	}
++ 	fclose(fp);
++ 	return (0);
++ }
++ #else
++ #include <ttyent.h>
++ char	*rindex();
++ 
++ Ttyslot(line)
++ char *line;
++ {
++ 	register char *p;
++ 	register struct ttyent *ty;
++ 	register s;
++ 
++ 	if ((p = rindex(line, '/')) == NULL)
++ 		p = line;
++ 	else
++ 		p++;
++ 	setttyent();
++ 	s = 0;
++ 	while ((ty = getttyent()) != NULL) {
++ 		s++;
++ 		if (strcmp(ty->ty_name, p) == 0) {
++ 			endttyent();
++ 			return (s);
++ 		}
++ 	}
++ 	endttyent();
++ 	return (0);
++ }
++ #endif
++ #endif /* !SYSV */
+*** /tmp/,RCSt1001934	Mon Apr 25 08:46:18 1988
+--- screen.c	Thu Apr 21 07:58:51 1988
+***************
+*** 348,354
+  	register int x;
+  	register int border = 2 * screen->border;
+  	register int i, j, k;
+! #ifdef sun
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+
+--- 348,356 -----
+  	register int x;
+  	register int border = 2 * screen->border;
+  	register int i, j, k;
+! #ifdef TIOCSWINSZ
+! 	struct winsize ws;
+! #else	/* TIOCSWINSZ */
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+***************
+*** 352,362
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+! #else	/* sun */
+! #ifdef TIOCSWINSZ
+! 	struct winsize ws;
+! #endif	/* TIOCSWINSZ */
+! #endif	/* sun */
+  
+  	/* round so that it is unlikely the screen will change size on  */
+  	/* small mouse movements.					*/
+
+--- 354,360 -----
+  #ifdef TIOCSSIZE
+  	struct ttysize ts;
+  #endif	/* TIOCSSIZE */
+! #endif	/* TIOCWINSZ */
+  
+  	/* round so that it is unlikely the screen will change size on  */
+  	/* small mouse movements.					*/
+***************
+*** 472,489
+  	
+  	screen->fullVwin.fullheight = height;
+  	screen->fullVwin.fullwidth = width;
+- #ifdef sun
+- #ifdef TIOCSSIZE
+- 	/* Set tty's idea of window size */
+- 	ts.ts_lines = rows;
+- 	ts.ts_cols = cols;
+- 	ioctl (screen->respond, TIOCSSIZE, &ts);
+- #ifdef SIGWINCH
+- 	if(screen->pid > 1)
+- 		killpg(getpgrp(screen->pid), SIGWINCH);
+- #endif	/* SIGWINCH */
+- #endif	/* TIOCSSIZE */
+- #else	/* sun */
+  #ifdef TIOCSWINSZ
+  	/* Set tty's idea of window size */
+  	ws.ws_row = rows;
+
+--- 470,475 -----
+  	
+  	screen->fullVwin.fullheight = height;
+  	screen->fullVwin.fullwidth = width;
+  #ifdef TIOCSWINSZ
+  	/* Set tty's idea of window size */
+  	ws.ws_row = rows;
+***************
+*** 491,496
+  	ws.ws_xpixel = width;
+  	ws.ws_ypixel = height;
+  	ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+  #ifdef SIGWINCH
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+
+--- 477,483 -----
+  	ws.ws_xpixel = width;
+  	ws.ws_ypixel = height;
+  	ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
++ #ifdef notdef
+  #ifdef SIGWINCH
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+***************
+*** 495,502
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+  #endif	/* SIGWINCH */
+! #endif	/* TIOCSWINSZ */
+! #endif	/* sun */
+  	return (0);
+  }
+  
+
+--- 482,500 -----
+  	if(screen->pid > 1)
+  		killpg(getpgrp((int)screen->pid), SIGWINCH);
+  #endif	/* SIGWINCH */
+! #endif notdef
+! #else	/* TIOCSWINSZ */
+! #ifdef TIOCSSIZE
+! 	/* Set tty's idea of window size */
+! 	ts.ts_lines = rows;
+! 	ts.ts_cols = cols;
+! 	ioctl (screen->respond, TIOCSSIZE, &ts);
+! #ifdef SIGWINCH
+! 	if(screen->pid > 1)
+! 		killpg(getpgrp(screen->pid), SIGWINCH);
+! #endif	/* SIGWINCH */
+! #endif	/* TIOCSSIZE */
+! #endif	/* TIONSWINSZ */
+  	return (0);
+  }
+  
+

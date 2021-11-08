@@ -1,0 +1,5 @@
+The following changes have been made to this directory since R2:
+
+     o  bad exit status bug fixed.
+     o  nits for picky compilers fixed.
+     o	many bugs fixed by virtue of fixes to the Athena widgets (c.f.).

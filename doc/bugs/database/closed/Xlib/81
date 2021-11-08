@@ -1,0 +1,153 @@
+Return-Path: tom%hpcvxth@sde.hp.com
+Received: by expo.lcs.mit.edu; Tue, 27 Sep 88 17:57:52 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26484; Tue, 27 Sep 88 17:57:33 EDT
+Received: from hp-pcd.HP.COM by hp-sde ; Tue, 27 Sep 88 14:59:54 pdt
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA25902; Tue, 27 Sep 88 14:58:14 PDT
+Received: from hpcvxth.HP.COM by hpcvlx.HP.COM; Tue, 27 Sep 88 14:54:17 pdt
+Received: by hpcvxth.HP.COM; Tue, 27 Sep 88 14:55:19 mdt
+Date: Tue, 27 Sep 88 14:55:19 mdt
+From: tom%hpcvxth@sde.hp.com
+Message-Id: <8809272055.AA09354@hpcvxth.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: Xlib bug
+
+### bug number:   1017
+### area:         Xlib
+### severity:     very high
+### comments:     yuck
+
+
+VERSION:
+     X11 release 2
+SYNOPSIS:
+     logic in XCreateFontCursor doesn't look right.
+DESCRIPTION:
+     When a display is opened more than once, XCreateFontCursor()
+     doesn't seem to work right.
+REPEAT-BY:
+     Run this program.  It will error invalidly while doing
+     XCreateFontCursor().
+
+     #include <stdio.h>
+     #include <X11/Xlib.h>
+     #include <X11/Xutil.h>
+     #include <X11/cursorfont.h>
+     
+     XWMHints xwmh = {
+         (InputHint|StateHint),	/* flags */
+         False,			/* input */
+         NormalState,		/* initial_state */
+         0,				/* icon pixmap */
+         0,				/* icon window */
+         0, 0,			/* icon location */
+         0,				/* icon mask */
+         0,				/* Window group */
+     };
+     
+     
+     main(argc, argv)
+     char *argv[];
+     {
+        XEvent event;     /* holds X server events */
+        XSizeHints xsh;		/* Size hints for window manager */
+        Display *display1;
+        Display *display2;
+        Display *display3;
+        Window window;
+        Cursor cursor;
+     
+        if ((display1 = XOpenDisplay(NULL)) == NULL) {
+	    fprintf(stderr, "%s: can't open %s\n", argv[0], XDisplayName(NULL));
+	    exit(1);
+	}
+
+	XSynchronize(display1, 1);
+
+	window = XCreateSimpleWindow(display1,
+		DefaultRootWindow(display1),
+		20, 20,
+		150, 150,
+		2,
+		WhitePixel(display1, DefaultScreen(display1)),
+		BlackPixel(display1, DefaultScreen(display1)));
+
+	xsh.flags = (PPosition | PSize);
+	xsh.height = 150;
+	xsh.width = 150;
+	xsh.x = 20;
+	xsh.y = 20;
+	XSetStandardProperties(display1, window, "Clock", "Clock",
+	    None, argv, argc, &xsh);
+	XSetWMHints(display1, window, &xwmh);
+
+	XMapWindow(display1, window);
+	XSync(display1, 0);
+	sleep(1);
+
+	cursor = XCreateFontCursor(display1, XC_left_ptr);
+	XDefineCursor(display1, window, cursor);
+
+	if ((display2 = XOpenDisplay(NULL)) == NULL) {
+	    fprintf(stderr, "%s: can't open %s\n", argv[0], XDisplayName(NULL));
+	    exit(1);
+	}
+	XSynchronize(display2, 1);
+	cursor = XCreateFontCursor(display2, XC_left_ptr);
+	XCloseDisplay(display2);
+
+	if ((display3 = XOpenDisplay(NULL)) == NULL) {
+	    fprintf(stderr, "%s: can't open %s\n", argv[0], XDisplayName(NULL));
+	    exit(1);
+	}
+
+	XSynchronize(display3, 1);
+
+	/* The next call errors out and exits. */
+	cursor = XCreateFontCursor(display3, XC_left_ptr);
+
+	XCloseDisplay(display3);
+
+	sleep(5);
+
+	XUndefineCursor(display1, XDefaultRootWindow(display1));
+
+	XCloseDisplay(display1);
+     }
+
+
+FIX:
+     The problem is in XCreateFontCursor(). 
+     
+     Cursor XCreateFontCursor(dpy, which)
+        Display *dpy;
+        unsigned int which;
+     {
+        static Font cfont = 0;
+        Cursor result;
+        static Display *olddpy = NULL;
+        /*
+         * the cursor font contains the shape glyph followed by the mask
+         * glyph; so character position 0 contains a shape, 1 the mask for 0,
+         * 2 a shape, etc.  <X11/cursorfont.h> contains hash define names
+         * for all of these.
+         */
+
+=====>  if (cfont == 0 || dpy != olddpy)        {
+                if (cfont && dpy) XUnloadFont (olddpy, cfont);
+                cfont = XLoadFont(dpy, CURSORFONT);
+                olddpy = dpy;
+                if (!cfont) return (Cursor) 0;
+        }
+      result = XCreateGlyphCursor
+               (dpy, cfont, cfont, which, which + 1, &foreground, &background);
+        return(result);
+     }
+
+     In the line marked, dpy may be equal to olddyp even though the 
+     displays are different.  Therefore, the font doen't get loaded and the
+     call to XCreateGlyphCursor() fails.
+
+tom houser
+tom@hpcvxth
+

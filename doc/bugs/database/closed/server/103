@@ -1,0 +1,40 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Return-Path: <Hornig@alderaan.scrc.symbolics.com>
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by expo.lcs.mit.edu; Wed, 30 Mar 88 11:15:29 EST
+Received: from MAMA-CASS.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 182119; Wed 30-Mar-88 11:14:15 EST
+Date: Wed, 30 Mar 88 11:13 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: server/dix/events.c
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880330161357.6.HORNIG@MAMA-CASS.SCRC.Symbolics.COM>
+
+### bug number:   284
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	Missing static declarations.
+
+DESCRIPTION:
+	CheckDeviceGrabs and IsParent need static declarations before
+their first use.
+
+REPEAT-BY:
+	Compile the file.
+

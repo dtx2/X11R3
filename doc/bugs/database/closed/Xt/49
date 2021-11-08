@@ -1,0 +1,39 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 28 Jun 88 15:46:54 EDT
+Return-Path: <tnt@adea-att.arpa>
+Received: from EXPO.LCS.MIT.EDU by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 165661; 20 Jun 88 17:04:58 EDT
+Received: by expo.lcs.mit.edu; Mon, 20 Jun 88 17:01:19 EDT
+Received: by ai-att (3.2/4.16)
+	id AA08569 for xpert@expo.lcs.mit.edu; Mon, 20 Jun 88 14:01:03 PDT
+Date: Mon, 20 Jun 88 14:01:03 PDT
+From: Tom Teng <tnt@adea-att.arpa>
+Message-Id: <8806202101.AA08569@ai-att>
+To: xpert@expo.lcs.mit.edu
+Subject: XtNameToWidget problem
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Tue, 28 Jun 88 15:46 EDT
+Resent-Message-Id: <19880628194628.7.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   649
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+AREA:
+	Xt
+
+SYNOPSIS:
+	XtNameToWidget fails on primitives with popup children
+
+DESCRIPTION:
+	The XtNameToWidget function that translates a widget name to a widget instance
+	doesn't take into account a primitive widget with popup childrens. This is
+	used, for instance, with the HP Widget set when using their menu manager, menu
+	panels, etc...  
+
+	Is the "if (!XtIsComposite(root)) return NULL;" to strong in NameListToWidget?
+

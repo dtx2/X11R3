@@ -1,0 +1,81 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:scotthe%shark.gwd.tek.com@tektronix.tek.com
+Received: by expo.lcs.mit.edu; Wed, 1 Jun 88 19:28:53 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Wed 1 Jun 88 19:24:03-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id ae02883; 1 Jun 88 18:46 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa08103; 1 Jun 88 18:33 EDT
+Received: from shark.GWD.TEK.COM by tektronix.TEK.COM (5.51/6.24)
+	id AA17365; Wed, 1 Jun 88 12:57:05 PDT
+Received: by shark.GWD.TEK.COM (5.16/6.24)
+	id AA07207; Wed, 1 Jun 88 12:58:22 PDT
+From: Scott Hennes <scotthe@shark.gwd.tek.com>
+Message-Id: <8806011958.AA07207@shark.GWD.TEK.COM>
+Date: Wed,  1 Jun 88 12:58:20 PDT
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.gwd.tek.com
+Subject: X11 R2 bug report: Depth and root of clipmask not being checked
+
+### bug number:   557
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2 with fixes 1-17 applied
+
+CLIENT MACHINE:
+	Tektronix 4316
+
+CLIENT OPERATING SYSTEM:
+	UTEK 2.3 (== 4.2bsd kernel with some 4.3 utilities)
+
+DISPLAY:
+	Tektronix 4316
+
+SYNOPSIS:
+	Depth and root of clipmask not being checked in ChangeGC.
+
+DESCRIPTION:
+	Area: Server
+
+	The protocol says that "If a pixmap is specified as the clip-mask,
+	it must have depth one and have the same root as the gcontext 
+	(else a Match error).  Dix does not currently check for this.
+
+REPEAT-BY:
+	Set clipmask in GC using a pixmap whose depth is not 1.
+	The sample server will not complain.
+FIX:
+
+*** /tmp/,RCSt1025070	Fri May 27 16:03:54 1988
+--- gc.c	Fri May 27 15:40:49 1988
+***************
+*** 327,334
+  		        pPixmap = (PixmapPtr)LookupID(pid, RT_PIXMAP, RC_CORE);
+  		    if (pPixmap)
+  		    {
+! 		        clipType = CT_PIXMAP;
+! 			pPixmap->refcnt++;
+  		    }
+  		    else
+  		    {
+
+--- 327,342 -----
+  		        pPixmap = (PixmapPtr)LookupID(pid, RT_PIXMAP, RC_CORE);
+  		    if (pPixmap)
+  		    {
+! 			if ((pPixmap->drawable.depth != 1) ||
+! 			    (pPixmap->drawable.pScreen != pGC->pScreen))
+! 			{
+! 			    error = BadMatch;
+! 			}
+! 			else
+! 			{
+! 			    clipType = CT_PIXMAP;
+! 			    pPixmap->refcnt++;
+! 			}
+  		    }
+  		    else
+  		    {
+ 
+-----			-----
+

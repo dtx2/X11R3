@@ -1,0 +1,59 @@
+Return-Path: rick@bilbo.locus
+Received: by expo.lcs.mit.edu; Fri, 30 Sep 88 14:29:59 EDT
+Received: by devnet (1.0L/0.07) id AA2933501; Fri, 30 Sep 88 10:17:50 PDT
+Date: Fri, 30 Sep 88 10:17:50 PDT
+From: Richard Petkiewicz <rick@bilbo.locus>
+Message-Id: <8809301717.AA2933501@devnet>
+To: xbugs@expo.lcs.mit.edu
+Subject:        xwininfo help bug
+
+### bug number:   1033
+### area:         xwininfo
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Bell Tech AT 386
+
+CLIENT OPERATING SYSTEM:
+	SVR3.0
+
+DISPLAY:
+	EGA
+
+SYNOPSIS:
+	 xwininfo help message lists "status" for "-all", when it
+	 should be "-stats".
+
+DESCRIPTION:
+	 xwininfo help message lists "status" for "-all", when it
+	 should be "-stats".
+
+REPEAT-BY:
+	 Type "xwininfo -help".
+
+FIX:
+*** xwininfo.c	Fri Sep 30 10:37:16 1988
+--- /usr/src/XRelease/clients/xwininfo/xwininfo.c	Fri Sep 30 10:36:44 1988
+***************
+*** 63,69
+      fprintf (stderr,
+  	"    -wm                  print out window manager hints\n");
+      fprintf (stderr,
+! 	"    -all                 -tree, status, -bits, -events, -size, -wm\n");
+      fprintf (stderr,
+  	"\n");
+      exit (1);
+
+--- 63,69 -----
+      fprintf (stderr,
+  	"    -wm                  print out window manager hints\n");
+      fprintf (stderr,
+! 	"    -all                 -tree, -stats, -bits, -events, -size, -wm\n");
+      fprintf (stderr,
+  	"\n");
+      exit (1);
+

@@ -1,0 +1,39 @@
+Return-Path: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu
+Received: by expo.lcs.mit.edu; Fri, 22 Apr 88 12:33:54 EDT
+Received: by nutmeg.Berkeley.EDU (5.57/1.25)
+	id AA01901; Wed, 20 Apr 88 20:31:27 PDT
+Date: Wed, 20 Apr 88 20:31:27 PDT
+From: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu (Adam R de Boor)
+Message-Id: <8804210331.AA01901@nutmeg.Berkeley.EDU>
+To: x11%brie@sun.com, xbugs@expo.lcs.mit.edu
+Subject: input source callback args don't match doc
+
+### bug number:   406
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	The toolkit intrinsics document says the 'source' argument to an
+	InputCallbackProc (as called when a source specified by
+	XtAddInput is ready) is passed by value, when it is actually passed by
+	reference.
+
+REPEAT-BY:
+	Believe the doc and try to read from that file...
+
+FIX:
+	Fix the doc.
+

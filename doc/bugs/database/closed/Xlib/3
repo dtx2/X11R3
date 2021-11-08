@@ -1,0 +1,67 @@
+Return-Path: beorn%banzai.Berkeley.EDU@ucbvax.berkeley.edu
+Received: from ucbvax.Berkeley.EDU by EXPO.LCS.MIT.EDU; Sun, 27 Mar 88 14:02:18 EST
+Received: from banzai.Berkeley.EDU by ucbvax.Berkeley.EDU (5.58/1.26)
+	id AA03874; Thu, 24 Mar 88 02:02:36 PST
+Received: by banzai (5.50/5.17)
+	id AA05051; Thu, 24 Mar 88 00:56:19 PST
+Date: Thu, 24 Mar 88 00:56:19 PST
+From: beorn%banzai.Berkeley.EDU@ucbvax.berkeley.edu (Beorn Johnson)
+Message-Id: <8803240856.AA05051@banzai>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xlib bug
+
+### bug number:   230
+### area:         Xlib
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	All
+
+CLIENT OPERATING SYSTEM:
+	All
+
+DISPLAY:
+	n/a
+
+SYNOPSIS:
+	 A display of ':0' is processed into ""
+
+DESCRIPTION:
+	XConnDis( ) converts a display of ':0' into
+	a blank string (seen when using 'XDisplayString( )').
+
+REPEAT-BY:
+	inside "xterm -display :0" :
+		echo $DISPLAY
+
+FIX:
+
+*** XConnDis.c  Wed Mar 23 20:04:38 1988
+--- XConnDis.c.old      Thu Feb 25 19:53:18 1988
+***************
+*** 228,235 ****
+         * spec and return it in the result parameter.
+         */
+        display_ptr = displaybuf;
+!       while (*display_ptr != '\0')
+!           display_ptr++;
+        *(display_ptr++) = ':';
+  #ifdef DNETCONN
+        if (dnet)
+--- 228,235 ----
+         * spec and return it in the result parameter.
+         */
+        display_ptr = displaybuf;
+!       while (*(++display_ptr) != '\0')
+!           ;
+        *(display_ptr++) = ':';
+  #ifdef DNETCONN
+        if (dnet)
+
+

@@ -1,0 +1,89 @@
+Return-Path: @MC.LCS.MIT.EDU:jim@VX.LCS.MIT.EDU
+Received: by expo.lcs.mit.edu; Wed, 4 May 88 08:57:14 EDT
+Message-Id: <8805041257.AA13260@EXPO.LCS.MIT.EDU>
+Received: from VX.LCS.MIT.EDU by MC.LCS.MIT.EDU via Chaosnet; 4 MAY 88  08:55:55 EDT
+Received: by VX.LCS.MIT.EDU with sendmail-4.12/4.8 id <AA20038@VX.LCS.MIT.EDU>; Wed, 4 May 88 08:54:29 edt
+Date: Wed, 4 May 88 08:54:29 edt
+From: Jim Fulton <jim@VX.LCS.MIT.EDU>
+To: xbugs@EXPO.LCS.MIT.EDU
+Subject: fix for xterm -S
+
+### bug number:   450
+### area:         xterm
+### severity:     low
+### comments:     
+
+Path: mit-vax!bloom-beacon!husc6!necntc!dandelion!amber!jeff
+From: jeff@amber.ci.com (J Harley deRienzo)
+Newsgroups: comp.windows.x
+Subject: Re: X11R2 term -S bug.
+Message-ID: <4337@dandelion.CI.COM>
+Date: 3 May 88 22:05:19 GMT
+References: <331@ksr.UUCP>
+Sender: usenet@dandelion.CI.COM
+Reply-To: jeff@amber.UUCP (J Harley deRienzo)
+Distribution: usa
+Organization: Cognition, Inc., Billerica, MA
+Lines: 59
+
+In article <331@ksr.UUCP> benson@ksr.COM (Benson Margulies) writes:
++
++I've run aground on a bug in X11R2 xterm slave mode, and
++the X team hasn't time to fix it. I'm prepared to take
++a whack at it myself, but I am hoping that someone out there
++can offer some help as to approach.
++
++xterm -SpqFD
++
++supplies xterm with /dev/ptypq (and /dev/ttypq) with the master side
++open on file descriptor FD. 
++
++You then pass the slave end of pty to your application, which can then
++proceed to use the window as if it were a terminal. A quick way
++to get multiple windows for an application which only knows 
++how to talk to file descriptors.
++
++Now, when I try to use this, the xterm starts up, partially 
++initializes itself, and then dies with an X protocol error.
++
++(to try this at home, you need a program that picks a pty,
++opens both ends, prepares a -S argument, and forks and execs xterm).
++
++When I tried to debug this with xterm in run-everything-synchronously
++mode, the protocol error went away, so I failed to find out where
++in xterm was generating the problem.
++
++Can anyone out there offer some idea of how to dig out the source
++of a protocol error?
++
++
++
++Benson I. Margulies                         Kendall Square Research Corp.
++harvard!ksr!benson			    ksr!benson@harvard.harvard.edu
+
+	I think the problem lies in xterm...
+
+	Take a quick look at the source to xterm.  In main() the
+	first thing that happens is that xterm does a close() on
+	*every* file descriptor except for stdin, stdout, and stderr.
+	You don't really want it to close the pty's FD.
+
+	A small modification to this initial close loop (checking
+	first for the -S switch) or else moving the close loop
+	past where the arguments are parsed (so you can tell which
+	FD *not* to close) will probably fix things.
+
+			Jeff
+
+	jeff@dandelion.CI.COM
+	derienzo@eagle.MIT.EDU
+
+
+
+
+	
+	jeff
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+

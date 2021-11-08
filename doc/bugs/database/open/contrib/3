@@ -1,0 +1,57 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Wed, 9 Mar 88 09:29:19 EST
+Date: Wed, 9 Mar 88 09:29:19 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803091429.AA07887@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: plaid displayname bug
+
+### bug number:   58
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+From: dale@amiga.UUCP (Dale Luck)
+Date: 8 Mar 88 19:08:25 GMT
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	amiga 2000
+
+CLIENT OPERATING SYSTEM:
+	amigados
+
+DISPLAY:
+	amiga
+
+SYNOPSIS:
+	uninitialized variable being used "char * display"
+
+DESCRIPTION:
+	If you do not give any parameters when starting up plaid
+	it passes variable "display" to XOpenDis without initializing
+	it's contents. (The variable was on the stack.) This causes
+	plaid to giveup instead of use the "DISPLAY".
+
+REPEAT-BY:
+	plaid
+
+FIX:
+79c79
+<     char *display = NULL;		/* correct code */
+---
+>     char *display;			/* old code */
+
+Dale Luck
+amiga!dale
+
+---------------- end of bug report -----------------
+Maybe I should have cut the first 5 lines off? does this bug system
+look at the keywords and automatically file them, or is a human on
+the other end?  Just wondering.
+Dale Luck
+

@@ -1,0 +1,94 @@
+Return-Path: karlton@decwrl.dec.com
+Received: from sonora.dec.com by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 19:49:15 EST
+Received: from gilroy.dec.com by sonora.dec.com (5.54.4/4.7.34)
+	id AA05740; Fri, 25 Mar 88 16:47:35 PST
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA12389; Fri, 25 Mar 88 16:47:32 PST
+Message-Id: <8803260047.AA12389@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: swick@athena.mit.edu
+Subject: login_shell variable misplaced in xterm:main.c
+Date: Fri, 25 Mar 88 16:47:31 -0800
+From: Phil Karlton <karlton@decwrl.dec.com>
+
+### bug number:   228
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     ref bug #61
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE: any
+
+CLIENT OPERATING SYSTEM: Ultrix 2.2
+
+DISPLAY: any
+
+SYNOPSIS: -ls switch not working to xterm
+
+DESCRIPTION:
+	The static variable login_shell was being tested to see if the
+	execlp should be done with an initial "-" in the string. This
+	varaiable was never being set. The proper variable to use is
+	term->misc.login_shell.
+
+REPEAT-BY:
+	run xterm with "-ls" switch. .login file not processed by csh.
+
+FIX:
+*** /tmp/,RCSt1012150	Fri Mar 25 16:41:16 1988
+--- main.c	Fri Mar 25 16:35:26 1988
+***************
+*** 1,5
+  #ifndef lint
+! static char rcs_id[] = "$Header: main.c,v 1.1 88/02/26 06:14:30 joel Exp $";
+  #endif	/* lint */
+  
+  /*
+
+--- 1,5 -----
+  #ifndef lint
+! static char rcs_id[] = "$Header: main.c,v 1.4 88/03/25 16:33:26 karlton Exp $";
+  #endif	/* lint */
+  
+  /*
+***************
+*** 141,147
+  static char *get_ty;
+  static int inhibit;
+  static int log_on;
+- static int login_shell;
+  static char passedPty[2];	/* name if pty if slave */
+  static int loginpty;
+  #ifdef TIOCCONS
+
+--- 141,146 -----
+  static char *get_ty;
+  static int inhibit;
+  static int log_on;
+  static char passedPty[2];	/* name if pty if slave */
+  static int loginpty;
+  #ifdef TIOCCONS
+***************
+*** 1259,1265
+  		 NTTYDISC : 0;
+  		ioctl(0, TIOCSETD, (char *)&ldisc);
+  #endif	/* !SYSV */
+! 		execlp (ptr, login_shell ? shname_minus : shname, 0);
+  		fprintf (stderr, "%s: Could not exec %s!\n", xterm_name, ptr);
+  		sleep(5);
+  		exit(ERROR_EXEC);
+
+--- 1258,1264 -----
+  		 NTTYDISC : 0;
+  		ioctl(0, TIOCSETD, (char *)&ldisc);
+  #endif	/* !SYSV */
+! 		execlp(ptr, term->misc.login_shell ? shname_minus : shname, 0);
+  		fprintf (stderr, "%s: Could not exec %s!\n", xterm_name, ptr);
+  		sleep(5);
+  		exit(ERROR_EXEC);
+

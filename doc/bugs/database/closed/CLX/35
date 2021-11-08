@@ -1,0 +1,72 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Wed, 13 Apr 88 09:15:35 EDT
+Return-Path: <@TI.COM:Oren@Home.csc.ti.com>
+Received: from ti.com (TI.COM) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 139234; 8 Apr 88 12:52:02 EDT
+Received: by ti.com id AA28579; Fri, 8 Apr 88 11:49:53 CDT
+Received: from SI by tilde id AA21161; Fri, 8 Apr 88 11:42:09 CDT
+Message-Id: <2785509646-4032333@SI>
+Sender: OREN@si.csc.ti.com
+Date: Fri, 8 Apr 88  11:40:46 CDT
+From: LaMott Oren <Oren@home.csc.ti.com>
+To: bug-clx@zermatt.lcs.mit.edu
+Subject: CLX event-dispatch bug
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Wed, 13 Apr 88 09:15 EDT
+Resent-Message-Id: <880413091558.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   369
+### area:         CLX
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+event-dispatch has a typeo.
+ "(dolist (event all-events)" should be
+ "(dolist (event true-events)"
+
+I didn't discover this until I tried to run it on a Symbolics.
+Heres the complete correct version:
+
+;; From the CLX/input.l file:
+(defmacro event-dispatch ((display event) &body clauses)
+  ;; Helper macro for event-case
+  (let ((event-key (gensym))
+	(all-events (make-array *max-events* :element-type 'bit :initial-element 0)))
+    `(reading-event (,event)
+       (let ((,event-key (aref *event-key-vector* (event-code ,event))))
+	 (case ,event-key
+	   ,@(mapcar
+	       #'(lambda (clause)
+		   (let* ((events (car clause))
+			  (arglist (cadr clause))
+			  (body (cddr clause)))
+		     (if (member events '(otherwise t))
+			 ;; code for OTHERWISE clause.  Find all events NOT
+			 ;; used by other clauses
+			 (let ((keys (do ((i 0 (1+ i))
+					  (key nil)
+					  (result nil))
+					 ((>= i *max-events*) result)
+				       (setq key (aref *event-key-vector* i))
+				       (when (and key (zerop (aref all-events i)))
+					 (push key result)))))
+			   `(otherwise (binding-event-values
+					 (,display ,event-key ,keys ,@arglist)
+					 ,@body)))
+			 ;; Code for normal clauses
+			 (let (true-events) ;; canonicalize event-names
+			   (if (consp events)
+			       (progn
+				 (setq true-events (mapcar #'canonicalize-event-name events))
+				 (dolist (event true-events)
+				   (setf (aref all-events (get-event-code event)) 1)))
+			       (setf true-events (canonicalize-event-name events)
+				     (aref all-events (get-event-code true-events)) 1))
+			   `(,true-events (binding-event-values
+					    (,display ,event-key ,true-events ,@arglist)
+					    ,@body))))))
+	       clauses))))))
+
+

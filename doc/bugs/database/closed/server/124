@@ -1,0 +1,283 @@
+Return-Path: hrp%rothko.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Fri, 15 Jul 88 16:49:48 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA08401; Fri, 15 Jul 88 15:48:39 CDT
+Received: from rothko.cray.com by hall.cray.com
+	id AA04458; 3.2/CRI-2.9; Fri, 15 Jul 88 15:53:18 CDT
+Received: by rothko.cray.com
+	id AA08927; 3.2/CRI-2.9; Fri, 15 Jul 88 15:52:39 CDT
+Date: Fri, 15 Jul 88 15:52:39 CDT
+From: hrp%rothko.CRAY.COM@uc.msc.umn.edu (Hal Peterson)
+Message-Id: <8807152052.AA08927@rothko.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: jlf@rothko.cray.com, bobo@rothko.cray.com
+Subject: server access bug
+
+### bug number:   703
+### area:         server
+### severity:     low
+### comments:     
+
+WARNING!  my previous mail contained an error that may be a security
+hole; to try out the changes I was using /tmp/X#.hosts instead of
+/etc/X#.hosts.  These diffs are fixed.  Sorry for the confusion.
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun-3/50 or CRAY-2 system.
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5 or UNICOS 5.0 (pre-pre-release)
+
+DISPLAY:
+	Sun-3/50 monochrome
+
+SYNOPSIS:
+	Server will not allow an XAddHost from an authorized host.
+
+DESCRIPTION:
+	Section 7.11 of the Xlib manual says:
+
+	    To change the access list, the client must reside on the
+	    same host as the server and/or must have been granted
+	    permission in the initial authorization at connection
+	    setup.  The initial access control list can be specified
+	    by providing a file that the server can read at startup
+	    and reset time.
+
+	This is not the case with the sample server running on a Sun;
+	the ONLY host allowed to change the access list is the host on
+	which the server is running.
+
+REPEAT-BY:
+	Create the file /etc/X0.hosts and put into it the name of the
+	remote host.
+
+	Start the server.
+
+	Do a local xhost and notice that the remote machine is in the
+	access list.
+
+	On the remote machine do an xhost and notice that it works
+	fine.
+
+	On the remote machine do an xhost with a hostname argument and
+	see the fur fly:
+	    X Protocol error detected by server: attempt to access private resource
+	      Failed request major op code 109 X_ChangeHosts
+	      Failed request minor op code 0 (if applicable)
+	      ResourceID 0x8006b in failed request (if applicable)
+	      Serial number of failed request 4
+	      Current serial number in output stream 6
+
+	OR:  try to run the X Testing Consortium suite's XAddHost test
+	from a remote machine.
+
+FIX:
+	The following diffs add the hosts in /etc/X#.hosts to the
+	selfhost list instead of the validhosts list.  The affected
+	files are access.c and connection.c in server/os/4.2bsd.
+
+*** access.c-DIST	Fri Jul 15 15:16:54 1988
+--- access.c	Fri Jul 15 15:45:14 1988
+***************
+*** 127,137 ****
+      }
+  }
+  
+! /* Reset access control list to initial hosts */
+! ResetHosts (display)
+      char *display;
+  {
+-     register HOST	*host, *self;
+      char 		hostname[120];
+      char		fname[32];
+      FILE		*fd;
+--- 127,137 ----
+      }
+  }
+  
+! 
+! /* Add to the selfhosts list the extra hosts found in /etc/X#.hosts */
+! DefineMoreSelves(display)
+      char *display;
+  {
+      char 		hostname[120];
+      char		fname[32];
+      FILE		*fd;
+***************
+*** 154,160 ****
+      pointer		addr;
+      register struct hostent *hp;
+  
+!     while (host = validhosts)
+      {
+          validhosts = host->next;
+          xfree (host);
+--- 154,235 ----
+      pointer		addr;
+      register struct hostent *hp;
+  
+!     strcpy (fname, "/etc/X");
+!     strcat (fname, display);
+!     strcat (fname, ".hosts");
+!     if (fd = fopen (fname, "r")) {
+! 	while (fgets (hostname, sizeof (hostname), fd)) {
+! 	    if (ptr = index (hostname, '\n'))
+! 	        *ptr = 0;
+! #ifdef DNETCONN
+! 	    if ((ptr = index (hostname, ':')) && (*(ptr + 1) == ':')) {
+! 		/* node name (DECnet names end in "::") */
+! 		*ptr = 0;
+! 		if (dnaddrp = dnet_addr(hostname)) {
+! 		    /* allow nodes to be specified by address */
+! 		    NewSelf (AF_DECnet,
+! 			     sizeof(*dnaddrp),
+! 			     (pointer) dnaddrp);
+! 		} else {
+! 		    if (np = getnodebyname (hostname)) {
+! 			/* node was specified by name */
+! 			saddr.sa.sa_family = np->n_addrtype;
+! 			if ((family = ConvertAddr (&saddr.sa, &len, &addr)) ==
+! 			    AF_DECnet) {
+! 			    bzero ((pointer) &dnaddr, sizeof (dnaddr));
+! 			    dnaddr.a_len = np->n_length;
+! 			    bcopy (np->n_addr, (pointer) dnaddr.a_addr,
+! 				   np->n_length);
+! 			    NewSelf (family, np->n_length, (pointer) &dnaddr);
+! 			}
+! 		    }
+! 		}
+! 	    } else {
+! #endif				/* DNETCONN */
+! #ifdef TCPCONN
+! 		/* host name */
+! 		if (hp = gethostbyname (hostname)) {
+! 		    saddr.sa.sa_family = hp->h_addrtype;
+! 		    if ((family = ConvertAddr (&saddr.sa, &len, &addr)) > 0)
+! #ifdef NEW_HEADER_WITH_OLD_LIBRARY
+! 		        NewSelf (family, len, hp->h_addr_list);
+! #else
+! 		        NewSelf (family, len, hp->h_addr);
+! #endif
+! 
+! 		}
+! #endif				/* TCPCONN */
+! #ifdef DNETCONN
+! 	    }
+! #endif				/* DNETCONN */
+! 	}
+! 	fclose (fd);
+!     }
+! }
+! 
+! /* Add a new self to the selfhosts list */
+! NewSelf (family, len, addr)
+!     int family;
+!     int len;
+!     pointer addr;
+! {
+!     register HOST *host;
+! 
+!     host = (HOST *) xalloc (sizeof (HOST));
+!     host->family = family;
+!     host->len = len;
+!     bcopy(addr, host->addr, len);
+!     host->next = selfhosts;
+!     selfhosts = host;
+! }
+! 
+! /* Reset access control list to initial hosts */
+! ResetHosts (display)
+!     char *display;
+! {
+!     register HOST	*host, *self;
+! 
+!     while (host = validhosts)
+      {
+          validhosts = host->next;
+          xfree (host);
+***************
+*** 165,230 ****
+          *host = *self;
+          host->next = validhosts;
+          validhosts = host;
+-     }
+-     strcpy (fname, "/etc/X");
+-     strcat (fname, display);
+-     strcat (fname, ".hosts");
+-     if (fd = fopen (fname, "r")) 
+-     {
+-         while (fgets (hostname, sizeof (hostname), fd))
+- 	{
+-     	if (ptr = index (hostname, '\n'))
+-     	    *ptr = 0;
+- #ifdef DNETCONN
+-     	if ((ptr = index (hostname, ':')) && (*(ptr + 1) == ':'))
+- 	{
+-     	    /* node name (DECnet names end in "::") */
+-     	    *ptr = 0;
+-     	    if (dnaddrp = dnet_addr(hostname))
+- 	    {
+-     		    /* allow nodes to be specified by address */
+-     		    NewHost (AF_DECnet, (pointer) dnaddrp);
+-     	    }
+- 	    else
+- 	    {
+-     		if (np = getnodebyname (hostname))
+- 		{
+-     		    /* node was specified by name */
+-     		    saddr.sa.sa_family = np->n_addrtype;
+-     		    if ((family = ConvertAddr (&saddr.sa, &len, &addr)) ==
+- 		      AF_DECnet)
+- 		    {
+-     			bzero ((pointer) &dnaddr, sizeof (dnaddr));
+-     			dnaddr.a_len = np->n_length;
+-     			bcopy (np->n_addr, (pointer) dnaddr.a_addr,
+- 			  np->n_length);
+-     			NewHost (family, (pointer) &dnaddr);
+-     		    }
+-     		}
+-     	    }
+-     	}
+- 	else
+- 	{
+- #endif /* DNETCONN */
+- #ifdef TCPCONN
+-     	    /* host name */
+-     	    if (hp = gethostbyname (hostname))
+- 	    {
+-     		saddr.sa.sa_family = hp->h_addrtype;
+-     		if ((family = ConvertAddr (&saddr.sa, &len, &addr)) > 0)
+- #ifdef NEW_HEADER_WITH_OLD_LIBRARY
+-     		    NewHost (family, hp->h_addr_list);
+- #else
+-     		    NewHost (family, hp->h_addr);
+- #endif
+- 
+-     	    }
+- #endif /* TCPCONN */
+- #ifdef DNETCONN
+-     	}	
+- #endif /* DNETCONN */
+-         }
+-         fclose (fd);
+      }
+  }
+  
+--- 240,245 ----
+*** connection.c-DIST	Fri Jul 15 15:17:09 1988
+--- connection.c	Fri Jul 15 12:07:10 1988
+***************
+*** 243,248 ****
+--- 243,249 ----
+  	DefineSelf (request);
+      }
+  #endif /* DNETCONN */
++     DefineMoreSelves(display);
+      if (WellKnownConnections == 0)
+          Error ("No Listeners, nothing to do");
+      signal (SIGPIPE, SIG_IGN);
+

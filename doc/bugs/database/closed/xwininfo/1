@@ -1,0 +1,53 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 21:23:12 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08336; Wed, 16 Mar 88 21:22:22 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 14:00:22 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA12597; Wed, 16 Mar 88 14:03:53 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 14:04:33 pst
+Message-Id: <8803162204.AA24830@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xwininfo bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 14:04:29 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   146
+### area:         xwininfo
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	-tree option in xwininfo does not work all the time.
+DESCRIPTION:
+	When the -tree option is used on a window without children,
+	the process core dumps.
+REPEAT-BY:
+	xwininfo -tree on an xload window.
+FIX:
+*** xwininfo.c.R2	Wed Mar 16 10:24:42 1988
+--- xwininfo.c	Wed Mar 16 10:27:43 1988
+***************
+*** 394,400
+      Display_Window_Id(child_list[i]);
+    }
+  
+!   free(child_list);
+  }
+  
+  
+
+--- 394,401 -----
+      Display_Window_Id(child_list[i]);
+    }
+  
+!   if (num_children)
+!      free(child_list);
+  }
+  
+  
+

@@ -1,0 +1,191 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Wed, 6 Apr 88 13:51:58 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8804061751.AA02603@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: xterm multiclick time should be settable (with fix)
+Date: Wed, 06 Apr 88 13:51:57 EDT
+
+### bug number:   319
+### area:         xterm
+### severity:     
+### assigned to:  jim
+### status:       closed
+### comments:     
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+AREA:
+	xterm
+
+SYNOPSIS:
+	The multiclick time in xterm should be user-settable.
+
+DESCRIPTION:
+	The maximum time between multiple clicks when selecting text should
+	be a user-settable parameter.  It is currently hardcoded to be 250
+	milliseconds.
+
+REPEAT-BY:
+	Look at the code; try to select characters/words/lines slowly.
+
+FILES:
+	clients/xterm/button.c
+	clients/xterm/charproc.c
+	clients/xterm/main.c
+	clients/xterm/ptyx.h
+
+FIX:
+The following code adds a "multiClickTime (class MultiClickTime)" resource and
+a -mc msecs command line switch.
+
+*** /tmp/,RCSt1a02557	Wed Apr  6 13:46:09 1988
+--- button.c	Wed Apr  6 13:41:20 1988
+***************
+*** 350,358 ****
+  	free (line);	/* free text from fetch */
+  }
+  
+- 	
+- #define MULTICLICKTIME 250
+- 
+  SetSelectUnit(buttonDownTime, defaultUnit)
+  unsigned long buttonDownTime;
+  SelectUnit defaultUnit;
+--- 350,355 ----
+***************
+*** 359,365 ****
+  {
+  /* Do arithmetic as integers, but compare as unsigned solves clock wraparound */
+  	if ((long unsigned)((long int)buttonDownTime - lastButtonUpTime)
+! 	 > MULTICLICKTIME) {
+  		numberOfClicks = 1;
+  		selectUnit = defaultUnit;
+  	} else {
+--- 356,362 ----
+  {
+  /* Do arithmetic as integers, but compare as unsigned solves clock wraparound */
+  	if ((long unsigned)((long int)buttonDownTime - lastButtonUpTime)
+! 	 > term->screen.multiClickTime) {
+  		numberOfClicks = 1;
+  		selectUnit = defaultUnit;
+  	} else {
+*** /tmp/,RCSt1a02562	Wed Apr  6 13:46:12 1988
+--- charproc.c	Wed Apr  6 13:40:08 1988
+***************
+*** 72,77 ****
+--- 72,78 ----
+  #define	XtNmarginBell		"marginBell"
+  #define	XtNpointerColor		"pointerColor"
+  #define	XtNpointerShape		"pointerShape"
++ #define XtNmultiClickTime	"multiClickTime"
+  #define	XtNmultiScroll		"multiScroll"
+  #define	XtNnMarginBell		"nMarginBell"
+  #define	XtNreverseWrap		"reverseWrap"
+***************
+*** 94,99 ****
+--- 95,101 ----
+  #define	XtCLogInhibit		"LogInhibit"
+  #define	XtCLoginShell		"LoginShell"
+  #define	XtCMarginBell		"MarginBell"
++ #define XtCMultiClickTime	"MultiClickTime"
+  #define	XtCMultiScroll		"MultiScroll"
+  #define	XtCColumn		"Column"
+  #define	XtCReverseVideo		"ReverseVideo"
+***************
+*** 156,161 ****
+--- 158,164 ----
+  static  int	defaultIntBorder   = DEFBORDER;
+  static  int	defaultSaveLines   = SAVELINES;
+  static  int	defaultNMarginBell = N_MARGINBELL;
++ static  int	defaultMultiClickTime = MULTICLICKTIME;
+  
+  static XtResource resources[] = {
+  {XtNfont, XtCFont, XtRString, sizeof(char *),
+***************
+*** 212,217 ****
+--- 215,223 ----
+  {XtNpointerShape,XtCCursor, XtRString, sizeof(Cursor),
+  	XtOffset(XtermWidget, misc.curs_shape),
+  	XtRString, (caddr_t) "xterm"},
++ {XtNmultiClickTime,XtCMultiClickTime, XtRInt, sizeof(int),
++ 	XtOffset(XtermWidget, screen.multiClickTime),
++ 	XtRInt, (caddr_t) &defaultMultiClickTime},
+  {XtNmultiScroll,XtCMultiScroll, XtRBoolean, sizeof(Boolean),
+  	XtOffset(XtermWidget, screen.multiscroll),
+  	XtRBoolean, (caddr_t) &defaultFALSE},
+***************
+*** 1782,1788 ****
+     new->screen.visualbell = request->screen.visualbell;
+     new->screen.TekEmu = request->screen.TekEmu;
+     new->misc.re_verse = request->misc.re_verse;
+! 
+  
+      /*
+       * set the colors if reverse video; this is somewhat tricky since
+--- 1788,1794 ----
+     new->screen.visualbell = request->screen.visualbell;
+     new->screen.TekEmu = request->screen.TekEmu;
+     new->misc.re_verse = request->misc.re_verse;
+!    new->screen.multiClickTime = request->screen.multiClickTime;
+  
+      /*
+       * set the colors if reverse video; this is somewhat tricky since
+*** /tmp/,RCSt1a02567	Wed Apr  6 13:46:18 1988
+--- main.c	Wed Apr  6 13:45:37 1988
+***************
+*** 187,192 ****
+--- 187,193 ----
+  {"+ls",		"*loginShell",	XrmoptionNoArg,		(caddr_t) "off"},
+  {"-mb",		"*marginBell",	XrmoptionNoArg,		(caddr_t) "on"},
+  {"+mb",		"*marginBell",	XrmoptionNoArg,		(caddr_t) "off"},
++ {"-mc",		"*multiClickTime", XrmoptionSepArg,	(caddr_t) NULL},
+  {"-ms",		"*pointerColor",XrmoptionSepArg,	(caddr_t) NULL},
+  {"-nb",		"*nMarginBell",	XrmoptionSepArg,	(caddr_t) NULL},
+  {"-rw",		"*reverseWrap",	XrmoptionNoArg,		(caddr_t) "on"},
+***************
+*** 604,610 ****
+  #endif	/* TIOCCONS */
+  " [-fb bold_font] [-fg foregrnd_color] [-fn norm_font] \\\n",
+  " [-i] [-j] [-l] [-lf logfile] [-ls] [-mb] [-ms mouse_color] \\\n",
+! " [-n name] [-nb bell_margin] [-rv] [-rw] [-s] \\\n",
+  " [-sb] [-si] [-sk] [-sl save_lines] [-sn] [-st] [-T title] [-t] [-tb] \\\n",
+  " [-vb] [=[width]x[height][[+-]xoff[[+-]yoff]]] \\\n",
+  " [%[width]x[height][[+-]xoff[[+-]yoff]]] [#[+-]xoff[[+-]yoff]] \\\n",
+--- 605,611 ----
+  #endif	/* TIOCCONS */
+  " [-fb bold_font] [-fg foregrnd_color] [-fn norm_font] \\\n",
+  " [-i] [-j] [-l] [-lf logfile] [-ls] [-mb] [-ms mouse_color] \\\n",
+! " [-n name] [-nb bell_margin] [-rv] [-rw] [-s] [-mc msecs]\\\n",
+  " [-sb] [-si] [-sk] [-sl save_lines] [-sn] [-st] [-T title] [-t] [-tb] \\\n",
+  " [-vb] [=[width]x[height][[+-]xoff[[+-]yoff]]] \\\n",
+  " [%[width]x[height][[+-]xoff[[+-]yoff]]] [#[+-]xoff[[+-]yoff]] \\\n",
+*** /tmp/,RCSt1a02572	Wed Apr  6 13:46:22 1988
+--- ptyx.h	Wed Apr  6 13:14:46 1988
+***************
+*** 325,335 ****
+--- 325,338 ----
+  	int		margin;		/* 0 -> margin 1, 1 -> margin 2	*/
+  	int		pen;		/* current Tektronix pen 0=up, 1=dn */
+  	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
++ 	int		multiClickTime;	 /* time between multiclick selects */
+  } TScreen;
+  
+  /* meaning of bits in screen.select flag */
+  #define	INWINDOW	01	/* the mouse is in one of the windows */
+  #define	FOCUS		02	/* one of the windows is the focus window */
++ 
++ #define MULTICLICKTIME 250	/* milliseconds */
+  
+  typedef struct
+  {
+
+

@@ -1,0 +1,36 @@
+/**/# site:  $XConsortium: site.def,v 1.16 88/10/12 10:30:24 jim Exp $
+
+/*****************************************************************************
+ *                                                                           *
+ *			   SITE-SPECIFIC DEFINITIONS                         *
+ *                                                                           *
+ * Override any of the defaults in def.def here.  Use ifndef so that servers *
+ * can override you if necessary:                                            *
+ *                                                                           *
+ *     #ifndef ABuildParameter                                               *
+ *     #define ABuildParameter myvalue                                       *
+ *     #endif                                                                *
+ *                                                                           *
+ * We strongly recommend that you don't change the installation directories  *
+ * and just use symbolic links if you want things to be installed on a       *
+ * different partition.  For example,                                        *
+ *                                                                           *
+ *     # cd directory_containing_X_distribution                              *
+ *     # make World                                                          *
+ *     # mkdir /otherdisk/X                                                  *
+ *     # foreach i (bin lib include)                                         *
+ *     >     mkdir /otherdisk/X/$i                                           *
+ *     >     ln -s /otherdisk/X/$i /usr/$i/X11                               *
+ *     > end                                                                 *
+ *     # make install                                                        *
+ *                                                                           *
+ * Note on using DESTDIR:  If you want to install into a scratch directory   *
+ * but will eventually move the tree back to the root, compile with DESTDIR  *
+ * blank and install with "make install DESTDIR=directory".                  *
+ *                                                                           *
+ *****************************************************************************/
+
+/*
+ * place site-specific definitions here
+ */
+

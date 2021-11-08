@@ -1,0 +1,78 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Mon, 13 Jun 88 12:55:00 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA06965; Mon, 13 Jun 88 12:53:38 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Mon, 13 Jun 88 08:53:36 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA25874; Mon, 13 Jun 88 09:53:02 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Mon, 13 Jun 88 09:55:00 pdt
+Message-Id: <8806131655.AA02806@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xload label
+X-Mailer: mh6.5
+Date: Mon, 13 Jun 88 09:54:56 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   597
+### area:         xload
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	'label' in .Xdefaults not used.
+DESCRIPTION:
+	Even if 'label' is declared in .Xdefaults, xload
+	goes ahead and sets it to 'hostname'.
+REPEAT-BY:
+	defined 'xload*label: foo' in .Xdefaults. Received
+	'hostname' as my label.
+SUGGESTED FIX:
+*** clients/uwm/xload.c.old	Fri Jun 10 17:35:55 1988
+--- clients/uwm/xload.c	Fri Jun 10 17:29:36 1988
+***************
+*** 43,48
+  {
+      char host[256];
+      Widget toplevel;
+      Arg arg;
+      
+      (void) gethostname(host,255);
+
+--- 43,49 -----
+  {
+      char host[256];
+      Widget toplevel;
++     Widget load;
+      Arg arg;
+      
+      (void) gethostname(host,255);
+***************
+*** 54,63
+  	      XCreateBitmapFromData (XtDisplay(toplevel),
+  				     XtScreen(toplevel)->root,
+  				     xload_bits, xload_width, xload_height));
+!     XtSetValues (toplevel, &arg, 1);
+! 
+!     XtSetArg (arg, XtNlabel, host);
+!     XtCreateManagedWidget ("load", loadWidgetClass, toplevel, &arg, 1);
+      XtRealizeWidget (toplevel);
+      XtMainLoop();
+  }
+
+--- 55,68 -----
+  	      XCreateBitmapFromData (XtDisplay(toplevel),
+  				     XtScreen(toplevel)->root,
+  				     xload_bits, xload_width, xload_height));
+!     load = XtCreateManagedWidget ("load", loadWidgetClass, toplevel, &arg, 1);
+!     arg.name = XtNlabel;
+!     arg.value = NULL;
+!     XtGetValues(load, &arg, 1);
+!     if (arg.value == NULL || strlen(arg.value) == 0) {
+!        XtSetArg (arg, XtNlabel, host);
+!        XtSetValues (load, &arg, 1);
+!     }
+      XtRealizeWidget (toplevel);
+      XtMainLoop();
+  }
+

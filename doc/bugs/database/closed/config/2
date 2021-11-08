@@ -1,0 +1,109 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by expo.lcs.mit.edu; Thu, 7 Apr 88 08:37:23 EDT
+Received: by harvard.harvard.edu; Thu, 7 Apr 88 07:38:57 EST
+Received: from jeeves.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA27553; Thu, 7 Apr 88 08:11:43 EDT
+Received: by jeeves.ksr.com (3.2/SMI-3.2)
+	id AA02992; Thu, 7 Apr 88 08:11:41 EDT
+Message-Id: <8804071211.AA02992@jeeves.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: Makefile Structure
+Reply-To: ksr!benson@harvard.harvard.edu
+Date: Thu, 07 Apr 88 08:11:39 EDT
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   330
+### area:         config
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     see Bob's response at the end
+
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	application makefiles load from libraries in source
+directories instead of installation directories. This causes problems
+for dual-architecture users.
+
+DESCRIPTION:
+
+We here at KSR have both sun3 and sun4 machines running X. We have a
+single copy of the core.src hierarchy (using NFS, of course), and dual
+copies of the bin and lib installation targets X11. To initially
+install x11, I made the world on a sun3 and installed it, cleaned the
+world, and then repeated the process on a sun4.
+
+The problem arises when I receive a bugfix to a particular program.
+Say that I wish to recompile xterm. I have to remove all of the .o
+files in clients/xterm, because the ones lying around are probably for
+the wrong machine. I'm used to that, though it would be nice if the
+makefiles had the option to have subdirectories for different machines
+(ie, clients/xterm/sun3 and clients/xterm/sun4).
+
+However, I also either have to remake all the relevant libraries (like
+Xlib, Xt, Xaw), or I have to screw around with the makefile to do
+something like:
+
+xterm : *.o -L/usr/local/lib/X11 -lXaw -lXt -lX
+
+instead of all of those ../../ paths that the makefile comes with by
+default.
+
+I propose the following as things that the X consortium could do to
+ease the pain of us multi-architecture NFS users:
+
+a) split the build into two phases : libraries and programs
+	The libraries would be built and then installed, and then
+	the programs that use them would be built looking for them
+	in their installed homes instead of ../../ ----
+
+or
+
+b) complify the templates to allow us to configure any number of
+architectures, and come up with makefiles that put object files and
+archives only in per-architecture subdirectories.  This might also be
+exploited by those who want their objects on a different file system
+than their sources.
+
+
+[and Bob's response]
+
+
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Thu, 7 Apr 88 18:10:34 EDT
+Date: Thu, 7 Apr 88 18:10 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: Makefile Structure
+To: ksr!benson@harvard.harvard.edu, xbugs@expo.lcs.mit.edu
+In-Reply-To: <8804072109.AA13214@EXPO.LCS.MIT.EDU>
+Message-Id: <880407181020.3.RWS@KILLINGTON.LCS.MIT.EDU>
+
+    Date: Thu, 07 Apr 88 08:11:39 EDT
+    From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+    a) split the build into two phases : libraries and programs
+	    The libraries would be built and then installed, and then
+	    the programs that use them would be built looking for them
+	    in their installed homes instead of ../../ ----
+
+Installing as part of a build is an exceedingly bad idea.  One has only
+to attempt to make the Andrew system in V11R2 to see how badly this can
+screw you, or attempt to do development on a system where production use
+is also desired.
+
+    b) complify the templates to allow us to configure any number of
+    architectures
+
+We don't have the time or energy to do this.  We would rather wait for
+someone to solve the problem in general (there are people working on the
+problem), and then steal from them.  In the mean time, we do system
+builds for five or six architectures from the same source pool as
+standard practice.  We just create symbolic link hierarchies (using
+util/lndir.sh), and do all compiles in the link hierarchies.  It all
+works out just fine (assuming you have symbolic links).  There is
+a problem of keeping the links up to date, but it hasn't been that
+much of a problem, so we haven't attempted to automate it.
+

@@ -1,0 +1,75 @@
+SRCS =	\
+	init.c		\
+	screentab.c	\
+	hpKeyMap.c	\
+	hpFonts.c hpLines.c	\
+	hpScreens.c	\
+	hpByteBlt.c	\
+	hpPolyFSR.c tcPolyFSR.c	\
+	hpwindow.c	\
+	input_ext.c	\
+	x_hil.c		\
+	x_hilinit.c	\
+	beeper.c	\
+	x_tablet.c	\
+	x_threebut.c	\
+	ipc.c		\
+	salloc.c	\
+	hpcursor.c hpcgc.c shadow.c wshadow.c hpCopyArea.c \
+	moreBS.c	\
+	sunGC.c 	sunCursor.c	
+
+OBJS = \
+	init.o		\
+	screentab.o	\
+	hpKeyMap.o	\
+	hpScreens.o	\
+	hpFonts.o hpLines.o	\
+	hpPolyFSR.o tcPolyFSR.o	\
+	hpwindow.o	\
+	hpByteBlt.o	\
+	input_ext.o	\
+	x_hil.o		\
+	x_hilinit.o	\
+	beeper.o	\
+	x_tablet.o	\
+	x_threebut.o	\
+	ipc.o		\
+	salloc.o	\
+	hpcursor.o hpcgc.o shadow.o wshadow.o hpCopyArea.o \
+	moreBS.o	\
+	sunGC.o			sunCursor.o	
+
+STUBSRC = \
+	cecrtstub.c gbxcrtstub.c mobcrtstub.c rencrtstub.c \
+	mrcrtstub.c tccrtstub.c crtstub.c dvcrtstub.o
+STUBOBJ = \
+	cecrtstub.o gbxcrtstub.o mobcrtstub.o rencrtstub.o \
+	mrcrtstub.o tccrtstub.o crtstub.o dvcrtstub.o
+
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+   INCLUDES = -I.. -I../../../include -I../mfb -I../cfb \
+	      -I$(INCLUDESRC) -I../../../../extensions/include
+EXT_DEFINES = ExtensionDefines
+   LINTLIBS = ../../../dix/llib-ldix.ln ../../../os/4.2bsd/llib-los.ln
+
+NormalLibraryObjectRule()
+
+all:: $(OFILES)
+
+NormalLibraryTarget(hp,$(OBJS))
+NormalLibraryTarget(crtstub,$(STUBOBJ))
+
+SpecialObjectRule(input_ext.o, $(ICONFIGFILES), $(EXT_DEFINES))
+SpecialObjectRule(x_hil.o, $(ICONFIGFILES), $(EXT_DEFINES))
+SpecialObjectRule(x_hilinit.o, $(ICONFIGFILES), $(EXT_DEFINES))
+SpecialObjectRule(x_tablet.o, $(ICONFIGFILES), $(EXT_DEFINES))
+SpecialObjectRule(x_threebut.o, $(ICONFIGFILES), $(EXT_DEFINES))
+SpecialObjectRule(hpcursor.o, $(ICONFIGFILES), $(EXT_DEFINES))
+
+DependTarget()
+
+lintlib:
+
+NormalLintTarget($(SRCS))

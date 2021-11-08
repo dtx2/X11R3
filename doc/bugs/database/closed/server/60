@@ -1,0 +1,169 @@
+Return-Path: karynk@spray.calcomp.com
+Received: by expo.lcs.mit.edu; Sat, 23 Apr 88 04:36:07 EDT
+Received: by EDDIE.MIT.EDU with sendmail-5.45/4.7 id <AA04660@EDDIE.MIT.EDU>; Sat, 23 Apr 88 04:33:00 EDT
+Received: by harvard.harvard.edu; Sat, 23 Apr 88 03:36:56 EST
+Received: from spray.CalComp.COM (spray.ARPA) 
+	by elrond.CalComp.COM (1.2/smail2.5/01-15-88)
+	id AA04845; Fri, 22 Apr 88 10:52:04 edt
+Received: by spray.CalComp.COM (5.52/UUCP-Proj/rel1.0/14-Jan-87)
+	id AA02185; Fri, 22 Apr 88 10:56:12 EDT
+Date: Fri, 22 Apr 88 10:56:12 EDT
+From: karynk@spray.calcomp.com (Karyn M. Kachinski)
+Message-Id: <8804221456.AA02185@spray.CalComp.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: tiled line bug
+Cc: karynk@spray.calcomp.com
+
+### bug number:   409
+### area:         server
+### severity:     medium high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	CG4
+
+SYNOPSIS:
+    A tiled line draws differently when the window is moved.
+
+DESCRIPTION:
+   Move a window that contains tiled images; the images drawn change if a 
+repaint of the window occurs.  It seems like the tile pattern stays relative
+to absolute 0, 0, not relative to the window origin.
+
+REPEAT-BY:
+
+This test program displays a tiled line.  The mouse buttons are used to cause
+a repaint of the window. The window can be moved using a window manager, I 
+used uwm. To cause it to happen, start xpixmap3 (this program), start uwm,
+move the window to a new location and hit a button, the displayed image should
+be different.
+
+++++++++++++++++++++++++++++++++++ cut here +++++++++++++++++++++++++++++++++
+
+#include <stdio.h>
+#include <math.h>
+#include <strings.h>
+#include <signal.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+#include <sys/time.h>
+
+extern char *getenv();
+
+
+/* objects */
+Display	 *dpy;
+Window   theWindow,theInputWindow;
+Pixmap   pix;
+
+#define WIDTH  512
+#define HEIGHT 512
+#define BORDER 1
+
+XEvent			event;
+XSetWindowAttributes	xswa;
+XGCValues		xgcv;
+GContext		gc;
+Visual			visual;
+
+Colormap 	colors;
+XColor	xcsd, xced;
+
+/**************/
+main(argc, argv)      
+    int   argc;
+    char *argv[];
+/**************/
+{
+
+int	x,y;
+int	height,width,border;
+int	offset;
+int ForeColor,BackColor,Color;
+char *display = NULL;
+int XDEBUG;
+
+char *p;			/* get environment variable */
+
+/*****************************************************/
+
+    p = getenv("XDEBUG");
+    if(p)
+	sscanf(p, "%x", &XDEBUG );
+    else
+	XDEBUG = 0;
+
+    /* Open up the display. */
+
+    if ((dpy = XOpenDisplay(display)) == NULL) {
+        fprintf(stderr, "%s: Can't open display '%s'\n",argv[0], display);
+        exit(1);
+    }
+
+    /* Open the main window output. */
+    x = 0;
+    y = 0;
+    width = WIDTH;
+    height = HEIGHT;
+    border = 0 /*BORDER*/;
+
+    pix = XCreatePixmap(dpy, RootWindow(dpy, DefaultScreen(dpy)), 128, 128,
+      DefaultDepth(dpy, DefaultScreen(dpy)) );
+    xgcv.function = GXcopy;
+    xgcv.foreground = BlackPixel(dpy, DefaultScreen(dpy)); /* */
+    xgcv.line_style = LineSolid;
+    gc = (GContext)XCreateGC(dpy,pix,GCFunction|GCLineStyle|GCForeground,&xgcv);
+
+    XFillArc(dpy, pix, gc, 0, 0, 128, 128, 0, 360*64 );
+
+    XFreeGC( dpy, gc );
+
+    xswa.background_pixel = BlackPixel(dpy, DefaultScreen(dpy)); /* */
+    xswa.border_pixel = WhitePixel(dpy, DefaultScreen(dpy));
+    xswa.event_mask = ExposureMask|ButtonPressMask;
+    visual.visualid = CopyFromParent;
+    theWindow = XCreateWindow(dpy, RootWindow(dpy, DefaultScreen(dpy)),
+		x, y, width, height, border,
+		CopyFromParent, InputOutput, &visual, 
+		CWBackPixel | CWBorderPixel | CWEventMask,
+		&xswa );
+    
+    xgcv.function = GXcopy /*GXor*/;
+    xgcv.foreground = WhitePixel(dpy, DefaultScreen(dpy)); /* */
+    xgcv.background = BlackPixel(dpy, DefaultScreen(dpy));
+    xgcv.tile = pix; /*color*/
+    xgcv.fill_style = FillTiled/* */;
+    xgcv.line_width = 256;
+    xgcv.ts_x_origin = 0;
+    xgcv.ts_y_origin = 0;
+    gc = (GContext)XCreateGC(dpy, RootWindow(dpy, DefaultScreen(dpy)),
+	GCFunction|GCLineWidth|GCForeground|GCBackground|GCTile|GCFillStyle|GCTileStipXOrigin|GCTileStipYOrigin, &xgcv);
+
+    XMapWindow(dpy, theWindow);
+
+    /**************** Main loop *****************/
+
+    while (1) {
+        XNextEvent(dpy, &event);
+	XClearWindow(dpy, theWindow );
+        XDrawLine(dpy, theWindow, gc, 0, 64, 256, 64 ); /*  */
+    }  /* end while loop */
+}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+FIX:
+  In our port of the server I used pWin->absCorner.x and pWin->absCorner.y
+to translate the window back to the absolute 0,0 similiar to how fill 
+stippled lines are done.
+

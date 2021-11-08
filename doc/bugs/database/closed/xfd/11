@@ -1,0 +1,74 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Wed, 3 Aug 88 16:31:17 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA15490; Wed, 3 Aug 88 16:31:25 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 3 Aug 88 12:30:45 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA14623; Wed, 3 Aug 88 13:32:06 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 3 Aug 88 13:33:30 pdt
+Message-Id: <8808032033.AA02188@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xfd bug
+X-Mailer: mh6.5
+Date: Wed, 03 Aug 88 13:33:24 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   818
+### area:         xfd
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	xfd allows a minimum size too small to use.
+	allow "-grey" to work same as "-gray".
+DESCRIPTION:
+	The user can specify a geometry size of 1x1. Not very useful and
+	extremely difficult to resize.
+	I forget which spelling to use to get gray. Nice to have both.
+REPEAT-BY:
+	xfd -geometry 1x1
+	xfd -grey
+SUGGESTED FIX:
+*** xfd.c.old	Wed Jul  6 15:35:37 1988
+--- xfd.c	Wed Jul  6 15:49:58 1988
+***************
+*** 90,96
+  	for (i = 1; i < argc; i++) {
+  		if (!strcmp("-", argv[i]))
+  		  continue;
+! 		if (!strcmp("-gray", argv[i])) {
+  		  gray = 1;
+  		  continue;
+  		}		  
+
+--- 90,96 -----
+  	for (i = 1; i < argc; i++) {
+  		if (!strcmp("-", argv[i]))
+  		  continue;
+! 		if (!strcmp("-gray", argv[i]) || !strcmp("-grey", argv[i])) {
+  		  gray = 1;
+  		  continue;
+  		}		  
+***************
+*** 276,281
+  
+  	size_hints.min_width = box_x+1;
+  	size_hints.min_height = box_y + space_per_line*number_of_lines;
+  }
+  
+  char s[4] = { 0, 0, 0, 0 };
+
+--- 276,286 -----
+  
+  	size_hints.min_width = box_x+1;
+  	size_hints.min_height = box_y + space_per_line*number_of_lines;
++ 
++ 	if (size_hints.width < size_hints.min_width)
++ 		size_hints.width = size_hints.min_width;
++ 	if (size_hints.height < size_hints.min_height)
++ 		size_hints.height = size_hints.min_height;
+  }
+  
+  char s[4] = { 0, 0, 0, 0 };
+

@@ -1,0 +1,174 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by EXPO.LCS.MIT.EDU; Thu, 5 May 88 09:27:24 EDT
+Date: Thu, 5 May 88 09:27 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: KillClient doesn't always
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880505132710.1.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   456
+### area:         server
+### severity:     medium high
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	all
+
+AREA:
+	server
+
+SYNOPSIS:
+	KillClient fails to kill off the resources of a client
+	that has closed with retained resources.
+
+DESCRIPTION:
+	Ditto.
+
+REPEAT-BY:
+	The following program should demo.  Repeatedly invoking
+		retaintest -retain
+	should (against the sample server) produce two alternating ids.
+	Instead it produces monotonically increasing ids.
+
+/* $Header: retaintest.c,v 1.5 88/02/09 11:27:38 karlton Exp $ */
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <stdio.h>
+#include "wsimple.h"
+
+#define NULL 0
+#define ROOT RootWindow(dpy, screen)
+
+static Atom XA_PK_PIXMAP;
+
+usage()
+{
+    char **cpp;
+    static char *help_message[] = {
+"where options include:",
+"    -display host:dpy		the X server to contact",
+"    -justPrint			print property state",
+"    -retain			do RetainPermanent on this Client",
+NULL};
+    fflush(stdout);
+    fprintf(stderr, "usage: %s [-options ...]\n\n", program_name);
+    for (cpp = help_message; *cpp; cpp++) {
+	fprintf(stderr, "%s\n", *cpp);
+    }
+    fprintf(stderr, "\n");
+    exit (1);
+}
+
+
+Pixmap PrintCurrentState(dpy)
+    Display *dpy;
+{
+    int     status;
+    Pixmap * p;
+    Atom actual_type;
+    int     actual_format, actual_length, bytes_remaining;
+
+    status = XGetWindowProperty (
+	    dpy, ROOT, XA_PK_PIXMAP, 0, sizeof (Pixmap), False, AnyPropertyType,
+	    &actual_type, &actual_format, &actual_length, &bytes_remaining,
+	    &p);
+    if (status == Success) {
+	if (actual_type == None) {
+	    printf ("No retain permanent client found.\n");
+	    return None;
+	}
+	printf ("Pixmap from previous client is 0x%X.\n", *p);
+	return * p;
+    }
+    else {
+	printf ("XGetWindowProperty call failed: %d\n", status);
+	return None;
+    }
+}
+
+main(argc, argv)
+  int argc;
+  char * argv[];
+{
+    Bool justPrint = False;
+    Bool retain = False;
+    Pixmap pixmap;
+    int     i;
+
+    program_name = argv[0];
+    Setup_Display_And_Screen (&argc, argv);
+    for (i = 1; i < argc; i++) {
+	if (strcmp (argv[i], "-justPrint") == 0)
+	    justPrint = True;
+	else if (strcmp (argv[i], "-retain") == 0)
+	    retain = True;
+	else
+	    usage ();
+    }
+    XSynchronize (dpy, True);
+    XA_PK_PIXMAP = XInternAtom (dpy, "_PK_PIXMAP", False);
+    pixmap = PrintCurrentState (dpy);
+    if (justPrint)
+	exit (0);
+    if (pixmap != None) {
+	XDeleteProperty (dpy, ROOT, XA_PK_PIXMAP);
+	XDrawPoint(dpy, pixmap, DefaultGC(dpy, screen), 5, 5);	/* exist ? */
+	XKillClient (dpy, pixmap);
+    }
+    if (retain) {
+	pixmap = XCreatePixmap (dpy, ROOT, 16, 16, DefaultDepth(dpy, screen));
+	XChangeProperty (
+		dpy, ROOT, XA_PK_PIXMAP, XA_PIXMAP, 32,
+		PropModeReplace, &pixmap, sizeof (pixmap));
+	XSetCloseDownMode (dpy, RetainPermanent);
+	printf("This client is saving pixmap 0x%X.\n", pixmap);
+	XFlush(dpy);
+	XCloseDisplay (dpy);
+    }
+}
+
+
+FILES:
+	server/dix/dispatch.c
+
+FIX:
+
+*** /tmp/,RCSt1a24439	Thu May  5 09:18:25 1988
+--- server/dix/dispatch.c	Thu May  5 09:18:12 1988
+***************
+*** 1,4 ****
+! /* $Header: dispatch.c,v 1.47 88/04/30 12:03:26 rws Exp $ */
+  /************************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+--- 1,4 ----
+! /* $Header: dispatch.c,v 1.48 88/05/05 09:17:30 rws Exp $ */
+  /************************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+  and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+***************
+*** 2975,2981 ****
+      if (clientIndex && pResource)
+      {
+  	myIndex = client->index;
+!     	if (clients[clientIndex] && !clients[clientIndex]->clientGone)
+   	{
+  	    CloseDownClient(clients[clientIndex]);
+  	}
+--- 2975,2981 ----
+      if (clientIndex && pResource)
+      {
+  	myIndex = client->index;
+!     	if (clients[clientIndex])
+   	{
+  	    CloseDownClient(clients[clientIndex]);
+  	}
+
+

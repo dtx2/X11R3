@@ -1,0 +1,104 @@
+Return-Path: solomon@cs.wisc.edu
+Received: by expo.lcs.mit.edu; Fri, 1 Jul 88 12:29:47 EDT
+Date: Fri, 1 Jul 88 11:28:38 CDT
+From: solomon@cs.wisc.edu (Marvin Solomon)
+Message-Id: <8807011628.AA14690@speedy.cs.wisc.edu>
+Received: by speedy.cs.wisc.edu; Fri, 1 Jul 88 11:28:38 CDT
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in Viewport widget
+Cc: tonyrich@cs.wisc.edu
+
+### bug number:   675
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VAX 8550
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.2
+
+SERVER MACHINE:
+	Vaxstation 200
+
+SERVER OPERATING SYSTEM:
+	4.3 BSD
+
+DISPLAY:
+	QVSS
+
+SYNOPSIS:
+	 Athena toolkit Viewport Widget core dumps if XtNforceBars is
+	 specified.
+
+DESCRIPTION:
+	 In X11R2/lib/Xaw/Viewport.c:
+	    "$Header: Viewport.c,v 1.19 88/02/26 10:15:15 swick Exp $";
+	in the procedure Initialize() about line 215, if the forceBars
+	property is set, CreateScrollbar() is called as part of the setup
+	for creating the clip widget.  However, CreateScrollbar() attempts
+	to resize the clip widget (see lines 172 and 180), which of course
+	can't be resized yet, since it doesn't exist.
+	The result is a core dump in XtResizeWidget.
+
+REPEAT-BY:
+#include <stdio.h>
+#include <X11/StringDefs.h>
+#include <X11/Intrinsic.h>
+#include <X11/Viewport.h>
+
+static XrmOptionDescRec options[] = {
+{"-file", "*proof.file", XrmoptionSepArg, NULL},
+};
+
+usage(prog)
+char *prog;
+{
+	fprintf(stderr,"usage: %s [options] [file]\n",prog);
+	exit(1);
+}
+
+int _Xdebug;
+
+Arg VPargs[] = {
+	{ XtNallowHoriz, (XtArgVal)"true" },
+	{ XtNallowVert, (XtArgVal)"true" },
+	{ XtNuseBottom, (XtArgVal)"true" },
+	{ XtNuseRight, (XtArgVal)"true" },
+	{ XtNforceBars, (XtArgVal)"true" },
+};
+
+main(argc,argv)
+char **argv;
+{
+	Widget toplevel = XtInitialize("main", "Demo",
+			     options, XtNumber(options),
+			     &argc, argv );
+	Widget child, viewport;
+	Arg args[10];
+
+	setbuf(stdout, 0);
+
+	viewport = XtCreateManagedWidget("viewport", viewportWidgetClass,
+		toplevel,
+		VPargs, XtNumber(VPargs));
+
+	child = XtCreateManagedWidget("child", /* some other widget */
+		viewport,
+		(ArgList)0, (Cardinal)0);
+
+
+	XtRealizeWidget(toplevel);
+
+	XtMainLoop();
+}
+
+FIX:
+	Sorry, but the code is much too convoluted for me to figure out how
+	to fix it.
+

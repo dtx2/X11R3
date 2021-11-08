@@ -1,0 +1,45 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:14 EST
+Date: Fri, 4 Mar 88 16:13:14 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA04991@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: mfbUnmapWindow
+
+### bug number:   14
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 14:52:58 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 175871; Thu 3-Mar-88 14:52:14 EST
+Date: Thu, 3 Mar 88 14:52 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: mfbUnmapWindow
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com
+Message-Id: <19880303195209.4.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	mfbUnmapWindow in server/ddx/mfb/mfbwindow is defined with 3
+arguments.  It is called with one one.
+
+REPEAT-BY:
+	Run teh server and unmap a window.
+
+FIX:
+	Get rid of the second two arguments.

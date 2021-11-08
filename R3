@@ -1,0 +1,1 @@
+This is the X Window System, Version 11, Release 3.  See README for details.

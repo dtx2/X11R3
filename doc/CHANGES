@@ -1,0 +1,7 @@
+The following changes have been made to this directory since R2:
+
+     o  a new directory has been added for extensions.
+     o  a new directory has been added for tutorials.
+     o  the BDF specification has been moved to its own directory, bdf.
+     o  Athena Widgets documentation moved to its own directory.
+     o  ICCCM draft removed.

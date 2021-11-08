@@ -1,0 +1,49 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:14:24 EST
+Date: Fri, 4 Mar 88 16:14:24 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042114.AA05152@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: server/ddx/mi/miexpose.c
+
+### bug number:   29
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 15:25:12 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 176238; Fri 4-Mar-88 15:24:25 EST
+Date: Fri, 4 Mar 88 15:24 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: server/ddx/mi/miexpose.c
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com
+Message-Id: <19880304202421.2.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	TryClientEvents is called with the wrong arguments.
+
+DESCRIPTION:
+	In 3 places in miexpose.c, TryClientEvents is called with its
+6th argument passed as 0.  The argument expected is a GrabPtr.  0 is not
+a GrabPtr.
+
+REPEAT-BY:
+	N/A
+
+FIX:
+	Replace the 0 with NULL.

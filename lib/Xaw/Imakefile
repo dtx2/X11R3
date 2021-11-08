@@ -1,0 +1,135 @@
+    STD_DEFINES = LibraryDefines
+    CDEBUGFLAGS = LibraryCDebugFlags
+       INCLUDES = -I. -I$(TOOLKITSRC) -I$(TOP) -I$(TOP)/X11
+   INSTALLFLAGS = $(INSTINCFLAGS)
+       LINTLIBS = $(LINTXLIB) $(LINTXTOOL)
+#ifdef RtArchitecture
+             CC = pcc
+#endif
+
+HEADERS = \
+	AsciiText.h \
+	AsciiTextP.h \
+	Box.h \
+	BoxP.h \
+	Cardinals.h \
+	Clock.h \
+	ClockP.h \
+	Command.h \
+	CommandP.h \
+	Dialog.h \
+	DialogP.h \
+	Form.h \
+	FormP.h \
+	Grip.h \
+	GripP.h \
+	Label.h \
+	LabelP.h \
+	List.h \
+	ListP.h \
+	Load.h \
+	LoadP.h \
+	Logo.h \
+	LogoP.h \
+	Mailbox.h \
+	MailboxP.h \
+	Scroll.h \
+	ScrollP.h \
+	Simple.h \
+	SimpleP.h \
+	Template.c \
+	Template.h \
+	TemplateP.h \
+	Text.h \
+	TextP.h \
+	TextSrcP.h \
+	VPaned.h \
+	VPanedP.h \
+	Viewport.h \
+	ViewportP.h
+
+SRCS = \
+	AsciiSink.c \
+	AsciiText.c \
+	Box.c \
+	Clock.c \
+	Command.c \
+	Dialog.c \
+	DiskSrc.c \
+	Form.c \
+	GrayPixmap.c \
+	Grip.c \
+	Label.c \
+	List.c \
+	Load.c \
+	Logo.c \
+	Mailbox.c \
+	Scroll.c \
+	Simple.c \
+	StringSrc.c \
+	Text.c \
+	TextTr.c \
+	Vendor.c \
+	Viewport.c \
+	VPaned.c \
+	XDrawLogo.c
+
+OBJS = \
+	AsciiSink.o \
+	AsciiText.o \
+	Box.o \
+	Clock.o \
+	Command.o \
+	Dialog.o \
+	DiskSrc.o \
+	Form.o \
+	GrayPixmap.o \
+	Grip.o \
+	Label.o \
+	List.o \
+	Load.o \
+	Logo.o \
+	Mailbox.o \
+	Scroll.o \
+	Simple.o \
+	StringSrc.o \
+	Text.o \
+	TextTr.o \
+	Vendor.o \
+	Viewport.o \
+	VPaned.o \
+	XDrawLogo.o
+
+#if DebugLibXaw && ProfileLibXaw
+DebuggedAndProfiledLibraryObjectRule()
+#else
+# if DebugLibXaw
+DebuggedLibraryObjectRule()
+# else
+#  if ProfileLibXaw
+ProfiledLibraryObjectRule()
+#  else
+NormalLibraryObjectRule()
+#  endif
+# endif
+#endif
+
+NormalLibraryTarget(Xaw,$(OBJS))
+LintLibraryTarget(Xaw,$(SRCS))
+InstallLibrary(Xaw,$(USRLIBDIR))
+InstallLintLibrary(Xaw,$(LINTLIBDIR))
+
+#if ProfileLibXaw
+ProfiledLibraryTarget(Xaw,$(OBJS))
+InstallLibrary(Xaw_p,$(USRLIBDIR))
+#endif
+
+#if DebugLibXaw
+DebuggedLibraryTarget(Xaw,$(OBJS))
+#endif
+
+InstallMultiple($(HEADERS),$(INCDIR))
+
+DependTarget()
+
+NormalLintTarget($(SRCS))

@@ -1,0 +1,48 @@
+Return-Path: swick
+Received: by expo.lcs.mit.edu; Mon, 12 Sep 88 15:26:44 EDT
+From: swick@expo.lcs.mit.edu (Ralph Swick)
+Message-Id: <8809121926.AA24098@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject:  r3b Xqdss crash
+Date: Mon, 12 Sep 88 15:26:41 EDT
+
+### bug number:   965
+### area:         server
+### severity:     very high
+### comments:     
+
+			  X Window System Bug Report
+			    xbugs@expo.lcs.mit.edu
+
+
+
+
+VERSION:
+    R3beta
+
+
+CLIENT MACHINE and OPERATING SYSTEM:
+    Microvax II Ultrix 2.2, 3.0, 4.3bsd
+
+
+DISPLAY:
+    QDSS
+
+
+WINDOW MANAGER:
+    any
+
+
+AREA:
+    server
+
+
+SYNOPSIS:
+    Server will reset after enough 'xsetroot -solid xxx' commands.
+
+
+REPEAT BY:
+    % foreach i (x x x x x x x x x x)
+    > xsetroot -solid red
+    > end
+

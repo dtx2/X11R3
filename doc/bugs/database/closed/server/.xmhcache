@@ -1,0 +1,195 @@
+   1  03/09 jim@expo.lcs.mit.  cursor from bitmap from data invisible on qdss  <<### bug number: 57
+   2  03/05 franz!frozen!jdi@  Serious bug in MapWindow  <<### bug number: 36 ### area: ### severit
+   3  03/07 swick@athena.mit.  Re: Serious bug in MapWindow  <<### bug number: 47 ### area: ### sev
+   4  03/07 franz!sparky!jdi@  Re: Serious bug in MapWindow  <<### bug number: 48 ### area: ### sev
+   5  03/07 rws@zermatt.lcs.m  Re: Serious bug in MapWindow  <<### bug number: 49 ### area: ### sev
+   6  03/04 jim@expo.lcs.mit.  Bug in X.V11R2 distribution  <<### bug number: 2 ### area: server ##
+   7  03/04 jim@expo.lcs.mit.  Bug in X.V11R2 distribution  <<### bug number: 9 ### area: ### sever
+   8  03/04 jim@expo.lcs.mit.  server/dix/colormap.c  <<### bug number: 4 ### area: ### severity: #
+   9  03/04 jim@expo.lcs.mit.  server/dix/main.c  <<### bug number: 5 ### area: ### severity: ### a
+  10  03/04 jim@expo.lcs.mit.  server/dix/main.c padding  <<### bug number: 6 ### area: ### severit
+  11  03/04 jim@expo.lcs.mit.  misc.h  <<### bug number: 7 ### area: ### severity: ### assigned to:
+  12  03/04 jim@expo.lcs.mit.  server/ddx/mfb/maskbits.h  <<### bug number: 8 ### area: ### severit
+  13  03/04 jim@expo.lcs.mit.  CloseFont  <<### bug number: 13 ### area: ### severity: ### assigned
+  14  03/11 edmond@cs.ucla.ed  Problems compiling X11 R2 on and IBM RT  <<### bug number: 91 ### ar
+  15  03/04 jim@expo.lcs.mit.  mfbUnmapWindow  <<### bug number: 14 ### area: ### severity: ### ass
+  16  03/04 jim@expo.lcs.mit.  CreateColormap  <<### bug number: 15 ### area: ### severity: ### ass
+  17  03/04 jim@expo.lcs.mit.  miSubtractO in server/ddx/mi/miregion.c  <<### bug number: 19 ### ar
+  18  03/04 jim@expo.lcs.mit.  misc.h  <<### bug number: 27 ### area: ### severity: ### assigned to
+  19  03/04 jim@expo.lcs.mit.  server/ddx/mi/miexpose.c  <<### bug number: 29 ### area: ### severit
+  20  03/05 wesommer@athena.m  X11R2:server/os/sysV/util.c: stupid comment misspelling.  <<### bug 
+  21  03/05 franz!sparky!jdi@  off by one on draw-rectangle  <<### bug number: 38 ### area: ### sev
+  22  03/06 dshr@sun.com       Bug in property.c  <<### bug number: 39 ### area: ### severity: ### 
+  23  03/06 dshr@sun.com       Bug in property.c  <<### bug number: 40 ### area: ### severity: ### 
+  24  03/10 jim@expo.lcs.mit.  miClearToBackground misses exposures if no background pixmap  <<### 
+  25  03/14 kddlab!uunet.uu.n  xbugs  <<### bug number: 94 ### area: server ### severity: ### assig
+  26  03/12 hornig@alderaan.s  AlterSaveSetForClient in server/dix/dixutils.c  <<### bug number: 92
+  27  03/10 apollo!bowbeer@ed  ReparentWindow sets clientWinSize wrong  <<### bug number: 87 ### ar
+  28  03/14 apollo!bowbeer@ed  format bug in ADMPATH in OsInit()  <<### bug number: 113 ### area: s
+  29  03/15 capmkt!nlp3!nlp5!  miRectsToRegion dumps core  <<### bug number: 122 ### area: server #
+  30  03/11 sherouse@godot.ra  sense of ButtonMotionMask wrong?  <<### bug number: 89 ### area: ser
+  31  03/15 ibmuupa!erik@ucbv  XStoreNamedColor is broken  <<### bug number: 135 ### area: server #
+  32  03/17 hornig@alderaan.s  miPolyGlyphBlt  <<### bug number: 163 ### area: server ### severity:
+  33  03/25 jim@expo.lcs.mit.  problem with X_ChangeKeyboardMapping (or maybe XChangeKeyboardMappin
+  34  03/04 jim@expo.lcs.mit.  mfbDestroyPixmap  <<### bug number: 21 ### area: ### severity: ### a
+  35  03/16 vasudev@decvax.de  Bug in X.V11 Release 2 server ddx/mi code  <<### bug number: 136 ###
+  36  03/17 gms%hpcvxgs@hplab  AddInputDevice bug?  <<### bug number: 156 ### area: server ### seve
+  37  03/17 hornig@alderaan.s  mfbUnnaturalTileFS and mfbUnnaturalStippleFS  <<### bug number: 164 
+  38  03/14 reilly@atari.dec.  xman causes X server core dump when creating directory screen of man
+  39  05/05 rws@zermatt.lcs.m  KillClient doesn't always  <<### bug number: 456 ### area: server ##
+  40  05/05 rws@zermatt.lcs.m  server handling of too many clients  <<### bug number: 459 ### area:
+  41  05/05 keith@expo.lcs.mi  qdss doesn't reinstall default colormap when uninstalling another.  
+  42  05/09 jeff@dandelion.ci   <<### bug number: 477 ### area: server ### severity: low ### commen
+  43  04/30 rws@zermatt.lcs.m  bad drawable/gc checking in server  <<### bug number: 441 ### area: 
+  44  04/28 rws@zermatt.lcs.m  server CirculateNotify bug  <<### bug number: 464 ### area: server #
+  45  05/05 rws@zermatt.lcs.m  changing line-style doesn't always  <<### bug number: 472 ### area: 
+  46  05/09 harvard!ora!ventu   <<### bug number: 479 ### area: server ### severity: very high ### 
+  47  05/06 henry@garp.mit.ed  [<kit@ATHENA.MIT.EDU: Key Click on RT workstations]  <<### bug numbe
+  48  04/26 mcvax!cwi.nl!guid  manupilating the system date can confuse the screen saver  <<### bug
+  49  04/15 mcvax!serc.nl!flo  bug in ./server/os/4.2bsd/osinit.c  <<### bug number: 384 ### area: 
+  50  04/20 tek@cs.ucla.edu    WaitForSomething()  <<### bug number: 398 ### area: server ### sever
+  51  05/03 mit-erl!apollo!re  CFB bug - dashed lines  <<### bug number: 447 ### area: server ### s
+  52  04/07 liuho@sun.com      sun386i support for X11R2  <<### bug number: 337 ### area: server ##
+  53  05/14 rws@zermatt.lcs.m  server event dispatch during grabs does not obey spec  <<### bug num
+  54  05/16 mcvax!cwi.nl!guid  XFillRectangle coordinate wrap error crashes X server and Ultrix  <<
+  55  05/17 bilbo.jta@seas.uc  Colormaps and root window  <<### bug number: 505 ### area: server ##
+  56  05/18 swick@athena.mit.  sample server bug: ListFonts returns too many names  <<### bug numbe
+  57  05/17 bilbo.geoff@seas.  mivaltree can crash server if some windows are partly off-screen  <<
+  58  05/19 keith@expo.lcs.mi  mfbfillrct.c revisited  <<### bug number: 522 ### area: server ### s
+  59  05/20 rws@zermatt.lcs.m  too much mouse motion causes Sun server to wedge  <<### bug number: 
+  60  04/22 karynk@spray.calc  tiled line bug  <<### bug number: 409 ### area: server ### severity:
+  61  05/19 mcvax!inset!rob@u   <<### bug number: 523 ### area: server ### severity: low ### commen
+  62  03/05 deboor@buddy.berk  Re: off by one on draw-rectangle  <<### bug number: 37 ### area: ###
+  63  04/08 jim@vx.lcs.mit.ed  mizerlines.c dy > dx  <<### bug number: 342 ### area: server ### sev
+  64  03/20 richard.draves@rp  RT server colormap initialization  <<### bug number: 185 ### area: s
+  65  03/20 richard.draves@rp  bug in Sun server b/w colormap initialization  <<### bug number: 186
+  66  03/20 richard.draves@rp  bug in XListFonts server functionality  <<### bug number: 187 ### ar
+  67  03/23 mowat@dg-rtp.dg.c  divide by zero in miwidedash.c  <<### bug number: 200 ### area: serv
+  68  03/25 attunix!sfrod!jmb  re: X logo screensaver on a sun  <<### bug number: 215 ### area: ser
+  69  03/28 hornig@alderaan.s  miOpqStipDrawable (in server/ddx/mi/mibitblt.c)  <<### bug number: 2
+  70  03/28 hornig@alderaan.s  server/ddx/cfb/cfbscrinit.c  <<### bug number: 239 ### area: server 
+  71  03/28 hornig@alderaan.s  cfbCreatePixmap  <<### bug number: 240 ### area: server ### severity
+  72  03/28 hornig@alderaan.s  cfbmskbits.h  <<### bug number: 241 ### area: server ### severity: #
+  73  04/04 porsche%hpcvlx@hp  X11 bug  <<### bug number: 257 ### area: server ### severity: ### as
+  74  05/20 mcvax!inset!rob@u   <<### bug number: 528 ### area: server ### severity: low ### commen
+  75  05/21 rws@zermatt.lcs.m  server software cursor checks ignoring line-width  <<### bug number:
+  76  04/08 bp@june.cs.washin  a bug [in server with Unix domain socket protection]  <<### bug numb
+  77  04/11 mit-erl!apollo!re  getimage bug  <<### bug number: 360 ### area: server ### severity: #
+  78  04/19 jam@spray.calcomp  getspans? [not doing an increment]  <<### bug number: 391 ### area: 
+  79  05/16 mcvax!inset!rob@u  bug report  <<### bug number: 497 ### area: server ### severity: low
+  80  04/07 ekberg@home.csc.t  ClientTimeToServerTime looks wrong  <<### bug number: 339 ### area: 
+  81  04/02 deboor%dill.berke  cfbPadPixmap lies  <<### bug number: 256 ### area: server ### severi
+  82  04/07 hornig@alderaan.s  cfbQuickBlt  <<### bug number: 336 ### area: server ### severity: ##
+  83  05/26 rws@zermatt.lcs.m  color overallocation can be hazardous to your server  <<### bug numb
+  84  06/03 matt@expo.lcs.mit  pixmap formats wrong on 4-plane Xqdss  <<### bug number: 561 ### are
+  85  04/02 ibmuupa!erik@ucbv  unneccesary validates  <<### bug number: 247 ### area: server ### se
+  86  03/28 hornig@alderaan.s  FreeClientPixels (in server/dix/colormap.c)  <<### bug number: 270 #
+  87  06/01 toddb@tekcrl.crl   bug in dix/colormap.c  <<### bug number: 558 ### area: server ### se
+  88  05/10 stellar!stevep@ed  Bug in CreateColormap()  <<### bug number: 480 ### area: server ### 
+  89  06/03 matt@expo.lcs.mit  Bug fixed in PixmapBytePad()  <<### bug number: 562 ### area: server
+  90  06/01 scotthe@shark.gwd  X11 R2 bug report: Depth and root of clipmask not being checked  <<#
+  91  06/06 rws@zermatt.lcs.m  "empty" bitmap clip-mask produces opposite of desired effect  <<### 
+  92  06/08 rws@zermatt.lcs.m  synthetic KeymapNotify events don't have sequence numbers  <<### bug
+  93  04/13 dcooper%esdsdf.de  Toolkit bug [actually, server bug]  <<### bug number: 374 ### area: 
+  94  05/11 toddb%tekcrl.crl@  Dash value not checked in CreateGC or ChangeGC  <<### bug number: 48
+  95  05/13 karlton@wsl.dec.c  SaveSet handling of window positions  <<### bug number: 492 ### area
+  96  05/24 mcvax!inset!rob@u   <<### bug number: 538 ### area: server ### severity: low ### commen
+  97  04/06 rws@zermatt.lcs.m  GetImage and not viewable windows  <<### bug number: 321 ### area: s
+  98  04/02 hornig@alderaan.s  cfbwindow.c,mfbwindow.c  <<### bug number: 251 ### area: server ### 
+  99  03/28 hornig@alderaan.s  cfbDestroyPixmap  <<### bug number: 268 ### area: server ### severit
+ 100  03/28 hornig@alderaan.s  cfbUnmapWindow  <<### bug number: 269 ### area: server ### severity:
+ 101  03/28 hornig@alderaan.s  server/dix/colormap.c  <<### bug number: 271 ### area: server ### se
+ 102  03/30 hornig@alderaan.s  server/dix/dispatch.c  <<### bug number: 283 ### area: server ### se
+ 103  03/30 hornig@alderaan.s  server/dix/events.c  <<### bug number: 284 ### area: server ### seve
+ 104  03/30 hornig@alderaan.s  server/dix/window.c  <<### bug number: 285 ### area: server ### seve
+ 105  03/30 hornig@alderaan.s  server/ddx/mi/mibitblt.c  <<### bug number: 286 ### area: server ###
+ 106  03/30 hornig@alderaan.s  miPutImage  <<### bug number: 287 ### area: server ### severity: ###
+ 107  03/30 hornig@alderaan.s  miPaintWindow  <<### bug number: 288 ### area: server ### severity: 
+ 108  03/30 hornig@alderaan.s  server/ddx/mi/mifpolycon.c  <<### bug number: 289 ### area: server #
+ 109  03/30 hornig@alderaan.s  server/ddx/mi/milines.c  <<### bug number: 290 ### area: server ### 
+ 110  03/30 hornig@alderaan.s  server/ddx/mi/mipolycon.c  <<### bug number: 291 ### area: server ##
+ 111  03/30 hornig@alderaan.s  miCopyPlane  <<### bug number: 292 ### area: server ### severity: ##
+ 112  03/30 hornig@alderaan.s  mfbDestroyPixmap  <<### bug number: 295 ### area: server ### severit
+ 113  03/30 hornig@alderaan.s  cfbPositionWindow  <<### bug number: 298 ### area: server ### severi
+ 114  03/30 hornig@alderaan.s  cfbDestroyPixmap  <<### bug number: 300 ### area: server ### severit
+ 115  06/30 rws@zermatt.lcs.m  multi-head server can dump core at connection setup  <<### bug numbe
+ 116  06/29 sequent!gssc!dave  inconsistent number of parameters to CreatePixmap()  <<### bug numbe
+ 117  07/05 rws@zermatt.lcs.m  rotated pixmaps aren't needed in cfb anymore  <<### bug number: 679 
+ 118  07/05 rws@zermatt.lcs.m  program-driven Zaphod broken on Sun  <<### bug number: 688 ### area:
+ 119  04/22 rws@zermatt.lcs.m  SelectionClear  <<### bug number: 405 ### area: server ### severity:
+ 120  05/04 erin@austin.lockh  Bug Report  <<### bug number: 452 ### area: server ### severity: med
+ 121  04/29 kwh@sei.cmu.edu    XPutImage bug  <<### bug number: 439 ### area: server ### severity: 
+ 122  07/19 matt@expo.lcs.mit  fixed bug in qdss qdcursor.c  <<### bug number: 709 ### area: server
+ 123  07/15 hrp%rothko.cray.c  server access bug  <<### bug number: 702 ### area: server ### severi
+ 124  07/15 hrp%rothko.cray.c  server access bug  <<### bug number: 703 ### area: server ### severi
+ 125  07/13 jupiter!bob%jupit   <<### bug number: 712 ### area: server ### severity: very high ### 
+ 126  07/15 jta@bilbo.locus     <<### bug number: 705 ### area: server ### severity: very low ### c
+ 127  07/15 jta@bilbo.locus     <<### bug number: 704 ### area: server ### severity: low ### commen
+ 128  07/25 toddb@expo.lcs.mi  delayed write implementation, et. al.  <<### bug number: 777 ### are
+ 129  07/25 keith@expo.lcs.mi  hp CopyArea/PolyFillRect ignore ClientClip/SubwindowMode  <<### bug 
+ 130  07/25 toddb@expo.lcs.mi  region struct not big enough for complex clipmasks  <<### bug number
+ 131  06/29 toddb@tekcrl.crl   non-contiguous masks aren't being found by AllocCP  <<### bug number
+ 132+ 07/29 toddb@expo.lcs.mi  delayed write can cause server to loop forever  <<### bug number: 78
+ 133  04/11 mit-erl!apollo!re  getimage bug  <<### bug number: 359 ### area: server ### severity: #
+ 134  04/25 karynk@spray.calc  bug on odd width vertical double dashed lines  <<### bug number: 415
+ 135  05/03 mit-erl!apollo!te  miwidedash bug  <<### bug number: 448 ### area: server ### severity:
+ 136  06/09 nathanm%hpcvlx@hp  Background-colored part of double dashes drawn with wrong coordinate
+ 137  06/17 nathanm%hpcvlx@hp  Bug report & fix  <<### bug number: 612 ### area: server ### severit
+ 138  06/22 nathanm%hpcvlx@hp  Bug report & fix: wide dashed lines, joins, caps  <<### bug number: 
+ 139  07/22 nathanm%hpcvlx@hp  Bug report & fixes -- wide solid and dashed lines  <<### bug number:
+ 140  07/26 jupiter!bob%jupit  bug in FindColor()...causes server crash  <<### bug number: 788 ### 
+ 141  04/07 mit-erl!apollo!re  Xbug - XGetImage  <<### bug number: 341 ### area: server ### severit
+ 142  03/29 tom%hpcvxth@hplab  4 bit pixels  <<### bug number: 248 ### area: server ### severity: #
+ 143  05/23 jupiter!bob%jupit   <<### bug number: 534 ### area: server ### severity: low ### commen
+ 144  07/28 tom%hpcvxth@hplab  miGetPlane woes  <<### bug number: 798 ### area: server ### severity
+ 145  04/06 angel@flipper.mia  Having problem running X.V11R2 on a GPX  <<### bug number: 326 ### a
+ 146  04/13 rws@zermatt.lcs.m  max-request-length, and broken pipes  <<### bug number: 367 ### area
+ 147  04/11 tek@cs.ucla.edu    xsetroot -gray  <<### bug number: 349 ### area: server ### severity:
+ 148  04/13 ardent!jkh@uunet.  XMapRaised  <<### bug number: 375 ### area: server ### severity: ###
+ 149  04/19 jam@spray.calcomp  getimage or xmag  <<### bug number: 387 ### area: server ### severit
+ 150  05/13 mcvax!cwi.nl!guid  X server writes on tail of rgb.dir  <<### bug number: 489 ### area: 
+ 151  05/17 bilbo.geoff@seas.  mfbValidateGC checks font boundaries incorrectly  <<### bug number: 
+ 152  04/29 sunybcs!sbcs!amig  Bugs in maskbits.h when GETLEFTBITS_ALIGNMENT != 4  <<### bug number
+ 153  05/31 jupiter!bob%jupit  MSBFirst getstipplepixels fails with 24 planes  <<### bug number: 55
+ 154  06/02 yba@athena.mit.ed  InitExtensions  <<### bug number: 559 ### area: server ### severity:
+ 155  06/03 jupiter!bob%jupit  mfbGetSpans problem  <<### bug number: 563 ### area: server ### seve
+ 156  06/13 karlton@wsl.dec.c  incorrect no-op in window.c:DrawLogo  <<### bug number: 600 ### area
+ 157  06/06 jupiter!bob%jupit  SendConnectionSetupInfo() walk the various available visuals incorre
+ 158  06/14 dana@thumper.bell  Bug(?) in Color sun tiling  <<### bug number: 602 ### area: server #
+ 159  06/15 scotthe@shark.gwd  X11 R2 bug report: Improper scroll using CopyArea  <<### bug number:
+ 160  06/16 apollo!dpg@eddie.  Minor bug in server/ddx/apollo/ap_text.h  <<### bug number: 609 ### 
+ 161  06/20 mit-erl!apollo!te  Fix for Xapollo, long text strings.  <<### bug number: 622 ### area:
+ 162  06/30 ndd@cs.duke.edu    xwd -xy on color Suns?  <<### bug number: 673 ### area: server ### s
+ 163  08/01 msm@decwrl.dec.co  server/dix/events.c/FocusInEvents  <<### bug number: 805 ### area: s
+ 164  08/06 elsie!ado@ncifcrf  XSetClipMask sometimes doesn't  <<### bug number: 831 ### area: serv
+ 165  08/09 rws@zermatt.lcs.m  allow server connection info to vary each cycle  <<### bug number: 8
+ 166  08/10 rws@zermatt.lcs.m  GetImage with backing-store  <<### bug number: 845 ### area: server 
+ 167  08/11 rws@zermatt.lcs.m  missing two BadValue checks in the server  <<### bug number: 851 ###
+ 168  08/14 rws@zermatt.lcs.m  CopyPlane doesn't check for legal bit plane  <<### bug number: 868 #
+ 169  08/14 rws@zermatt.lcs.m  provide uniform -wm server option for forcing backing store  <<### b
+ 170  08/15 solomon@cs.wisc.e  yet another qdss bug  <<### bug number: 871 ### area: server ### sev
+ 171  08/17 rws@zermatt.lcs.m  grabs don't ref count cursors  <<### bug number: 881 ### area: serve
+ 172  08/10 bowbeer@apollo.co  memory leak in PassiveClientGone  <<### bug number: 849 ### area: se
+ 173  07/06 jupiter!bob%jupit  bug report -- memory leak in cfb code  <<### bug number: 700 ### are
+ 174  08/17 nathanm%hpcvlx@sd  Wide dashes bug  <<### bug number: 883 ### area: server ### severity
+ 175  07/27 jtkohl@athena.mit  screen saver logo lossage, DEC QDSS  <<### bug number: 793 ### area:
+ 176  07/05 harry%hpcvxhp@hpl   <<### bug number: 698 ### area: server ### severity: low ### commen
+ 177  03/24 deboor%bay.berkel  bitGravity/winGravity interaction  <<### bug number: 217 ### area: s
+ 178  04/02 deboor%nutmeg.ber  fix for bad interactions between bitGravity and winGravity  <<### bu
+ 179  03/22 deboor%dill.berke  TraverseTree(ExposeAll) in window.c not according to spec  <<### bug
+ 180  08/23 scotthe@shark.gwd  X11 R2 bug report: Subwindows not getting exposed properly  <<### bu
+ 181  08/22 u-jmolse%ug@cs.ut  Problem with XGrabKeyboard  <<### bug number: 898 ### area: server #
+ 182  04/27 ekberg@home.csc.t  Configure-window makes diagonal windows  <<### bug number: 432 ### a
+ 183  05/27 karlton@wsl.dec.c  bogus declaration in qdpushpxl.c:qdPPPix1chan  <<### bug number: 544
+ 184  06/17 dana@thumper.bell  lowering font filename case  <<### bug number: 613 ### area: server 
+ 185  05/20 rws@zermatt.lcs.m  cfb-based stippling glitches  <<### bug number: 527 ### area: server
+ 186  07/05 dschmidt@expo.lcs  line width 1 equived rectangle troubles in MFB  <<### bug number: 68
+ 187  07/21 karlton@wsl.dec.c  extra allocation in server/ddx/snf/fonts.c: ReadNFont  <<### bug num
+ 188  07/21 scotthe@shark.gwd  X11 R2 bug report: ifdef out some dead code  <<### bug number: 707 #
+ 189  07/22 scotthe@shark.gwd  X11 R2 bug report: Missing ifdefs in rgb.h  <<### bug number: 770 ##
+ 190  08/23 scotthe@shark.gwd  CopyWindow called for Input only windows.  <<### bug number: 902 ###
+ 191  08/30 shep@allspice.lcs  "xhost +" doesn't get reset when server resets  <<### bug number: 92
+ 192  08/29 tek@cs.ucla.edu    XCopyPlane  <<### bug number: 920 ### area: server ### severity: low
+ 193  09/02 tek@cs.ucla.edu    XGetKeyboardMapping  <<### bug number: 932 ### area: server ### seve
+ 194  09/02 tom%hpcvxth%sde.h  server bug in mi  <<### bug number: 931 ### area: server ### severit
+ 195  08/31 scotthe@shark.gwd  X11 R2 bug: awm SaveUnders crashes server  <<### bug number: 926 ###

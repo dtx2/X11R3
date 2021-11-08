@@ -1,0 +1,156 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Thu, 14 Apr 88 11:41:19 EDT
+Return-Path: <@UCBARPA.BERKELEY.EDU:franz!sparky!jdi@ucbarpa.Berkeley.EDU>
+Received: from ucbarpa.Berkeley.EDU (UCBARPA.BERKELEY.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 140783; 13 Apr 88 18:27:19 EDT
+Received: by ucbarpa.Berkeley.EDU (5.59/1.28)
+	id AA22451; Wed, 13 Apr 88 15:26:01 PDT
+Received: from sparky. (sparky) by franz (5.5/3.14)
+	id AA09105; Wed, 13 Apr 88 12:42:07 PST
+Received: by sparky. (4.0/SMI-4.0)
+	id AA07959; Wed, 13 Apr 88 13:39:50 PDT
+Message-Id: <8804132039.AA07959@sparky.>
+To: LaMott Oren <Home.csc.ti.com!Oren@ucbarpa.berkeley.edu>
+Cc: bug-clx@zermatt.lcs.mit.edu
+Subject: Re: mail etc 
+In-Reply-To: Your message of Tue, 12 Apr 88 11:39:29 CDT.
+             <2785855169-3903994@SI> 
+Date: Wed, 13 Apr 88 13:39:48 PDT
+From: John Irwin <franz!sparky!jdi@ucbarpa.berkeley.edu>
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 14 Apr 88 11:41 EDT
+Resent-Message-Id: <880414114150.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   382
+### area:         CLX
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+
+In image.cl, z-format-pixarray calls z-format-row-#, where # is 1,4,8,16,24,32.
+
+z-format-row-# is passed a two dimensional array (pixarray) with element
+type (unsigned-byte #)
+
+z-format-row-1 and z-format-row-4 do
+	(setf (aref pixarray) row col) byte)
+where byte is type card8, which attempts to stuff a byte into a bit, giving
+an error.
+
+Patch follows.
+
+There is also apparently a problem with the automatic opening of fonts:
+
+<user 11> (setq dis (xlib:open-display "sparky"))
+
+#<DISPLAY sparky 0> 
+<user 12> (setq fonts (xlib:list-fonts dis "*"))
+
+(omitted for brevity)
+<user 13> (setq 6x10 (car fonts))
+
+#s(xlib:font :id-internal nil :display #<DISPLAY sparky 0> :reference-count 0 :name "6x10" :font-info-internal #s(xlib::font-info :direction :left-to-right :min-char 0 :max-char 127 :min-byte1 0 :max-byte1 0 :min-byte2 0 :max-byte2 127 ...) :char-infos-internal nil :local-only-p t ...) 
+<user 14> (xlib:char-width 6x10 66)
+Error: X-Error: length-error in request 4 (last request was 5)  Code 45.0 [OpenFont]
+[1] <user 16> :dn 7
+Evaluation stack:
+
+... 4 more (possibly invisible) newer frames ...
+
+   (xlib:default-error-handler #<DISPLAY sparky 0> xlib:length-error :major 45 :minor 0 ...)
+   (apply)
+   (xlib::report-error #<DISPLAY sparky 0> #s(xlib::reply-buffer :size 4096 :ibuf8 #(0 16 0 4 6 56 0 ...)))
+   (xlib::wait-for-reply #<DISPLAY sparky 0> nil)
+ ->(xlib::query-font #s(xlib:font :id-internal 10485761 :display #<DISPLAY sparky 0> :reference-count 1 :name "6x10" :font-info-internal #s(xlib::font-info :direction # :min-char # :max-char # :min-byte1 # :max-byte1 # :min-byte2 # ...) :char-infos-internal nil ...))
+   (xlib::font-char-infos #s(xlib:font :id-internal 10485761 :display #<DISPLAY sparky 0> :reference-count 1 :name "6x10" :font-info-internal #s(xlib::font-info :direction # :min-char # :max-char # :min-byte1 # :max-byte1 # :min-byte2 # ...) :char-infos-internal nil ...))
+   (xlib:char-width #s(xlib:font :id-internal 10485761 :display #<DISPLAY sparky 0> :reference-count 1 :name "6x10" :font-info-internal #s(xlib::font-info :direction # :min-char # :max-char # :min-byte1 # :max-byte1 # :min-byte2 # ...) :char-infos-internal nil ...) 66)
+   (apply)
+
+... more older frames ...
+[1] <user 17> (pprint *)
+
+(xlib::query-font
+ #s(xlib:font :id-internal 10485761 :display #<DISPLAY sparky 0>
+    :reference-count 1 :name "6x10" :font-info-internal
+    #s(xlib::font-info :direction :left-to-right :min-char 0 :max-char 127
+       :min-byte1 0 :max-byte1 0 :min-byte2 0 :max-byte2 127 :all-chars-exist-p
+       t :default-char 0 :min-bounds #(0 6 6 8 2 0) :max-bounds #(0 6 6 8 2 0)
+       :ascent 8 :descent 2 :properties
+       (:copyright 78 :family_name 83 :point_size 100 :weight 196 :resolution
+        103 :x_height 8 :quad_width 6))
+    :char-infos-internal nil :local-only-p t :plist nil)) 
+[1] <user 18> 
+
+Diffs to image.cl
+-----------------------------------------------------
+365c365
+< 	    (setf (aref pixarray row i) (logand 1 byte))
+---
+> 	    (setf (aref pixarray row i) byte)
+373,387c373,380
+< 	  (setf (aref pixarray row col) (logand 1 byte))
+< 	  (setf (aref pixarray row (incf col))
+< 	    (logand 1 (setq byte (ash byte -1))))
+< 	  (setf (aref pixarray row (incf col))
+< 	    (logand 1 (setq byte (ash byte -1))))
+< 	  (setf (aref pixarray row (incf col))
+< 	    (logand 1 (setq byte (ash byte -1))))
+< 	  (setf (aref pixarray row (incf col))
+< 	    (logand 1 (setq byte (ash byte -1))))
+< 	  (setf (aref pixarray row (incf col))
+< 	    (logand 1 (setq byte (ash byte -1))))
+< 	  (setf (aref pixarray row (incf col))
+< 	    (logand 1 (setq byte (ash byte -1))))
+< 	  (setf (aref pixarray row (incf col))
+< 	    (logand 1 (setq byte (ash byte -1))))
+---
+> 	  (setf (aref pixarray row col) byte)
+> 	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+> 	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+> 	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+> 	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+> 	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+> 	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+> 	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+395c388
+< 	    (setf (aref pixarray row (+ i col)) (logand 1 byte))
+---
+> 	    (setf (aref pixarray row (+ i col)) byte)
+415c408
+< 	  (setf (aref pixarray row col) (logand 15 byte))
+---
+> 	  (setf (aref pixarray row col) byte)
+423c416
+< 	  (setf (aref pixarray row (incf col)) (logand 15 byte))
+---
+> 	  (setf (aref pixarray row (incf col)) byte)
+
+
+--------
+Your message:
+
+       More important is the bug I sent to bug-clx about z-format-row-1 setting
+       a bit element in an array to a card8 value.  Have you been able to recre
+   ate
+       this?  I assume your lisp machine allows this but it doesn't seem that i
+   t
+       should.
+    I don't remember ever reading this, and I can't find your message in my
+    archives.  I assume you're talking about the statements:
+    	  (setf (aref pixarray row (incf col)) (setq byte (ash byte -1)))
+    I suppose they really should be:
+    	  (setf (aref pixarray row (incf col)) (logand 1 (setq byte (ash byte -
+   1))))
+    but I was hoping the logand wasn't required...
+    Why don't you send a fix to bug-clx.  There are probably similar
+    problems with z-format-row-4.
+       
+       Also have you been able to recreate the (list-fonts) problem?
+    Again, I don't remember seeing and I can't find a copy of this message.
+    Please (re)send me your bug report. [I hope I'm not losing lots of
+    these!]
+--------
+
+

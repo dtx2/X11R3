@@ -1,0 +1,54 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 21:25:52 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08405; Wed, 16 Mar 88 21:24:55 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 16 Mar 88 14:10:43 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA13825; Wed, 16 Mar 88 14:14:23 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 16 Mar 88 14:15:03 pst
+Message-Id: <8803162215.AA24877@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xfd bug
+X-Mailer: mh6.5
+Date: Wed, 16 Mar 88 14:14:57 PST
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   151
+### area:         xfd
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	xfd does not use the optimum size for its window if a position is
+	specified.
+DESCRIPTION:
+	If the user gives xfd a position string only, xfd does not use its
+	default or optimum size for the window.
+REPEAT-BY:
+	xfd =+15+15
+FIX:
+*** xfd.c.R2	Wed Mar 16 10:35:06 1988
+--- xfd.c	Wed Mar 16 10:38:31 1988
+***************
+*** 219,225
+  	x_offset += 2; y_offset += 2;
+  	box_x += 3;  box_y += 3;
+  
+! 	if (!geometry) {        /* if user didn't override, use ideal size */
+  		size_hints.width = box_x*16+1;
+  		size_hints.height = box_y*16 + space_per_line *number_of_lines;
+  	}
+
+--- 219,226 -----
+  	x_offset += 2; y_offset += 2;
+  	box_x += 3;  box_y += 3;
+  
+! /*	if (!geometry) {        /* if user didn't override, use ideal size */
+! 	if (!(size_hints.flags & USSize)) {
+  		size_hints.width = box_x*16+1;
+  		size_hints.height = box_y*16 + space_per_line *number_of_lines;
+  	}
+

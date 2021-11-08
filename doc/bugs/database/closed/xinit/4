@@ -1,0 +1,73 @@
+Return-Path: spaf@purdue.edu 
+Received: from arthur.cs.purdue.edu ([128.10.2.1]) by EXPO.LCS.MIT.EDU; Sun, 6 Mar 88 19:50:46 EST
+Received: from uther.cs.purdue.edu by arthur.cs.purdue.edu; (5.54/3.16)
+	id AA14695; Sun, 6 Mar 88 19:50:01 EST
+Received: by uther.cs.purdue.edu (3.2/SMI-3.0DEV3)
+	id AA00999; Sun, 6 Mar 88 19:48:12 EST
+Date: Sun, 6 Mar 88 19:48:12 EST
+Message-Id: <8803070048.AA00999@uther.cs.purdue.edu>
+Subject: xinit hang when using ksh
+To: xbugs@expo.lcs.mit.edu
+From: Gene Spafford <spaf@purdue.edu>
+
+### bug number:   41
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	B/W
+
+SYNOPSIS:
+	 Invoking xinit from the ksh results in the Xsun server hanging
+	 indefinitely.
+
+DESCRIPTION:
+	 xinit resets the process group in startServer, but the server, in
+	 server/os/4.2bsd/osinit.c, tries to do a write to filedes 2 to
+	 determine if the unit is open.  This causes the server process to
+	 block since it is no longer in the distinguished process group of
+	 the terminal unit 2 is open to.
+
+REPEAT-BY:
+	Run ksh, then type "xinit"
+
+FIX:
+	Many ... hard to say what is best.
+
+	Quick fix, invoke xinit with stderr redirected (as in
+	"xinit 2>/dev/null")
+
+	Fix os/4.2bsd/osinit.c to check unit 2 being open some other way.
+	However, if unit 2 is open and an error message is written, the
+	same problem occurs.  
+
+	I tried a couple of changes to xinit (and Xsun), but they cause
+	other problems:
+	  * if you change the distinguished pg of fd 2 via a TIOCSPGRP
+	    ioctl, then when you wish to exit X the original xinit
+	    process blocks when it tries to print the "waiting for
+	    server to terminate" message.
+	  * removing the control terminal via a TIOCNOTTY causes the
+	    Xsun server to die elsewhere...I'm not sure where since
+	    my dbx refuses to load the Xsun I built with -g
+	  * trying to change the control terminal of either the client
+	    or the xinit process results in the login session terminating
+	    when the xinit does -- the result of the killpg signal
+	    clobbering the parent too?
+
+	Since I don't understand the relationship of all the parts quite
+	well enough yet, I'll leave it to you folks to suggest the
+	proper fix.  For now, I'll just redirect my stderr to /dev/null.

@@ -1,0 +1,35 @@
+Xmh*Geometry:			508x750
+Xmh*Command.BorderWidth:	1
+Xmh*folders.Command.BorderWidth:0
+Xmh*toc*cursor:			left_ptr
+Xmh.*close.label:		Close Window
+Xmh*compose.label:		Compose Message
+Xmh*folderButtons.open.label:	Open Folder
+Xmh*folderButtons.openInNew.label:Open Folder in New Window
+Xmh*folderButtons.create.label:	Create Folder
+Xmh*folderButtons.delete.label:	Delete Folder
+Xmh*inc.label:			Incorporate New Mail
+Xmh*next.label:			View Next Message
+Xmh*prev.label:			View Previous
+Xmh*delete.label:		Delete
+Xmh*move.label:			Move
+Xmh*copy.label:			Copy
+Xmh*unmark.label:		UnMark
+Xmh*viewNew.label:		View In New
+Xmh*reply.label:		Reply
+Xmh*forward.label:		Forward
+Xmh*useAsComp.label:		Use as Composition
+Xmh*commit.label:		Commit Changes
+Xmh*print.label:		Print
+Xmh*pack.label:			Pack Folder
+Xmh*sort.label:			Sort Folder
+Xmh*rescan.label:		Rescan Folder
+Xmh*pick.label:			Pick
+Xmh*openSeq.label:		Open Sequence
+Xmh*addToSeq.label:		Add to Sequence
+Xmh*removeFromSeq.label:	Remove from Sequence
+Xmh*deleteSeq.label:		Delete Sequence
+Xmh*edit.label:			Edit Message
+Xmh*save.label:			Save Message
+Xmh*send.label:			Send
+Xmh*reset.label:		New Headers

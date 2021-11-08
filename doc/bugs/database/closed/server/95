@@ -1,0 +1,58 @@
+Return-Path: karlton@wsl.dec.com
+Received: by EXPO.LCS.MIT.EDU; Sat, 14 May 88 02:01:40 EDT
+Received: from gilroy.dec.com by decwrl.dec.com (5.54.4/4.7.34)
+	id AA00556; Fri, 13 May 88 20:16:31 PDT
+Received: from localhost by gilroy.dec.com (5.54.4/4.7.34)
+	id AA13550; Fri, 13 May 88 20:16:27 PDT
+Message-Id: <8805140316.AA13550@gilroy.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: hania@wsl.dec.com, susan@wsl.dec.com, karlton@wsl.dec.com
+Subject: SaveSet handling of window positions
+Date: Fri, 13 May 88 20:16:25 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+
+### bug number:   492
+### area:         server
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	any
+
+CLIENT OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+SYNOPSIS:
+	 SaveSet processing is putting window down off by BW of window.
+
+DESCRIPTION:
+	The code for dealing with the outer (rather than inner) top
+	left corner of the window was fixed in the R2 release for
+	the Reparent call. (pWin->clientWinSize.x is now correctly
+	set to "x + bw" instead of "x" as in R1. Similarly for y.
+
+	The call made to ReparentWindow in HandleSaveSet was not adjusted
+	to this proper semantics.	
+
+REPEAT-BY:
+	Kill reparenting window manager and start it up again. All of the
+	windows with non-zero borders will crawl down and right.
+
+FIX:
+	In window.c:HandleSaveSet, change the call
+
+            ReparentWindow(pWin, pParent, pWin->absCorner.x,
+                           pWin->absCorner.y, client);
+	to
+
+            ReparentWindow(pWin, pParent, pWin->absCorner.x-pWin->borderWidth,
+                           pWin->absCorner.y-pWin->borderWidth, client);
+
+

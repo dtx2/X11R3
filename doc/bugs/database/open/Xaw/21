@@ -1,0 +1,77 @@
+Return-Path: masscomp!malaga!aat@eddie.mit.edu
+Received: by expo.lcs.mit.edu; Wed, 13 Jul 88 17:17:25 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA02521@EDDIE.MIT.EDU>; Wed, 13 Jul 88 17:15:28 EDT
+From: masscomp!malaga!aat@eddie.mit.edu
+Message-Id: <8807132115.AA02521@EDDIE.MIT.EDU>
+Date: 13-Jul-1988 16:16-EDT (Wednesday)
+To: xbugs@expo.lcs.mit.edu
+Cc: mitch, masscomp!aat
+Subject: Label Widget Sensitivity Slightly Broken
+
+### bug number:   761
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	MASSCOMP 5400
+
+CLIENT OPERATING SYSTEM:
+	RTU (Unix)
+
+DISPLAY:
+	GA1000
+
+SYNOPSIS:
+	The Xaw manual (p. 17) states that changing the XtNsensitive resource
+	will cause the button to "display a different border and a stippled
+	string when the Label widget is set to insensitive."  If one Realizes
+	a Label widget, and subsequently changes the sensitivity with a 
+	XtSetValues call, the label string remains unchanged (in conflict
+	with the manual description).
+
+DESCRIPTION:
+	The label string text is displayed with different attributes depending 
+	on the sensitivity, but only during a Redisplay call. The Label 
+	SetValues procedure does not cause a Redisplay when the sensitivity is
+	changed, hence the stippling effect as described in the manual
+	will be seen only upon widget redisplay.
+
+REPEAT-BY:
+	See SYNOPSIS.
+
+FIX:
+	I inserted code in Label.c in SetValues(), to check the sensitivity
+	and make sure TRUE was returned when the sensitivity changed (to 
+	signal that a redisplay would be desirable).  
+	I thought of putting the code in the Core SetValues
+	procedure, but realized that not all subclasses of Core necessarily
+	(will) have something that would be visibly desensitized, and hence 
+	the best place seemed in Label.  The code is as follows:
+	
+	-----------------------------------------------------------------
+
+	static Boolean SetValues(current, request, new)
+				.
+				.
+				.
+	        Boolean sensitivity_changed = False;
+				.
+				.
+				.
+    		if (curlw->core.sensitive != newlw->core.sensitive)
+			sensitivity_changed = True;
+				 
+    		return( was_resized  || sensitivity_changed);
+	-----------------------------------------------------------------
+
+SUBMITTED BY:
+Andy Takats, 
+uunet!masscomp!aat
+
+Acknowledgement of receipt would be appreciated.
+

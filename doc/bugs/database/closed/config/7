@@ -1,0 +1,76 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Tue, 15 Mar 88 09:32:04 EST
+Message-Id: <8803151432.AA24686@EXPO.LCS.MIT.EDU>
+Return-Path: <@RELAY.CS.NET,@RELAY.CS.NET:temin@software.org>
+Received: from RELAY.CS.NET (RELAY.CS.NET) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 132697; 15 Mar 88 09:25:57 EST
+Received: from relay2.cs.net by RELAY.CS.NET id ad10667; 15 Mar 88 9:09 EST
+Received: from software.org by RELAY.CS.NET id aa03770; 15 Mar 88 9:03 EST
+Received: by spc-gould (5.52/5.17)
+	id AA27777; Tue, 15 Mar 88 07:17:48 EST
+Date: Tue, 15 Mar 88 07:17:48 EST
+From: Aaron Temin <temin%software.org@relay.cs.net>
+To: rws@zermatt.lcs.mit.edu
+Subject: making X11R2 on Apollo DN3000
+Cc: begeddov%software.org@relay.cs.net, temin%software.org@relay.cs.net
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Tue, 15 Mar 88 09:32 EST
+Resent-Message-Id: <880315093228.7.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   119
+### area:         config
+### severity:     
+### assigned to:  
+### status:       closed
+
+Bob,
+
+Gabe and I found that making the new release on our Apollo
+DN3000 was pretty straightforward, but ran across a couple
+of things that it might be worthwhile for someone up
+your way to know.  (Maybe for R3, after they release their
+new OS, it'll go as smoothly as on a Sun :-)).  I'll offer
+these up over xpert as well.
+
+While I'm at it, let me add my kudos to the others.  I think
+the job being done with the X software is superb given the
+constraints, and a good model for how to promulgate ideas
+(i.e. the X protocol) through the public domain.
+
+Thanks,
+Aaron Temin
+Software Productivity Consortium
+arpanet: temin%software.org@relay.cs.net
+
+---------------------------------
+Comments on building X11R2 on Apollo DN3000, SR 9.7:
+
+Comments on installing X11 release 2 on Apollo DN3000 SR 9.7.
+
+- Files <sys/fcntl.h> and <sys/sysmacros.h> are asked for but
+  missing [I wish I could recall who asked for fcntl.h, since
+  that is supposed to be superceded by Xos.h.]
+
+  * Solution: fcntl.h exists in <fcntl.h>.  sys/sysmacros.h doesn't
+   seem to be on the Apollo at all (though our Sun has it).
+   Create directory ./X11/sys, since all calls to the compiler include
+   a switch to look in ./X11.  Stuff the two files (a link suffices
+   for fcntl.h) into ./X11/sys/ and all is happy.
+
+- Warning from makedepend on apollo-specific includes in
+  ./server/ddx/apollo  for *.ins.c files (#eject directive):
+  just a warning, ok to ignore it.
+
+- ./server/ddx/apollo contains clients (tox and todm) that need libX11.a so
+  ./lib and ./server cannot completely be made in parallel as
+  mentioned in the apollo release notes.  One can make them in
+  parallel and then go back and make tox and todm after libX11.a
+  exists (the server itself will be fine).
+
+- imake doesn't work on the apollos (due to cpp not working
+  properly).  We got around this by using a Sun and NFS, but then
+  had to explicitly #undef sun and #define apollo in
+  ./util/imake.includes/imake.tmpl (ugly).
+
+
+

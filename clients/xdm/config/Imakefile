@@ -1,0 +1,9 @@
+/**/#
+/**/# This Makefile is simply a convenience and isn't used in the main build.
+/**/#
+
+#define IHaveSubdirs
+#define PassCDebugFlags 'CDEBUGFLAGS=$(CDEBUGFLAGS)'
+        SUBDIRS = default fileserver
+
+MakeSubdirs($(SUBDIRS))

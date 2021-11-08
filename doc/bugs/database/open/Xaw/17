@@ -1,0 +1,56 @@
+Return-Path: masscomp!mouse!mitch@eddie.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 12 Jul 88 18:23:10 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA07046@EDDIE.MIT.EDU>; Tue, 12 Jul 88 18:21:20 EDT
+Received: from localhost by mouse.masscomp.com id aa01666; 12 Jul 88 15:35 EDT
+To: masscomp!mit-eddie!expo.lcs.mit.edu!xbugs@mouse.masscomp.com
+Subject: Viewport widget borders (Xaw/Viewport.c)
+Date: Tue, 12 Jul 88 15:35:36 -0400
+From: mitch@mouse.masscomp.com
+Message-Id:  <8807121535.aa01666@mouse.masscomp.com>
+
+### bug number:   757
+### area:         Xaw
+### severity:     low
+### comments:     
+
+
+
+e-mail: uunet!masscomp!mitch
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	MASSCOMP 5400
+
+CLIENT OPERATING SYSTEM:
+	RTU (Unix)
+
+DISPLAY:
+	GA1000
+
+SYNOPSIS:
+	Can't seem to get visible borders on a viewport widget.
+
+REPEAT-BY:
+	Run the xwidgets toolkit example with the following defaults file
+	as your XENVIRONMENT variable.
+
+FIX:
+	Wish I knew.
+
+
+-------------------
+
+*viewport.allowHoriz: on
+*viewport.allowVert: on
+*viewport.useRight: on
+*viewport.useBottom: on
+*viewport.forceBars: on
+*viewport.borderWidth: 5
+*viewport.borderColor: lightblue
+*viewport.clip.background: red
+*Scrollbar*background:blue
+

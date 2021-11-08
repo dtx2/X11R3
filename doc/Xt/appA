@@ -1,0 +1,31 @@
+.bp
+\&
+.sp 1
+.ce 3
+\s+1\fBAppendix A\fP\s-1
+
+\s+1\fBResource File Format\fP\s-1
+.sp 2
+.LP
+.XS
+\fBAppendix A \- Resource File Format\fP
+.XE
+A resource file contains text representing the default resource values for an
+application or set of applications.
+The resource file is an ASCII text file that consists of a number of lines
+with the following EBNF syntax:
+.TS
+l l .
+resourcefile	= {line "\\\\n"}.
+line	= (comment | production).
+comment	= "!" string.
+production	= resourcename ":" string.
+resourcename	= ["*"] name {("." | "*") name}.
+string	= {<any character not including eol>}.
+name	= {"A"-"Z" | "a"-"z" | "0"-"9"}.
+.TE
+.LP
+If the last character on a line is a backslash (\\),
+that line is assumed to continue on the next line.
+.LP
+To include a newline character in a string, use ``\\n''.

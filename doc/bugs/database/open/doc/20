@@ -1,0 +1,37 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by expo.lcs.mit.edu; Thu, 7 Apr 88 08:37:38 EDT
+Received: by harvard.harvard.edu; Thu, 7 Apr 88 07:39:09 EST
+Received: from jeeves.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA27566; Thu, 7 Apr 88 08:20:10 EDT
+Received: by jeeves.ksr.com (3.2/SMI-3.2)
+	id AA03007; Thu, 7 Apr 88 08:20:08 EDT
+Message-Id: <8804071220.AA03007@jeeves.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: inconsistency in xinit man page
+Reply-To: ksr!benson@harvard.harvard.edu
+Date: Thu, 07 Apr 88 08:20:00 EDT
+From: Benson I. Margulies                         Kendall Square Research Corp. <ksr!benson@harvard.harvard.edu>
+
+### bug number:   332
+### area:         doc
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     other people have complained about this and the X :0 vs X 0
+
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	the man page Xserver seems to disagree on precisely what the 
+syntax of client and server program names is supposed to be.
+
+DESCRIPTION:
+
+There is a paragraph which claims that if the first argument or first
+argument following -- does NOT begin with . or /, then its an option.
+But the examples at the end show Xsun, not /usr/new/Xsun. Is there
+some other disambiguational rule?
+
+

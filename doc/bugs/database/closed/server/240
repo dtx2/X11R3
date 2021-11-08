@@ -1,0 +1,59 @@
+Return-Path: xpiinc!sfw@uunet.uu.net
+Received: by expo.lcs.mit.edu; Tue, 4 Oct 88 23:09:23 EDT
+Received: from xpiinc.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA05896; Tue, 4 Oct 88 23:07:15 EDT
+Received: from opus.xpiinc.uu.net (opus) by xpiinc.uu.net (5.5/SMI-3.2)
+	id AA24706; Tue, 4 Oct 88 16:00:56 EDT
+Message-Id: <8810042000.AA10545@opus.xpiinc.uu.net>
+Date: Tue, 4 Oct 88 16:00:49 EDT
+From: Steven F. Williams <xpiinc!sfw@uunet.uu.net>
+To: uunet!xbugs%expo.lcs.mit.edu@uunet.uu.net
+Subject: server bug report
+
+### bug number:   1050
+### area:         server
+### severity:     medium
+### comments:     
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	 Sun 2/50 or Sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or 3.5
+
+DISPLAY:
+	Sun 2/50 or Sun 3/50 monochrome 
+
+SYNOPSIS:
+	 Server drops connection during request with length > MAX_REQUEST_SIZE
+
+DESCRIPTION:
+	I was running one of the X Test Consortiums X11 protocol verification
+	tests (BadLength3_r). This test sends a request with a value in
+	the length field greater than the MAX_REQUEST_SIZE expected by the 
+	server. What happens is the test never really sends all that data
+	(which may be a bug with the test). However, the server gets stuck
+	in a loop saying give me the data, give me the data ...
+	until it times out and drops the connection. 
+
+	The protocol spec says that "Requests larger than this (the max
+	request size) generate a Length error, and the server will
+	read and discard the entire request."  Because of the timeout
+	the client never receives the Length error. Perhaps there 
+	should be a check for length error before the actual read
+	is attempted.
+
+REPEAT-BY:
+
+	running the BadLength3_r X11 protocol verification test. I am
+	not allowed to redistribute this test, although, I believe
+	there is a copy of the test suite at MIT. See RWS.
+
+FIX:
+	check for length error before trying to read data or on timeout
+	send the Length error then drop the connection.
+

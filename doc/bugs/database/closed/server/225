@@ -1,0 +1,62 @@
+Return-Path: rajeev@swiss-mocha.mit.edu
+Received: by expo.lcs.mit.edu; Wed, 28 Sep 88 20:53:13 EDT
+Received: from swiss-mocha.mit.edu by garcon.mit.edu (5.51/5.18)  id AA01109; Wed, 28 Sep 88 20:40:13 EDT
+Received: by swiss-mocha.MIT.EDU (1.2/Ultrix2.0-B)
+	id AA28829; Wed, 28 Sep 88 20:51:28 edt
+Date: Wed, 28 Sep 88 20:51:28 edt
+From: rajeev@swiss-mocha.mit.edu (Rajeev Jayavant)
+Message-Id: <8809290051.AA28829@swiss-mocha.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: Xqvss bug under Ultrix 2.2
+
+### bug number:   1019
+### area:         server
+### severity:     medium
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VS2000
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.2
+
+DISPLAY:
+	QVSS
+
+SYNOPSIS:
+	 cursor always appears as a solid white rectangle
+
+DESCRIPTION:
+	neither clients nor window managers could change cursor
+appearance.  It's really hard to see a solid white cursor on a white
+xterm background!
+
+REPEAT-BY:
+	run Xqvss!  The server was built from the sources on expo with
+all of the updates applied using "patch".  I haven't tried compiling
+this server under Ultrix 2.0, but I had previously obtained an Ultrix
+2.0 binary of a Xqvss server that ran fine under 2.0 but exhibited the
+cursor problem under 2.2.
+
+FIX:
+This fix was implemented based on a suggestion from Alan Mimms
+(alan@apple.com).  It works under Ultrix 2.2, but I don't know if it
+breaks things under other systems.
+
+*** server/ddx/dec/qvss/qvss_io.c.orig	Wed Dec 23 01:28:20 1987
+--- server/ddx/dec/qvss/qvss_io.c	Wed Sep 28 16:25:22 1988
+***************
+*** 606,611 ****
+--- 606,612 ----
+      }
+      for ( i=0; i<16; i++)
+  	qvInfo->cursorbits[i] = ((short *)pCurs->devPriv[ pScr->myNum])[i];
++     ioctl(fdQVSS, QIOWCURSOR, (short *)pCurs->devPriv[ pScr->myNum]);
+      return TRUE;
+  }
+  
+
+

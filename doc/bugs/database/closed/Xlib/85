@@ -1,0 +1,22 @@
+Return-Path: susan@wsl.dec.com
+Received: by expo.lcs.mit.edu; Mon, 17 Oct 88 18:55:17 EDT
+Received: from gnome7.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA03818; Mon, 17 Oct 88 15:55:08 PDT
+Received: by gnome7.pa.dec.com (5.57/4.7.34)
+	id AA02821; Mon, 17 Oct 88 15:01:13 PDT
+Message-Id: <8810172201.AA02821@gnome7.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu, mento@wsl.dec.com
+Subject: Xlib function: XFindOnExtensionList() not implemented
+Date: Mon, 17 Oct 88 15:01:11 PDT
+From: Susan Angebranndt <susan@wsl.dec.com>
+
+### bug number:   1081
+### area:         Xlib
+### severity:     medium
+### comments:     yup, not there...
+
+
+XFindOnExtensionList() is declared in Xlib.h (and documented in manual)
+but there's no implementation.  
+
+

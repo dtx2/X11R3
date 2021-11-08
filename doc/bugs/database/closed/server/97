@@ -1,0 +1,44 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by expo.lcs.mit.edu; Wed, 6 Apr 88 16:16:48 EDT
+Date: Wed, 6 Apr 88 16:16 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: GetImage and not viewable windows
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <880406161627.3.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   321
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	don't care
+
+DISPLAY:
+	all
+
+AREA:
+	server
+
+SYNOPSIS:
+	GetImage should cause BadMatch if a window isn't viewable, but doesn't.
+
+DESCRIPTION:
+	ditto.
+
+REPEAT-BY:
+	look at the code, or try it.
+
+FILES:
+	server/dix/dispatch.c
+
+FIX:
+	the /* check for being on screen */ should be augmented
+	to make sure that the window is realized.
+
+

@@ -1,0 +1,38 @@
+   1  03/17 michael.grossman@  xterm -ls option not working  <<### bug number: 159 ### area: xterm 
+   2  03/25 kit@athena.mit.ed  Bug in xterm.  <<### bug number: 222 ### area: xterm ### severity: #
+   3  03/10 jim@expo.lcs.mit.  xterm -ls broken?  <<### bug number: 61 ### area: xterm ### severity
+   4  03/25 karlton@decwrl.de  login_shell variable misplaced in xterm:main.c  <<### bug number: 22
+   5  03/28 swick@athena.mit.  xterm hardcodes scrollbar attributes  <<### bug number: 234 ### area
+   6  04/01 jayaram@miranda.s  xterm ignores '-ls' option  <<### bug number: 245 ### area: xterm ##
+   7  04/06 jim@expo.lcs.mit.  xterm multiclick time should be settable (with fix)  <<### bug numbe
+   8  04/06 jim@expo.lcs.mit.  xterm should allow redefinition of character classes [with fix]  <<#
+   9  04/06 jim@expo.lcs.mit.  xterm should allow tailoring of line cutting [with fix]  <<### bug n
+  10  04/07 mcvax!cwi.nl!guid   <<### bug number: 334 ### area: xterm ### severity: ### assigned to
+  11  03/10 nih-csl!jip@ncifc  xterm BUG (tek mode reverse video problems)  <<### bug number: 83 ##
+  12  03/23 jim@expo.lcs.mit.  class of xterm wrong  <<### bug number: 201 ### area: xterm ### seve
+  13  03/29 kddlab!uunet.uu.n  xterm bugs.  <<### bug number: 279 ### area: xterm ### severity: ###
+  14  03/24 beorn%banzai.berk  xterm bug  <<### bug number: 229 ### area: xterm ### severity: ### a
+  15  03/10 jim@expo.lcs.mit.  overriding xterm "ti" and "te" termcap items  <<### bug number: 82 #
+  16  03/24 beorn%banzai.berk  bug in xterm  <<### bug number: 231 ### area: xterm ### severity: ##
+  17  04/05 ksr!benson@harvar  -S to xterm on Sun seems not to work  <<### bug number: 311 ### area
+  18  05/04 jim@vx.lcs.mit.ed  fix for xterm -S  <<### bug number: 450 ### area: xterm ### severity
+  19  05/18 jim@expo.lcs.mit.  xterm -l (logging) doesn't work  <<### bug number: 515 ### area: xte
+  20  04/03 mcvax!doc.ic.ac.u  bugs in xterm/button.c  <<### bug number: 314 ### area: xterm ### se
+  21  05/17 ksr!benson@harvar  proposed xterm feature  <<### bug number: 501 ### area: xterm ### se
+  22  05/20 swick@athena.mit.  xterm cursor color wrong when not focus  <<### bug number: 525 ### a
+  23  06/12 ksr!benson@harvar  WINDOWID is apparently all wrong in xterm  <<### bug number: 593 ###
+  24  06/08 karynk@spray.calc  xterm bug (in bcopy call)  <<### bug number: 601 ### area: xterm ###
+  25  06/21 jtkohl@athena.mit  xterm (X11R2) has no documented option to disable utmp munging  <<##
+  26  06/27 bst@research.att.  sunOs 4.0 vs xterm  <<### bug number: 644 ### area: xterm ### severi
+  27  06/11 mcvax!cwi.nl!guid  xterm handling of some DEC special keys broken  <<### bug number: 59
+  28  06/25 elsie!ado@ncifcrf  xterm misses a "feature" of VT100 save/restore cursor sequences  <<#
+  29  06/26 elsie!ado@ncifcrf   <<### bug number: 653 ### area: xterm ### severity: low ### comment
+  30  06/26 elsie!ado@ncifcrf   <<### bug number: 654 ### area: xterm ### severity: low ### comment
+  31  06/09 jim@expo.lcs.mit.  xterm pointerShape resource broken  <<### bug number: 578 ### area: 
+  32  03/10 jim@expo.lcs.mit.  xterm: window changes to rlogin commands  <<### bug number: 63 ### a
+  33  03/04 jim@expo.lcs.mit.  xterm dumps core when compiled with gcc  <<### bug number: 28 ### ar
+  34  03/17 ksr!benson@harvar  xterm suggestion  <<### bug number: 168 ### area: xterm ### severity
+  35  03/29 jim@expo.lcs.mit.  xterm scrollbar and resize bug  <<### bug number: 277 ### area: xter
+  36  03/29 kddlab!uunet.uu.n  xterm bugs.  <<### bug number: 280 ### area: xterm ### severity: ###
+  37  04/26 jim@vx.lcs.mit.ed  Bug in xterm DECCOLM handling  <<### bug number: 419 ### area: xterm
+  38  06/26 elsie!ado@ncifcrf   <<### bug number: 656 ### area: xterm ### severity: low ### comment

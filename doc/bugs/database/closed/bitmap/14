@@ -1,0 +1,110 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 9 Jun 88 20:33:25 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07385; Thu, 9 Jun 88 20:32:00 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 9 Jun 88 16:31:49 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA19299; Thu, 9 Jun 88 17:31:02 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 9 Jun 88 17:33:07 pdt
+Message-Id: <8806100033.AA08224@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: bitmap fails when wm makes it too small
+X-Mailer: mh6.5
+Date: Thu, 09 Jun 88 17:33:03 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   586
+### area:         bitmap
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	enhancement
+DESCRIPTION:
+	A bitmap grid can be requested that is larger than the window manager
+	will allow. Bitmap goes ahead and uses the space as best it can,
+	resulting in command buttons or the image grids becoming clipped or
+	just plain missing.
+
+	It has been requested that a message is given in this case, so the
+	user can abort the program without waiting for the large grid to be
+	drawn, having it cover the entire screen and unable to quit the bitmap
+	program via the QUIT button.
+
+	Below is the support for such a message. It is displayed any time the
+	window is not large enough for the entire grid, command buttons and
+	image grids.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/bitmap/bitmap.c.old	Thu Jun  9 11:12:16 1988
+--- clients/bitmap/bitmap.c	Thu Jun  9 13:39:42 1988
+***************
+*** 92,97
+  void ClearOrSetAll(), InvertAll(),
+        ClearOrSetArea(), InvertArea(), CopyOrMoveArea(),
+        Line(), Circle(), FloodFill(),
+        SetHotSpot(), ClearHotSpot(), Quit();
+  boolean WriteOutput();
+  
+
+--- 92,98 -----
+  void ClearOrSetAll(), InvertAll(),
+        ClearOrSetArea(), InvertArea(), CopyOrMoveArea(),
+        Line(), Circle(), FloodFill(),
++       DialogInputHandler(),
+        SetHotSpot(), ClearHotSpot(), Quit();
+  boolean WriteOutput();
+  
+***************
+*** 1251,1256
+    x_room /= image.width;
+    y_room /= image.height;
+    square_size = min (x_room, y_room);
+    if (square_size < 1) square_size = 1;
+  
+    /* set the grid window's dimensions */
+
+--- 1252,1273 -----
+    x_room /= image.width;
+    y_room /= image.height;
+    square_size = min (x_room, y_room);
++   if (square_size < 1 || outer_height < right_side_bottom) {
++      int done = FALSE;
++      while (!done) {
++ 	int result;
++ 	static char *strings[2] = { "Yes", "No"};
++ 
++ 	result = dialog(outer_window, font,
++ 		"Window will be truncated...Continue?",
++ 			"No will abort program, Yes will continue",
++ 				strings, 2, DialogInputHandler); 
++ 	if (result == 1)
++ 	   Quit();
++ 	else
++ 	   done = TRUE;
++      }
++   }
+    if (square_size < 1) square_size = 1;
+  
+    /* set the grid window's dimensions */
+***************
+*** 1914,1920
+      return (!this_window);
+      }
+  
+! DialogInputHandler (event)
+    XEvent *event;
+    {
+    if (event->type == Expose || event->type == ConfigureNotify)
+
+--- 1931,1937 -----
+      return (!this_window);
+      }
+  
+! void DialogInputHandler (event)
+    XEvent *event;
+    {
+    if (event->type == Expose || event->type == ConfigureNotify)
+

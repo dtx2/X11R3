@@ -1,0 +1,68 @@
+Return-Path: blia.UUCP!mao@cgl.ucsf.edu
+Received: by expo.lcs.mit.edu; Wed, 18 May 88 21:16:21 EDT
+Received: by cgl.ucsf.edu (5.54/GSC4.5)
+	id AA28552; Wed, 18 May 88 18:12:40 PDT
+Received: by blia.BLI (5.51/4.37.5)
+	id AA08921; Wed, 18 May 88 09:17:16 PDT
+Date: Wed, 18 May 88 09:17:16 PDT
+From: blia.UUCP!mao@cgl.ucsf.edu (Mike Olson)
+Message-Id: <8805181617.AA08921@blia.BLI>
+To: xbugs@expo.lcs.mit.edu
+Subject: source code control system problems
+
+### bug number:   517
+### area:         config
+### severity:     enhancement
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	machine-independent
+
+CLIENT OPERATING SYSTEM:
+	system-independent
+
+DISPLAY:
+	display-independent
+
+SYNOPSIS:
+	 Use of source code control in distributed files is inconsistent
+	 and occasionally troublesome.
+
+DESCRIPTION:
+	 when i modify source distribution files (including Imakefiles),
+	 i use RCS to track changes that i have made.  this makes it
+	 possible for me to apply patches distributed on the network, and
+	 to back up to a known version if necessary.
+
+	 Many (but not all) source files distributed under R1 were maintained
+	 using RCS by the developers.  others used SCCS.  i propose that the
+	 control system be standardized.  also, the $Source$ directive under
+	 RCS makes it impossible for me to use 'ci -k' to save the file
+	 *exactly* as distributed.  'ci -k' keeps the same version number
+	 and author name listed in the source file.  if i can't use 'ci -k',
+	 patch will fail on the RCS header when i try to apply a distributed
+	 fix.
+
+REPEAT-BY:
+	under R2, in directory ./contrib/andrew, try
+		% ci -k Makefile
+
+	in any other R2 directory, examine the source files; most do not
+	include RCS headers.
+
+FIX:
+	choose a standard source code control system for X11, and use it
+	consistently.  do not include site-specific fields; under RCS,
+	the only line that is necessary is
+
+		$Header$
+===========================
+
+					mike olson
+					britton lee, inc.
+					...!ucbvax!mtxinu!blia!mao
+					olson@ucbvax.berkeley.edu
+

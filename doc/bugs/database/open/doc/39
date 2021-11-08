@@ -1,0 +1,45 @@
+Return-Path: elsie!ado@ncifcrf.gov
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 08:32:52 EDT
+Received: by fcs280s.ncifcrf.gov (4.0/NCIFCRF-1.0)
+	id AA12020; Wed, 29 Jun 88 08:24:44 EDT
+Received: by elsie.UUCP (5.51/4.7)
+	id AA12726; Tue, 28 Jun 88 16:15:38 EDT
+Date: Tue, 28 Jun 88 16:15:38 EDT
+From: elsie!ado@ncifcrf.gov (Arthur David Olson)
+Message-Id: <8806282015.AA12726@elsie.UUCP>
+Apparently-To: xbugs@expo.lcs.mit.edu
+
+### bug number:   655
+### area:         doc
+### severity:     low
+### comments:     
+
+-------------------------------------------------------------------------------
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.5
+
+DISPLAY:
+	Sun B&W
+
+SYNOPSIS:
+	AllPlanes is either misimplemented or misdocumented
+
+DESCRIPTION:
+	Page 6 of the "Xlib - C Language X Interface" writeup shows
+		AllPlanes()
+	as the invocation, but <X11/Xlib.h> has
+		#define AllPlanes		(~0)
+	as the definition, meaning that parentheses should not appear
+	in the invocation.
+
+FIX:
+	Take your pick of changing the header or changing the writeup.
+-- 
+	ado@ncifcrf.gov			ADO is a trademark of Ampex.
+

@@ -1,0 +1,68 @@
+Return-Path: jlf%sierra.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Sat, 6 Aug 88 03:03:37 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA24900; Fri, 5 Aug 88 11:53:33 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA18027; 3.2/CRI-3.1; Fri, 5 Aug 88 11:59:52 CDT
+Received: by jlf.cray.com
+	id AA01655; 3.2/CRI-3.1; Fri, 5 Aug 88 11:22:57 CDT
+Date: Fri, 5 Aug 88 11:22:57 CDT
+From: jlf%sierra.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8808051622.AA01655@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: XAllocColorPlanes bug report
+Cc: bobo@sierra.cray.com, hrp@sierra.cray.com, joel@uf.msc.umn.edu,
+        wtg@sierra.cray.com
+
+### bug number:   829
+### area:         Xlib
+### severity:     low
+### comments:     [done -- jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+
+	XAllocColorPlanes failed test suite
+
+DESCRIPTION:
+
+	XAllocColorPlanes was not unpacking the data from the input buffer
+	correctly.
+
+REPEAT-BY:
+
+	Run test for XAllocColorPlanes
+
+FIX:
+	Use _XRead32 instead of _XRead.
+
+Xlib/XAllPlanes.c	Wed Jul 20 11:00:57 1988
+***************
+*** 38,44 ****
+  	*bmask = rep.blueMask;
+  
+  	/* sizeof(CARD32) = 4 */
+! 	_XRead32 (dpy, (char *) pixels, (long)(ncolors * 4));
+      }
+  
+      UnlockDisplay(dpy);
+--- 38,44 ----
+  	*bmask = rep.blueMask;
+  
+  	/* sizeof(CARD32) = 4 */
+! 	_XRead (dpy, (char *) pixels, (long)(ncolors * 4));
+      }
+  
+      UnlockDisplay(dpy);
+

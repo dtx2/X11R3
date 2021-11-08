@@ -1,0 +1,50 @@
+Return-Path: henry@garp.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 22 Sep 88 21:14:21 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA13994; Thu, 22 Sep 88 21:14:26 EDT
+Received: by GARP.MIT.EDU with sendmail-5.54/4.7 
+	id <AA01270@GARP.MIT.EDU>; Thu, 22 Sep 88 21:14:20 EDT
+Message-Id: <8809230114.AA01270@GARP.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: [Roger A. Roach: xmh (Print)]
+Date: Thu, 22 Sep 88 21:14:17 EDT
+From: Henry Mensch <henry@garp.mit.edu>
+
+### bug number:   1000
+### area:         xmh
+### severity:     medium
+### comments:     [bug-trackers: watch for 4 digits in bug number...]
+
+this seems to be true for any print errors.  i had a bad command
+string for the PrintCommand resource and saw the same response.
+
+this is on both RT/PCs running AOS and uVAXes running 4.3BSD.
+
+--
+-- Henry Mensch / <henry@ATHENA.MIT.EDU>
+-- Project Athena Quality Assurance
+
+REFERENCE:
+
+------- Forwarded Message
+
+Received: by E40-PO.MIT.EDU (5.45/4.7) id AA02533; Thu, 22 Sep 88 10:31:00 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA28248; Thu, 22 Sep 88 10:27:22 EDT
+Received: by RAR.MIT.EDU (5.45/4.7) id AA21802; Thu, 22 Sep 88 10:27:11 EDT
+Message-Id: <8809221427.AA21802@RAR.MIT.EDU>
+To: Bugs@ATHENA.MIT.EDU
+Subject: xmh (Print)
+Date: Thu, 22 Sep 88 10:27:07 EDT
+From: Roger A. Roach <rar@ATHENA.MIT.EDU>
+
+
+xmh seems to be having problems printing large files.  I selected two
+rather large mail files (digests, couple hundred lines each) and hit
+the Print button.  (My PrintCommand sends the mail to the X9700
+printer.)  The Print button stayed on for several minutes (5?) and
+then went off with no print being generated.  I assume that lpr timed
+out while trying to send the files to MITVMA.  There should have been
+some error window telling me this.
+
+------- End of Forwarded Message
+
+

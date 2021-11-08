@@ -1,0 +1,39 @@
+# $XConsortium: Imakefile,v 1.11 88/09/06 17:59:29 jim Exp $
+    STD_DEFINES = LibraryDefines
+    CDEBUGFLAGS = LibraryCDebugFlags
+       INCLUDES = -I$(TOP) -I$(INCLUDESRC) -I$(XLIBSRC) -I../include
+           SRCS = XFillZoids.c XBezier.c XPlxVideo.c XTestExt1.c
+           OBJS = XFillZoids.o XBezier.o XPlxVideo.o XTestExt1.o
+       LINTLIBS = $(LINTXLIB)
+
+#if DebugLibXext && ProfileLibXext
+DebuggedAndProfiledLibraryObjectRule()
+#else
+# if DebugLibXext
+DebuggedLibraryObjectRule()
+# else
+#  if ProfileLibXext
+ProfiledLibraryObjectRule()
+#  else
+NormalLibraryObjectRule()
+#  endif
+# endif
+#endif
+
+NormalLibraryTarget(Xext,$(OBJS))
+LintLibraryTarget(Xext,$(SRCS))
+InstallLibrary(Xext,$(USRLIBDIR))
+InstallLintLibrary(Xext,$(LINTLIBDIR))
+
+#if ProfileLibXext
+ProfiledLibraryTarget(Xext,$(OBJS))
+InstallLibrary(Xext_p,$(USRLIBDIR))
+#endif
+
+#if DebugLibXext
+DebuggedLibraryTarget(Xext,$(OBJS))
+#endif
+
+DependTarget()
+
+NormalLintTarget($(SRCS))

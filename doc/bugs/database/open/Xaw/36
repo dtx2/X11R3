@@ -1,0 +1,164 @@
+Return-Path: davy@riacs.edu
+Received: by expo.lcs.mit.edu; Tue, 4 Oct 88 18:04:15 EDT
+Received: from intrepid.riacs.edu by icarus.riacs.edu (5.59/2.0G)
+	   id AA16222; Tue, 4 Oct 88 15:03:45 PDT
+Received: from localhost by intrepid.riacs.edu (5.59/2.0N)
+	   id AA01315; Tue, 4 Oct 88 15:04:23 PDT
+Message-Id: <8810042204.AA01315@intrepid.riacs.edu>
+To: xbugs@expo.lcs.mit.edu
+Subject: Bug in Xaw Scrollbars and Xterm
+Date: Tue, 04 Oct 88 15:04:13 -0700
+From: davy@riacs.edu
+
+### bug number:   1048
+### area:         Xaw
+### severity:     
+### comments:     probably fixed by ralph's new Scrollbar widget interface
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sequent Balance series
+
+CLIENT OPERATING SYSTEM:
+	Dynix 3.0.n
+
+DISPLAY:
+	Anything (we rsh our xterms over to the Sequent to display on Suns).
+
+SYNOPSIS:
+	When running xterm on a sequent, pressing the middle button in the
+	scroll bar (the "thumbwheel") causes xterm to take an arithmetic
+	exception and dump core.
+
+DESCRIPTION:
+	The NotifyThumb routine from the Xaw scrollbar widget passes a
+	float to the callback routine in xterm, ScrollTextTo.  But since
+	the XtCallCallbacks routine declares the call data as a caddr_t,
+	things get all hosed up on a Sequent, since you can't stuff
+	floats into char *'s and vice versa.
+
+	This is going to cause problems on any machine where caddr_t
+	is not the catch-all type.  I don't have a SPARC machine to
+	test it on, but I suspect you might have this problem there,
+	too.
+
+	I would suggest making the callback stuff pass a union around
+	instead of a caddr_t, and putting things like float, long, and
+	char * into the union.  This would be a lot more portable.
+	Actually doing this of course, is left as an exercise. :-)
+
+REPEAT-BY:
+	Run an xterm on a Sequent, and press the middle mouse button in
+	the scrollbar.  Watch it dump core.
+
+FIX:
+	NOTE: This fix is a KLUDGE.  I didn't feel like going through the
+	entire toolkit changing the caddr_t to something else, nor did I
+	feel like finding everything that uses the scrollbar widget and
+	fixing them to use a pointer to a float or whatever.
+
+	My fix was simply to make the NotifyThumb routine pass a long
+	instead of a float, by taking the original float and multiplying
+	by 1000000.0.  Then, in xterm, I changed ScrollTextTo to take
+	the long and divide by 1000000.0, giving a float again.
+
+	Diffs for src/lib/Xaw/Scroll.c and src/clients/xterm/scrollbar.c
+	are enclosed below, separated by a line of "#"s.
+
+*** /tmp/,RCSt1001300	Tue Oct  4 15:00:27 1988
+--- scrollbar.c	Tue Oct  4 13:52:03 1988
+***************
+*** 1,5 ****
+  /*
+!  *	$Header: scrollbar.c,v 1.1 88/10/04 13:37:47 root Exp $
+   */
+  
+  #include <X11/copyright.h>
+--- 1,5 ----
+  /*
+!  *	$Header: /u9/src/X.V11R2/src/clients/xterm/RCS/scrollbar.c,v 1.2 88/10/04 13:51:08 root Exp $
+   */
+  
+  #include <X11/copyright.h>
+***************
+*** 41,47 ****
+  extern void bcopy();
+  
+  #ifndef lint
+! static char rcs_id[] = "$Header: scrollbar.c,v 1.1 88/10/04 13:37:47 root Exp $";
+  #endif	/* lint */
+  
+  /* Event handlers */
+--- 41,47 ----
+  extern void bcopy();
+  
+  #ifndef lint
+! static char rcs_id[] = "$Header: /u9/src/X.V11R2/src/clients/xterm/RCS/scrollbar.c,v 1.2 88/10/04 13:51:08 root Exp $";
+  #endif	/* lint */
+  
+  /* Event handlers */
+***************
+*** 319,325 ****
+--- 319,329 ----
+  static void ScrollTextTo(scrollbarWidget, closure, topPercent)
+  	Widget scrollbarWidget;
+  	Opaque closure;
++ #ifdef sequent			/* fix sequent alignment problem */
++ 	long topPercent;
++ #else
+  	float topPercent;
++ #endif
+  {
+  	register TScreen *screen = &term->screen;
+  	int thumbTop;	/* relative to first saved line */
+***************
+*** 331,337 ****
+--- 335,346 ----
+     screen->topline    : -Number of lines above the last screen->max_row+1 lines
+  */
+  
++ #ifdef sequent			/* fix sequent alignment problem */
++ 	thumbTop = ((float) topPercent / 1000000.0) * 
++ 		   (screen->savedlines + screen->max_row+1);
++ #else
+  	thumbTop = topPercent * (screen->savedlines + screen->max_row+1);
++ #endif
+  	newTopLine = thumbTop - screen->savedlines;
+  	WindowScroll(screen, newTopLine);
+  }
+
+################################################################
+
+*** /tmp/,RCSt1001305	Tue Oct  4 15:01:44 1988
+--- Scroll.c	Tue Oct  4 13:49:14 1988
+***************
+*** 1,5 ****
+  #ifndef lint
+! static char rcsid[] = "$Header: Scroll.c,v 1.1 88/10/04 13:40:52 root Exp $";
+  #endif lint
+  
+  /***********************************************************
+--- 1,5 ----
+  #ifndef lint
+! static char rcsid[] = "$Header: /u9/src/X.V11R2/src/lib/Xaw/RCS/Scroll.c,v 1.2 88/10/04 13:48:19 root Exp $";
+  #endif lint
+  
+  /***********************************************************
+***************
+*** 644,650 ****
+--- 644,654 ----
+  
+      if (LookAhead(gw, event)) return;
+  
++ #ifdef sequent			/* fix sequent alignment problem */
++     XtCallCallbacks( gw, XtNthumbProc, (long) (w->scrollbar.top * 1000000.0));
++ #else
+      XtCallCallbacks( gw, XtNthumbProc, w->scrollbar.top);
++ #endif
+  }
+  
+  
+

@@ -1,0 +1,60 @@
+Return-Path: sequent!michael@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 20 Sep 88 17:25:30 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA09901; Tue, 20 Sep 88 17:25:22 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA01716; Tue, 20 Sep 88 14:25:02 PDT
+Message-Id: <8809202125.AA01716@decwrl.dec.com>
+To: xbugs@athena.mit.edu
+Subject: R3B - Xaw/Load.c doesn't correct honor "reverseVideo"
+Cc: michael@decwrl.dec.com, len@decwrl.dec.com
+Date: Tue, 20 Sep 88 13:58:19 PDT
+From: Michael Squires <sequent!michael@decwrl.dec.com>
+
+### bug number:   986
+### area:         xload
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 3 (pre-release)
+SYNOPSIS:
+	The load widget doesn't flip the text and scale lines for
+	"reverseVideo".
+DESCRIPTION:
+	Configuration:
+		server:	Sun 3/50, SunOS3.2
+		client: Symmetry S81, Dynix 3.0.12
+
+REPEAT-BY:
+	run "xload", then run "xload -reverse"
+FIX:
+
+*** Load.c	Tue Sep  6 13:41:53 1988
+--- /w/michael/xnew/src/lib/Xaw/Load.c	Tue Sep 20 12:58:43 1988
+***************
+*** 190,195
+  
+  	if (w->core.border_pixel == fg) w->core.border_pixel = bg;
+  	w->load.fgpixel = bg;
+  	w->core.background_pixel = fg;
+      }
+  
+
+--- 219,225 -----
+  
+  	if (w->core.border_pixel == fg) w->core.border_pixel = bg;
+  	w->load.fgpixel = bg;
++ 	w->load.hipixel = bg;
+  	w->core.background_pixel = fg;
+      }
+  
+
+
+			Michael Squires
+			Sequent Computer Systems, Inc.
+			15450 SW Koll Parkway
+			Beaverton, OR  97006
+			(503) 626-5700 x9891
+			sequent!michael@decwrl.dec.com
+			michael%sequent.uucp@tektronix.tek.com@relay.cs.net
+

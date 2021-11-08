@@ -1,0 +1,46 @@
+Return-Path: phil@brl.arpa 
+Received: from ZERMATT.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Sun, 6 Mar 88 23:36:27 EST
+Date:     Sun, 6 Mar 88 23:27:19 EST
+From: Phil Dykstra <phil@brl.arpa>
+To: xbugs@expo.lcs.mit.edu
+Subject:  Can't make World without any servers
+Message-Id:  <8803062327.aa04911@SPARK.BRL.ARPA>
+
+### bug number:   45
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Vax 780
+
+CLIENT OPERATING SYSTEM:
+	4.3 BSD
+
+DISPLAY:
+	[none!]
+
+SYNOPSIS:
+	Can't make World without any servers.
+
+DESCRIPTION:
+	On systems without displays where one would still wish
+	to build the libraries and client code, if you dont
+	define any servers the makefiles bomb (because of
+	"for i in $(ALL);" where all is now indefined).  It would
+	be nice if one could still do a "make World" etc. on
+	such a machine.
+
+REPEAT-BY:
+	Don't define any servers and try to do a make depend or
+	make install.
+
+FIX:
+	Check for $(ALL) defined before the "for i in $(ALL)" lines...
+
+- Phil
+<phil@brl.arpa>

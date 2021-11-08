@@ -1,0 +1,36 @@
+Return-Path: mcvax!latlog!payne@uunet.uu.net
+Received: by expo.lcs.mit.edu; Mon, 20 Jun 88 12:44:11 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA17689; Mon, 20 Jun 88 12:42:53 EDT
+Received: from mcvax.UUCP by uunet.UU.NET (5.59/1.14) with UUCP 
+	id AA05890; Mon, 20 Jun 88 12:42:46 EDT
+Received: by mcvax.cwi.nl; Mon, 20 Jun 88 17:45:19 +0200 (MET)
+Received: from edee.ed.ac.uk by kestrel.Ukc.AC.UK   via Janet (UKC CAMEL FTP)
+           id aa12442; 20 Jun 88 14:35 BST
+Date: Mon, 20 Jun 88 13:45:34 -0100
+Message-Id: <380.8806201245@latlog.co.uk>
+From: mcvax!latlog!PAYNE@uunet.uu.net
+Subject: XWriteBitmapFile calls XDestroyImage too soon
+To: xbugs@athena.mit.edu
+
+### bug number:   618
+### area:         Xlib
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	XWriteBitmapFile uses image fields after a call to XDestroyImage.
+DESCRIPTION:
+	When XWriteBitmapFile writes out the width and height of the
+	bitmap it uses image->width and image->height. Before this
+	XDestroyImage has been called on image which causes (in my case)
+	the width field in image to be corrupted.
+REPEAT-BY:
+	I tried to save an 850x850 bitmap using XWriteBitmapFile, the
+	width field written out to the file is garbage.
+FIX:
+	Either use width and height rather than image->width and image->height
+	as the size of the bitmap or destroy the image after the width and
+	height have been written out.
+

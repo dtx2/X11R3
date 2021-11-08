@@ -1,0 +1,55 @@
+Return-Path: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu
+Received: by expo.lcs.mit.edu; Thu, 26 May 88 18:22:21 EDT
+Received: by nutmeg.Berkeley.EDU (5.57/1.25)
+	id AA12914; Thu, 26 May 88 00:47:26 PDT
+Date: Thu, 26 May 88 00:47:26 PDT
+From: deboor%nutmeg.Berkeley.EDU@ginger.berkeley.edu (Adam R de Boor)
+Message-Id: <8805260747.AA12914@nutmeg.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: resources shared through Xrm get doubly-freed
+
+### bug number:   541
+### area:         Xt
+### severity:     enhancement
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160C or 3/75M
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2 or Sprite (Berkeley experimental)
+
+DISPLAY:
+	cg2 or bw2
+
+SYNOPSIS:
+	 Because of the resource caching done in the resource manager,
+	 there are times when a resource will be freed twice.
+
+DESCRIPTION:
+	 As a prime example of this, when a font name is converted to an
+	 XFontStruct * by two different widgets, the XFontStruct * is
+	 shared between the two widgets, as it should be, but this is not
+	 taken into account when the widgets are destroyed. If in my
+	 application I open two windows (Text widgets with a modified
+	 disk source) and close them individually, the XCloseFont for
+	 the second widget fails with a BadFont error. This always happens
+	 on the second close no matter how many windows I open.
+
+	 Revision: Turns out it's not the Text widget that's freeing the
+	 fonts. but one of my own. NEVERTHELESS, there should be a way to
+	 find the number of widgets sharing a given resource and have
+	 it freed when everyone is done. Perhaps this is in the
+	 soon-to-be-released new Intrinsics spec?
+
+REPEAT-BY:
+	see above.
+
+FIX:
+	the shared resources need to have some sort of reference count to
+	avoid this so a widget can completely clean up its state, otherwise
+	this can be a substantial core leak....
+

@@ -1,0 +1,238 @@
+.ds tk X Toolkit
+.ds xT X Toolkit Intrinsics \- C Language Interface
+.ds xI Intrinsics
+.ds xW Athena X Widgets \- C Language X Toolkit Interface
+.ds xL Xlib \- C Language X Interface
+.ds xC Inter-Client Communication Conventions Manual
+.ds Rn 3
+.ds Vn 2.2
+.hw XtMake-Geometry-Request XtQuery-Geometry wid-get
+.na
+.de Ds
+.nf
+.\\$1D \\$2 \\$1
+.ft 1
+.ps \\n(PS
+.\".if \\n(VS>=40 .vs \\n(VSu
+.\".if \\n(VS<=39 .vs \\n(VSp
+..
+.de De
+.ce 0
+.if \\n(BD .DF
+.nr BD 0
+.in \\n(OIu
+.if \\n(TM .ls 2
+.sp \\n(DDu
+.fi
+..
+.de FD
+.LP
+.KS
+.TA .5i 3i
+.ta .5i 3i
+.nf
+..
+.de FN
+.fi
+.KE
+.LP
+..
+.de IN		\" send an index entry to the stderr
+.tm \\n%:\\$1:\\$2:\\$3
+..
+.de C{
+.KS
+.nf
+.D
+.\"
+.\"	choose appropriate monospace font
+.\"	the imagen conditional, 480,
+.\"	may be changed to L if LB is too
+.\"	heavy for your eyes...
+.\"
+.ie "\\*(.T"480" .ft L
+.el .ie "\\*(.T"300" .ft L
+.el .ie "\\*(.T"202" .ft PO
+.el .ie "\\*(.T"aps" .ft CW
+.el .ft R
+.ps \\n(PS
+.ie \\n(VS>40 .vs \\n(VSu
+.el .vs \\n(VSp
+..
+.de C}
+.DE
+.R
+..
+.de Pn
+.ie t \\$1\fB\^\\$2\^\fR\\$3
+.el \\$1\fI\^\\$2\^\fP\\$3
+..
+.de PN
+.ie t \fB\^\\$1\^\fR\\$2
+.el \fI\^\\$1\^\fP\\$2
+..
+.de NT
+.ne 7
+.ds NO Note
+.if \\n(.$>$1 .if !'\\$2'C' .ds NO \\$2
+.if \\n(.$ .if !'\\$1'C' .ds NO \\$1
+.ie n .sp
+.el .sp 10p
+.TB
+.ce
+\\*(NO
+.ie n .sp
+.el .sp 5p
+.if '\\$1'C' .ce 99
+.if '\\$2'C' .ce 99
+.in +5n
+.ll -5n
+.R
+..
+.		\" Note End -- doug kraft 3/85
+.de NE
+.ce 0
+.in -5n
+.ll +5n
+.ie n .sp
+.el .sp 10p
+..
+.ny0
+# Makefile for the Xlib manpages.
+
+TROFF= psroff -t
+PRINTER= lpr
+
+#define Dot3XList(arg) \@@	arg.3X11
+#define CreateRule(arg) @@arg.3X11: arg@@	(cat strings.mit macros.t; soelim $?) > $@
+#define NoSuffixList(arg) \@@	arg
+
+#define ManPages(transform) \
+	transform(AllPlanes) \
+	transform(BlkPScrn) \
+	transform(ImageOrd) \
+	transform(IsCKey) \
+	transform(XAddHost) \
+	transform(XAllColor) \
+	transform(XAllEvnt) \
+	transform(XCKCntrl) \
+	transform(XCKMping) \
+	transform(XCPCntrl) \
+	transform(XCSSet) \
+	transform(XCWAttrib) \
+	transform(XClrArea) \
+	transform(XConfWin) \
+	transform(XCopyArea) \
+	transform(XCreCmap) \
+	transform(XCreFCur) \
+	transform(XCreGC) \
+	transform(XCreImage) \
+	transform(XCrePmap) \
+	transform(XCreReg) \
+	transform(XCreWin) \
+	transform(XDefCur) \
+	transform(XDesWin) \
+	transform(XDrArc) \
+	transform(XDrIStr) \
+	transform(XDrLine) \
+	transform(XDrPoint) \
+	transform(XDrRect) \
+	transform(XDrString) \
+	transform(XDrText) \
+	transform(XERegion) \
+	transform(XFillRect) \
+	transform(XFlush) \
+	transform(XFree) \
+	transform(XGetDef) \
+	transform(XGetRes) \
+	transform(XGetVInfo) \
+	transform(XGetWAttr) \
+	transform(XGetWProp) \
+	transform(XGrButton) \
+	transform(XGrKey) \
+	transform(XGrKeybrd) \
+	transform(XGrPntr) \
+	transform(XGrServer) \
+	transform(XIfEvent) \
+	transform(XInitial) \
+	transform(XInstCmap) \
+	transform(XInterReg) \
+	transform(XInternA) \
+	transform(XListFont) \
+	transform(XLoadFont) \
+	transform(XLookKsym) \
+	transform(XMDBases) \
+	transform(XMapWin) \
+	transform(XNEvent) \
+	transform(XOpDsply) \
+	transform(XParGeom) \
+	transform(XPolyReg) \
+	transform(XPutBEvnt) \
+	transform(XPutImage) \
+	transform(XPutRes) \
+	transform(XQBSize) \
+	transform(XQColor) \
+	transform(XQPointer) \
+	transform(XQTree) \
+	transform(XRaiseWin) \
+	transform(XReadBF) \
+	transform(XRecCur) \
+	transform(XReparWin) \
+	transform(XSContext) \
+	transform(XSInput) \
+	transform(XSeArcMod) \
+	transform(XSeClassH) \
+	transform(XSeClipO) \
+	transform(XSeClosDM) \
+	transform(XSeCommnd) \
+	transform(XSeErrHan) \
+	transform(XSeEvent) \
+	transform(XSeFillS) \
+	transform(XSeFont) \
+	transform(XSeFontP) \
+	transform(XSeIcName) \
+	transform(XSeIcSH) \
+	transform(XSeInFoc) \
+	transform(XSeLAttr) \
+	transform(XSeNormH) \
+	transform(XSePMap) \
+	transform(XSeScSav) \
+	transform(XSeSelOwn) \
+	transform(XSeSizeH) \
+	transform(XSeStandC) \
+	transform(XSeStandP) \
+	transform(XSeState) \
+	transform(XSeTile) \
+	transform(XSeTransH) \
+	transform(XSeWMH) \
+	transform(XSeZoomH) \
+	transform(XStBytes) \
+	transform(XStColors) \
+	transform(XStName) \
+	transform(XStTKsym) \
+	transform(XSync) \
+	transform(XTextExt) \
+	transform(XTextWid) \
+	transform(XTranWCo) \
+	transform(XUQuark) \
+	transform(XUnmapWin) \
+	transform(XWarpPntr) 
+
+INSTALLFLAGS = $(INSTMANFLAGS)
+    MANPAGES = ManPages(Dot3XList)
+   TROFFSRCS = macros.t ManPages(NoSuffixList)
+
+all: $(MANPAGES)
+
+man.PS:	macros.t $(TROFFSRCS)
+	eqn $(MANPAGES)| $(TROFF) -man - > $@.tmp
+	$(MV) $@.tmp $@
+
+clean::
+	$(RM) $(MANPAGES)
+
+ManPages(CreateRule)
+
+InstallMultiple($(MANPAGES),$(MANDIR))
+
+depend:

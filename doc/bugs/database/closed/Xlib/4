@@ -1,0 +1,47 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Thu, 31 Mar 88 17:45:55 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803312245.AA01476@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: _XDefaultError prints extra white space
+Date: Thu, 31 Mar 88 17:45:53 EST
+
+### bug number:   306
+### area:         Xlib
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+VERSION:
+	X Version 11 Release 2
+
+CLIENT MACHINE:
+	all
+
+CLIENT OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+AREA:
+	Xlib
+
+SYNOPSIS:
+	_XDefaultError prints a final "\n  " instead of "\n".
+
+DESCRIPTION:
+	The final newline printed by the Xlib routine _XDefaultError
+	contains two spaces.  It should simply print "\n".
+
+REPEAT-BY:
+	Look at the code.
+
+FILES:
+	lib/X/XlibInt.c
+
+FIX:
+	Remove the two spaces from the last fputs in _XDefaultError.
+

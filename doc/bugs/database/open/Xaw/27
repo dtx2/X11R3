@@ -1,0 +1,36 @@
+Return-Path: @MC.LCS.MIT.EDU:acha%zachry.DEC@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Wed, 10 Aug 88 04:12:58 EDT
+Received: from decwrl.dec.com (TCP 20013204401) by MC.LCS.MIT.EDU 10 Aug 88 03:57:20 EDT
+Received: by decwrl.dec.com (5.54.5/4.7.34)
+	id AA06487; Tue, 9 Aug 88 12:17:18 PDT
+Date: Tue, 9 Aug 88 12:17:18 PDT
+Message-Id: <8808091917.AA06487@decwrl.dec.com>
+From: acha%zachry.DEC@decwrl.dec.com (Anurag Acharya)
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in Box Widget Layout + fix for it
+
+### bug number:   843
+### area:         Xaw
+### severity:     low
+### comments:     
+
+ 
+Folks,
+ 
+	There is a bug in the DoLayout routine associated with the Box Widget. It 
+calculates the height required for the box on  the basis of one line per child
+even while positioning multiple children on each line. 
+ 
+The "diff"erence between the original file ( <Xdir>/core/lib/Xaw/Box.c ) and
+the fixed file is :
+ 
+165c165
+< 	    if ((lw + bw > w /* idth */) && (lw > h_space)) {
+---
+> 	    if ((lw + bw > width) && (lw > h_space)) {
+ 
+cheers,
+ 
+-- anurag
+
+

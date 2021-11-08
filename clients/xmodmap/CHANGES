@@ -1,0 +1,7 @@
+The following changes have been made to this directory since R2:
+
+     o  additional error checking has been added to xmodmap.
+     o  allow NoSymbol and numbers for keysym names.
+     o  provide for changing pointer map.
+     o  xprkbd has been folded into xmodmap -k.
+     o	bugs printing the wrong key mapping for some servers fixed.

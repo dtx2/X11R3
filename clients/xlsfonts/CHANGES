@@ -1,0 +1,7 @@
+The following changes have been made to this directory since R2:
+
+     o  command line processing has been cleaned up.
+     o  a better help message is now provided.
+     o  various compiler nits have been taken care of.
+     o  add -fn so that people can look at new fonts.
+

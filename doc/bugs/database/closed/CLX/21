@@ -1,0 +1,41 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Thu, 17 Mar 88 13:48:08 EST
+Received: from DAGOBAH.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 179278; Thu 17-Mar-88 13:47:02 EST
+Date: Thu, 17 Mar 88 13:46 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: lib/CLX/defsystem.lisp
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com, york@alderaan.scrc.symbolics.com
+Message-Id: <19880317184649.1.HORNIG@DAGOBAH.SCRC.Symbolics.COM>
+
+### bug number:   155
+### area:         CLX
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	I dependency is missing from the Symbolics DEFSYSTEM form for
+CLX.
+
+DESCRIPTION:
+	Module DISPLAY is missing the dependency
+(:IN-ORDER-TO :COMPILE (:LOAD BUFFER)).
+
+REPEAT-BY:
+	Try to compile CLX from scratch with REQUESTS changed and
+DISPLAY not changed.
+

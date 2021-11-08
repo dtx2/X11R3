@@ -1,0 +1,43 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Fri, 19 Aug 88 17:30:13 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8808192130.AA29765@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: problem with Xt Makefile
+Date: Fri, 19 Aug 88 17:30:10 EDT
+
+### bug number:   891
+### area:         config
+### severity:     low
+### comments:     
+
+
+------- Forwarded Message
+
+Return-Path: meyerm@ei.ecn.purdue.edu
+Received: by expo.lcs.mit.edu; Fri, 19 Aug 88 16:48:19 EDT
+Received: by ei.ecn.purdue.edu (5.54/1.14jrs)
+	id AA23189; Fri, 19 Aug 88 15:40:49 EST
+Date: Fri, 19 Aug 88 15:40:49 EST
+From: meyerm@ei.ecn.purdue.edu (Morris A Meyer)
+Message-Id: <8808192040.AA23189@ei.ecn.purdue.edu>
+To: jim@expo.lcs.mit.edu
+Subject: lib/Xt/{Im,Makefile} HEADERS directive....
+Cc: meyerm@el.ecn.purdue.edu
+
+
+dont know if this has already been reported yet, but
+there is a file IntrinsicI.h that is use in the HP Widgets
+toolkit that doesn't show up in the HEADERS directive in
+the Makefile.  When "make install" is done, IntrinsicI.h
+doesn't get copied/installed in /usr/include/X11 .
+
+Kind of a nit, but thought you would want to know about
+it.  Sorry this wasn't in the bug report template format.
+
+		--morris
+
+
+------- End of Forwarded Message
+
+

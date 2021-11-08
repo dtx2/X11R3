@@ -1,0 +1,39 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu 
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Tue, 8 Mar 88 20:01:11 EST
+Date: Tue, 8 Mar 88 20:01 EST
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: fd slot of Display structure
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <880308200101.4.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   55
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+Date: Tue, 8 Mar 88 19:28 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Message-Id: <19880309002832.4.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	The fd slot of the Display structure in Xlib is declared as an
+int.
+
+DESCRIPTION:
+	It would be much nicer of it were a (void *) like all of the
+other private fields for the benefit of operating systems which don't
+name network connections with numbers.
+

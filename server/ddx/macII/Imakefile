@@ -1,0 +1,51 @@
+SRCS =	\
+	macIIInit.c \
+	macIIMono.c \
+	macIICrsr.c \
+	macIIIo.c \
+	macIIKbd.c \
+	macIIMouse.c \
+	macIIUtils.c \
+	macIIGC.c \
+	macIIKMap.c \
+	Xrepair.c \
+	X11R3.script \
+	def.x11start
+
+OFILES = macIIInit.o 
+
+OBJS = \
+	macIIMono.o \
+	macIICrsr.o \
+	macIIIo.o \
+	macIIKbd.o \
+	macIIMouse.o \
+	macIIUtils.o \
+	macIIGC.o \
+	macIIKMap.o
+
+STD_DEFINES = ServerDefines
+CDEBUGFLAGS = ServerCDebugFlags
+   INCLUDES = -I.  -I../../include -I../mfb -I../../dix -I$(INCLUDESRC)
+   LINTLIBS = ../../dix/llib-ldix.ln ../../os/4.2bsd/llib-los.ln \
+	      ../mfb/llib-lmfb.ln ../mi/llib-lmi.ln ../cfb/llib-lcfb.ln
+
+NormalLibraryObjectRule()
+
+all:: $(OFILES) Xrepair
+
+lintlib:
+
+NormalLibraryTarget(macII,$(OBJS))
+NormalLintTarget($(SRCS))
+SingleProgramTarget(Xrepair, Xrepair.o,,)
+InstallProgram(Xrepair,$(BINDIR))
+InstallScript(X11R3,$(BINDIR))
+InstallProgram($(BINDIR)/X11R3,$(BINDIR)/X11)
+InstallNonExec(def.x11start,$(LIBDIR)/.x11start)
+InstallNonExec(xterms.tic,$(USRLIBDIR)/terminfo/x/xterm)
+InstallNonExec(xterms.tic,$(USRLIBDIR)/terminfo/x/xterms)
+InstallNonExec(xterm.tic,$(LIBDIR))
+InstallNonExec(xterms.tic,$(LIBDIR))
+DependTarget()
+InstallManPage(XmacII,$(MANDIR))

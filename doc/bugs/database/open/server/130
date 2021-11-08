@@ -1,0 +1,285 @@
+Return-Path: erin@austin.lockheed.com
+Received: by EXPO.LCS.MIT.EDU; Thu, 5 May 88 12:19:11 EDT
+Received: by shrike.Austin.Lockheed.COM (4.0/1.25); Thu, 5 May 88 09:54:30 CDT
+Date: Thu, 5 May 88 09:54:30 CDT
+From: Erin Green <erin@austin.lockheed.com>
+Message-Id: <8805051454.AA29718@shrike.Austin.Lockheed.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: Bug Report
+Cc: erin@austin.lockheed.com
+
+### bug number:   458
+### area:         server
+### severity:     low
+### comments:     
+
+Please respond with a short message when you receive this bug report.
+Thanks,  Marianna Clark
+erin@austin.lockheed.com
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+        VAXstation II
+
+CLIENT OPERATING SYSTEM:
+	Ultrix 2.0
+
+DISPLAY:
+	GPX
+
+SYNOPSIS:
+        When drawing a filled primitive (eg rectangle, arc) using a
+	stipple pattern and with fill style set to FillStippled, the 
+	background of the pattern is not transparent.  
+
+DESCRIPTION:
+	We try to draw filled primitives into specific bitplanes, 
+	using a XSetPlaneMask, and the foreground of the stipple
+	pattern is drawn in the correct set of planes and in the
+	correct foreground color.  With the fill style set to
+	FillStippled, I expected the background of the stipple
+	pattern to be transparent, as opposed to setting the fill
+	style to FillOpaqueStippled, but the background takes on 
+	a color assigned to bit planes which are not included in
+	the current plane mask.  And the background is not
+	consistently the same color when the same program is 
+	executed repeatedly.  In general, drawing filled primitives
+	using stipples gives really flakey results.  The following
+	test program does not exactly mimic the conditions in our
+	software, but it does illustrate the problems.
+
+REPEAT-BY:  TEST PROGRAM
+/*
+ DESCRIPTION: This routine tests the use of "stipples" to create
+	      filled primitives.  Filled and unfilled rectangles
+	      are drawn into the lower 2 bitplanes when the "t" 
+	      and "r" keys are pressed, respectively.  Filled, 
+	      solid, and unfilled circles are drawn into 2 higher
+	      bitplanes when "f", "s", and "c" keys are pressed.
+	      The program is terminated by pressing "q". The fill
+	      style is set to FillStippled, so that the unfilled 
+	      parts of the primitives should be transparent.
+
+ NAME:    Marianna Clark, Lockheed, Austin, TX, 512-448-5285
+ DATE:    5/4/88
+ ACTION:  Created.
+
+ */
+ 
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+main()
+{
+   Display
+      *display;
+   Window
+      window, root;
+   Visual
+      *visual;
+   GC
+      gc;
+   XImage
+      *ximage;
+   unsigned int
+      screen,
+      width, height, border, depth;
+   XSizeHints
+      sizehints;
+   XEvent
+      event;
+   KeySym
+      key;
+   Status
+      status;
+   Colormap
+      cmap;
+   XColor
+      color;
+   Pixmap 
+      bitmap;
+   short
+      bitmap_pattern[16];
+   int 
+      i, done,
+      xo, yo;
+   char
+      **argv,
+      *sms="SMS",
+      text[4];
+
+   argv = &sms;
+
+/*
+ *  CREATE AN X WINDOW
+ */
+
+   display = XOpenDisplay("");
+   if (display == 0)
+   {
+      printf("error: can't open display\n");
+      exit(1);
+   }
+
+   sizehints.x = sizehints.y = 100;
+   sizehints.width = 500;
+   sizehints.height = 500;
+   sizehints.flags = USPosition;
+
+   window = XCreateSimpleWindow( display,
+		      DefaultRootWindow(display), sizehints.x,
+		      sizehints.y, sizehints.width, sizehints.height,
+		      0, 0, 0);
+
+   XSetStandardProperties( display, window, sms,
+		      sms, None, &argv, 1, &sizehints );
+
+   XMapWindow( display, window );
+
+   XSelectInput( display, window, ExposureMask );
+   XNextEvent( display, &event );
+
+   status = XGetGeometry( display, window, &root, 
+			  &xo, &yo, &width, &height, &border, &depth );
+
+   printf("\n window origin: %d, %d, window size: %dx%d, depth: %d\n",
+	   xo, yo, width, height, depth );
+
+   /* allocate color cells for "private" colors (can be changed)
+    *  set up color table so that there are 2 "overlays"; the first
+    *  bit planes are one overlay and the next 2 bitplanes are the
+    *  other bitplane.  The upper overlay has higher priority.
+    */
+
+   visual = DefaultVisual( display, screen );
+   cmap = XCreateColormap( display, window, visual, AllocAll);
+
+   color.flags = DoRed | DoGreen | DoBlue;
+
+   color.pixel = 0;
+   color.red = 65535; color.green = 65535; color.blue = 65535;
+   XStoreColor( display, cmap, &color);
+
+   color.pixel = 1;
+   color.red = 65535; color.green = 0; color.blue = 0;
+   XStoreColor( display, cmap, &color);
+
+   color.pixel = 2;
+   color.red = 0; color.green = 0; color.blue = 65535;
+   XStoreColor( display, cmap, &color);
+
+   color.pixel = 3;
+   color.red = 0; color.green = 65535; color.blue = 0;
+   XStoreColor( display, cmap, &color);
+
+   color.pixel = 4;
+   color.red = 0; color.green = 65535; color.blue = 65535;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 5;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 6;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 7;
+   XStoreColor( display, cmap, &color);
+
+   color.pixel = 8;
+   color.red = 65535; color.green = 65535; color.blue = 0;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 9;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 10;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 11;
+   XStoreColor( display, cmap, &color);
+
+   color.pixel = 12;
+   color.red = 65535; color.green = 0; color.blue = 65535;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 13;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 14;
+   XStoreColor( display, cmap, &color);
+   color.pixel = 15;
+   XStoreColor( display, cmap, &color);
+
+   XInstallColormap (display, cmap);
+   
+   gc =  XCreateGC( display, window, 0, 0 );
+
+/*  CREATE A STIPPLE PATTERN  */
+              
+   for (i=0; i<16; i+=2)
+      bitmap_pattern[i] = 0x55;
+   for (i=1; i<16; i+=2)
+      bitmap_pattern[i] = 0xAA;
+
+   bitmap = XCreateBitmapFromData ( display, window,
+				    bitmap_pattern, 16, 16 );
+
+   /* main event-reading loop */
+
+   XSelectInput (display, window,  KeyPressMask );
+   done = 0;
+   while ( !done )
+   {
+      XNextEvent (display, &event );
+
+      i = XLookupString (&event, text, 10, &key, 0);
+      done = (i == 1 && text[0] == 'q');
+	   
+      if (!done)
+      {
+	   if (i==1 && text[0] == 'r')
+	   {
+	      XSetPlaneMask( display, gc, 0x003 );
+	      XSetForeground( display, gc, 2);
+	      XDrawRectangle( display, window, gc,  event.xbutton.x,
+	                      event.xbutton.y, 80, 80);
+           }
+	   else if (i==1 && text[0] == 't')
+	   {
+	      XSetPlaneMask( display, gc, 0x003 );
+	      XSetForeground (display, gc, 3);
+	      XSetFillStyle (display, gc, FillStippled );
+	      XSetStipple ( display, gc, bitmap);
+              XFillRectangle( display, window, gc, event.xbutton.x,
+		        event.xbutton.y, 70, 70);
+	      XSetFillStyle( display, gc, FillSolid );
+	   }
+	   else if (i==1 && text[0] == 'c')
+	   {
+	      XSetPlaneMask( display, gc, 0x00c );
+	      XSetForeground( display, gc, 4);
+              XDrawArc( display, window, gc, event.xbutton.x,
+		        event.xbutton.y, 50, 50, 0, 23040);
+           }
+	   else if (i==1 && text[0] == 's')
+	   {
+	      XSetPlaneMask( display, gc, 0x00c );
+	      XSetForeground( display, gc, 8);
+              XFillArc( display, window, gc, event.xbutton.x,
+		        event.xbutton.y, 50, 50, 0, 23040);
+	   }
+	   else if (i==1 && text[0] == 'f')
+	   {
+	      XSetPlaneMask( display, gc, 0x00c );
+	      XSetForeground (display, gc, 12);
+	      XSetFillStyle (display, gc, FillStippled );
+	      XSetStipple ( display, gc, bitmap);
+              XFillArc( display, window, gc, event.xbutton.x,
+		        event.xbutton.y, 50, 50, 0, 23040);
+	      XSetFillStyle( display, gc, FillSolid );
+	   }
+      }
+    }
+
+    /*  Termination  */
+
+    XFreeGC (display, gc );
+    XDestroyWindow (display, window);
+    XCloseDisplay (display);
+}
+

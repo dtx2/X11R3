@@ -1,0 +1,119 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Tue, 12 Jul 88 15:34:05 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8807121934.AA29419@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: Setenv setup didn't allocate enough pointers in SysV xterm
+Date: Tue, 12 Jul 88 15:34:04 EDT
+
+### bug number:   732
+### area:         xterm
+### severity:     low
+### comments:     
+
+
+------- Forwarded Message
+
+Return-Path: daves%hpcvxds@ce.hp.com
+Received: by expo.lcs.mit.edu; Thu, 9 Jun 88 18:10:24 EDT
+Received: from hpcvxds.HP.COM by hpcea ; Thu, 9 Jun 88 15:12:27 pdt
+Received: by hpcvxds.HP.COM; Thu, 9 Jun 88 15:08:25 pdt
+Date: Thu, 9 Jun 88 15:08:25 pdt
+From: Dave Serisky <daves%hpcvxds@ce.hp.com>
+Message-Id: <8806092208.AA28927@hpcvxds.HP.COM>
+To: jim%expo.lcs.mit.edu@ce.hp.com
+Subject: xterm bug fix and questions
+
+Jim --
+
+I have attached a bug fix that caused a potential problem for SYSV xterm.
+I also have 2 questions for you about xterm.
+
+First off, the name specified in the "-e command..." string overrides the
+name specified in the "-n name" option as far as the icon name goes.  I
+think that this is a problem (bug).  Secondly, the manual page and the
+help message state that the "-i" option is used to get icon startup.  It
+should be "-iconic" since that is the option parsed by the toolkit (I know
+that "-i" works, but it makes things non-standard and as soon as a new
+"-isomething" option gets added to xterm, it will break.
+
+- -- Dave Serisky
+
+*** /tmp/,RCSt1a28855	Thu Jun  9 15:02:17 1988
+- --- main.c	Thu Jun  9 14:58:52 1988
+***************
+*** 1,5
+  #ifndef lint
+! static char rcs_id[] = "$Header: main.c,v 1.13 88/05/18 10:54:40 daves Exp $";
+  #endif	/* lint */
+  
+  /*
+
+- --- 1,5 -----
+  #ifndef lint
+! static char rcs_id[] = "$Header: main.c,v 1.14 88/06/09 14:58:09 daves Exp $";
+  #endif	/* lint */
+  
+  /*
+***************
+*** 1152,1160
+  		/* copy the environment before Setenving */
+  		for (i = 0 ; environ [i] != NULL ; i++) ;
+  		/*
+! 		 * The `4' is the number of Setenv() calls which may add
+! 		 * a new entry to the environment.  The `1' is for the
+! 		 * NULL terminating entry.
+  		 */
+  		envnew = (char **) calloc ((unsigned) i + (4 + 1), sizeof(char *));
+  		bcopy((char *)environ, (char *)envnew, i * sizeof(char *));
+
+- --- 1152,1160 -----
+  		/* copy the environment before Setenving */
+  		for (i = 0 ; environ [i] != NULL ; i++) ;
+  		/*
+! 		 * The `4' (`5' for SYSV) is the number of Setenv()
+! 		 * calls which may add a new entry to the environment.
+! 		 * The `1' is for the NULL terminating entry.
+  		 */
+  #ifdef SYSV
+  		envnew = (char **) calloc ((unsigned) i + (5 + 1), sizeof(char *));
+***************
+*** 1156,1161
+  		 * a new entry to the environment.  The `1' is for the
+  		 * NULL terminating entry.
+  		 */
+  		envnew = (char **) calloc ((unsigned) i + (4 + 1), sizeof(char *));
+  		bcopy((char *)environ, (char *)envnew, i * sizeof(char *));
+  		environ = envnew;
+
+- --- 1156,1164 -----
+  		 * calls which may add a new entry to the environment.
+  		 * The `1' is for the NULL terminating entry.
+  		 */
++ #ifdef SYSV
++ 		envnew = (char **) calloc ((unsigned) i + (5 + 1), sizeof(char *));
++ #else	/* !SYSV */
+  		envnew = (char **) calloc ((unsigned) i + (4 + 1), sizeof(char *));
+  #endif	/* !SYSV */
+  		bcopy((char *)environ, (char *)envnew, i * sizeof(char *));
+***************
+*** 1157,1162
+  		 * NULL terminating entry.
+  		 */
+  		envnew = (char **) calloc ((unsigned) i + (4 + 1), sizeof(char *));
+  		bcopy((char *)environ, (char *)envnew, i * sizeof(char *));
+  		environ = envnew;
+  		Setenv ("TERM=", TermName);
+
+- --- 1160,1166 -----
+  		envnew = (char **) calloc ((unsigned) i + (5 + 1), sizeof(char *));
+  #else	/* !SYSV */
+  		envnew = (char **) calloc ((unsigned) i + (4 + 1), sizeof(char *));
++ #endif	/* !SYSV */
+  		bcopy((char *)environ, (char *)envnew, i * sizeof(char *));
+  		environ = envnew;
+  		Setenv ("TERM=", TermName);
+
+------- End of Forwarded Message
+
+

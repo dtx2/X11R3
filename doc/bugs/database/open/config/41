@@ -1,0 +1,103 @@
+Return-Path: dwm@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Thu, 15 Sep 88 16:21:06 EDT
+Received: from granite.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA01699; Thu, 15 Sep 88 13:21:08 PDT
+Received: from localhost by granite.DEC.COM (5.54.3/4.7.34)
+	id AA15733; Thu, 15 Sep 88 13:18:43 PDT
+Message-Id: <8809152018.AA15733@granite.DEC.COM>
+To: xbugs@expo.lcs.mit.edu
+Cc: dwm@decwrl.dec.com
+Subject: makedepend bug, and a workaround
+Date: Thu, 15 Sep 88 13:18:41 PDT
+From: Donald Mullis <dwm@decwrl.dec.com>
+
+### bug number:   974
+### area:         config
+### severity:     low
+### comments:     
+
+Makedepend will drop dependencies if #if statements within .h files
+cause second-level or higher .h files not to be included on behalf of
+the first .c file processed by makedepend, but do cause them to be
+included for subsequent .c files.  Here is a test case which gives the
+wrong answer with the X.V11R2 makedepend:
+
+::::::::::::::
+Makefile
+::::::::::::::
+DEPEND = /udir/dwm/src/makedepend/makedepend
+#DEPEND = makedepend
+depend:
+	$(DEPEND) -v7 -I. -s'# DO NOT DELETE' foo.c foo2.c
+# DO NOT DELETE
+
+::::::::::::::
+foo.h
+::::::::::::::
+#ifndef ZZ
+#include "badfile.h"
+#endif
+::::::::::::::
+foo.c
+::::::::::::::
+#define ZZ
+#include "foo.h"
+#undef ZZ
+::::::::::::::
+foo2.c
+::::::::::::::
+#include "foo.h"
+
+
+My workaround is to invoke makedepend individually for each of the .c
+files, and concatenate the output.  The following C shell script does the job:
+
+<<< BEGIN makedepend1
+#! /bin/csh
+#
+# exec the makedepend_command once for each of the argument .c or .h files
+#
+# syntax:
+#	makedepend1 makedepend_command makedepend_arg0 ...
+#
+set command=${argv[1]}
+shift
+
+set makefile="Makefile"
+
+set keys
+set files
+
+# save args away.  the "gq" prevents splitting of args which contain spaces
+foreach f ( ${argv:gq} )
+    if ( "X$f" =~ X-* ) then
+	set keys = ( $keys "$f" )
+    else
+	set files = ( $files "$f" )
+    endif
+end
+
+# for the first file, invoke makedepend on the Makefile
+${command} -f$makefile ${keys:gq} $files[1]
+shift files
+
+# for subsequent files, use -f- to append output to the Makefile
+foreach f ( $files )
+    ${command} -f- ${keys:gq} $f >>$makefile
+end
+<<< END makedepend1
+
+
+I had originally attempted to make the fix in makedepend itself, but it
+began to appear that doing so would require traversing anew the graph
+of included files for each file named on the command line, which would
+negate the speed advantages of processing all the .c files in one
+execution of makedepend.  Freeing the storage after processing each .c
+file was also quite hard to get right.
+
+The C shell script makedepend1, on the other hand, gets the right
+answer (at least for the test case and the ddxlegss directory of the
+Firefox server), and requires no change to makedepend.
+
+dwm
+

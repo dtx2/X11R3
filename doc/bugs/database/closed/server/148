@@ -1,0 +1,33 @@
+Return-Path: ardent!jkh@uunet.uu.net
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Wed, 13 Apr 88 17:07:47 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08243; Wed, 13 Apr 88 16:06:50 EST
+Received: from ardent.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA14063; Wed, 13 Apr 88 17:06:42 EDT
+Received: by ardent.ardent.ether (5.51/SMI-3.0DEV3)
+	id AA24005; Wed, 13 Apr 88 13:41:16 PST
+Date: Wed, 13 Apr 88 13:41:16 PST
+From: ardent!jkh@uunet.uu.net (Jordan K. Hubbard)
+Message-Id: <8804132141.AA24005@ardent.ardent.ether>
+To: xpert@athena.mit.edu
+Subject: XMapRaised
+Cc: xbugs@athena.mit.edu
+
+### bug number:   375
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       closed
+### comments:     
+
+Question:
+
+If an XMapWindow() generates a MapRequest event for a client that's
+done a SubstructureRedirect, doesn't it stand to reason that XMapRaised()
+should do the same (as well as generating a ConfigureRequest)?
+
+Right now, it just generates a ConfigureRequest. I checked.
+
+
+					Jordan
+					jkh@violet.berkeley.edu
+

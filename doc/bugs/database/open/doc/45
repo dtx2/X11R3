@@ -1,0 +1,56 @@
+Return-Path: ha%srfsup.DEC@decwrl.dec.com
+Received: by expo.lcs.mit.edu; Tue, 12 Jul 88 17:53:45 EDT
+Received: by decwrl.dec.com (5.54.4/4.7.34)
+	id AA05584; Tue, 12 Jul 88 14:51:56 PDT
+Date: Tue, 12 Jul 88 14:51:56 PDT
+Message-Id: <8807122151.AA05584@decwrl.dec.com>
+From: ha%srfsup.DEC@decwrl.dec.com
+To: xbugs@expo.lcs.mit.edu
+Subject: X.V11R2 install problem
+
+### bug number:   744
+### area:         doc
+### severity:     low
+### comments:     
+
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Monochrome DEC VaxStation 2000
+
+CLIENT OPERATING SYSTEM:
+	Ultrix Release 2.2
+
+DISPLAY:
+	QVSS
+
+SYNOPSIS:
+	Incorrect documentation
+
+DESCRIPTION:
+	Bad example line for /etc/ttys file
+
+REPEAT-BY:
+	Giving the supplied line on page 12 of the X11 Release notes and
+	the man page for XSERVER(1).
+
+FIX:
+
+The documentation incorrectly provides the following example
+line for /etc/ttys:
+
+ttyv0 "/usr/bin/X11/xterm -L -geometry 80x24+0+0 :0" xterm off 
+	window="/usr/bin/X11/X :0"
+
+It should be:
+
+ttyv0 "/usr/bin/X11/xterm -L -display DIGITAL:0 -geometry 80x24+0+0 -j"
+ 		xterm on secure window="/usr/bin/X11/X nologo"
+
+Note that you should give the name of the host before the :0 as well as
+supply the -display argument.
+

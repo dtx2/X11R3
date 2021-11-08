@@ -1,0 +1,115 @@
+Return-Path: mcvax!inset!rob@uunet.uu.net
+Received: by EXPO.LCS.MIT.EDU; Mon, 16 May 88 12:20:33 EDT
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA05515; Mon, 16 May 88 12:19:04 EDT
+From: mcvax!inset!rob@uunet.uu.net
+Received: by mcvax.cwi.nl; Mon, 16 May 88 18:14:10 +0200 (MET)
+Message-Id: <8805161614.AA29325@mcvax.cwi.nl>
+Received: from inset by kestrel.Ukc.AC.UK   with UUCP  id aa05488;
+          16 May 88 15:58 BST
+Received: from cetia by inset with v7.8; Mon May 16 14:23:12 BST 1988
+Received: by cetia with v7.8; Mon May 16 15:15:59 GMT 1988
+To: xbugs@expo.lcs.mit.edu
+Subject: bug report
+Date: Mon, 16 May 88 14:23:19 BST
+
+### bug number:   497
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Cetia Unigraph
+
+CLIENT OPERATING SYSTEM:
+	SVr2 with BSD4.2 extensions and NFS
+
+DISPLAY:
+	Unigraph
+
+SYNOPSIS:
+	 Asserts fail in miRegionReset().
+
+DESCRIPTION:
+	 miComputeclips() ensures that x1 <= x2, and y1 <= y2 when
+	 setting up borderBox, but does not check the relationship
+	 between v and x2, or v and y2, which can then result in
+	 the failed assert in miRegionReset().
+
+REPEAT-BY:
+	Running the shellscript below, having compiled rand.c (in the
+	same directory as the script)
+	always resulted in the server core dumping with assert fail,
+	eventually.
+
+----------clocks----------
+#!/bin/sh
+if [ "$1" = "" ]
+then
+	DISP="cetia1:0"
+else
+	DISP="$1"
+fi
+XCLOCK=/X11.install/usr/bin/X11/xclock
+RAND=`dirname $0`/./rand
+while :
+	do
+	tmp="" ; pid=""
+	for times in 1 2 3 4 5 6 7
+		do
+		if [ $times = 1 ]
+		then
+			TYPE=digital
+			upd=7
+			h=50
+			w=450
+		else
+			TYPE=analog
+			upd=1
+#
+# these loops are to prevent an infinite loop in mfbClipLine (rel1)
+#
+			h=0 ; while [ $h -lt 50 ] ;do
+				h=`$RAND 200`
+			done
+			w=0 ; while [ $w -lt 50 ] ;do
+				w=`$RAND 800`
+			done
+		fi
+		geom="geometry =${w}x${h}""+`$RAND 1024`+`$RAND 868`"
+			echo "	xclock -bw $times -update $upd -fn vxms-37.snf -${TYPE} -display $DISP -${geom} &"
+			${XCLOCK} -bw $times -update $upd -fn vxms-37.snf -${TYPE} -display $DISP -${geom} &
+			pid="$pid $!"
+		done
+	sleep 30
+	echo killing xclock processes no $pid
+	kill  -1 $pid ; pid=""
+	done
+----------rand.c----------
+#include <time.h>
+#include <stdio.h>
+
+main(argc,argv)
+int argc,**argv;
+{
+	int arg;
+
+	if(argc!=2) {
+		fprintf(stderr,"Usage: %s range\n",argv[0]);
+		exit(1);
+	}
+	if ( (arg=atoi(argv[1])) < 2 )
+		arg=2;
+
+	srand(time(0));
+	printf("%d\n", (rand()%arg+1) );
+}
+--------------------------
+
+FIX:
+	i added some extra tests on v and x2/y2.
+	but i don't know how appropriate this is.
+

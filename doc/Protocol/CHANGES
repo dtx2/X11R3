@@ -1,0 +1,165 @@
+A general copy-edit of the document has been made.  The changes shown
+below may not reflect the exact wording now in the document.
+
+Semantic changes:
+
+In CreateGC:
+"The cap-style defines how the endpoints of a patch are drawn:
+NotLast	    Equivalent to Butt, except that for a line-width of
+	    zero /- or one -/ the final endpoint is not drawn.
+Butt	    Square at the endpoint (perpendicular to the slope of
+	    the line), with no projection beyond.
+Round	    A circular arc with diameter equal to the line-width,
+	    centered on the endpoint; equivalent to Butt for
+	    line-width zero /- or one -/.
+Projecting  Square at the end, but the path continues beyond the
+	    endpoint for a distance equal to half the line-width;	
+	    equivalent to Butt for line-width zero /- or one -/."
+
+In CreateGC:
+"The join-style defines how corners are drawn for wide lines:
+Miter	The outer edges of the two lines extend to meet at an
+	angle. /+ However, if the angle is less than 11 degrees,
+	then a Bevel join-style is used instead. +/"
+
+In PolyArc, replace the sentence beginning "For a wide line with
+line-width lw, ..." with the following:  "For a wide line with
+line-width lw, the bounding outlines for filling are given by the two
+infinitely thin paths consisting of all points whose perpendicular
+distance from the path of the circle/ellipse is equal to lw/2 (which may
+be a fractional value).  The cap-style is applied the same as for a line
+corresponding to the tangent of the circle/ellipse at the endpoint."
+
+In GrabPointer: "The request fails with status NotViewable if
+grab-window or confine-to window is not viewable /+ , or the confine-to
+window lies completely outside the boundaries of the root window. +/"
+
+In UngrabPointer: "An UngrabPointer request is performed automatically
+if the event window or confine-to window for active pointer grab becomes
+not viewable /+ , or if window reconfiguration causes the confine-to
+window to lie completely outside the boundaries of the root window. +/"
+
+In OpenFont:
+"/+ The interpretation of the characters ``?'' (octal value 77) and
+``*'' (octal value 52) in the pattern is left undefined, and is
+reserved for future definition. +/"
+
+Minor changes:
+
+In the TIMECOORD structure, change
+	x,y: CARD16
+to
+	x,y: INT16
+
+Add Value errors to UngrabButton, ChangeActivePointerGrab, and UngrabKey.
+
+In GetImage: "If the drawable is a window, the window must be /- mapped -/
+/+ viewable +/, and it must be the case that ..."
+
+In CopyPlane:  "The bit-plane must have exactly one bit set /+ and the
+value of bit-plane must be less than 2^N where N is the depth of
+src-drawable +/ (else a Value error)."
+
+In the encoding for CirculateNotify, replace the 4-byte "parent" field
+with a 4-byte "unused" field.
+
+In the encoding section on Connection Setup:  "For TCP connections,
+displays on a given host are numbered starting from 0, and the server
+for display N listens and accepts connections on port 6000+N. /+ For
+DECnet connections, displays on a given host are numbered starting from
+0, and the server for display N listens and accepts connections on the
+object name obtained by concatenating "X$X" with the decimal
+representation for N, e.g., X$X0 and X$X1. +/"
+
+Clarifications:
+
+In the description of Alloc error "Note that /- this -/ /+ the explicit
+listing of Alloc error in requests +/ only covers allocation errors at a
+very coarse level and is not intended to /- (nor can it in practice hope
+to) -/ cover all cases of a server running out of allocation space in
+the middle of service.  The semantics when a server runs out of
+allocation space are left unspecified /+ , but a server may generate an
+Alloc error on any request for this reason, and clients should be
+prepared to receive such errors and handle or discard them +/ ."
+
+In ClearArea:  "If the window has a defined background tile, the
+rectangle is tiled with a plane-mask of all ones and function of Copy /+
+and subwindow-mode of ClipByChildren +/ ."
+
+In CreateGC: "A line-width of zero /- differs -/ /+ may differ +/ from a
+line-width of one in which pixels are drawn."
+
+In CreateGC: "Pixels with centers on a horizontal edge are a special
+case and are part of the line if and only if the interior /+ or the
+boundary +/ is immediately below (y increasing direction) /+ and the
+interior or the boundary is immediately to the right (x increasing
+direction) +/ ."
+
+In GrabButton (at beginning of next-to-last paragraph): "/+ This request
+overrides all previous passive grabs by the same client on the same
+button/key combinations on the same window. +/"
+
+In GrabKey (at beginning of next-to-last paragraph): "/+ This request
+overrides all previous passive grabs by the same client on the same key
+combinations on the same window. +/"
+
+In GetImage (at end of next-to-last paragraph): "/+ The pointer cursor
+image is not included in the contents returned. /+"
+
+In CreateWindow: "If background-pixel is given, it overrides the default
+background-pixmap and any background-pixmap given explicitly, and a
+pixmap of undefined size filled with background-pixel is used for the
+background. /+ Range checking is not performed on the background-pixel
+value, it is simply truncated to the appropriate number of bits. +/"
+
+In CreateWindow: "If border-pixel is given, it overrides the default
+border-pixmap and any border-pixmap given explicitly, and a pixmap of
+undefined size filled with border-pixel is used for the border. /+ Range
+checking is not performed on the border-pixel value, it is simply
+truncated to the appropriate number of bits. +/"
+
+In CreateWindow: "If the background is None, the previous screen
+contents /+ from other windows of the same depth as the window +/ are
+simply left in place if the contents come from /+ the parent of the
+window or +/ an inferior /+ of the parent +/ /- window of the same depth
+-/, and otherwise the initial contents of the exposed regions are
+undefined."
+
+In CopyArea: "If graphics-exposures is True but /- no regions are
+exposed -/ /+ no GraphicsExposure events are generated +/ , then a
+NoExposure event is generated."
+
+In SetDashes: "The initial and alternating elements of dashes are the
+``even'' dashes; the others are the ``odd'' dashes.  /+ Each element
+specifies a dash length in pixels. +/"
+
+In ChangeKeyboardControl (at end of auto-repeat paragraph): "/+ Each key
+has an individual mode of whether or not it should auto-repeat, and a
+default setting for that mode.  In addition, there is a global mode of
+whether auto-repeat should be enabled or not, and a default setting for
+that mode.  When the global mode is On, keys should obey their
+individual auto-repeat modes; when the global mode is Off, no keys
+should auto-repeat.  An auto-repeating key generates alternating
+KeyPress and KeyRelease events.  When a key is used as a modifier, it is
+desirable for the key to not auto-repeat, regardless of the auto-repeat
+setting for the key. +/"
+
+In SetModifierMapping: "A server can impose restrictions on how
+modifiers can be changed (for example, if certain keys do not generate
+up transitions in hardware /+ or if auto-repeat cannot be disabled on
+certain keys +/ or if multiple keys per modifier are not supported)."
+
+In SendEvent: "The event code must be one of the core events or one of
+the events defined by an extension /+ (else a Value error) +/ , so that
+the server can correctly byte swap the contents as necessary."
+
+In Section 11: "... the save-set window is reparented to the closest
+ancestor such that the save-set window is not an inferior of a window
+created by the client. /+ The reparenting leaves unchanged the absolute
+coordinates (with respect to the root window) of the upper left outer
+corner of the save-set window. +/"
+
+In Section 13 (at end):  "/+ For a request from a given client, any
+events destined for that client which are caused by executing the
+request must be sent to the client before any reply or error is sent.
++/"

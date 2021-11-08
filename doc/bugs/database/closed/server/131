@@ -1,0 +1,494 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:@tektronix.tek.com:toddb@tekcrl.crl
+Received: by expo.lcs.mit.edu; Thu, 30 Jun 88 03:26:40 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Thu 30 Jun 88 03:23:19-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id aa18338; 30 Jun 88 1:06 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa19348; 30 Jun 88 0:51 EDT
+Received: by tektronix.TEK.COM (5.51/6.24)
+	id AA18858; Wed, 29 Jun 88 16:46:40 PDT
+Received: by tekcrl.CRL.TEK.COM (5.51/6.24)
+	id AA18014; Wed, 29 Jun 88 16:46:48 PDT
+Message-Id: <8806292346.AA18014@tekcrl.CRL.TEK.COM>
+To: xbugs@expo.lcs.mit.edu
+Reply-To: toddb@tekcrl.crl.tek.com
+Cc: xserver@shark.lcs.mit.edu
+Subject: non-contiguous masks aren't being found by AllocCP
+Date: 29 Jun 88 16:46:45 PDT (Wed)
+From: Todd Brunhoff <toddb@tekcrl.crl>
+
+### bug number:   672
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	AllocCP can't find any masks that are non-contiguous
+
+DESCRIPTION:
+	After failing a search for a contiguous set of planes,
+	AllocCP loops through a range of possible masks looking for
+	a non-contiguous set.  For each mask it loops through the
+	pixels implied by the mask, ensuring that each is free.
+	The problem is that the macro GetNextBitsOrBreak() breaks out
+	of the loop when the pixel value is equal to the mask, but
+	the test immediately following the loop decides that the
+	search failed if the pixel is <= the mask.  It should be
+	strictly less-than.
+
+	But note that we now have to put in an extra check because
+	we can't tell the difference between a non-zero reference count
+	on the last pixel, and sucessfully reaching the last pixel.
+	It occured to me to change the semantics of GetNextBitsOrBreak(),
+	so that it always incremented the pixel by the base amount
+	before the test (inside the macro).  But better to keep the
+	changes local.
+
+REPEAT-BY:
+	Run the enclosed program.  It is a wrapper for AllocCP that tests what
+	requests for colors/planes can possibly succeed given a colormap
+	state.  You can replace the AllocCP() with your own version
+	(extracted from colormap.c); this one has the fix shown below
+	applied to it.  It is currently set up for a (hypothetical) 5 bit
+	deep visual.  You can compile it by placing it in the dix
+	directory (believe me) and typing
+
+		make test.o
+		cc -o test test.o
+
+	There are two ways to run it.  "test search" will look
+	for any occurance of a non-contiguous mask returned from
+	AllocCP.  This will churn for some time, and will fail
+	to find anything without the patch applied.  With the
+	patch applied, it will spit out lots of junk.  You
+	can also give it a colormap state on the command line
+	and it will return what requests for colors/planes can possibly
+	succeed.
+
+	The invocation
+
+	test 2 3 6 7 8 9 10 11 12 13 14 15 18 19 22 23 24 25 26 27 28 29 30 31
+
+	should be able to find a success for 1 color and 3 planes such
+	that the pixel and mask are (binary) 00000 and 10101, respectively.
+
+FIX:
+*** /tmp/,RCSt1024543	Wed Jun 29 16:14:55 1988
+--- colormap.c	Wed Jun 29 16:05:32 1988
+***************
+*** 1501,1507
+  	    {
+  		GetNextBitsOrBreak(maxp, mask, base);
+  	    }
+! 	    if (maxp <= mask)
+  		continue;
+  	    /* this one works */
+  	    *ppix++ = pixel;
+
+--- 1501,1507 -----
+  	    {
+  		GetNextBitsOrBreak(maxp, mask, base);
+  	    }
+! 	    if (maxp < mask || (maxp == mask && ent[pixel + maxp].refcnt))
+  		continue;
+  	    /* this one works */
+  	    *ppix++ = pixel;
+
+---------------
+Usenet:       {ucbvax,decvax,allegra,uw-beaver,hplabs}!tektronix!crl!toddb
+{CS,ARPA}net: toddb%tekcrl.crl.tek.com@relay.cs.net                  c--Q Q
+US:           Todd Brunhoff; Visual Systems Lab; Tektronix, Inc.         `
+              Box 500  MS 50-662, Beaverton OR 97077                     -
+Phone:        (503) 627-1121
+
+
+-------------------------  test.c  ---------------------------
+#include "X.h"
+#include "misc.h"
+#include "dix.h"
+#include "colormapst.h"
+#include "scrnintstr.h"
+
+#define GetNextBitsOrBreak(bits, mask, base)    \
+            if((bits) == (mask))                \
+                break;                          \
+            (bits) += (base);                   \
+            while((bits) & ~(mask))             \
+                (bits) += ((bits) & ~(mask));
+
+/*----------------- insert AllocCP here ---------------------*/
+/* Allocates count << planes pixels from colormap pmap for client. If
+ * contig, then the plane mask is made of consecutive bits.  Returns
+ * all count << pixels in the array pixels. The first count of those
+ * pixels are the unique pixels.  *pMask has the mask to Or with the
+ * unique pixels to get the rest of them.
+ *
+ * Returns True iff all pixels could be allocated 
+ * All cells allocated will have refcnt set to AllocPrivate and shared to FALSE
+ * (see AllocShared for why we care)
+ */
+static int
+AllocCP (pmap, pentFirst, count, Free, planes, contig, pixels, pMask)
+    ColormapPtr	pmap;
+    EntryPtr	pentFirst;
+    int		count, Free, planes;
+    Bool	contig;
+    Pixel	*pixels, *pMask;
+    
+{
+    EntryPtr	ent;
+    Pixel	pixel, base, entries, maxp, save;
+    int		dplanes, found;
+    Pixel	*ppix;
+    Pixel	mask;
+    Pixel	finalmask;
+
+    dplanes = pmap->pVisual->nplanes;
+
+    /* Easy case.  Allocate pixels only */
+    if (planes == 0)
+    {
+        if (count == 0 || count > Free)
+    	    return (FALSE);
+
+        /* allocate writable entries */
+	ppix = pixels;
+        ent = pentFirst;
+        pixel = 0;
+        while (--count >= 0)
+	{
+            /* Just find count unallocated cells */
+    	    while (ent->refcnt)
+	    {
+    	        ent++;
+    	        pixel++;
+    	    }
+    	    ent->refcnt = AllocPrivate;
+    	    *ppix++ = pixel;
+	    ent->fShared = FALSE;
+        }
+        *pMask = 0;
+        return (TRUE);
+    }
+    else if ( count <= 0  || planes > dplanes ||
+      (count << planes) > Free)
+    {
+	return (FALSE);
+    }
+
+    /* General case count pixels * 2 ^ planes cells to be allocated */
+
+    /* make room for new pixels */
+    ent = pentFirst;
+
+    /* first try for contiguous planes, since it's fastest */
+    for (mask = (1 << planes) - 1, base = 1, dplanes -= (planes - 1);
+         --dplanes >= 0;
+         mask += mask, base += base)
+    {
+        ppix = pixels;
+        found = 0;
+        pixel = 0;
+        entries = pmap->pVisual->ColormapEntries - mask;
+        while (pixel < entries)
+	{
+    	    save = pixel;
+    	    maxp = pixel + mask + base;
+    	    /* check if all are free */
+    	    while (pixel != maxp && ent[pixel].refcnt == 0)
+    	        pixel += base;
+	    if (pixel == maxp)
+		{
+		    /* this one works */
+		    *ppix++ = save;
+		    found++;
+		    if (found == count)
+		    {
+			/* found enough, allocate them all */
+			while (--count >= 0)
+			{
+			    pixel = pixels[count];
+			    maxp = pixel + mask;
+			    while (1)
+			    {
+				ent[pixel].refcnt = AllocPrivate;
+				ent[pixel].fShared = FALSE;
+				if (pixel == maxp)
+				    break;
+				pixel += base;
+				*ppix++ = pixel;
+			    }
+			}
+			*pMask = mask;
+			return (TRUE);
+		    }
+		}
+    	    pixel = save + 1;
+    	    if (pixel & mask)
+    	        pixel += mask;
+        }
+    }
+
+    dplanes = pmap->pVisual->nplanes;
+    if (contig || planes == 1 || dplanes < 3)
+	return (FALSE);
+
+    /* this will be very slow for large maps, need a better algorithm */
+
+    /*
+       we can generate the smallest and largest numbers that fits in dplanes
+       bits and contain exactly planes bits set as follows. First, we need to
+       check that it is possible to generate such a mask at all.
+       (Non-contiguous masks need one more bit than contiguous masks). Then
+       the smallest such mask consists of the rightmost planes-1 bits set, then
+       a zero, then a one in position planes + 1. The formula is
+         (3 << (planes-1)) -1
+       The largest such masks consists of the leftmost planes-1 bits set, then
+       a zero, then a one bit in position dplanes-planes-1. If dplanes is
+       smaller than 32 (the number of bits in a word) then the formula is:
+         (1<<dplanes) - (1<<(dplanes-planes+1) + (1<<dplanes-planes-1)
+       If dplanes = 32, then we can't calculate (1<<dplanes) and we have
+       to use:
+         ( (1<<(planes-1)) - 1) << (dplanes-planes+1) + (1<<(dplanes-planes-1))
+	  
+	  << Thank you, Loretta>>>
+
+    */
+
+    finalmask =
+        (((1<<(planes-1)) - 1) << (dplanes-planes+1)) + (1<<(dplanes-planes-1));
+    for (mask = (3 << (planes -1)) - 1; mask <= finalmask; mask++)
+    {
+        /* next 3 magic statements count number of ones (HAKMEM #169) */
+        pixel = (mask >> 1) & 033333333333;
+        pixel = mask - pixel - ((pixel >> 1) & 033333333333);
+        if ((((pixel + (pixel >> 3)) & 030707070707) % 077) != planes)
+    	    continue;
+        ppix = pixels;
+        found = 0;
+        entries = pmap->pVisual->ColormapEntries - mask;
+        base = lowbit (mask);
+        for (pixel = 0; pixel < entries; pixel++)
+	{
+	    if (pixel & mask)
+	        continue;
+	    maxp = 0;
+	    /* check if all are free */
+	    while (ent[pixel + maxp].refcnt == 0)
+	    {
+		GetNextBitsOrBreak(maxp, mask, base);
+	    }
+	    if (maxp < mask || (maxp == mask && ent[pixel + maxp].refcnt))
+		continue;
+	    /* this one works */
+	    *ppix++ = pixel;
+	    found++;
+	    if (found < count)
+		continue;
+	    /* found enough, allocate them all */
+	    while (--count >= 0)
+	    {
+		pixel = (pixels)[count];
+		maxp = 0;
+		while (1)
+		{
+		    ent[pixel + maxp].refcnt = AllocPrivate;
+		    ent[pixel + maxp].fShared = FALSE;
+		    GetNextBitsOrBreak(maxp, mask, base);
+		    *ppix++ = pixel + maxp;
+		}
+	    }
+
+	    *pMask = mask;
+	    return (TRUE);
+	}
+    }
+    return (FALSE);
+}
+
+/*----------------- insert AllocCP above this line ---------------------*/
+
+
+/* if you want four planes... */
+/* #define _np	4 */
+/* if you want five planes... */
+#define _np	5
+
+#define	_nc	(1<<_np)
+
+static VisualRec junkVisual = {
+/* vid screen class     rMask gMask bMask oRed oGreen oBlue bpRGB cmpE nplan */
+    0, 0,     PseudoColor, 0,    0,    0,    0,   0,     0,   _np, _nc,  _np,
+};
+ColormapRec junkColormap = { &junkVisual };
+Entry junkredEntry[ _nc ];
+Entry junkgreenEntry[ _nc ];
+Entry junkblueEntry[ _nc ];
+Entry saveredEntry[ _nc ];
+int	maxplanes[ _nc+1 ];
+int	MaskIsContig[ _nc ];
+
+PrintBinaryList(name, list, count, planes)
+    char	*name;
+    Pixel	*list;
+    int		count, planes;
+{
+    int i;
+
+    printf("%s: ", name);
+    while (count-- > 0) {
+	for (i=planes-1; i>=0; i--)
+	    printf("%d", (list[ count ] & (1<<i)) != 0);
+	if (count > 0)
+	    printf(",");
+    }
+    printf("\n");
+}
+
+setupTest(pmap, pixels, pmask, pcolors, pplanes)
+    ColormapPtr pmap;
+    Pixel *pixels, *pmask;
+    int	*pcolors, *pplanes;
+{
+    int	colors, planes, result;
+
+    if (*pcolors == pmap->pVisual->ColormapEntries && *pplanes == 0)
+	return(FALSE);
+
+    bcopy(junkredEntry, saveredEntry, sizeof(saveredEntry));
+
+    if (*pplanes == 0 && *pcolors == 0) {
+	colors = 1;
+	planes = maxplanes[ 1 ];
+    } else if (*pplanes == 0) {
+	colors = *pcolors+1;
+	planes = maxplanes[ colors ];
+    } else {
+	colors = *pcolors;
+	planes = *pplanes - 1;
+    }
+
+    for (; colors <= pmap->pVisual->ColormapEntries; colors++) {
+	for (; planes >= 0; planes--) {
+	    result = AllocCP(pmap, pmap->red, colors, pmap->freeRed, planes,
+		FALSE, pixels, pmask);
+	    if (result)
+		goto done;
+	}
+    }
+done:
+    *pcolors = colors;
+    *pplanes = planes;
+    bcopy(saveredEntry, junkredEntry, sizeof(saveredEntry));
+
+    return (result);
+}
+
+log2i(n)
+	unsigned long n;
+{
+	unsigned long	i;
+	for (i=31; i>=0; i--)
+		if ((unsigned long)(1<<i) <= n)
+			return(i);
+	return(0);
+}
+
+main(argc, argv)
+    int	argc;
+    char	**argv;
+{
+    int	colors, planes, count;
+    ColormapPtr pmap = &junkColormap;
+    Pixel pixels[ 16 ], mask, pix, end;
+
+    pmap = &junkColormap;
+    junkColormap.pVisual = &junkVisual;
+    junkColormap.red = junkredEntry;
+    junkColormap.green = junkgreenEntry;
+    junkColormap.blue = junkblueEntry;
+
+    pmap->freeRed = pmap->pVisual->ColormapEntries;
+
+    for (colors=1; colors<pmap->pVisual->ColormapEntries; colors++)
+	maxplanes[ colors ] = log2i(pmap->pVisual->ColormapEntries / colors);
+    for (colors=0; colors<pmap->pVisual->ColormapEntries; colors++)
+	MaskIsContig[colors] = (log2i(colors) < log2i(colors+lowbit(colors)));
+    MaskIsContig[ 0 ] = TRUE;
+
+    if (strcmp(argv[1], "search") == 0) {
+	int	i, j;
+
+	if (pmap->pVisual->ColormapEntries > 32)
+	    Error("search option won't work for depth > 5 (32 colors)\n");
+
+	for (pix = (1<<pmap->pVisual->ColormapEntries)-1; pix >= 0; pix--) {
+	    if ((pix & 0x1FF) == 0x100)
+		write(1, ".", 1);
+	    pmap->freeRed = pmap->pVisual->ColormapEntries;
+	    for (i=pmap->pVisual->ColormapEntries-1; i>=0; i--) {
+		if (pix & (1<<i)) {
+		    pmap->red[ i ].refcnt = AllocPrivate;
+		    pmap->freeRed--;
+		} else
+		    pmap->red[ i ].refcnt = 0;
+	    }
+	    planes = colors = 0;
+	    while (setupTest(pmap, pixels, &mask, &colors, &planes)) {
+		if (! MaskIsContig[ mask ]) {
+		    printf("\nwith\n");
+		    for (j=pmap->pVisual->ColormapEntries-1; j>=0; j--) {
+			if (pmap->red[ j ].refcnt)
+			    PrintBinaryList("  preallocated", &j, 1,
+				    pmap->pVisual->nplanes);
+		    }
+		    PrintBinaryList("got non-contiguous mask", &mask, 1,
+			pmap->pVisual->nplanes);
+		    PrintBinaryList("    pixels", pixels, colors,
+			pmap->pVisual->nplanes);
+		    printf("%d colors, %d planes\n", colors, planes);
+		}
+	    }
+	}
+	exit (0);
+    }
+
+    for (argc--, argv++; argc; argc--, argv++) {
+	count = sscanf(*argv, "%d-%d", &pix, &end);
+	if (pix > pmap->pVisual->ColormapEntries)
+		Error("pix %d is too big\n", pix);
+	if (count == 2) {
+	    if (end > pmap->pVisual->ColormapEntries)
+		    Error("pix %d is too big\n", end);
+	} else
+	    end = pix;
+	while (pix <= end) {
+	    pmap->red[ pix ].refcnt = AllocPrivate;
+	    pmap->red[ pix ].fShared = FALSE;
+	    pmap->freeRed--;
+	    PrintBinaryList("preallocated", &pix, 1,
+		    pmap->pVisual->nplanes);
+	    pix++;
+	}
+    }
+
+    planes = colors = 0;
+    while (setupTest(pmap, pixels, &mask, &colors, &planes)) {
+	printf("%d colors, %d planes:\n", colors, planes);
+	PrintBinaryList("    pixels", pixels, colors,
+	    pmap->pVisual->nplanes);
+	if (mask)
+	    PrintBinaryList("    masks", &mask, 1,
+		pmap->pVisual->nplanes);
+    }
+    exit(0);
+}
+
+
+Error(fmt, x0,x1,x2,x3,x4,x5,x6,x7,x8,x9)
+	char	*fmt;
+{
+	printf(fmt, x0,x1,x2,x3,x4,x5,x6,x7,x8,x9);
+	exit(1);
+}
+

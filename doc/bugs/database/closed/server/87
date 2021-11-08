@@ -1,0 +1,65 @@
+Return-Path: @XX.LCS.MIT.EDU,@relay.cs.net:@tektronix.tek.com:toddb@tekcrl.crl
+Received: by expo.lcs.mit.edu; Wed, 1 Jun 88 19:33:00 EDT
+Received: from RELAY.CS.NET by XX.LCS.MIT.EDU with TCP/SMTP; Wed 1 Jun 88 19:24:17-EDT
+Received: from relay2.cs.net by RELAY.CS.NET id aa02930; 1 Jun 88 18:52 EDT
+Received: from tektronix.tek.com by RELAY.CS.NET id aa08134; 1 Jun 88 18:43 EDT
+Received: by tektronix.TEK.COM (5.51/6.24)
+	id AA20900; Wed, 1 Jun 88 15:33:49 PDT
+Received: by tekcrl.CRL.TEK.COM (5.51/6.24)
+	id AA23988; Wed, 1 Jun 88 15:33:22 PDT
+Message-Id: <8806012233.AA23988@tekcrl.CRL.TEK.COM>
+To: xbugs@expo.lcs.mit.edu
+Cc: alt@shark.lcs.mit.edu
+Subject: bug in dix/colormap.c
+Date: 01 Jun 88 15:33:20 PDT (Wed)
+From: Todd Brunhoff <toddb@tekcrl.crl>
+
+### bug number:   558
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	AllocCP does not allow allocation of all color planes.
+DESCRIPTION:
+	If AllocCP is called with its argument 'nplanes' equal to
+	the number of device planes, it decides that the allocation
+	is in error.  This means that the current implementation will
+	only allow an AllocColorCells request with a 'planes' value
+	that is less than the number of planes in the device.
+	So what if I want to allocate all the planes on a newly
+	created colormap?
+REPEAT-BY:
+	running an X10 application through a version of the
+	protocol converter you don't have.
+FIX:
+*** /tmp/,RCSt1004389	Wed Jun  1 14:55:30 1988
+--- colormap.c	Wed Jun  1 14:53:43 1988
+***************
+*** 1385,1391
+          *pMask = 0;
+          return (TRUE);
+      }
+!     else if ( count <= 0  || planes >= dplanes ||
+        (count << planes) > Free)
+      {
+  	return (FALSE);
+
+--- 1385,1391 -----
+          *pMask = 0;
+          return (TRUE);
+      }
+!     else if ( count <= 0  || planes > dplanes ||
+        (count << planes) > Free)
+      {
+  	return (FALSE);
+
+---------------
+Usenet:       {ucbvax,decvax,allegra,uw-beaver,hplabs}!tektronix!crl!toddb
+{CS,ARPA}net: toddb%crl.tek.csnet@relay.cs.net                       c--Q Q
+US:           Todd Brunhoff; Visual Systems Lab; Tektronix, Inc.         `
+              Box 500  MS 50-662, Beaverton OR 97077                     -
+Phone:        (503) 627-1121
+

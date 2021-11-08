@@ -1,0 +1,24 @@
+Return-Path: karlton@wsl.dec.com
+Received: by expo.lcs.mit.edu; Fri, 30 Sep 88 02:06:02 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA16509; Thu, 29 Sep 88 23:05:51 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA03938; Thu, 29 Sep 88 23:06:03 PDT
+Message-Id: <8809300606.AA03938@gilroy.pa.dec.com>
+To: xbugs@expo.lcs.mit.edu
+Cc: joel@wsl.dec.com, vasudev@wsl.dec.com, us@expo.lcs.mit.edu
+Subject: R3 beta server/os/4.2bsd/utils.c: UseMsg
+Date: Thu, 29 Sep 88 23:06:02 -0700
+From: Phil Karlton <karlton@wsl.dec.com>
+
+### bug number:   1024
+### area:         server
+### severity:     low
+### comments:     
+
+The use message references "-bp" and "-wp" which properly should be defned
+by the ddx layer. A careful comparison of the switches actually parsed by
+utils.c and what is delivered in the top level use message are in order.
+
+PK
+

@@ -1,0 +1,182 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 09:02:09 EDT
+Date: Tue, 5 Jul 88 09:02 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: Xlib property bugs
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880705130229.7.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   678
+### area:         Xlib
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	any
+
+DISPLAY:
+	any
+
+WINDOW MANAGER:
+	any
+
+AREA:
+	Xlib
+
+SYNOPSIS:
+	window_group truncated from WMHints
+	WM_TRANSIENT_FOR length not checked
+	too-short WM_CLASS not handled
+
+DESCRIPTION:
+	The window_group field from WMHints was being truncated
+	when stored in a property.
+
+	The length of the WM_TRANSIENT_FOR property was not
+	being sanity checked.
+
+	A very short WM_CLASS value could cause problems.
+
+REPEAT-BY:
+	eyeball
+
+FILES:
+	lib/X/Xatomtype.h, lib/X/XGetHints.c
+
+FIX:
+
+*** /tmp/,RCSt1a00651	Mon Jul  4 11:33:54 1988
+--- lib/X/Xatomtype.h	Wed Jun 29 09:20:27 1988
+***************
+*** 1,4 ****
+! /* $Header: Xatomtype.h,v 11.7 87/09/11 08:15:34 toddb Exp $ */
+  
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+--- 1,4 ----
+! /* $Header: Xatomtype.h,v 11.8 88/06/29 09:19:30 rws Exp $ */
+  
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+***************
+*** 54,60 ****
+      BITS32 iconMask;
+      CARD32 windowGroup;
+    } xPropWMHints;
+! #define NumPropWMHintsElements 8 /* number of elements in this structure */
+  
+  /* this structure defines the icon size hints information */
+  typedef struct {
+--- 54,60 ----
+      BITS32 iconMask;
+      CARD32 windowGroup;
+    } xPropWMHints;
+! #define NumPropWMHintsElements 9 /* number of elements in this structure */
+  
+  /* this structure defines the icon size hints information */
+  typedef struct {
+
+
+*** /tmp/,RCSt1a00665	Mon Jul  4 11:34:25 1988
+--- lib/X/XGetHints.c	Wed Jun 29 09:24:32 1988
+***************
+*** 1,6 ****
+  #include "copyright.h"
+  
+! /* $Header: XGetHints.c,v 11.20 88/06/19 16:49:17 rws Exp $ */
+  
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+--- 1,6 ----
+  #include "copyright.h"
+  
+! /* $Header: XGetHints.c,v 11.21 88/06/29 09:22:10 rws Exp $ */
+  
+  /***********************************************************
+  Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
+***************
+*** 95,103 ****
+              != Success) return (NULL);
+  
+  	/* If the property is undefined on the window, return null pointer. */
+  
+          if ((actual_type != XA_WM_HINTS) ||
+! 	    (nitems < NumPropWMHintsElements) || (actual_format != 32)) {
+  		if (prop != NULL) Xfree ((char *)prop);
+                  return(NULL);
+  		}
+--- 95,104 ----
+              != Success) return (NULL);
+  
+  	/* If the property is undefined on the window, return null pointer. */
++ 	/* pre-R3 bogusly truncated window_group, don't fail on them */
+  
+          if ((actual_type != XA_WM_HINTS) ||
+! 	    (nitems < (NumPropWMHintsElements - 1)) || (actual_format != 32)) {
+  		if (prop != NULL) Xfree ((char *)prop);
+                  return(NULL);
+  		}
+***************
+*** 111,117 ****
+  	hints->icon_x = prop->iconX;
+  	hints->icon_y = prop->iconY;
+  	hints->icon_mask = prop->iconMask;
+! 	hints->window_group = prop->windowGroup;
+  	Xfree ((char *)prop);
+  	return(hints);
+  }
+--- 112,121 ----
+  	hints->icon_x = prop->iconX;
+  	hints->icon_y = prop->iconY;
+  	hints->icon_mask = prop->iconMask;
+! 	if (nitems >= NumPropWMHintsElements)
+! 	    hints->window_group = prop->windowGroup;
+! 	else
+! 	    hints->window_group = 0;
+  	Xfree ((char *)prop);
+  	return(hints);
+  }
+***************
+*** 213,219 ****
+  	*propWindow = None;
+  	return (0);
+  	}
+!     if ( (actual_type == XA_WINDOW) && (actual_format == 32) ) {
+  	*propWindow = *data;
+  	Xfree( (char *) data);
+  	return (1);
+--- 217,224 ----
+  	*propWindow = None;
+  	return (0);
+  	}
+!     if ( (actual_type == XA_WINDOW) && (actual_format == 32) &&
+! 	 (nitems != 0) ) {
+  	*propWindow = *data;
+  	Xfree( (char *) data);
+  	return (1);
+***************
+*** 243,251 ****
+  	
+     if ( (actual_type == XA_STRING) && (actual_format == 8) ) {
+  	len_name = strlen(data);
+- 	len_class = strlen(data+len_name+1);
+  	classhint->res_name = Xmalloc(len_name+1);
+  	strcpy(classhint->res_name, data);
+  	classhint->res_class = Xmalloc(len_class+1);
+  	strcpy(classhint->res_class, data+len_name+1);
+  	Xfree( (char *) data);
+--- 248,257 ----
+  	
+     if ( (actual_type == XA_STRING) && (actual_format == 8) ) {
+  	len_name = strlen(data);
+  	classhint->res_name = Xmalloc(len_name+1);
+  	strcpy(classhint->res_name, data);
++ 	if (len_name == nitems) len_name--;
++ 	len_class = strlen(data+len_name+1);
+  	classhint->res_class = Xmalloc(len_class+1);
+  	strcpy(classhint->res_class, data+len_name+1);
+  	Xfree( (char *) data);
+

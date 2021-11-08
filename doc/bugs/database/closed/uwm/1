@@ -1,0 +1,74 @@
+Return-Path: ksr!benson@harvard.harvard.edu
+Received: from harvard.harvard.edu by EXPO.LCS.MIT.EDU; Tue, 15 Mar 88 09:20:26 EST
+Received: by harvard.harvard.edu; Tue, 15 Mar 88 09:22:15 EST
+Received: from sing-sing.ksr.com by ksr.com (3.2/SMI-3.2)
+	id AA09366; Tue, 15 Mar 88 09:13:40 EST
+Received: by sing-sing.ksr.com (3.2/SMI-3.2)
+	id AA28039; Tue, 15 Mar 88 09:13:38 EST
+Date: Tue, 15 Mar 88 09:13:38 EST
+From: ksr!benson@harvard.harvard.edu (Benson Margulies)
+Message-Id: <8803151413.AA28039@sing-sing.ksr.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: UWM perhaps a bug
+
+### bug number:   118
+### area:         uwm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     see the response at the bottom
+
+wm has the very helpful property of maintaining window labels. However,
+wm is documented as the un-preferred window manager. uwm, conversly,
+appears to be the blessed window manager, but dosen't maintain window labels.
+
+A person might consider it a bug.
+
+A person might not.
+
+Is there a X-group party line on this issue? I understood that the X11
+theory was that labels were the window manager's department. Is
+there going to be an `official' window manager that implements this?
+If I ported the wm label code to uwm, would you accept it ?
+
+--benson
+
+[and, my response
+
+ To:ksr!benson@harvard.harvard.edu
+ cc:
+ Subject:re: UWM perhaps a bug
+ --------
+ 
+ ### bug number:   118
+ ### area:         uwm
+ 
+ > wm has the very helpful property of maintaining window labels. However,
+ > wm is documented as the un-preferred window manager. uwm, conversly,
+ > appears to be the blessed window manager, but dosen't maintain window labels.
+ > 
+ > A person might consider it a bug.
+ > 
+ > A person might not.
+ > 
+ > Is there a X-group party line on this issue? I understood that the X11
+ > theory was that labels were the window manager's department. Is
+ > there going to be an `official' window manager that implements this?
+ 
+ The problem is that wm is really a hack.  Uwm, although kind of ugly, is a 
+ lot closer to being something usable.  A number of other window managers are
+ being written by various people (some commercial, some public including cwm
+ in the andrew sources) that support title bars.  Jordan Hubbard has been
+ rewriting uwm, but we haven't heard from him lately.
+ 
+ 
+ > If I ported the wm label code to uwm, would you accept it ?
+ 
+ Anyone is welcome to submit code.  It should be selectable from the .uwmrc
+ file as well as from a new f. function.  Dealing with reparenting might be 
+ harder than it looks, however.
+ 
+ Jim Fulton
+ 
+jim]
+ 

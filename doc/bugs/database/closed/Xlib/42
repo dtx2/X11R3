@@ -1,0 +1,76 @@
+Return-Path: jlf%sierra.CRAY.COM@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Tue, 2 Aug 88 14:41:29 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA17000; Tue, 2 Aug 88 13:39:20 CDT
+Received: from jlf.cray.com by hall.cray.com
+	id AA01021; 3.2/CRI-3.1; Tue, 2 Aug 88 13:45:26 CDT
+Received: by jlf.cray.com
+	id AA13724; 3.2/CRI-3.1; Tue, 2 Aug 88 13:45:24 CDT
+Date: Tue, 2 Aug 88 13:45:24 CDT
+From: jlf%sierra.CRAY.COM@uc.msc.umn.edu (John Freeman)
+Message-Id: <8808021845.AA13724@jlf.cray.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: Cray: XChProp.c nonbug report
+
+### bug number:   808
+### area:         Xlib
+### severity:     low
+### comments:     [done --jim]
+
+VERSION:
+	X11 release 2  Xlib
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+
+	Xlib fails test suite for:
+	    XStoreBuffer
+	    XStoreBytes
+	    XSetIconName
+	    XGetIconName
+	    XStoreName
+	    XFetchName
+	    XFetchBuffer
+	    XFetchBytes
+
+
+DESCRIPTION:
+
+	These routines all use the XChangeProperty Xlib call with format=8.
+	The XChangeProperty code used a Data32 macro for format=8, meaning
+	it thought the data was in 32 bits/word unpacked format.  By changing
+	XChangeProperty, Xlib passed the above tests.
+
+REPEAT-BY:
+
+	Run test suite for above Xlib calls.
+
+FIX:
+
+Xlib/XChProp.c	Tue Aug  2 13:05:53 1988
+***************
+*** 29,35 ****
+      switch (format) {
+        case 8:
+  	req->length += (nelements + 3)>>2;
+! 	Data (dpy, (char *)data, nbytes);
+          break;
+   
+        case 16:
+--- 29,35 ----
+      switch (format) {
+        case 8:
+  	req->length += (nelements + 3)>>2;
+! 	Data32 (dpy, (char *)data, nbytes);
+          break;
+   
+        case 16:
+

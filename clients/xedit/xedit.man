@@ -1,0 +1,198 @@
+.TH XEDIT 1 "26 October 1988" "X Version 11"
+.SH NAME
+xedit - simple text editor for X
+.SH SYNTAX
+\fBxedit\fP [ \fI-toolkitoption\fP ...] [ filename ]
+.SH OPTIONS
+.I Xedit
+accepts all of the standard X Toolkit command line
+options (see \fIX(1)\fP), plus:
+.TP 8
+.I filename
+Specifies the file that is to be loaded during start-up.
+This is the file which will be edited.
+If a file is not specified,
+.I xedit
+lets you load a file or create a new file after it has started up.
+.SH DESCRIPTION
+.I Xedit
+provides a window consisting of the following three areas:
+.IP "Commands Menu" 25
+Lists editing commands (for example, \fBUndo\fP or \fBSearch\fP).
+.IP "Message Window"
+Displays
+.I xedit
+messages.
+In addition, this window can be used as a scratch pad.
+.IP "Edit Window"
+Displays the text of the file that you are editing or creating.
+.SH COMMANDS
+.IP "Quit" 25
+Quits the current editing session.
+If any changes have not been saved,
+.I xedit 
+displays a warning message and allows you to save the file.
+.IP "Save"
+Stores a copy of the original, unedited file in \fIfile\fP.BAK. 
+Then, overwrites the original file with the edited contents.
+.IP "Edit"
+Allows the text displayed in the Edit window to be edited.
+.IP "Load"
+Loads the specified file and displays it in the Edit window.
+.IP "Undo"
+Undoes the last edit only.
+.IP "More"
+Undoes each edit previous to the last edit,
+which must first be undone with the 
+.B Undo
+command.
+.IP "Jump"
+Advances the cursor from the beginning of the file to the text line
+that corresponds to the selected line number.
+.IP "<<"
+Searches from the cursor back to the beginning of the file for the string
+entered in the Search input box.
+If you do not enter a string in the Search input box,
+.I xedit
+automatically copies the last string that you selected from any
+X application into the Search input box and searches for that string.
+.IP "Search >>"
+Searches from the cursor forward to the end of the file for the string
+entered in the search input box.
+If you do not enter a string in the Search input box,
+.I xedit
+automatically copies the last string that you selected from any
+X application into the Search input box and searches for that string.
+.IP "Replace"
+Replaces the last searched-for string
+with the string specified in the Replace input box.
+If no string has been previously searched for,
+searches from the insert cursor to the end of the file 
+for the next occurrence of the search string and highlights it.
+.IP "All"
+Repositions the cursor at the beginning of the file and replaces all 
+occurrences of the search string with the string specified in the 
+Replace input box.
+.SH X DEFAULTS
+For
+.I xedit,
+the available class identifiers are:
+.sp
+.nf
+ButtonBox
+Command
+Scrollbar
+Text   
+.fi
+.PP
+For
+.I xedit,
+the available name identifiers are:
+.sp
+.nf
+All
+Edit
+EditWindow
+Jump
+Load
+MessageWindow
+More
+Quit
+Replace
+Save
+Undo
+xedit
+.fi
+.sp
+.LP
+For
+.I xedit,
+the available resources are:
+.IP EnableBackups 22
+Specifies that,
+when edits made to an existing file are saved,
+.I xedit
+is to copy the original version of that file to \fIfile\fP.BAK 
+before it saves the changes.
+If the value of this option is specified as off, 
+a backup file is not created.
+.IP background
+Specifies the background color to be displayed in command buttons.
+The default is white.
+.IP border
+Specifies the border color of the 
+.I xedit
+window.
+.IP borderWidth
+Specifies the border width, in pixels, of the 
+.I xedit
+window.
+.IP font
+Specifies the font displayed in the
+.I xedit
+window.
+.IP foreground
+Specifies the foreground color of the
+.I xedit
+window.
+The default is black.
+.IP geometry
+Specifies the geometry (window size and screen location)
+to be used as the default for the 
+.I xedit
+window.
+For information about the format of the geometry specification,
+see \fIX(1)\fP.
+.IP internalHeight
+Specifies the internal horizontal padding (spacing between text and button
+border) for command buttons.
+.IP internalWidth
+Specifies the internal vertical padding (spacing between text and button
+border) for command buttons.
+.SH KEY BINDINGS
+.LP
+Each specification included in the \fI.XtActions\fP file
+modifies a key setting
+for the editor that
+.I xedit
+uses.
+When defining key specifications,
+you must use the following resource specification:
+.EX
+text.EventBindings:     .XtActions
+.EE
+.LP
+Each key specification assigns an editor command to a named
+key and/or mouse combination and has the format:
+.sp
+.DS
+.TA .5i 1.5i
+.ta .5i 1.5i
+\fIkey\fP\^:	\fIfunction\fP
+.DE
+.sp
+.IP \fIkey\fP 15
+Specifies the key or mouse button that is used to invoke the named function.
+.IP \fIfunction\fP
+Specifies the function to be invoked when the named key is pressed.
+.LP
+For more information about specifications in the
+.I .XtActions
+file, see \fIX(1)\fP.
+.SH FILES
+~/.XtActions
+.br
+/usr/lib/X11/.XtActions
+.SH SEE ALSO
+X(1), xrdb(1)
+.SH RESTRICTIONS
+Large numbers of certain edit functions (for example, Undo or More)
+tend to degrade performance over time.
+If there is a noticeable decrease in response time,
+save and reload the file.
+.SH BUGS
+It is not clear how to select a line number for the \fIJump\fP command.
+.PP
+The string searches don't work properly.
+.SH COPYRIGHT
+Copyright 1988, Digital Equipment Corporation.

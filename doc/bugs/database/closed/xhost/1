@@ -1,0 +1,62 @@
+Return-Path: pgf@SPACE.MIT.EDU
+Received: by EXPO.LCS.MIT.EDU; Tue, 10 May 88 15:14:43 EDT
+Message-Id: <8805101914.AA02033@EXPO.LCS.MIT.EDU>
+Received: from delcano.mit.edu by space AA02842; Tue, 10 May 88 15:13:34 EDT
+Received: by delcano AA16649; Tue, 10 May 88 15:13:30 EDT
+Date: Tue, 10 May 88 15:13:30 EDT
+From: Peter G. Ford <pgf@SPACE.MIT.EDU>
+To: xbugs@EXPO.LCS.MIT.EDU
+Subject: xhost bug in Sun-4
+
+### bug number:   482
+### area:         xhost
+### severity:     medium high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 4/260
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	Any
+
+SYNOPSIS:
+	xhost segmentation error
+
+DESCRIPTION:
+	Incorrect cast in argument to inet_ntoa() causes
+	sparc CPU to load mis-aligned integer argument.
+
+REPEAT-BY:
+	every time
+
+FIX:
+	/bin/sed 's/^	x//' >csr.1 <<'EOF'
+	xfix csr.1: xhost segmentation error on Sun-4 sparc
+	x
+	x*** ../clients/xhost/xhost.c~	Mon May  2 15:26:41 1988
+	x--- ../clients/xhost/xhost.c	Tue May 10 14:42:05 1988
+	x***************
+	x*** 255,261 ****
+	x      alarm(0);
+	x      if (hp)
+	x        return (hp->h_name);
+	x!     else return (inet_ntoa(*((int *)(ha->address))));
+	x    }
+	x  #ifdef DNETCONN
+	x    if (ha->family == FamilyDECnet) {
+	x--- 255,261 ----
+	x      alarm(0);
+	x      if (hp)
+	x        return (hp->h_name);
+	x!     else return (inet_ntoa(*((int *)ha->address)));
+	x    }
+	x  #ifdef DNETCONN
+	x    if (ha->family == FamilyDECnet) {
+EOF
+

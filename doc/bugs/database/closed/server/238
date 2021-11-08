@@ -1,0 +1,35 @@
+Return-Path: esosun!sol!laurie@seismo.css.gov
+Received: by expo.lcs.mit.edu; Thu, 29 Sep 88 16:10:22 EDT
+Received: from esosun.UUCP by seismo.CSS.GOV (5.59/1.14) with UUCP 
+	id AA25703; Thu, 29 Sep 88 16:09:51 EDT
+Received: by esosun.uucp (3.2/SMI-3.0/jmj1.0)
+	id AA12592; Thu, 29 Sep 88 12:59:03 PDT
+Received: from ws08.sag.uucp by sag.uucp (3.2/SAIC-SAG/kfp-1.0)
+	id AA08755 for seismo!expo.lcs.mit.edu!xbugs; Thu, 29 Sep 88 13:05:57 PDT
+Organization: Science Applications International Corporation
+Received: by ws08.sag.uucp (3.2/SMI-3.0DEV3)
+	id AA00407; Thu, 29 Sep 88 13:05:55 PDT
+Date: Thu, 29 Sep 88 13:05:55 PDT
+From: esosun!sol!laurie@seismo.css.gov (Laurie Clow)
+Message-Id: <8809292005.AA00407@ws08.sag.uucp>
+To: xbugs@expo.lcs.mit.edu
+Subject: clip mask problems
+
+### bug number:   1021
+### area:         server
+### severity:     medium
+### comments:     may have already been fixed....
+
+I am using x11 r2 on a sun.  When I try to call XFillRectangle with a clip 
+mask that is clear ( all bits set to 0 ) the entire rectangle is drawn 
+rather than none of it.  Is there a fix for this or a way to tell if the 
+clip mask is clear.  I would appreciate an answer as soon as possible, 
+but I understand if you a busy with x11 r3.
+
+Thank you for your time.
+
+Laurie Clow
+
+UUCP:  {ucbvax!ucsd,seismo}!esosun!sol!laurie (Lauren Clow) (619) 546-6409
+ARPA:  esosun!sol!laurie@seismo.css.gov
+

@@ -1,0 +1,58 @@
+Return-Path: joel@wsl.dec.com
+Received: by expo.lcs.mit.edu; Mon, 10 Oct 88 20:59:40 EDT
+Received: from gilroy.pa.dec.com by decwrl.dec.com (5.54.5/4.7.34)
+	id AA17915; Mon, 10 Oct 88 17:58:45 PDT
+Received: from localhost by gilroy.pa.dec.com (5.54.5/4.7.34)
+	id AA21477; Mon, 10 Oct 88 17:59:17 PDT
+Message-Id: <8810110059.AA21477@gilroy.pa.dec.com>
+To: bugs@expo.lcs.mit.edu, <RWS@zermatt.lcs.mit.edu>
+Cc: joel@wsl.dec.com, msm@wsl.dec.com
+Subject: Server-crashing bug in mibstore.c
+Date: Mon, 10 Oct 88 17:59:16 -0700
+From: joel@wsl.dec.com
+
+### bug number:   1067
+### area:         server
+### severity:     high
+### comments:     I can't reproduce this - rws
+
+
+The new mibstore.c code does not deal well with windows that are very large,
+and in fact tries to copy bits that aren't on the screen, and thus core dumps.
+
+Mark Manasse's summer student has an editor that creates a very large window,
+then scrolls it within a much smaller window to provide different views of the
+large window.
+
+When run on a file sufficient to create a window of height 3400 pixels or so,
+the mibbstore code tries to copy most of the window, which isn't too great.
+
+I have made the following change to miTranslateBackingStore, which improves
+things somewhat...
+
+    /* compute what the new pSavedRegion will be */
+-   extents.x1 = pWin->absCorner.x;
+-   extents.x2 = pWin->absCorner.x + pWin->clientWinSize.width;
+-   extents.y1 = pWin->absCorner.y;
+-   extents.y2 = pWin->absCorner.y + pWin->clientWinSize.height;
+-   (* pScreen->Inverse)(newSaved, pWin->clipList, &extents);
++   (* pScreen->Inverse)(newSaved, pWin->clipList,
++       (* pScreen->RegionExtents) (pWin->clipList));
+
+...on the theory that there is certainly nothing worth copying outside of the
+extent of the window's clipList.  I don't really pretend to understand this
+code, though, and there may be better solutions.
+
+This change made, the code no longer crashes.  However, it apparently does not
+keep track of itself very well.  It is quite possible to glitch backing store
+by scrolling quickly: many scanlines never get filled in with valid data, but
+the backing store doesn't know this and thus never exposes the areas.
+
+Mark should be providing at least a code file of the application that causes
+problems.  I will continue to try and figure out why backing store thinks it
+has more data than it has actually exposed and saved away, but I have limited
+time to spend on code I don't understand.  Forcing backingStore to NotUseful
+on every window ``fixes'' the problem for me, at least in the short term.
+
+- Joel McCormack
+

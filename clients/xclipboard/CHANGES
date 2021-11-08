@@ -1,0 +1,4 @@
+This directory is new to R3.  It contains the xclipboard client used to
+hold the contents of the CLIP_BOARD selection and the xcutsel client
+used to communicate between applications using only selections and
+applications using only cut buffers.

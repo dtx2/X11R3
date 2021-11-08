@@ -1,0 +1,58 @@
+Return-Path: @XX.LCS.MIT.EDU:liam%cs.qmc.ac.uk@nss.cs.ucl.ac.uk
+Received: by expo.lcs.mit.edu; Wed, 6 Jul 88 12:27:12 EDT
+Received: from NSS.Cs.Ucl.AC.UK by XX.LCS.MIT.EDU with TCP/SMTP; Wed 6 Jul 88 12:23:44-EDT
+Received: from cs.qmc.ac.uk by NSS.Cs.Ucl.AC.UK   via Janet with NIFTP
+           id aa04636; 6 Jul 88 13:53 BST
+Received: from sequent by csvax.cs.qmc.ac.uk id a005335; 6 Jul 88 14:02 BST
+Date:     Wed, 6 Jul 88 13:44:05 WET DST
+From: William Roberts <liam%cs.qmc.ac.uk@nss.cs.ucl.ac.uk>
+To: xbugs%expo.lcs.mit.edu@nss.cs.ucl.ac.uk
+Cc: x11%cs.qmc.ac.uk@nss.cs.ucl.ac.uk
+Subject:  Documentation mistake
+Reply-To: liam%cs.qmc.ac.uk@nss.cs.ucl.ac.uk
+Message-Id:  <8807061259.a023317@sequent.cs.qmc.ac.uk>
+
+### bug number:   699
+### area:         doc
+### severity:     low
+### comments:     
+
+(All re X11R2)
+
+X Protocol
+==========
+1) There is a mistake in the description of the ConfigureRequest event:
+
+  For:  "sibling and stack mode, which are reported as Above and None"
+  Read: "sibling and stack mode, which are reported as None and Above"
+
+The types don't match otherwise.
+
+2) Couple of typos; in the descriptions of both FocusIn and
+   EnterNotify the phrase
+
+        "... grab actives have mode ..." should read
+        "... grab activates have mode ..."
+
+3) Some additional index entries would be useful. In particular
+
+   Sequence number      referring to Section 2, Event Format
+   Visual Type          referring to Section 9, Connection Setup
+
+
+XLib
+====
+1) The description of the macro AllPlanes says
+
+        AllPlanes()
+
+   when in fact is it a macro without arguments and so should
+   be used as
+
+        AllPlanes               /* no parentheses */
+
+
+William Roberts         ARPA: liam@cs.qmc.ac.uk  (gw: cs.ucl.edu)
+Queen Mary College      UUCP: liam@qmc-cs.UUCP
+LONDON, UK              Tel:  01-975 5250
+

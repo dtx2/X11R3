@@ -1,0 +1,91 @@
+Return-Path: mowat@dg-rtp.dg.com
+Received: from adam.DG.COM by EXPO.LCS.MIT.EDU; Wed, 23 Mar 88 09:15:20 EST
+Received: from dg-rtp.dg.com (dg-rtp.ARPA) by adam.DG.COM with sendmail; Wed, 23 Mar 88 09:13:50 edt
+Reply-To: <mowat@dg-rtp.dg.com>
+Received: from ed209.dg_rtp (ed209) by dg-rtp.dg.com (1.00/4.7)
+	id AA15301; Wed, 23 Mar 88 09:06:32 est
+Received: by ed209.dg_rtp (1.00/4.7)
+	id AA15459; Wed, 23 Mar 88 09:08:55 est
+Date: Wed, 23 Mar 88 09:08:55 est
+From: mowat@dg-rtp.dg.com (Bill Mowat)
+Message-Id: <8803231408.AA15459@ed209.dg_rtp>
+To: xbugs@expo.lcs.mit.edu
+Subject: divide by zero in miwidedash.c
+
+### bug number:   200
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+
+                            BUG REPORT
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Data General DS/7500 (but this bug is common to all machines)
+
+CLIENT OPERATING SYSTEM:
+	Data General DG/UX (but isn't specific to this OS)
+
+DISPLAY:
+	DS/7540 (1280x1024, 8-bits/pixel)
+
+SYNOPSIS:
+	 ISZERO macro in ddx/mi/miwidedash.c.  Logic of test is backward.
+	 Code as released will ALWAYS divide by zero.
+
+DESCRIPTION:
+
+        Starting at line 254 of ddx/mi/miwidedash.c -- Code reads as follows:
+
+	    if(dashes[i].newLine)
+	    {
+		/* calculate slope of the line */
+		dx = (double) ((pPtIn + 1)->x - pPtIn->x);
+		dy = (double) ((pPtIn + 1)->y - pPtIn->y);
+		/* use slope of line to figure out how to use error term */
+		fXmajor = (fabs(dx) > fabs(dy));
+		if(fXmajor)
+====>>>>	    m = ISZERO(dx) ? (dy/dx) : EPSILON;
+		else
+====>>>>	    m = ISZERO(dy) ? (dx/dy) : EPSILON;
+		pPtIn++;
+	    }
+	    /* Add this point to our list */
+	    ppt->x = (double) dashes[i].pt.x +
+	    		(fXmajor ? 0.0 : dashes[i].e*m);
+	    ppt->y = (double) dashes[i].pt.y +
+	    		(fXmajor ? dashes[i].e*m : 0.0);
+	    ppt++;
+
+        The two buggy lines are marked with "====>>>>".  The ISZERO
+        should read !ISZERO.
+
+REPEAT-BY:
+	We found it when we tried to do wide lines in release 1 and 
+        never got around to filing a bug report.  I assumed that it 
+        was so blatent that someone else would catch it.
+
+FIX:
+	To fix, simply change the two marked lines to read as follows:
+
+		if(fXmajor)
+====>>>>	    m = !ISZERO(dx) ? (dy/dx) : EPSILON;
+		else
+====>>>>	    m = !ISZERO(dy) ? (dx/dy) : EPSILON;
+		pPtIn++;
+
+
+        Please let me know if this really isn't a bug (for some unknown 
+        reason), or if there is a better fix.  
+
+        Thanks -- Bill Mowat
+                  Data General Corp.
+                  (919) 248-5823
+
+                  mowat@dg-rtp.dg.com
+

@@ -1,0 +1,116 @@
+Return-Path: ibmuupa!erik@ucbvax.berkeley.edu
+Received: from ucbvax.Berkeley.EDU by EXPO.LCS.MIT.EDU; Wed, 16 Mar 88 15:26:46 EST
+Received: by  (5.58/1.26)
+	id AA04490; Tue, 15 Mar 88 20:57:39 PST
+Received: by ibmpa.pasc.ibm.com (5.51/4.7)
+	id AA02988; Tue, 15 Mar 88 09:59:59 PST
+Received: by salmon.pasc.ibm.com (5.51/5.17)
+	id AA07182; Tue, 15 Mar 88 10:04:49 PST
+Date: Tue, 15 Mar 88 10:04:49 PST
+From: ibmuupa!erik@ucbvax.berkeley.edu (Erik Fortune)
+Message-Id: <8803151804.AA07182@salmon.pasc.ibm.com>
+To: xbugs@expo.lcs.mit.edu
+Subject: XStoreNamedColor is broken
+
+### bug number:   135
+### area:         server
+### severity:     very high
+### assigned to:  rws
+### status:       fixed
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Any (discovered on RT/PC)
+
+CLIENT OPERATING SYSTEM:
+	Any (discovered on 4.3)
+
+DISPLAY:
+	Any color
+
+SYNOPSIS:
+	XStoreNamedColor broken
+	 (Release 2 IBM TCS bug #3)
+
+DESCRIPTION:
+	ProcStoreNamedColor never sets the pixel value when it tries
+	to store the color, so it ends up setting a random pixel (or
+	trying to).
+
+REPEAT-BY:
+	Examination is easiest, but the following program should produce
+	a "private resource" error message, but usually (on the RT) 
+	produces a "integer out of range" message if the bug is present.
+<------------------------ CUT HERE for ibmbR2-3.c ----------------------->
+#include <stdio.h>
+#include "X11/Xlib.h"
+#include "X11/Xatom.h"
+
+
+#define rnd(x)		(random() % (x))
+
+Display *dpy;
+
+StartConnectionToServer(argc, argv)
+int	argc;
+char	*argv[];
+{
+    char *display;
+    int i;
+
+    display = NULL;
+    for(i = 1; i < argc; i++)
+    {
+        if(index(argv[i], ':') != NULL)
+	    display = argv[i];
+    }
+    if (!(dpy = XOpenDisplay(display)))
+    {
+       perror("Cannot open display\n");
+       exit(0);
+   }
+}
+
+main(argc, argv)
+    int argc;
+    char **argv;
+
+{
+	int	i;
+	Window	w;
+	GC gc;
+	XGCValues xgcv;
+        XSetWindowAttributes xswa;
+	XEvent pe;
+        Visual visual;
+	char	line[100];
+
+	StartConnectionToServer(argc, argv);
+
+	XStoreNamedColor(dpy,DefaultColormap(dpy,DefaultScreen(dpy)),
+						"red",0,DoRed|DoBlue|DoGreen);
+	XSync(dpy, 0);
+
+	printf("Type CR to finish\n");
+	gets(line);
+}
+<------------------------ END OF ibmbR2-3.c ----------------------->
+
+
+FIX:
+	Set the pixel value (in .../server/dix/dispatch.c):
+*** /tmp/,RCSt1007162	Tue Mar 15 09:59:31 1988
+--- dispatch.c	Tue Mar 15 09:49:06 1988
+***************
+*** 2533,2538 ****
+--- 2533,2539 ----
+  	                 stuff->nbytes, &def.red, &def.green, &def.blue))
+  	{
+  	    def.flags = stuff->flags;
++ 	    def.pixel = stuff->pixel;
+  	    retval = StoreColors(pcmp, 1, &def);
+              if (client->noClientException != Success)
+                  return(client->noClientException);
+

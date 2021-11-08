@@ -1,0 +1,43 @@
+Return-Path: rusty%velveeta.Berkeley.EDU@berkeley.edu
+Received: from velveeta.Berkeley.EDU by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 16:11:08 EST
+Received: by velveeta.Berkeley.EDU (5.57/1.26)
+	id AA07154; Fri, 25 Mar 88 12:59:01 PST
+Date: Fri, 25 Mar 88 12:59:01 PST
+From: rusty%velveeta.Berkeley.EDU@berkeley.edu (rusty wright)
+Message-Id: <8803252059.AA07154@velveeta.Berkeley.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: xperfmon goes wild
+
+### bug number:   223
+### area:         contrib
+### severity:     
+### assigned to:  
+### status:       open
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	sun 3/50
+
+CLIENT OPERATING SYSTEM:
+	sun 3.5
+
+DISPLAY:
+	sun 3/50
+
+SYNOPSIS:
+	perfmon goes wild and soaks up all available cpu cycles.
+
+DESCRIPTION:
+	sometimes, when the display server quits, xperfmon doesn't
+	notice and then starts going crazy soaking up all available
+	cpu cycles.
+
+REPEAT-BY:
+	(What you did to get the error; include test program if appropriate)
+
+FIX:
+	(Preferred, but not necessary)
+

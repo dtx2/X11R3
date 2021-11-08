@@ -1,0 +1,62 @@
+Return-Path: kubitron@athena.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 31 May 88 23:04:28 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA09441; Tue, 31 May 88 22:03:12 EST
+Received: by ALEFNULL.MIT.EDU (5.45/4.7) id AA01971; Tue, 31 May 88 22:03:09 EST
+Message-Id: <8806010303.AA01971@ALEFNULL.MIT.EDU>
+To: xbugs@athena.mit.edu, swick@athena.mit.edu
+Cc: mckie@athena.mit.edu, gfi@athena.mit.edu, kubitron@athena.mit.edu
+Subject: Xibm and the Caps lock problem
+Date: Tue, 31 May 88 22:03:07 EST
+From: John D. Kubiatowicz <kubitron@athena.mit.edu>
+
+### bug number:   551
+### area:         server
+### severity:     low
+### comments:     
+
+
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	IBM PC/RT
+
+DISPLAY:
+	IBM PC/RT
+
+AREA:
+	server
+
+SYNOPSIS:
+	shift-lock not handled correctly
+
+DESCRIPTION:
+
+	This seems to be a DEVICE INDEPENDENT code problem!  The routine
+	ProcessKeyboardEvent in events.c takes care of all modifier keys,
+	including the shift lock key.  The only problem is that it processes
+	all modifiers in the same way, i.e. a key-up cancels the effect of
+	the modifier.  I hacked a version of events.c to toggle the shift
+	key, and (low-and-behold), I now have an Xibm with a caps-lock that
+	works...
+
+	I'm not sure whether I have hacked this at the right level of
+	abstraction, but there is clearly a problem here.  I think that the
+	vax code must work because the data-dependent driver enables
+	automatic caps-lock in the keyboard or something like this (i.e.
+	bypassing the "normal" mechanisms).
+
+	Thoughts?  Incidentally, I would really like to enable the caps-lock
+	led also... Is there any "official" X dictim on this?  (I would turn
+	on/off led #foo).
+
+	--KUBI--
+
+
+
+REPEAT-BY:
+
+FILES:
+
+FIX:

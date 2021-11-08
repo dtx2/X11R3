@@ -1,0 +1,280 @@
+Add Names to Name Set     19
+Annotation Text Alignment 12
+Annotation Text Height    12
+Annotation Text Path      12
+Annotation Text Style     12
+Annotation Text Up Vector 12
+Annotation Text2D         20
+Annotation Text3D         20
+Application Data          19
+ASF flags bits            34
+ASF_ATTRIBUTE             3
+Backface Surface Color    14
+Backface Surface Color Index 14
+Backface Surface Interior Style 14
+Backface Surface Interior Style Index 14
+Backface Surface Interpolation Method 15
+Backface Surface Reflection Attributes 14
+Backface Surface Reflection Model 15
+Begin Rendering           41
+Begin Structure           42
+Cell Array 2D             25
+Cell Array 3D             25, 26
+Change Name Set           49
+Change Pick Device        60
+Change Pipeline Context   33, 39
+Change Renderer           41
+Change Search Context     50
+Change Structure References 48
+Character Expansion       11
+Character Height          11
+Character Spacing         11
+Character Up Vector       11
+CHARINFO                  3, 62
+Close Font                62
+COLOR SPECIFIER           3
+ColorBundle (4n)          28
+COORD_2D                  3, 20, 21, 22, 23, 26
+COORD_3D                  3, 20, 21, 22, 23, 26, 56, 57
+Copy Elements             47
+Copy Lookup Table         29
+Copy Name Set             48
+Copy Pipeline Context     38
+Copy Search Context       50
+Copy Structure            42
+Create Lookup Table       29
+Create Name Set           48
+Create PHIGS WKS          51
+Create Pick Measure       60
+Create Pipeline Context   33, 38
+Create Renderer           40
+Create Search Context     50
+Create Structure          42
+Curve Approximation Method 13
+Delete Elements           47
+Delete Elements Between Labels 47
+Delete Elements To Label  47
+Delete Lookup Table Entries 33
+Delete Structures         43
+Depth Cue Index           19
+DepthCue (24+4n)          28
+DirectColorFormat         6, 9
+DRAWABLE_COORD            3, 56, 57
+Edge Bundle Index         17
+EdgeBundle (12+4n)        27
+Editing Context           6
+ELEMENT REF               3, 5
+Element Search            46
+Element Search Reply      46
+End Rendering             41
+End Structure             42
+Execute Deferred Actions  56
+Execute Structure         19
+Extended Cell Array 3D    26
+FACET                     3, 22
+Facet Culling Mode        15
+Facet Distinguish Flag    15
+Fetch Elements            45
+Fetch Elements Reply      45
+Fill Area 2D              22
+Fill Area 3D              3, 21, 22
+Fill Area 3D with Data    3, 22
+Fill Area Set 2D          23
+Fill Area Set 3D          22, 23
+Fill Area Set 3D with Data 23
+FloatingPointFormat       6
+FONTINFO                  4, 63
+FONTPROP                  4
+Free Lookup Table         29
+Free Name Set             48
+Free PHIGS WKS            51
+Free Pick Measure         60
+Free Pipeline Context     38
+Free Renderer             41
+Free Search Context       50
+Free Structure            42
+GDP 2D                    26
+GDP 3D                    26
+Get Ancestors             44
+Get Ancestors Reply       44
+Get Defined Indices       31
+Get Defined Indices Reply 31
+Get Descendants           44, 45
+Get Descendants Reply     45
+Get Dynamics              54
+Get Dynamics Reply        54
+Get Element Info          43
+Get Element Info Reply    43
+Get Enumerated Type Info  8, 9
+Get Enumerated Type Info Reply 9
+Get Extension             8
+Get Extension Reply       8
+Get Implementation Dependent Constants 9, 10
+Get Implementation Dependent Constants Reply 10
+Get Lookup Table Entries  32
+Get Lookup Table Entries Reply 32
+Get Lookup Table Entry    31, 32
+Get Lookup Table Entry Reply 32
+Get Name Set              48, 49
+Get Name Set Reply        49
+Get PHIGS Workstation Info 52
+Get PHIGS Workstation Info Reply 52
+Get PHIGS Workstation Postings 58
+Get PHIGS Workstation Postings Reply 58
+Get Pick Device           59, 60
+Get Pick Device Reply     60
+Get Pick Measure Attributes 61
+Get Pick Measure Attributes Reply 61
+Get Pipeline Context      38, 39
+Get Pipeline Context Reply 39
+Get Predefined Entries    2, 30, 31
+Get Predefined Entries Reply 31
+Get Renderer Attributes   41
+Get Renderer Attributes Reply 41
+Get Search Context        50
+Get Search Context Reply  50
+Get Structure Info        43
+Get Structure Info Reply  43
+Get Structures In Network 44
+Get Structures In Network Reply 44
+Get Table Info            29, 30
+Get Table Info Reply      30
+Get View Representation   54, 55
+Get View Representation Reply 55
+Global Transform 2D       18
+Global Transform 3D       18
+GSE                       19
+HALF_SPACE                4, 38
+HALF_SPACE_2D             4
+HLHSR Identifier          19
+Indexed Polygon           24
+Intensity Approx (8)      29
+Interior Bundle Index     16
+InteriorBundle (58+8n)    27
+Label                     6, 19, 46, 47
+Light (48+4n)             28
+Light Source State        18
+Line Bundle Index         13
+Line Color                13
+Line Color Index          13
+Line Type                 13
+Line Width                13
+LineBundle  (20+4n)       26
+List Fonts                62
+List Fonts Reply          62
+List Fonts With Info      62
+List Fonts With Info Reply 62
+Local Transform 2D        18
+Local Transform 3D        17
+Longword 0                33
+LONGWORD 1                34
+LookupTable               6
+Map DC to WC              56
+Map DC to WC Reply        56
+Map WC to DC              56, 57
+Map WC to DC Reply        57
+Marker 2D                 20
+Marker 3D                 20
+Marker Bundle Index       10
+Marker Color              10
+Marker Color Index        10
+Marker Scale              10
+Marker Type               10
+MarkerBundle (12+4n)      26
+Model Clip                18
+Names for Get Implementation Dependent Constants 9
+Nameset                   6
+Non-Uniform B Spline Curve 21
+Non-Uniform B-Spline Surface 25
+Normal Reorientation Mode 15
+Open Font                 61
+OPT_DATA                  3, 4, 5, 21, 23, 24
+Parametric Curve          21
+Parametric Polynomial Surface 24
+Path                      7, 11, 12
+Pattern Reference Point   16
+Pattern Reference Point and Vectors  16
+Pattern Size              16
+PatternBundle (12+c*4n)  
+P_BITMASK                 59, 60
+PC_BITMASK                2, 33, 38, 39
+PEXfont                   7
+PhigsWKS                  7
+PICK ELEMENT REF          5
+Pick ID                   19
+PickMeasure               7
+PipelineContext           7, 33
+PM_BITMASK                60, 61
+Polyline Interpolation Method 13
+Polyline Set 3D with Data 21
+Polyline2D                21
+Polyline3D                21
+Post Structure            58
+Quadrilateral Mesh        24
+Query Font                62
+Query Font Reply          62
+Query Text Extents        63
+Query Text Extents Reply  63
+Redraw All Structures     55
+Remove Names from Name Set 19
+Render Network            42
+Render Output Commands    42
+Renderer                  7, 39, 40, 41, 42
+Restore Model Clip Volume  18
+RGBApprox (24)            28
+R_MASK                    39
+SC_BITMASK                49, 50, 51
+Search Network            51
+Search Network Reply      51
+SearchContext             7
+Set Display Update Mode   56
+Set Editing Mode          45
+Set Element Pointer       46
+Set Element Pointer At Label 46
+Set HLHSR Mode            58
+Set Individual ASF        17
+Set Lookup Table Entries  33
+Set Model Clip Volume 2D  18
+Set Model Clip Volume 3D  18
+Set View Priority         56
+Set View Rep              57
+Set Workstation Viewport  57
+Set Workstation Window    57
+Store Elements            47
+STRING                    5, 62, 63
+Structure                 8, 19, 42, 43, 44, 45, 46, 47, 48, 51, 55, 58
+Surface Approximation     15
+Surface Color             14
+Surface Color Index       14
+Surface Edge Color        16, 17
+Surface Edge Color Index  16
+Surface Edge Flag         16
+Surface Edge Type         16
+Surface Edge Width        16
+Surface Interior Style    13, 14
+Surface Interior Style Index 13, 14
+Surface Interpolation Method 14, 15
+Surface Reflection Attributes 14
+Surface Reflection Model  14, 15
+Text Alignment            11, 12
+Text Bundle Index         12
+Text Color                11
+Text Color Index          11
+Text Font Index           10
+Text Path                 11, 12
+Text Precision            11
+Text2D                    20
+Text3D                    20
+TextBundle (16+4n)        27
+TextFontBundle (4)        28
+The following constants are used for the reply fields below 54
+Triangle Strip            23
+Trim Curve Approximation  15
+TRIM_CURVE (24+4*(k+pt)) 
+Unpost All Structures     58
+Unpost Structure          58
+Update Pick Measure       61
+Update Workstation        55
+VERTEX	                   5, 24
+View Index                18
+ViewBundle (156)          28

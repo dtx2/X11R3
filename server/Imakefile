@@ -1,0 +1,295 @@
+#define PassCDebugFlags 'CDEBUGFLAGS=$(CDEBUGFLAGS)' 'CC=$(CC)'
+
+        SUBDIRS = dix $(ALLDDXDIRS) $(ALLOSDIRS)
+    STD_DEFINES = ServerDefines
+    CDEBUGFLAGS = ServerCDebugFlags
+     EXTENSIONS = $(EXTENSIONSRC)/server/libext.a
+         EXTDIR = $(EXTENSIONSRC)/server
+    FONTUTILDIR = $(FONTSRC)/mkfontdir
+       FONTUTIL = $(FONTUTILDIR)/fontdir.o
+     ALLDDXDIRS = ddx/snf ddx/mi ddx/cfb ddx/mfb \
+                  ddx/dec/lk201 ddx/dec/qvss ddx/dec/qdss ddx/dec/qdss/libtl \
+                  ddx/sun \
+                  ddx/apollo \
+                  ddx/ibm \
+                  ddx/hp/hp ddx/hp/cfb ddx/hp/mfb ddx/hp/topcat \
+                  ddx/ndx ddx/tek \
+                  ddx/macII ddx/plx
+      ALLOSDIRS = os/4.2bsd os/bsdemul
+        SUBDIRS = dix $(ALLDDXDIRS) $(ALLOSDIRS)
+           BSD = os/4.2bsd/libos.a
+        BSDEMUL = os/bsdemul/libbsdemul.a
+           SYSV = os/sysV/libos.a
+            MFB = ddx/mfb/libmfb.a
+            CFB = ddx/cfb/libcfb.a
+             MI = ddx/mi/libmi.a
+            DIX = dix/libdix.a
+            SNF = ddx/snf/libsnf.a
+         APOLLO = ddx/apollo/libapollo.a
+            APC = ddx/apollo/apc/libapc.a
+            SUN = ddx/sun/libsun.a
+             HP = ddx/hp/hp/libhp.a
+          MACII = ddx/macII/libmacII.a
+            PLX = ddx/plx/libplx.a
+        SYSLIBS = -lm -ldbm
+    ALLPOSSIBLE = Xqvss Xqdss Xsun Xibm Xapollo Xhp Xpeg XmacII Xplx
+
+#ifndef	XqvssServer
+#define	XqvssServer /* as nothing */
+#endif
+
+#ifndef	XqdssServer
+#define	XqdssServer /* as nothing */
+#endif
+
+#ifndef	XsunServer
+#define	XsunServer /* as nothing */
+#endif
+
+#ifndef XplxServer
+#define XplxServer /* as nothing */
+#endif
+
+#ifndef	XHPServer
+#define	XHPServer /* as nothing */
+#endif
+
+#ifndef	XapolloServer
+#define	XapolloServer /* as nothing */
+#endif
+
+#ifndef	XibmServer
+#define	XibmServer /* as nothing */
+#endif
+
+#ifndef XndxServer
+#define	XndxServer /* as nothing */
+#endif
+
+#ifndef	XpegServer
+#define	XpegServer /* as nothing */
+#endif
+
+#ifndef	XmacIIServer
+#define	XmacIIServer /* as nothing */
+#endif
+
+# don't split this across lines, because imake will keep a trailing slash
+ALL = XqvssServer XqdssServer XsunServer XapolloServer XibmServer XHPServer XndxServer XpegServer XmacIIServer XplxServer
+
+#
+# This turns off the default rule for compiling .c files because
+# this makefile does not really know how to build it.  This is really
+# just a hack because of sun's version of make and nfs.
+#
+.c.o:
+
+all: $(ALL)
+
+#
+# qvss server
+#
+QVSSDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/dec/lk201 ddx/dec/qvss os/4.2bsd
+QVSSOBJS = ddx/dec/qvss/init.o ddx/dec/qvss/qvss_io.o ddx/dec/lk201/lk201.o\
+	$(FONTUTIL)
+QVSSLIBS = $(DIX) $(BSD) $(SNF) $(MFB) $(MI) $(EXTENSIONS)
+XqvssDIRS = $(QVSSDIRS)
+
+ServerTarget(Xqvss,$(EXTDIR) $(FONTUTILDIR) $(QVSSDIRS),$(QVSSOBJS),$(QVSSLIBS),$(SYSLIBS))
+
+#
+# qdss server
+#
+QDSSDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/dec/lk201 ddx/dec/qdss \
+           ddx/dec/qdss/libtl os/4.2bsd
+QDSSOBJS = ddx/dec/qdss/init.o ddx/dec/qdss/qdss_io.o ddx/dec/lk201/lk201.o\
+	$(FONTUTIL)
+QDSSLIBS = ddx/dec/qdss/libqdss.a ddx/dec/qdss/libtl/libtl.a \
+           ddx/dec/qdss/libqdss.a \
+           $(DIX) $(BSD) $(SNF) $(MFB) $(MI) $(EXTENSIONS)
+XqdssDIRS = $(QDSSDIRS)
+
+ServerTarget(Xqdss,$(EXTDIR) $(FONTUTILDIR) $(QDSSDIRS),$(QDSSOBJS),$(QDSSLIBS),$(SYSLIBS))
+
+
+#
+# sun server
+#
+#if defined(UseSunWindowsInServer) && UseSunWindowsInServer
+SUNWINDOWSLIBS = -lsunwindow -lpixrect
+#endif
+SUNDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/cfb ddx/sun os/4.2bsd
+SUNOBJS = ddx/sun/sunInit.o $(FONTUTIL)
+SUNLIBS = $(SUN) $(CFB) $(DIX) $(BSD) $(SNF) $(MFB) $(MI) $(EXTENSIONS)
+SUNSYSLIBS = $(SYSLIBS) $(SUNWINDOWSLIBS)
+XsunDIRS = $(SUNDIRS)
+
+ServerTarget(Xsun,$(EXTDIR) $(FONTUTILDIR) $(SUNDIRS),$(SUNOBJS),$(SUNLIBS),$(SUNSYSLIBS))
+
+#
+# plx server
+#
+PLXDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/plx ddx/dec/lk201 os/4.2bsd
+PLXOBJS = ddx/plx/plxInit.o ddx/plx/plxEvents.o $(FONTUTIL)
+PLXLIBS = $(PLX) ddx/dec/lk201/lk201.o $(DIX) $(BSD) $(SNF) $(MFB) $(MI) $(EXTENSIONS)
+PLXSYSLIBS = $(SYSLIBS) -lplx
+XplxDIRS = $(PLXDIRS)
+
+ServerTarget(Xplx,$(EXTDIR) $(FONTUTILDIR) $(PLXDIRS),$(PLXOBJS),$(PLXLIBS),$(PLXSYSLIBS))
+
+#
+# HP server
+#
+HPDIRS = dix ddx/snf ddx/mi ddx/hp/hp ddx/hp/cfb ddx/hp/mfb \
+         ddx/hp/topcat os/4.2bsd os/bsdemul
+HPOBJS = ddx/hp/hp/init.o $(FONTUTIL)
+HPLIBS = $(DIX) $(EXTENSIONS) $(HP) \
+          ddx/hp/topcat/libtopcat.a \
+          ddx/hp/hp/libcrtstub.a \
+	  $(HP) \
+          ddx/hp/cfb/libcfb.a \
+          ddx/hp/mfb/libmfb.a \
+          $(BSD) $(SNF) $(MI) $(BSDEMUL)
+#if ServerMallocLib
+HPMALLOCLIB = -lmalloc
+#endif
+HPSYSLIBS = $(SYSLIBS) $(HPMALLOCLIB)
+XhpDIRS = $(HPDIRS)
+
+ServerTarget(Xhp,$(EXTDIR) $(FONTUTILDIR) $(HPDIRS),$(HPOBJS),$(HPLIBS),$(HPSYSLIBS))
+
+#
+# ibm server
+#
+#if SpecialMalloc
+IBMALLOCLIB = ddx/ibm/common/libibmalloc.a
+#else
+IBMALLOCLIB = 
+#endif
+
+ddx/ibm/common/ibmDate.o: AlwaysForce
+	(cd ddx/ibm/common; $(MAKE) ibmDate.o)
+
+AlwaysForce:
+
+loadXibm: ddx/ibm/common/ibmDate.o
+
+IBMDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/ibm os/4.2bsd
+IBMOBJS = ddx/ibm/common/ibmcomm.o ddx/ibm/common/ibmDate.o $(FONTUTIL)
+IBMLIBS = ddx/ibm/libibm.a $(IBMALLOCLIB) \
+		$(DIX)  $(BSD) $(SNF) $(MFB) $(MI) $(EXTENSIONS)
+IBMSYSLIBS = $(SYSLIBS)
+XibmDIRS = $(IBMDIRS)
+
+ServerTarget(Xibm,$(EXTDIR) $(FONTUTILDIR) $(IBMDIRS),$(IBMOBJS),$(IBMLIBS),$(IBMSYSLIBS))
+
+#
+# apollo server
+#
+APOLLODIRS = dix ddx/snf ddx/mi ddx/mfb ddx/apollo os/4.2bsd
+APOLLOOBJS = ddx/apollo/ap_init.o /sys/traits/io_traits $(FONTUTIL)
+APOLLOLIBS = $(APOLLO) $(APC) $(DIX) $(BSD) $(SNF) $(MFB) $(MI) $(EXTENSIONS)
+XapolloDIRS = $(APOLLODIRS)
+
+ServerTarget(Xapollo,$(EXTDIR) $(FONTUTILDIR) $(APOLLODIRS),$(APOLLOOBJS),$(APOLLOLIBS),$(SYSLIBS))
+
+#
+# ndx server
+#
+NDXDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/cfb ddx/ndx os/4.2bsd
+NDXOBJS = ddx/ndx/init.o ddx/ndx/ndx_io.o $(FONTUTIL)
+NDXLIBS = $(DIX) $(BSD) $(SNF) $(MFB) $(CFB) $(MI) $(EXTENSIONS)
+XndxDIRS = $(NDXDIRS)
+
+ServerTarget(Xndx,$(EXTDIR) $(FONTUTILDIR) $(NDXDIRS),$(NDXOBJS),$(NDXLIBS),$(SYSLIBS))
+
+#
+# pegasus server
+#
+PEGASUSDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/tek os/4.2bsd
+PEGASUSOBJS = ddx/tek/tek4310.obj ddx/tek/tekextra.o $(FONTUTIL)
+PEGASUSLIBS = $(DIX) $(BSD) $(SNF) $(MFB) $(MI) $(EXTENSIONS)
+XpegDIRS = $(PEGASUSDIRS)
+
+ServerTarget(Xpeg,$(EXTDIR) $(FONTUTILDIR) $(PEGASUSDIRS),$(PEGASUSOBJS),$(PEGASUSLIBS),$(SYSLIBS))
+
+#
+# macII server
+#
+MACIIDIRS = dix ddx/snf ddx/mi ddx/mfb ddx/cfb ddx/macII os/4.2bsd os/bsdemul
+MACIIOBJS = ddx/macII/macIIInit.o $(FONTUTIL)
+MACIILIBS = $(MACII) $(CFB) $(DIX) $(BSD) $(SNF) $(BSDEMUL) $(MFB) $(MI) $(EXTENSIONS)
+MACIISYSLIBS = $(SYSLIBS)
+XmacIIDIRS = $(MACIIDIRS)
+ 
+ServerTarget(XmacII,$(EXTDIR) $(FONTUTILDIR) $(MACIIDIRS),$(MACIIOBJS),$(MACIILIBS),$(MACIISYSLIBS))
+
+#
+# other, necessary targets
+#
+MakeMakeSubdirs($(SERVERSUBDIRS),RealMakefiles)
+MakeNsubdirMakefiles()
+InstallMultiple($(ALL),$(BINDIR))
+
+#
+# Gad, but I wish this wasn't so complicated.  All this because
+# If we are making two servers, then there may be two lists of
+# directories to depend or whatever, most of which are duplicates
+#
+#define DoServerSubdirList(target)					@@\
+target::								@@\
+	@for i in $(ALL); do \						@@\
+		dirs="$$dirs \$$($${i}DIRS)"; \				@@\
+	done; \								@@\
+	$(MAKE) $(MFLAGS) Real/**/target \				@@\
+		"SERVERSUBDIRS=$$dirs" \				@@\
+		LINT=$(LINT) DESTDIR=$(DESTDIR)				@@\
+									@@\
+Real/**/target:								@@\
+	@subdirs=`ls -d $(SERVERSUBDIRS) | sort -u`; \			@@\
+	for i in $$subdirs; do \					@@\
+		echo "target""ing $$i"; \				@@\
+		(cd $$i ; $(MAKE) $(MFLAGS) target \			@@\
+			LINT=$(LINT) DESTDIR=$(DESTDIR) ); \		@@\
+	done
+
+Makefiles::
+	@for i in $(ALL); do \
+		dirs="$$dirs \$$($${i}DIRS)"; \
+	done; \
+	$(MAKE) $(MFLAGS) RealMakefiles "SERVERSUBDIRS=$$dirs"
+
+AllMakefiles::
+	@$(MAKE) $(MFLAGS) RealMakefiles "SERVERSUBDIRS=$(SUBDIRS)"
+
+AllClean::
+	@$(MAKE) $(MFLAGS) Realclean "SERVERSUBDIRS=$(SUBDIRS)"
+
+AllTags::
+	@$(MAKE) $(MFLAGS) Realtags "SERVERSUBDIRS=$(SUBDIRS)"
+
+DoServerSubdirList(clean)
+DoServerSubdirList(tags)
+DoServerSubdirList(depend)
+DoServerSubdirList(install)
+DoServerSubdirList(lintlib)
+DoServerSubdirList(lint)
+
+$(EXTDIR) $(FONTUTILDIR) $(SUBDIRS): FRC
+	@cd $@ ; echo "making $@"; \
+	$(MAKE) $(MFLAGS) PassCDebugFlags all
+
+clean::
+	$(RM) $(ALLPOSSIBLE)
+
+InstallManPage(Xserver,$(MANDIR))
+
+install::
+	@echo "************************************************************"
+	@echo "* "
+	@echo "*     Don't forget to create a link called $(BINDIR)/X"
+	@echo "*     pointing to the default server, if there is one."
+	@echo "* "
+	@echo "************************************************************"
+
+FRC:

@@ -1,0 +1,36 @@
+Return-Path: tom%hpcvxth@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Mon, 11 Jul 88 17:49:03 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA18136; Mon, 11 Jul 88 17:47:13 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Mon, 11 Jul 88 13:47:29 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA05707; Mon, 11 Jul 88 14:47:34 PDT
+Received: from hpcvxth.HP.COM by hpcvlx.HP.COM; Mon, 11 Jul 88 14:44:01 pdt
+Received: by hpcvxth.HP.COM; Mon, 11 Jul 88 14:45:59 mdt
+Date: Mon, 11 Jul 88 14:45:59 mdt
+From: tom%hpcvxth@hplabs.hp.com
+Message-Id: <8807112045.AA18753@hpcvxth.HP.COM>
+To: xbugs%expo.lcs.mit.edu@athena.mit.edu
+Subject: Xlib unimplemented function InitTranslationList()
+
+### bug number:   730
+### area:         Xlib
+### severity:     low
+### comments:     this is a duplicate of 110; really want to parse a toolkit
+###               like resource and use that
+
+
+VERSION:
+     X11 release 2
+SYNOPSIS:
+     Unimplemented function in Xlib
+DESCRIPTION:
+     In the file XKeyBind.c, the function InitTranslationList() is not
+     implemented.  I've applied all the patches I know about and
+     assume I have the latest code.  When will this be implemented?
+REPEAT-BY:
+FIX:
+     
+
+Tom Houser
+hplabs!tom@hpcvxth
+

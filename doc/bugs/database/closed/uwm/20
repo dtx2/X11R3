@@ -1,0 +1,105 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 9 Jun 88 20:35:14 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07409; Thu, 9 Jun 88 20:33:45 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 9 Jun 88 16:32:57 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA19352; Thu, 9 Jun 88 17:32:15 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 9 Jun 88 17:34:22 pdt
+Message-Id: <8806100034.AA08244@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm free's unmalloc'ed memory
+X-Mailer: mh6.5
+Date: Thu, 09 Jun 88 17:34:16 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   587
+### area:         uwm
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Attempting to free non-existant memory.
+DESCRIPTION:
+	If a window is not named, the variable 'name' gets set to a static
+	string. Later, uwm will try to free this string. Could cause problems
+	on some systems.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/uwm/RubberB.c.old	Thu Jun  9 14:23:25 1988
+--- clients/uwm/RubberBand.c	Thu Jun  9 14:27:50 1988
+***************
+*** 93,98
+          int events;                     /* what events we want.             */
+          Window pop;                     /* pop up prompt window         */
+  	int i;
+  	char *name;
+  	int width_offset, height_offset; /* to subtract if resize increments */
+  	XSetWindowAttributes attr;	/* for setting save unders flag */
+
+--- 93,99 -----
+          int events;                     /* what events we want.             */
+          Window pop;                     /* pop up prompt window         */
+  	int i;
++ 	int named = TRUE;
+  	char *name;
+  	int width_offset, height_offset; /* to subtract if resize increments */
+  	XSetWindowAttributes attr;	/* for setting save unders flag */
+***************
+*** 108,114
+  	  }
+  	  return;
+  	}
+!         if (!XFetchName(dpy, window, &name))
+  	  name = "Unnamed Window";
+  
+  	ur = XCreateFontCursor(dpy, XC_ur_angle);
+
+--- 109,115 -----
+  	  }
+  	  return;
+  	}
+!         if (!XFetchName(dpy, window, &name)) {
+  	  name = "Unnamed Window";
+  	  named = FALSE;
+  	}
+***************
+*** 110,115
+  	}
+          if (!XFetchName(dpy, window, &name))
+  	  name = "Unnamed Window";
+  
+  	ur = XCreateFontCursor(dpy, XC_ur_angle);
+  	ul = XCreateFontCursor(dpy, XC_ul_angle);
+
+--- 111,118 -----
+  	}
+          if (!XFetchName(dpy, window, &name)) {
+  	  name = "Unnamed Window";
++ 	  named = FALSE;
++ 	}
+  
+  	ur = XCreateFontCursor(dpy, XC_ur_angle);
+  	ul = XCreateFontCursor(dpy, XC_ul_angle);
+***************
+*** 370,376
+  	XFreeCursor (dpy, ul);
+  	XFreeCursor (dpy, lr);
+  	XFreeCursor (dpy, ll);
+! 	free(name);
+  	free(text);
+  	*x = min(x1, x2);
+  	*y = min(y1, y2);
+
+--- 373,380 -----
+  	XFreeCursor (dpy, ul);
+  	XFreeCursor (dpy, lr);
+  	XFreeCursor (dpy, ll);
+! 	if (named)
+! 	    free(name);
+  	free(text);
+  	*x = min(x1, x2);
+  	*y = min(y1, y2);
+

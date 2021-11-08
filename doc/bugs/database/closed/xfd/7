@@ -1,0 +1,112 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Tue, 5 Jul 88 14:40:36 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26133; Tue, 5 Jul 88 14:38:59 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Tue, 5 Jul 88 10:39:08 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA29542; Tue, 5 Jul 88 11:39:11 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Tue, 5 Jul 88 11:40:57 pdt
+Message-Id: <8807051840.AA17888@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xfd problems/enhancements
+X-Mailer: mh6.5
+Date: Tue, 05 Jul 88 11:40:53 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   691
+### area:         xfd
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Call 'Xos.h' for system dependencies.
+	Need to strip leading path from client name.
+	Negative start values illogical.
+	Null or zero length titles cause problems.
+DESCRIPTION:
+	If 'xfd' is started using a path, the values in
+	the .Xdefault files aren't found.
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/xfd/xfd.c.old	Fri Jun 24 10:15:14 1988
+--- clients/xfd/xfd.c	Fri Jun 24 18:24:08 1988
+***************
+*** 7,12
+   *
+   */
+  
+  #include <X11/Xlib.h>
+  #include <X11/Xutil.h>
+  #include <X11/Xatom.h>
+
+--- 7,13 -----
+   *
+   */
+  
++ #include <X11/Xos.h>
+  #include <X11/Xlib.h>
+  #include <X11/Xutil.h>
+  #include <X11/Xatom.h>
+***************
+*** 78,84
+  	char *fontname = BODY_FONT_DEFAULT;     /* Display default body font */
+  	char buffer[BUFFERSIZE];                /* buffer for XLookupString */
+  
+! 	INIT_NAME;
+  
+  	/* Handle command line arguments, open the display */
+  	Get_X_Options(&argc, argv);
+
+--- 79,89 -----
+  	char *fontname = BODY_FONT_DEFAULT;     /* Display default body font */
+  	char buffer[BUFFERSIZE];                /* buffer for XLookupString */
+  
+! 	program_name = strrchr(argv[0], '/');
+! 	if (!program_name)
+! 	   program_name = argv[0];
+! 	else
+! 	   program_name++;
+  
+  	/* Handle command line arguments, open the display */
+  	Get_X_Options(&argc, argv);
+***************
+*** 92,97
+  		if (!strcmp("-start", argv[i])) {
+  			if (++i >= argc) usage();
+  			first_char = atoi(argv[i]);
+  			continue;
+  		}
+  		if (!strcmp("-verbose", argv[i]) || !strcmp("-v", argv[i])) {
+
+--- 97,104 -----
+  		if (!strcmp("-start", argv[i])) {
+  			if (++i >= argc) usage();
+  			first_char = atoi(argv[i]);
++ 			if (first_char < 0)
++ 			   first_char = 0;
+  			continue;
+  		}
+  		if (!strcmp("-verbose", argv[i]) || !strcmp("-v", argv[i])) {
+***************
+*** 109,114
+  	max_char = real_font->max_char_or_byte2;
+  	if (real_font->min_byte1 || real_font->max_byte1)
+  		max_char = real_font->max_byte1 * max_char;
+  
+  	/* Resolve the X options */
+  	Resolve_X_Options();
+
+--- 116,125 -----
+  	max_char = real_font->max_char_or_byte2;
+  	if (real_font->min_byte1 || real_font->max_byte1)
+  		max_char = real_font->max_byte1 * max_char;
++ 
++ 	/* double check the title string */
++ 	if (!title || strlen(title) == 0)
++ 	   title = TITLE_DEFAULT;
+  
+  	/* Resolve the X options */
+  	Resolve_X_Options();
+

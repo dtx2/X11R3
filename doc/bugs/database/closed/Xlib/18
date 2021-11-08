@@ -1,0 +1,51 @@
+Return-Path: shep@allspice.lcs.mit.edu
+Received: from PTT.LCS.MIT.EDU (ALLSPICE.LCS.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 13:42:00 EST
+Received: from shep.sage by PTT.LCS.MIT.EDU via PCMAIL with DMSP
+	id AA13333; Mon, 28 Mar 88 13:41:27 EST
+Date: Mon, 28 Mar 88 13:41:27 EST
+Message-Id: <8803281841.AA13333@PTT.LCS.MIT.EDU>
+To: xbugs@expo.lcs.mit.edu
+Subject: C-/ doesn't type a C-_
+Sender: shep@ALLSPICE.LCS.MIT.EDU
+From: shep@ALLSPICE.LCS.MIT.EDU
+Repository: PTT
+Originating-Client: sage
+
+### bug number:   243
+### area:         Xlib
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     A special case of the more general lack
+###		  of dynamic reconfiguration of the keyboard.
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Microvax II
+
+CLIENT OPERATING SYSTEM:
+	4.3bsd
+
+DISPLAY:
+	QDSS
+
+SYNOPSIS: 
+	C-/ doesn't type a C-_
+
+DESCRIPTION:
+                    -----
+	Typing Ctrl | ? | on the LK201AA keyboard doesn't type a C-_
+	            | / |
+	            -----
+but instead types just a plain slash.  I couldn't figure out how to
+rebind this using xmodmap, and I have been told that it isn't
+possible.   (This did work under X10 without any rebinding.)
+
+REPEAT-BY:
+
+
+FIX:
+
+

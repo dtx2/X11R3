@@ -1,0 +1,108 @@
+Return-Path: bilbo.geoff@seas.ucla.edu
+Received: by expo.lcs.mit.edu; Tue, 17 May 88 20:49:16 EDT
+Message-Id: <8805180049.AA02463@EXPO.LCS.MIT.EDU>
+Date:           Tue, 17 May 88 17:29:33 PDT
+From: Geoff Kuenning <bilbo.geoff@seas.ucla.edu>
+Received:       from BILBO (193.255.1.3) by FRODO
+                id smtp.15703; Tue, 17 May 88 17:28:41 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject:        mivaltree can crash server if some windows are partly off-screen
+
+### bug number:   506
+### area:         server
+### severity:     very high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Bell Technologies 386/AT
+
+CLIENT OPERATING SYSTEM:
+	SVR3
+
+DISPLAY:
+	Video 7 VEGA (IBM EGA clone)
+
+SYNOPSIS:
+	mivaltree can crash server if some windows are partly off-screen
+
+DESCRIPTION:
+	The code in miComputeClips can call miRegionReset with an illegal
+	bounding box.  This can occur when miComputeClips is called with
+	a window that is partially off the right or lower edge of the screen.
+
+REPEAT-BY:
+	# For a 1024x1024 screen;  adjust coordinates as needed
+	# Border width should be 2
+	xload =100x100+922+922
+	xload =100x100+922+972
+
+	The server will abort with an assertion error when the second xload
+	is run.
+
+FIX:
+	Apply the following patch:
+
+Index: server/ddx/mi/mivaltree.c
+
+*** mivaltree.c.old	Tue May 17 15:07:23 1988
+--- mivaltree.c	Mon May 16 17:10:06 1988
+***************
+*** 201,210
+  		borderBox.y1 = y1;
+  		borderBox.x2 = x2;
+  		borderBox.y2 = y2;
+! 		(* pScreen->RegionReset) (borderRegion, &borderBox);
+! 		(* pScreen->Union) (pParent->borderExposed,
+! 				    pParent->borderExposed,
+! 				    borderRegion);
+  	    }
+  	    if (newExtents->y2 < oldExtents->y2) 
+              {
+
+--- 201,213 -----
+  		borderBox.y1 = y1;
+  		borderBox.x2 = x2;
+  		borderBox.y2 = y2;
+! 		if (v < x2)
+! 		{
+! 		    (* pScreen->RegionReset) (borderRegion, &borderBox);
+! 		    (* pScreen->Union) (pParent->borderExposed,
+! 					pParent->borderExposed,
+! 					borderRegion);
+! 		}
+  	    }
+  	    if (newExtents->y2 < oldExtents->y2) 
+              {
+***************
+*** 218,227
+  		borderBox.y1 = v;
+  		borderBox.x2 = x2;
+  		borderBox.y2 = y2;
+! 		(* pScreen->RegionReset) (borderRegion, &borderBox);
+! 		(* pScreen->Union) (pParent->borderExposed,
+! 				    pParent->borderExposed,
+! 				    borderRegion);
+  	    }
+  	    (* pScreen->RegionDestroy) (borderRegion);
+  
+
+--- 221,233 -----
+  		borderBox.y1 = v;
+  		borderBox.x2 = x2;
+  		borderBox.y2 = y2;
+! 		if (v < y2)
+! 		{
+! 		    (* pScreen->RegionReset) (borderRegion, &borderBox);
+! 		    (* pScreen->Union) (pParent->borderExposed,
+! 					pParent->borderExposed,
+! 					borderRegion);
+! 		}
+  	    }
+  	    (* pScreen->RegionDestroy) (borderRegion);
+  
+
+	Geoff Kuenning	geoff@lcc.ucla.edu	geoff@ITcorp.com
+

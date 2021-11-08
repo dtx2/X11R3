@@ -1,0 +1,75 @@
+Return-Path: mcvax!doc.ic.ac.uk!lmjm@uunet.uu.net
+Received: from uunet.UU.NET by expo.lcs.mit.edu; Wed, 6 Apr 88 05:04:50 EDT
+Received: from mcvax.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA17415; Wed, 6 Apr 88 05:03:57 EDT
+Received: by mcvax.cwi.nl; Wed, 6 Apr 88 11:00:01 +0200 (MET)
+Received: from doc.ic.ac.uk by kestrel.Ukc.AC.UK   via Janet (UKC CAMEL FTP)
+           id aa12089; 5 Apr 88 21:42 BST
+From: Lee McLoughlin <mcvax!doc.ic.ac.uk!lmjm@uunet.uu.net>
+Date: Sun, 3 Apr 88 19:46:08 BST
+Message-Id: <2985.8804031846@oriona.doc.ic.ac.uk>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug in xedit.c
+
+### bug number:   312
+### area:         xedit
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Hlh Orion
+
+CLIENT OPERATING SYSTEM:
+	BSD 4.2
+
+DISPLAY:
+	StarPoint
+
+SYNOPSIS:
+	xedit fails to compile due to incorrect cast
+
+DESCRIPTION:
+clients/xedit/xedit.c
+  155	         (XtArgVal)&enableBackups, 	"String", "FALSE"},
+	                                 ^
+Syntax error: initialiser too complex
+
+
+REPEAT-BY:
+	run cc
+
+FIX:
+*** /tmp/,RCSt1002977	Sun Apr  3 19:44:56 1988
+--- xedit.c	Sun Apr  3 19:43:21 1988
+***************
+*** 152,158
+     {"editInPlace", "EditInPlace", XtRBoolean, sizeof(int),
+           (Cardinal)&editInPlace, XtRString, "False"},
+     {"enableBackups", "EnableBackups", XtRBoolean, sizeof(int),
+!          (XtArgVal)&enableBackups, XtRString, "FALSE"},
+     {"backupNamePrefix", "BackupNamePrefix", XtRString, sizeof(char *),
+           (Cardinal)&backupNamePrefix,XtRString, ""},
+     {"backupNameSuffix", "BackupNameSuffix", XtRString, sizeof(char *),
+
+--- 152,158 -----
+     {"editInPlace", "EditInPlace", XtRBoolean, sizeof(int),
+           (Cardinal)&editInPlace, XtRString, "False"},
+     {"enableBackups", "EnableBackups", XtRBoolean, sizeof(int),
+!          (Cardinal)&enableBackups, XtRString, "FALSE"},
+     {"backupNamePrefix", "BackupNamePrefix", XtRString, sizeof(char *),
+           (Cardinal)&backupNamePrefix,XtRString, ""},
+     {"backupNameSuffix", "BackupNameSuffix", XtRString, sizeof(char *),
+
+--
+UKUUCP SUPPORT  Lee McLoughlin
+	"What you once thought was only a nightmare is now a reality!"
+
+Janet: lmcl@uk.ac.ukc, lmjm@uk.ac.ic.doc
+DARPA: lmjm%uk.ac.ic.doc@ucl-cs
+Uucp:  lmjm@icdoc.UUCP, ukc!icdoc!lmjm
+

@@ -1,0 +1,73 @@
+The following changes have been made to this directory since R2:
+
+     o	the Athena widgets now use the R3 Intrinsics.
+     o	many resources that the documentation said were ints are
+	really Dimensions and/or Positions.  See Xt/CHANGES for
+	the impact of this.
+     o	some resources that were formerly ints are now Dimensions.
+	The documentation and header files should now match reality.
+     o	the header file Misc.h has been renamed to XawMisc.h.
+     o	Label and Command have two additional resources; XtNresize
+	to disable resize requests in SetValues and XtNbitmap
+	to display a pixmap in place of the text.
+     o	Label and Command now support XtQueryGeometry.
+     o	Label, Command, and other subclasses of Simple will now display
+	their insensitive border in the foreground color rather than
+	always using white.
+     o	Box now returns a correct preferred geometry when first realized.
+     o	Form and Viewport now respect any initial non-zero width or
+	height specified for them when they are created.
+     o	Form now registers StringToWidget and StringToEdgeType conversion
+	procedures so that layouts can be specified externally in
+	a resource file.
+     o	Form supports the new XtCWQueryOnly flag in geometry requests
+     o	Scrollbar does color and reverse video properly.  SetValues on
+	an unrealized Scrollbar now works better.
+     o	Scroll has a new callback, XtNjumpProc, which is called under
+	the same conditions as XtNthumbProc but the call_data argument
+	is a float* to allow portable applications to be written.
+     o	AsciiSink (used by AsciiDisk and AsciiString) has been
+	fixed to not do a bad left-bearing computation and to get
+	the correct foreground.
+     o	Text, AsciiString, and AsciiDisk now get the correct background
+	resource.
+     o	Several key bindings in Text that were broken now work.
+     o	Several scrolling and positioning bugs in Text were fixed.
+     o	Text should now do wordWrap correctly.
+     o	Selection support has been added to Text.  Minimal support is
+	provided for all sources/sinks but sources can provide additional
+	support through new methods in the TextSource structure.  Any
+	private text sources and sinks will have to be updated to
+	initialize these new methods (NULL is fine).
+     o	Text*.h files have been re-organized to make public declarations
+	public, sink/source declarations semi-public and everything else
+	private (to subclasses).  New header TextSrcP.h contains
+	declarations needed by sources and sinks without exposing the
+	entire internals of TextP.h.
+     o	Clock now handles exposures without causing its interval timer to
+	close to zero.
+     o	Load now uses resource XtNhighlight to specify the label and scale
+	color.  It also updates more intelligently and scales correctly.
+     o	Extra spaces in Text have been removed to make it work on compilers
+	with small internal table space.
+     o	Grip has a cursor resource and determines its color from the
+	XtNforeground resource rather than XtNbackground.
+     o	the Mailbox widget has a new resource to specify a shell
+	command to be executed to check for new mail.  It also now
+	uses the translation manager and no longer compresses its
+	interval timer to zero on exposures or button presses.
+     o	Mailbox has two new resources: XtNvolume and XtNonceOnly to
+	provide better noise control.
+     o	XtNforceBars in Viewport no longer dumps core.
+     o	VPaned no longer assumes all it's children are
+	mapped_when_managed.  It no longer grabs the mouse when
+	resizing a pane.  It handles resize requests from children better.
+     o	a new routine, XtSimpleStippledPixmap, has been added.
+	(documentation not yet written).
+     o	a new widget, List, has been added.
+     o	Lots of resource and memory leaks due to missing Destroy methods
+	have been repaired.
+     o	New files Template.h, TemplateP.h and Template.c (all installed
+	in INCDIR) have been added to simplify new widget construction.
+     o	A VendorShell has been added to Xaw to register StringToPixmap
+	conversion for icon pixmaps.

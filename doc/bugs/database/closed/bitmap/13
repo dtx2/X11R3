@@ -1,0 +1,142 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 9 Jun 88 20:32:22 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA07378; Thu, 9 Jun 88 20:30:51 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 9 Jun 88 16:30:45 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA19240; Thu, 9 Jun 88 17:29:50 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 9 Jun 88 17:31:54 pdt
+Message-Id: <8806100031.AA08204@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: bitmap hotspot
+X-Mailer: mh6.5
+Date: Thu, 09 Jun 88 17:31:50 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   585
+### area:         bitmap
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	The hotspot is covered.
+DESCRIPTION:
+	During any Line, Circle, or FloodFill operation, if the grid with the
+	hotspot is affected, the hotspot disappears.
+REPEAT-BY:
+	Set the hotspot in a grid.
+	Cause a Line, Circle or FloodFill operation to affect the grid with
+	the hotspot in it.
+SUGGESTED FIX:
+*** clients/bitmap/bitmap.c.old	Thu Jun  9 10:53:57 1988
+--- clients/bitmap/bitmap.c	Thu Jun  9 10:56:59 1988
+***************
+*** 1456,1461
+  	if (result)
+  	   return;
+  
+  	dx = x2 - x1;
+  	dy = y2 - y1;
+  	x = x1 + 0.5;
+
+--- 1456,1463 -----
+  	if (result)
+  	   return;
+  
++ 	if (x_hot_spot != OUT_OF_RANGE)
++     	    HighlightHotSpot();  /* actually UNhighlight it */
+  	dx = x2 - x1;
+  	dy = y2 - y1;
+  	x = x1 + 0.5;
+***************
+*** 1477,1482
+  	x2_square_exed_through = y2_square_exed_through = OUT_OF_RANGE;
+  	x1_square_plus_through = y1_square_plus_through = OUT_OF_RANGE;
+  	x2_square_plus_through = y2_square_plus_through = OUT_OF_RANGE;
+  	RepaintRaster();
+  	RepaintRasterInverted();
+  }
+
+--- 1479,1486 -----
+  	x2_square_exed_through = y2_square_exed_through = OUT_OF_RANGE;
+  	x1_square_plus_through = y1_square_plus_through = OUT_OF_RANGE;
+  	x2_square_plus_through = y2_square_plus_through = OUT_OF_RANGE;
++ 	if (x_hot_spot != OUT_OF_RANGE)
++     	    HighlightHotSpot();  /* put the hot spot back on the screen */
+  	RepaintRaster();
+  	RepaintRasterInverted();
+  }
+***************
+*** 1499,1504
+  	if (result)
+  	   return;
+  
+  	dx = x2 - x1;
+  	dy = y2 - y1;
+  	rad = sqrt((double)(dx * dx + dy * dy)) + 0.5;
+
+--- 1503,1510 -----
+  	if (result)
+  	   return;
+  
++ 	if (x_hot_spot != OUT_OF_RANGE)
++     	    HighlightHotSpot();  /* actually UNhighlight it */
+  	dx = x2 - x1;
+  	dy = y2 - y1;
+  	rad = sqrt((double)(dx * dx + dy * dy)) + 0.5;
+***************
+*** 1531,1536
+  	x2_square_exed_through = y2_square_exed_through = OUT_OF_RANGE;
+  	x1_square_plus_through = y1_square_plus_through = OUT_OF_RANGE;
+  	x2_square_plus_through = y2_square_plus_through = OUT_OF_RANGE;
+  	RepaintRaster();
+  	RepaintRasterInverted();
+  }
+
+--- 1537,1544 -----
+  	x2_square_exed_through = y2_square_exed_through = OUT_OF_RANGE;
+  	x1_square_plus_through = y1_square_plus_through = OUT_OF_RANGE;
+  	x2_square_plus_through = y2_square_plus_through = OUT_OF_RANGE;
++ 	if (x_hot_spot != OUT_OF_RANGE)
++     	    HighlightHotSpot();  /* put the hot spot back on the screen */
+  	RepaintRaster();
+  	RepaintRasterInverted();
+  }
+***************
+*** 1564,1569
+      if (AskUserForPoint(&x, &y, 0))
+        return;
+  
+      flood_minx = flood_maxx = x;
+      flood_miny = flood_maxy = y;
+      FloodOne( x, y );
+
+--- 1572,1579 -----
+      if (AskUserForPoint(&x, &y, 0))
+        return;
+  
++     if (x_hot_spot != OUT_OF_RANGE)
++     	HighlightHotSpot();  /* actually UNhighlight it */
+      flood_minx = flood_maxx = x;
+      flood_miny = flood_maxy = y;
+      FloodOne( x, y );
+***************
+*** 1569,1574
+      FloodOne( x, y );
+      RefillGridPartially(flood_minx, flood_miny, flood_maxx, flood_maxy,
+        FALSE);
+      RepaintRaster();
+      RepaintRasterInverted();
+    }
+
+--- 1579,1586 -----
+      FloodOne( x, y );
+      RefillGridPartially(flood_minx, flood_miny, flood_maxx, flood_maxy,
+        FALSE);
++     if (x_hot_spot != OUT_OF_RANGE)
++ 	HighlightHotSpot();  /* put the hot spot back on the screen */
+      RepaintRaster();
+      RepaintRasterInverted();
+    }
+

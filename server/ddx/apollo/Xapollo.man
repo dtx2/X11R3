@@ -1,0 +1,161 @@
+.\" $XConsortium: Xapollo.man,v 1.5 88/09/06 15:03:30 jim Exp $
+.TH XAPOLLO 1 "1 March 1988" "X Version 11"
+.SH NAME
+Xapollo \- Apollo server for X Version 11
+.SH SYNOPSIS
+.B Xapollo
+[ option ] ...
+.SH DESCRIPTION
+.I Xapollo
+is the server for Version 11 of the
+.I X
+window system on Apollo systems.
+It will normally be started by
+.I xinit (1),
+or by a shell script run from an interactive shell.
+Note that you will probably need to give command line options to
+.I xinit (1)
+in order to get it to run the server with the desired command line
+options, and to run
+.I xterm (1)
+with the desired options, display, etc.
+See the man page for
+.I xinit (1).
+.SH CONFIGURATIONS
+.I Xapollo
+operates under DOMAIN/IX, with at least Apollo software release SR9.6.
+It operates on any Apollo display hardware.
+It requires a keyboard with a mouse.
+TCP/IP software must also be installed and running.
+.SH OPTIONS
+The Xapollo server program takes device dependent options as follows.
+In addition, the "standard" X11 server command line options can be used.
+These options are described under
+.I Xserver(1).
+.TP
+\fB-D\fP<unit>
+This option gives the display unit number to which the following string
+giving per-display options should apply.
+Presently, only \fB-D1\fP, meaning display unit 1, is meaningful.
+The string following has, for the present, the following simple syntax:
+\fBd\fP<depth>, which means use the given number as the depth of the screen.
+The actual depth will be the minimum of the available number of planes, and
+the depth given.
+If the resulting number is not 1, 4 or 8, the next smallest number in that
+list will be used.
+In the absence of any option, the server will use the full depth available.
+For example,
+.I -D1 d1
+means treat display unit 1 as a monochrome display,
+regardless of how many planes it has.
+.I -D1 d4
+means use only 4 planes of display unit 1, assuming that it
+has at least 4 planes.
+.SH KEYBOARD
+We assume Apollo keyboard number 2 (with mouse, without
+numeric keypad or lighted CapsLock key).
+(Keyboard number 1 is unsupported, since it can't have a mouse.
+Keyboard number 3, with the numeric keypad and lighted CapsLock key,
+is a superset of keyboard number 2.
+It has the ability to generate raw key up/down transitions;
+this should be supported but isn't.
+Keyboard number 2 cannot generate raw key up/downs.)
+.PP
+Only the white keys, the four basic arrow keys and F1-F8 are implemented now.
+Up transitions for the white keys are faked.
+Positions of the real control and shift keys are inferred from the raw input
+character; their transitions are faked if necessary.
+.PP
+"Mouse" Control, Shift and Meta keys are as follows:
+.PP
+.TP 8
+Control:
+.br
+KBD_$LD, Boxed up-arrow, Lower left corner of left-hand keypad
+.TP 8
+Shift:
+.br
+KBD_$LF, Boxed down-arrow, Lower right corner of left-hand keypad
+.TP 8
+Meta:
+.br
+KBD_$R1, "POP", Lower right corner of main keyboard
+.PP
+You can bail out of the server by hitting the ABORT/EXIT key
+(KBD_$R5 and KBD_$R5S, upper right corner of keyboard).
+Unshifted, it will exit the server in an orderly fashion.
+If this doesn't work (i.e. server is wedged), the shifted version is the
+system quit character.
+.SH SWITCHER
+The server has a feature called the switcher, which allows you to alternate
+between the X server and the Apollo DM environment.
+(This feature is included by defining the symbol SWITCHER when the
+Apollo driver is compiled; this happens by default.)
+Once the X server is running, you can switch from it to the DM by running
+the program
+.I todm,
+found in the
+.I server/ddx/apollo
+directory.
+You may wish to bind this program to a
+.I uwm (1)
+menu entry, if you use that window manager.
+.PP
+While in the DM, you can switch back to an already-running X server by running
+the program
+.I tox,
+also in the
+.I server/ddx/apollo
+directory.
+You may wish to bind this program to a DM programmable key.
+.PP
+While you are "switched away" from the X server to the DM, the X server
+is blocked.
+.SH "SEE ALSO"
+.PP
+Xserver(1),
+xinit (1),
+todm (1),
+tox (1),
+and the
+.I server/ddx/apollo/README
+file on the X distribution tape.
+.SH LIMITATIONS
+When running in monochrome, the server uses the portable but slow MFB driver.
+When in color, it uses Apollo native graphics interfaces, but more optimizations
+are still called for.
+.PP
+Due to differing implementation techniques for the color switcher and
+the monochrome switcher, you will find that running the X server in
+monochrome leaves the DM free to continue execution (for example,
+processing typed-ahead input), while running the server in color
+blocks the DM, so that typed-ahead input will not be processed until
+you switch back to the DM.
+.PP
+The pointer motion buffer, threshhold and acceleration factors are not
+implemented.
+.PP
+The keyboard hardware does not allow for keyclick, bell pitch or volume
+control, or autorepeat control.
+The keyboard support for keyboard 3 could allow more
+natural use of control and shift, and it could add more Apollo keys to the
+keymap.
+.SH BUGS
+If the server exits abnormally on a color display, it will not restore
+the hardware color map to its former state, making the DM screen hard
+to read.
+You can fix this by running the program
+.I /systest/ssr_util/lcm,
+which will reload the DM's default color map.
+.PP
+There is a known race condition in the pre-SR9.7 versions of TCP/IP which may
+make local clients hang just after establishing connections to the server.
+This problem does not exist with remote clients.
+At SR9.7, this problem has been fixed.
+.SH COPYRIGHT
+Copyright 1987, 1988, Apollo Computer Inc.
+.SH AUTHORS
+.TP
+Dave Gorgen, Jim Hamilton, Steve Reber, Bob Terek
+.br
+Apollo Computer Inc.

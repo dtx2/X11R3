@@ -1,0 +1,55 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: from ATHENA (ATHENA.MIT.EDU) by expo.lcs.mit.edu; Wed, 13 Apr 88 17:29:41 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA08639; Wed, 13 Apr 88 16:28:27 EST
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 13 Apr 88 13:27:59 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA20640; Wed, 13 Apr 88 13:28:15 PST
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 13 Apr 88 14:30:49 pdt
+Message-Id: <8804132130.AA01407@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xfd icon
+X-Mailer: mh6.5
+Date: Wed, 13 Apr 88 14:30:45 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   379
+### area:         xfd
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     fix provided
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	Specified a icon bitmap, but it isn't being used.
+DESCRIPTION:
+	The bitmap was being processed by wsimple when it was specifed,
+	but it was never being passed on to the server.
+REPEAT-BY:
+	xfd -icon bitmapfile; then iconify the window. It will not use the
+	bitmap specified.
+SUGGESTED FIX:
+*** wsimple.c.old	Mon Mar 28 08:58:08 1988
+--- wsimple.c	Tue Apr  5 14:04:36 1988
+***************
+*** 609,616
+  	XSetWindowBackground(dpy, wind, background);
+  	XSetWindowBorder(dpy, wind, border);
+  
+! 	XSetStandardProperties(dpy, wind, title, icon_name, None, _commands,
+! 			       _number_of_commands, &size_hints);
+  }
+  
+  /*
+
+--- 609,616 -----
+  	XSetWindowBackground(dpy, wind, background);
+  	XSetWindowBorder(dpy, wind, border);
+  
+! 	XSetStandardProperties(dpy, wind, title, icon_name, icon_pixmap,
+! 				_commands, _number_of_commands, &size_hints);
+  }
+  
+  /*
+

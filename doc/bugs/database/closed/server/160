@@ -1,0 +1,44 @@
+Return-Path: apollo!dpg@eddie.mit.edu
+Received: by expo.lcs.mit.edu; Thu, 16 Jun 88 11:59:12 EDT
+Received: by EDDIE.MIT.EDU with UUCP with smail2.5 with sendmail-5.45/4.7 id <AA06673@EDDIE.MIT.EDU>; Thu, 16 Jun 88 11:57:48 EDT
+Received: by apollo.UUCP id AA00093; Thu, 16 Jun 88 10:29:36 edt
+From: David Gorgen <apollo!dpg@eddie.mit.edu>
+Message-Id: <8806161429.AA00093@apollo.UUCP>
+Date: Thu, 16 Jun 88 10:11:54 EDT
+Subject: Minor bug in server/ddx/apollo/ap_text.h
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   609
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+DISPLAY:
+	Apollo
+
+SYNOPSIS:
+	server/ddx/apollo/ap_text.h is missing a final #endif
+
+DESCRIPTION:
+	Ditto.  It compiles anyway, but just to be a bit cleaner....
+
+REPEAT-BY:
+	Eyeball the source file in question.
+
+FIX:
+
+*** server/ddx/apollo/ap_text.h	Thu Mar  3 15:38:47 1988
+--- ap_text.h	Wed Jun 15 17:44:39 1988
+***************
+*** 38,40 ****
+--- 38,41 ----
+  extern int gprPolyText8();
+  extern int gprPolyText16();
+  extern int nopText();
++ #endif
+
+-------
+

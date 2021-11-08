@@ -1,0 +1,83 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 10:09:32 EST
+Date: Thu, 10 Mar 88 10:09:32 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803101509.AA00539@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: wm fix
+
+### bug number:   78
+### area:         wm
+### severity:     
+### assigned to:  
+### status:       closed
+
+(Message inbox:52)
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 08:47:04 EST
+Return-Path: <@RELAY.CS.NET,@RELAY.CS.NET,@ai.toronto.edu:moraes@csri.toronto.edu>
+Received: from RELAY.CS.NET (RELAY.CS.NET) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 125237; 23 Feb 88 19:05:52 EST
+Received: from ai.toronto.edu by RELAY.CS.NET id aa18743; 23 Feb 88 18:55 EST
+Received: from yonge.csri.toronto.edu by ai.toronto.edu via ETHER with SMTP id AA10498; Tue, 23 Feb 88 18:51:03 EST
+Received: from moraes by yonge.csri.toronto.edu via UNIX id AA24770; Tue, 23 Feb 88 18:50:52 EST
+Date: Tue, 23 Feb 88 18:50:52 EST
+From: Mark Moraes <moraes%csri.toronto.edu@relay.cs.net>
+Message-Id: <8802232350.AA24770@yonge.csri.toronto.edu>
+To: RWS@zermatt.lcs.mit.edu
+Subject: wm fix
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Thu, 10 Mar 88 08:47 EST
+Resent-Message-Id: <880310084703.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+
+Hi.
+
+I don't know if this is exciting or worthwhile, since wm is officially
+only a demo, but I use it and the fix makes it somewhat easier to use.
+Very minor.
+
+Is X11R2 going to have a nice window manager in the wm style?
+
+Thanks,
+
+	Mark.
+
+*** /tmp/,RCSt1a20486	Tue Feb 23 18:46:33 1988
+--- demos/wm/test.c	Fri Feb 19 13:22:05 1988
+***************
+*** 483,488
+  				ev.xbutton.y_root - dragy - BORDERWIDTH,
+  				dragWidth + 2 * BORDERWIDTH,
+  				dragHeight + 2 * BORDERWIDTH);
+  		}
+  		else {
+  		    int newx, newy;
+
+--- 483,489 -----
+  				ev.xbutton.y_root - dragy - BORDERWIDTH,
+  				dragWidth + 2 * BORDERWIDTH,
+  				dragHeight + 2 * BORDERWIDTH);
++ 		    XRaiseWindow(dpy, ga->frame);
+  		}
+  		else {
+  		    int newx, newy;
+***************
+*** 1397,1403
+  	 EnterWindowMask)
+      attributes.event_mask = FRAME_EVENT_MASK;
+      attributes.background_pixel = ri->background;
+!     attributes.border_pixel = ri->foreground;
+      attributes.bit_gravity = NorthWestGravity;
+      return XCreateWindow(dpy, root, x, y, width, height, BORDERWIDTH,
+  	     DefaultDepth(dpy, scr), CopyFromParent, DefaultVisual(dpy, scr),
+
+--- 1398,1404 -----
+  	 EnterWindowMask)
+      attributes.event_mask = FRAME_EVENT_MASK;
+      attributes.background_pixel = ri->background;
+!     attributes.border_pixel = ri->borderpixel;
+      attributes.bit_gravity = NorthWestGravity;
+      return XCreateWindow(dpy, root, x, y, width, height, BORDERWIDTH,
+  	     DefaultDepth(dpy, scr), CopyFromParent, DefaultVisual(dpy, scr),
+

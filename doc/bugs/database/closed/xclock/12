@@ -1,0 +1,87 @@
+Return-Path: dave@cs.wisc.edu
+Received: by expo.lcs.mit.edu; Wed, 20 Apr 88 10:44:39 EDT
+Message-Id: <8804201444.AA03243@romano.cs.wisc.edu>
+Received: from localhost.WISC.EDU by romano.cs.wisc.edu; Wed, 20 Apr 88 09:44:21 CDT
+To: xbugs@expo.lcs.mit.edu
+Subject: the Clock Widget has a race condition with exposure events +FIX
+Date: Wed, 20 Apr 88 09:44:19 -0500
+From: Dave Cohrs <dave@cs.wisc.edu>
+
+### bug number:   397
+### area:         xclock
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     fix provided
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 4/110
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.2
+
+DISPLAY:
+	BW
+
+SYNOPSIS:
+	If one manages to expose part of the Clock widget just as
+	the minute changes, the old hands are not erased.
+
+DESCRIPTION:
+	Xclock, using the Clock widget in analog mode, occasionally
+	leaves the window in a strange state, with an old copy of the
+	minute hand visible (this could be true for the second hand as
+	well, but I don't use it).  If you partially cover the Clock
+	window, and then expose it, if the minute has changed since the
+	last time the Clock was updated, the widget doesn't erase the
+	old hands before redrawing the window, leaving junk in the
+	window.
+
+REPEAT-BY:
+	- run xclock
+	- run something else (an xterm will do), and partially
+	  cover the xclock window, leave the hands visible.
+	- wait a while (this is a timing dependent bug, so it's
+	  a little hard to reproduce), until the minute changes,
+	  but before xclock redraws the window
+	- Raise the xclock window
+
+	Notice at this point that the old minute hand is still
+	visible.
+
+FIX:
+	This fix is a bit of a kludge.  It just fully erases
+	the Clock window before redrawing the analog hands
+	and face.
+
+*** Clock.c.old	Wed Apr 20 09:41:59 1988
+--- Clock.c	Wed Apr 20 09:43:11 1988
+***************
+*** 263,270 ****
+      Region region;		/* unused */
+  {
+      ClockWidget w = (ClockWidget) gw;
+!     if (w->clock.analog)
+          DrawClockFace(w);
+      clock_tic((caddr_t)w, (XtIntervalId)NULL);
+  }
+  
+--- 263,276 ----
+      Region region;		/* unused */
+  {
+      ClockWidget w = (ClockWidget) gw;
+!     if (w->clock.analog) {
+! 	/*
+! 	 * There is a race condition when the clock is exposed
+! 	 * just as the time changes
+! 	 */
+! 	XClearWindow(XtDisplay(w), XtWindow(w));
+          DrawClockFace(w);
++     }
+      clock_tic((caddr_t)w, (XtIntervalId)NULL);
+  }
+  
+

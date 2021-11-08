@@ -1,0 +1,249 @@
+Return-Path: kit@athena.mit.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Fri, 25 Mar 88 16:11:06 EST
+From: kit@athena.mit.edu
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05243; Fri, 25 Mar 88 16:10:06 EST
+Received: by MYCROFT (5.45/4.7)
+	id AA02196; Fri, 25 Mar 88 16:08:25 EST
+Message-Id: <8803252108.AA02196@MYCROFT>
+To: xbugs@expo.lcs.mit.edu
+Cc: swick@athena.mit.edu, kit@athena.mit.edu
+Subject: Bug in xterm.
+Date: Fri, 25 Mar 88 16:08:17 EST
+
+### bug number:   222
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     supplied fix is INCORRECT, see appended fix
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	VS2000
+
+CLIENT OPERATING SYSTEM:
+	4.3 BSD - (Athena 6.0a if this helps)
+
+DISPLAY:
+	VR260 - Monochrome
+
+SYNOPSIS:
+	xterm sets the WINDOWID incorrectly
+
+DESCRIPTION:
+
+xterm sets the WINDOWID enviornment variable to the vt100 or tek
+window that is a child of the top level widget, not the child of root that is
+the toplevel window.
+
+REPEAT-BY:
+
+run the following program	- xsetsize =+10+10
+
+This gives interesting results. It should move your window to the upper left
+corner of the display (almost), but....
+
+------------------------------------------------------------
+#ifndef lint
+  static char rcsid_module_c[] = "$Header: README,v 1.2 87/08/08 20:06:43 treese Exp $";
+#endif lint
+
+/*	This is xsetsize.c 
+ *
+ *      Changes the size and placement of an xterm window.
+ *	
+ *	Created:        October 15 1987
+ *	By:		John E. Elsbree and Christopher J. VanHaren.
+ *      Modified:       March 24 1988
+ *      By:             Chris D. Peterson
+ *
+ *      $Source: /u2/projects/template/RCS/README,v $
+ *      $Author: kit $
+ *      $Header: README,v 1.2 87/08/08 20:06:43 kit Exp $
+ *	
+ *  	Copyright 1987, 1988 by the Massachusetts Institute of Technology.
+ *
+ *	For further information on copyright and distribution 
+ *	see the file mit-copyright.h
+ */
+
+#ifndef TRUE
+#define TRUE 1
+#endif TRUE
+
+#ifndef FALSE
+#define FALSE 0
+#endif FALSE
+
+#include "mit-copyright.h"
+#include <stdio.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+#define BAD_VALUE -1
+
+void main(), PrintUsage();
+char * getenv();
+
+void
+main(argc, argv)
+int argc;
+char *argv[];
+{
+  int geom_mask, i, x, y, width, height, border_width;
+  int icon_move, quiet;
+  Display *display;
+  Window window;
+  XWindowAttributes w_attr, r_attr;
+  XWMHints * wmhints;
+  char *w_str;
+
+  display = XOpenDisplay("");
+  w_str = getenv("WINDOWID");
+  window = (Window) atoi(w_str);
+
+  border_width = BAD_VALUE;
+  icon_move = FALSE;
+  quiet = FALSE;
+
+  if (argc == 1)
+    PrintUsage(display);
+
+  for (i=1; i < argc; i++) {
+    if ( strcmp(argv[i],"-q") == 0 || strcmp(argv[i],"-quiet") == 0)
+      quiet = TRUE;
+    if ( strcmp(argv[i],"-i") == 0 || strcmp(argv[i],"-icon") == 0)
+      icon_move = TRUE;
+    else if (strcmp(argv[i],"-bw") == 0) {
+      if (++i < argc)
+	border_width = atoi(argv[i]);
+    }
+    else if ( (geom_mask = XParseGeometry(argv[i], &x, &y, &width, &height)) 
+	     == 0 ) 
+      PrintUsage(display);
+  }
+
+  if (border_width > BAD_VALUE)
+    XSetWindowBorderWidth(display, window, border_width);
+  
+  if (icon_move) {		/* move icon */
+    wmhints = XGetWMHints(display, window);
+    if (wmhints == NULL) {
+      fprintf(stderr,
+	      "Could not iconify, is this window a child of the root?\n");
+      XCloseDisplay(display);
+      exit(1);
+    }
+
+    if (XValue & geom_mask) {
+      wmhints->icon_x = x;
+      wmhints->flags |= IconPositionHint;
+    }
+
+    if (YValue & geom_mask) {
+      wmhints->icon_y = y;
+      wmhints->flags |= IconPositionHint;
+    }
+
+    wmhints->flags |= StateHint;
+    wmhints->initial_state = IconicState;
+
+    XSetWMHints(display, window, wmhints);  
+
+    /* convince uwm to do what you told it to do. */
+
+    XUnmapWindow(display,window); 
+    XMapWindow(display,window); 
+  }
+  else {			/* size window. */
+    XGetWindowAttributes(display, window, &w_attr);
+    XGetWindowAttributes(display, w_attr.root, &r_attr);
+  
+    if (!(geom_mask & WidthValue))
+      width = w_attr.width;
+    
+    if (!(geom_mask & HeightValue))
+      height = w_attr.height;
+
+    if (!(geom_mask & XValue))
+      x = w_attr.x;
+
+    if (!(geom_mask & YValue))
+      y = w_attr.y;
+
+    if (geom_mask & XNegative)
+      x = r_attr.width - width - (w_attr.border_width * 2) + x;
+    
+    if (geom_mask & YNegative)
+      y = r_attr.height - height - (w_attr.border_width * 2) + y;
+
+    XMoveResizeWindow(display, window, x, y, width, height);
+    XRaiseWindow(display, window);
+
+    if ( !quiet && (width != w_attr.width || height != w_attr.height) ) {
+      fprintf(stdout,"Your Xterm has been resized to make sure that\n");
+      fprintf(stdout,"everything works correctly execute the command:\n\n\n");
+      fprintf(stdout,"'%% set noglob; eval `resize`'\n\n\n");
+    }
+  }
+  XFlush(display);
+  XCloseDisplay(display);
+}
+
+void
+PrintUsage(disp)
+Display * disp;
+{
+  printf("usage:  xsetsize [options]\n");
+  printf("[=[width]x[height][[+-]xoff[+-]yoff]]\n");
+  printf("-icon \n");
+  printf("-quiet \n");
+  printf("-bw border_width \n");
+  
+  XCloseDisplay(disp);
+  exit(1);
+}
+
+------------------------------------------------------------
+
+FIX:
+
+Quite simple actually:
+
+*** /mit/X11/src/clients/xterm/main.c	Sat Mar 19 15:23:20 1988
+--- main.c	Thu Mar 24 17:10:13 1988
+***************
+*** 1163,1170 ****
+  		Setenv ("TERMCAP=", newtc);
+  #endif	/* !SYSV */
+  
+! 		sprintf(buf, "%d", screen->TekEmu ? (int)TWindow(screen) :
+! 		 (int)VWindow(screen));
+  		Setenv ("WINDOWID=", buf);
+  		/* put the display into the environment of the shell*/
+  		Setenv ("DISPLAY=", XDisplayString (screen->display));
+--- 1163,1169 ----
+  		Setenv ("TERMCAP=", newtc);
+  #endif	/* !SYSV */
+  
+! 		sprintf(buf, "%d", XtWindow(toplevel));
+  		Setenv ("WINDOWID=", buf);
+  		/* put the display into the environment of the shell*/
+  		Setenv ("DISPLAY=", XDisplayString (screen->display));
+
+
+
+
+[ The above fix breaks on Tek mode.  Try the following instead:
+
+1166,1167c1166,1168
+< 		sprintf(buf, "%d", screen->TekEmu ? (int)TWindow(screen) :
+< 		 (int)VWindow(screen));
+---
+> 		sprintf (buf, "%lu", screen->TekEmu ? 
+> 			 ((unsigned long) XtWindow (tekWidget->core.parent)) :
+> 			 ((unsigned long) XtWindow (term->core.parent)));
+
+-Jim ]

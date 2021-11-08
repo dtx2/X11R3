@@ -1,0 +1,1378 @@
+\&
+.sp 1
+.ce 3
+\s+1\fBChapter 11\fP\s-1
+
+\s+1\fBUtility Functions\fP\s-1
+.sp 2
+.nr H1 11
+.nr H2 0
+.nr H3 0
+.nr H4 0
+.nr H5 0
+.LP
+.XS
+Chapter 11 \- Utility Functions
+.XE
+The \*(xI provide a number of utility functions that you can use to:
+.IP \(bu 5
+Determine the number of elements in an array
+.IP \(bu 5
+Translate strings to widget instances
+.IP \(bu 5
+Manage memory usage
+.IP \(bu 5
+Share graphics contexts
+.IP \(bu 5
+Manipulate selections
+.IP \(bu 5
+Merge exposure events into a region
+.IP \(bu 5
+Translate widget coordinates
+.IP \(bu 5
+Translate a window to a widget
+.IP \(bu 5
+Handle errors
+.NH 2
+Determining the Number of Elements in an Array
+.XS
+\fB\*(SN Determining the Number of Elements in an Array\fP
+.XE
+.LP
+To determine the number of elements in a fixed-size array, use
+.PN XtNumber .
+.IN "XtNumber" "" "@DEF@"
+.FD 0
+Cardinal XtNumber(\fIarray\fP)
+.br
+      ArrayVariable \fIarray\fP;
+.FN
+.IP \fIarray\fP 1i
+Specifies a fixed-size array.
+.LP
+The
+.PN XtNumber
+macro returns the number of elements in the specified argument lists, 
+resources lists, and other counted arrays.
+.NH 2
+Translating Strings to Widget Instances
+.XS
+\fB\*(SN Translating Strings to Widget Instances\fP
+.XE
+.LP
+To translate a widget name to widget instance, use
+.PN XtNameToWidget .
+.IN "XtNameToWidget" "" "@DEF@"
+.FD 0
+Widget XtNameToWidget(\fIreference\fP, \fInames\fP);
+.br
+      Widget \fIreference\fP;
+.br
+      String \fInames\fP;
+.FN
+.IP \fIreference\fP 1i
+Specifies the widget from which the search is to start.
+.IP \fInames\fP 1i
+Specifies the fully qualified name of the desired widget.
+.LP
+The
+.PN XtNameToWidget
+function looks for a widget whose name is the first component in the specified
+names and that is a pop-up child of reference (or a normal child if reference
+is a subclass of
+.PN compositeWidgetClass ).
+It then uses that widget as the new reference and repeats the search
+after deleting the first component from the specified names.
+If it cannot find the specified widget,
+.PN XtNameToWidget
+returns NULL.
+.LP
+Note that the names argument contains the name of a widget with respect to the 
+specified reference widget and can contain more than one widget name
+(separated by periods) for widgets that are not direct children 
+of the specified reference widget.
+.LP
+If more than one child of the reference widget matches the name,
+.PN XtNameToWidget
+can return any of the children.
+The \*(xI do not require that all children of a widget have unique names.
+If the specified names contain more than one component
+and if more than one child matches the first component,
+.PN XtNameToWidget
+can return NULL if the single branch that it follows does not
+contain the named widget.
+That is,
+.PN XtNameToWidget
+does not back up and follow other matching branches of the widget tree.
+.NH 2
+Managing Memory Usage
+.XS
+\fB\*(SN Managing Memory Usage\fP
+.XE
+.LP
+The \*(xI memory management functions provide uniform checking for
+null pointers and error reporting on memory allocation errors.
+These functions are completely compatible with their standard C language 
+runtime counterparts
+.Pn ( malloc ,
+.PN calloc ,
+.PN realloc ,
+and
+.PN free )
+with the following added functionality:
+.IP \(bu 5
+.PN XtMalloc ,
+.PN XtCalloc ,
+and
+.PN XtRealloc
+give an error if there is not enough memory.
+.IP \(bu 5
+.PN XtFree
+simply returns if passed a NULL pointer.
+.IP \(bu 5
+.PN XtRealloc
+simply allocates new storage if passed a NULL pointer.
+.LP
+See the standard C library documentation on
+.PN malloc ,
+.PN calloc ,
+.PN realloc ,
+and
+.PN free
+for more information.
+.sp
+.LP
+To allocate storage, use
+.PN XtMalloc .
+.IN "XtMalloc" "" "@DEF@"
+.FD 0
+char *XtMalloc(\fIsize\fP);
+.br
+      Cardinal \fIsize\fP;
+.FN
+.IP \fIsize\fP 1i
+Specifies the number of bytes desired.
+.LP
+The
+.PN XtMalloc
+functions returns a pointer to a block of storage of at least 
+the specified size bytes.
+If there is insufficient memory to allocate the new block,
+.PN XtMalloc
+calls
+.PN XtErrorMsg .
+.sp
+.LP
+To allocate and initialize an array, use
+.PN XtCalloc .
+.IN "XtCalloc" "" "@DEF@"
+.FD 0
+char *XtCalloc(\fInum\fP, \fIsize\fP);
+.br
+      Cardinal \fInum\fP;
+.br
+      Cardinal \fIsize\fP;
+.FN
+.IP \fInum\fP 1i
+Specifies the number of array elements to allocate.
+.IP \fIsize\fP 1i
+Specifies the size of an array element in bytes.
+.LP
+The
+.PN XtCalloc
+function allocates space for the specified number of array elements 
+of the specified size and initializes the space to zero.
+If there is insufficient memory to allocate the new block,
+.PN XtCalloc
+calls
+.PN XtErrorMsg .
+.sp
+.LP
+To change the size of an allocated block of storage, use
+.PN XtRealloc .
+.IN "XtRealloc" "" "@DEF@"
+.FD 0
+char *XtRealloc(\fIptr\fP, \fInum\fP);
+.br
+      char *\fIptr\fP;
+.br
+      Cardinal \fInum\fP;
+.FN
+.ds Po to the old storage
+.IP \fIptr\fP 1i
+Specifies a pointer \*(Po.
+.IP \fInum\fP 1i
+Specifies number of bytes desired in new storage.
+.LP
+The
+.PN XtRealloc
+function changes the size of a block of storage (possibly moving it).
+Then, it copies the old contents (or as much as will fit) into the new block
+and frees the old block.
+If there is insufficient memory to allocate the new block,
+.PN XtRealloc
+calls
+.PN XtErrorMsg .
+If ptr is NULL,
+.PN XtRealloc
+allocates the new storage without copying the old contents;
+that is, it simply calls
+.PN XtMalloc .
+.sp
+.LP
+To free an allocated block of storage, use
+.PN XtFree .
+.IN "XtFree" "" "@DEF@"
+.FD 0
+void XtFree(\fIptr\fP);
+.br
+      char *\fIptr\fP;
+.FN
+.ds Po to the block of storage that is to be freed
+.IP \fIptr\fP 1i
+Specifies a pointer \*(Po.
+.LP
+The
+.PN XtFree
+function returns storage and allows it to be reused.
+If ptr is NULL,
+.PN XtFree
+returns immediately.
+.sp
+.LP
+To allocate storage for a new instance of a data type, use
+.PN XtNew .
+.IN "XtNew" "" "@DEF@"
+.FD 0
+\fItype\fP *XtNew(\fItype\fP);
+.br
+      \fItype\fP;
+.FN
+.IP \fItype\fP 1i
+Specifies a previously declared data type.
+.LP
+.PN XtNew
+returns a pointer to the allocated storage.
+If there is insufficient memory to allocate the new block,
+.PN XtNew
+calls
+.PN XtErrorMsg .
+.PN XtNew
+is a convenience macro that calls
+.PN XtMalloc
+with the following arguments specified:
+.LP
+.Ds
+.TA .5i
+.ta .5i
+((type *) XtMalloc((unsigned) sizeof(type))
+.De
+.sp
+.LP
+To copy an instance of a string, use
+.PN XtNewString .
+.IN "XtNewString" "" "@DEF@"
+.FD 0
+String XtNewString(\fIstring\fP);
+.br
+      String \fIstring\fP;
+.FN
+.IP \fIstring\fP 1i
+Specifies a previously declared string.
+.LP
+.PN XtNewString
+returns a pointer to the allocated storage.
+If there is insufficient memory to allocate the new block,
+.PN XtNewString
+calls
+.PN XtErrorMsg .
+.PN XtNewString
+is a convenience macro that calls
+.PN XtMalloc
+with the following arguments specified:
+.LP
+.Ds 
+.TA .5i
+.ta .5i
+(strcpy(XtMalloc((unsigned) strlen(str) + 1), str))
+.De
+.NH 2
+Sharing Graphics Contexts
+.XS
+\fB\*(SN Sharing Graphics Contexts\fP
+.XE
+.LP
+The \*(xI provide a mechanism whereby cooperating clients can share a
+graphics context (GC), thereby reducing both the number of GCs
+created and the total number of server calls in any given application.
+The mechanism is a simple caching scheme, 
+and all GCs obtained by means of this mechanism must be treated as read-only.
+If a changeable GC is needed, the Xlib
+.PN XCreateGC
+function should be used instead.
+.LP
+To obtain a read-only, sharable GC, use
+.PN XtGetGC .
+.IN "XtGetGC" "" "@DEF@"
+.FD 0
+GC XtGetGC(\fIw\fP, \fIvalue_mask\fP, \fIvalues\fP)
+.br
+      Widget \fIw\fP;
+.br
+      XtGCMask \fIvalue_mask\fP;
+.br
+      XGCValues *\fIvalues\fP;
+.FN
+.IP \fIw\fP 1i
+Specifies the widget.
+.ds Vm fields of the values are specified
+.IP \fIvalue_mask\fP 1i
+Specifies which \*(Vm.
+.IP \fIvalues\fP 1i
+Specifies the actual values for this GC.
+.LP
+The
+.PN XtGetGC
+function returns a sharable, read-only GC.
+The parameters to this function are the same as those for
+.PN XCreateGC 
+except that a widget is passed instead of a display.
+.PN XtGetGC
+shares only GCs in which all values in the GC returned by
+.PN XCreateGC
+are the same.
+In particular, it does not use the value_mask provided to
+determine which fields of the GC a widget considers relevant.
+The value_mask is used only to tell the server which fields should be
+filled in with widget data and which it should fill in with default values.
+For further information about value_mask and values,
+see
+.PN XCreateGC
+in the \fI\*(xL\fP.
+.sp
+.LP
+To deallocate a shared GC when it is no longer needed, use
+.PN XtReleaseGC .
+.IN "XtReleaseGC" "" "@DEF@"
+.FD 0
+void XtReleaseGC(\fIw\fP, \fIgc\fP)
+.br
+      Widget \fIw\fP;
+.br
+      GC \fIgc\fP;
+.FN
+.IP \fIw\fP 1i
+Specifies the widget.
+.IP \fIgc\fP 1i
+Specifies the GC to be deallocated.
+.LP
+References to sharable GCs are counted and a free request is generated to the
+server when the last user of a given GC destroys it.
+.NH 2
+Managing Selections
+.XS
+\*(SN Managing Selections
+.XE
+.LP
+Arbitrary widgets (possibly not all in the same application) can communicate 
+with each other by means of the \*(tk global selection mechanism,
+which is defined in the \fI\*(xC\fP.
+The \*(xI provide functions for providing and receiving selection data in
+one logical piece (atomic transfers).
+The actual transfer between the selection owner and the \*(xI is not required to be atomic;
+the \*(xI will break a too-large selection 
+into smaller pieces for transport if necessary.
+.LP
+The next sections discuss how to:
+.IP \(bu 5
+Set and get the selection timeout value
+.IP \(bu 5
+Use atomic transfers
+.\".IP \(bu 5
+.\"Use incremental transfers
+.NH 3
+Setting and Getting the Selection Timeout Value
+.XS
+\*(SN Setting and Getting the Selection Timeout Value
+.XE
+.LP
+To set the \*(xI selection timeout, use
+.PN XtAppSetSelectionTimeout .
+.IN "XtAppSetSelectionTimeout" "" "@DEF@"
+.FD 0
+void XtAppSetSelectionTimeout(\fIapp_context\fP, \fItimeout\fP)
+.br
+    XtAppContext \fIapp_context\fP;
+.br
+    unsigned long \fItimeout\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.IP \fItimeout\fP 1i
+Specifies the selection timeout in milliseconds.
+.sp
+.LP
+To get the current selection timeout value, use
+.PN XtAppGetSelectionTimeout .
+.IN "XtAppGetSelectionTimeout" "" "@DEF@"
+.FD 0
+unsigned long XtAppGetSelectionTimeout(\fIapp_context\fP)
+.br
+     XtAppContext \fIapp_context\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.LP
+The
+.PN XtAppGetSelectionTimeout
+function returns the current selection timeout value, in milliseconds.
+The selection timeout is the time within which the two communicating 
+applications must respond to one another.
+The initial timeout value is set by the 
+.PN selectionTimeout
+application resource, or, if
+.PN selectionTimeout
+is not specified,
+it defaults to five seconds.
+.NH 3
+Using Atomic Transfers
+.XS
+\*(SN Using Atomic Transfers
+.XE
+.LP
+The next three three sections discuss:
+.IP \(bu 5
+Atomic transfer procedures
+.IP \(bu 5
+Getting the selection value
+.IP \(bu 5
+Setting the selection owner
+.NH 4
+Atomic Transfer Procedures
+.XS
+\*(SN Atomic Transfer Procedures
+.XE
+.LP
+The following procedures are to be used with atomic transfers.
+The first three are used by the selection owner,
+and the last one is used by the requestor.
+.LP
+.IN "XtConvertSelectionProc" "" "@DEF@"
+.FD 0
+typedef Boolean (*XtConvertSelectionProc)(Widget, Atom *, Atom *, Atom *,
+.br
+                      caddr_t *, unsigned long *, int *);
+.br
+    Widget \fIw\fP;
+.br
+    Atom *\fIselection\fP;
+.br
+    Atom *\fItarget\fP;
+.br
+    Atom *\fItype_return\fP;
+.br
+    caddr_t *\fIvalue_return\fP;
+.br
+    unsigned long *\fIlength_return\fP;
+.br
+    int *\fIformat_return\fP;
+.FN
+.IP \fIw\fP 1i
+Specifies the widget which currently owns this selection.
+.IP \fIselection\fP 1i
+Specifies the atom that describes the type of selection requested 
+(for example,
+.PN XA_PRIMARY 
+or 
+.PN XA_SECONDARY ).
+.IP \fItarget\fP 1i
+Specifies the target type of the selection that has been requested,
+which indicates the desired information about the selection 
+(for example, File Name, Text, Window).
+.IP \fItype_return\fP 1i
+Specifies a pointer to an atom into which the property type of the 
+converted value of the selection is to be stored.
+For instance, either file name or text might have property type 
+.PN XA_STRING .
+.IP \fIvalue_return\fP 1i
+Specifies a pointer into which a pointer to the converted value of the 
+selection is to be stored.
+The selection owner is responsible for allocating this storage.
+If the selection owner has provided an
+.PN XtSelectionDoneProc
+for the selection, 
+this storage is owned by the selection owner; 
+otherwise, it is owned by the \*(xI selection mechanism, 
+which frees it by calling
+.PN XtFree
+when it is done with it.
+.IP \fIlength_return\fP 1i
+Specifies a pointer into which the number of elements in value 
+(each of size indicated by format) is to be stored.
+.IP \fIformat_return\fP 1i
+Specifies a pointer into which the size in bits of the data elements 
+of the selection value is to be stored.
+.LP
+This procedure is called by the \*(xI selection mechanism 
+to get the value of a selection as a given type 
+from the current selection owner.
+It returns 
+.PN True 
+if the owner successfully converted the selection to the target type or
+.PN False
+otherwise.
+If the procedure returns
+.PN False
+the values of the return arguments are undefined.
+Each
+.PN XtConvertSelectionProc
+should respond to target value
+.PN TARGETS 
+by returning a value containing the list of the targets
+they are prepared to convert their selection into.
+.sp
+.LP
+.IN "XtLoseSelectionProc" "" "@DEF@"
+.FD 0
+typedef void (*XtLoseSelectionProc)(Widget, Atom *);
+.br
+    Widget \fIw\fP;
+.br
+    Atom *\fIselection\fP;
+.FN
+.IP \fIw\fP 1i
+Specifies the widget that has lost selection ownership.
+.IP \fIselection\fP 1i
+Specifies the atom that describes the selection type.
+.LP
+This procedure is called by the \*(xI selection mechanism
+to inform the specified widgets that it has lost the given selection.
+Note that this procedure does not ask the widget to lose the 
+selection ownership.
+.sp
+.LP
+.IN "XtSelectionDoneProc" "" "@DEF@"
+.FD 0
+typedef void (*XtSelectionDoneProc)(Widget, Atom *, Atom *);
+.br
+      Widget \fIw\fP;
+.br
+      Atom *\fIselection\fP;
+.br
+      Atom *\fItarget\fP;
+.FN
+.IP \fIw\fP 1i
+Specifies the widget that owns the converted selection.
+.IP \fIselection\fP 1i
+Specifies the atom that describes the selection type that was converted.
+.IP \fItarget\fP 1i
+Specifies the target type to which the conversion was done.
+.LP
+This procedure is called by the \*(xI selection mechanism
+to inform the selection owner when a selection requestor has successfully
+retrieved a selection value.
+If the selection owner has registered an
+.PN XtSelectionDoneProc ,
+it should expect it to be called once for each conversion that it performs 
+but after the converted value has been successfully transferred
+to the requestor.
+If the selection owner has registered an
+.PN XtSelectionDoneProc ,
+it also owns the storage containing the converted
+selection value.
+.sp
+.LP
+.IN "XtSelectionCallbackProc" "" "@DEF@"
+.FD 0
+typedef void (*XtSelectionCallbackProc)(Widget, caddr_t, Atom *, Atom *, \
+caddr_t, unsigned long *, int *);
+.br
+      Widget \fIw\fP;
+.br
+      caddr_t \fIclient_data\fP;
+.br
+      Atom *\fIselection\fP;
+.br
+      Atom *\fItype\fP;
+.br
+      caddr_t \fIvalue\fP;
+.br
+      unsigned long *\fIlength\fP;
+.br
+      int *\fIformat\fP;
+.FN
+.IP \fIw\fP 1i
+Specifies the widget that requested the selection value.
+.IP \fIclient_data\fP 1i
+Specifies a value passed in by the widget when it requested the
+selection.
+.IP \fIselection\fP 1i
+Specifies the type of selection that was requested.
+.IP \fItype\fP 1i
+Specifies the representation type of the selection value (for example,
+.PN XA_STRING ).
+Note that it is not the target that was requested but the type that
+is used to represent the target.
+The special \*(tk atom 
+.PN XT_CONVERT_FAIL 
+is used to indicate that the selection conversion failed because the
+selection owner did not respond within the \*(xI's selection timeout
+interval.
+.IP \fIvalue\fP 1i
+Specifies a pointer to the selection value.
+The requesting client owns this storage and is responsible for freeing it 
+by calling
+.PN XtFree
+when it is done with it.
+.IP \fIlength\fP 1i
+Specifies the number of elements in value.
+.IP \fIformat\fP 1i
+Specifies the size in bits of the data elements of value.
+.LP
+This procedure is called by the \*(xI selection mechanism to deliver the
+requested selection to the requestor.
+.NH 4
+Getting the Selection Value
+.XS
+\*(SN Getting the Selection Value
+.XE
+.LP
+To obtain the selection value in a single, logical unit, use
+.PN XtGetSelectionValue
+or
+.PN XtGetSelectionValues .
+.IN "XtGetSelectionValue" "" "@DEF@"
+.FD 0
+void XtGetSelectionValue(\fIw\fP, \fIselection\fP, \fItarget\fP, \
+\fIcallback\fP, \fIclient_data\fP, \fItime\fP)
+.br
+      Widget \fIw\fP;
+.br
+      Atom \fIselection\fP;
+.br
+      Atom \fItarget\fP;
+.br
+      XtSelectionCallbackProc \fIcallback\fP;
+.br
+      caddr_t \fIclient_data\fP;
+.br
+      Time \fItime\fP;
+.FN
+.ds Wi that is making the request
+.IP \fIw\fP 1i
+Specifies the widget \*(Wi.
+.IP \fIselection\fP 1i
+Specifies the particular selection desired (that is, primary or secondary).
+.IP \fItarget\fP 1i
+Specifies the type of the information that is needed about the selection.
+.ds Cb \ that is to be called when the selection value has been obtained
+.IP \fIcallback\fP 1i
+Specifies the callback procedure\*(Cb.
+Note that this is how the selection value is communicated back to the client.
+.ds Cd it is called
+.IP \fIclient_data\fP 1i
+Specifies the argument that is to be passed to the specified procedure
+when \*(Cd.
+.ds Ti is desired
+.IP \fItime\fP 1i
+Specifies the timestamp that indicates when the selection \*(Ti.
+This should be the timestamp of the event which triggered this request;
+the value 
+.PN CurrentTime 
+is not acceptable.
+.LP
+The
+.PN XtGetSelectionValue
+function requests the value of the selection that has been converted to 
+the target type. 
+The specified callback will be called some time after 
+.PN XtGetSelectionValue 
+is called;
+in fact, it may be called before or after 
+.PN XtGetSelectionValue 
+returns.
+.sp
+.LP
+.IN "XtGetSelectionValues" "" "@DEF@"
+.FD 0
+void XtGetSelectionValues(\fIw\fP, \fIselection\fP, \fItargets\fP, \
+\fIcount\fP, \fIcallback\fP, \fIclient_data\fP, \fItime\fP)
+.br
+      Widget \fIw\fP;
+.br
+      Atom \fIselection\fP;
+.br
+      Atom *\fItargets\fP;
+.br
+      int \fIcount\fP;
+.br
+      XtSelectionCallbackProc \fIcallback\fP;
+.br
+      caddr_t \fIclient_data\fP;
+.br
+      Time \fItime\fP;
+.FN
+.ds Wi that is making the request
+.IP \fIw\fP 1i
+Specifies the widget \*(Wi.
+.IP \fIselection\fP 1i
+Specifies the particular selection desired (that is, primary or secondary).
+.IP \fItargets\fP 1i
+Specifies the types of information that is needed about the selection.
+.IP \fIcount\fP 1i
+Specifies the length of the targets and client_data lists.
+.ds Cb \ that is to be called with each selection value obtained
+.IP \fIcallback\fP 1i
+Specifies the callback procedure\*(Cb.
+Note that this is how the selection values are communicated back to the
+client.
+.IP \fIclient_data\fP 1i
+Specifies the client data (one for each target type)
+that is passed to the callback procedure when it is called for that target.
+.ds Ti value is desired
+.IP \fItime\fP 1i
+Specifies the timestamp that indicates when the selection \*(Ti.
+This should be the timestamp of the event which triggered this request;
+the value 
+.PN CurrentTime
+is not acceptable.
+.LP
+The
+.PN XtGetSelectionValues
+function is similar to
+.PN XtGetSelectionValue 
+except that it takes a list of target types and a list of client data 
+and obtains the current value of the selection converted to each of the targets.
+The effect is as if each target were specified in a separate call to
+.PN XtGetSelectionValue .
+The callback is called once with the corresponding client data for each target.
+.PN XtGetSelectionValues
+does guarantee that all the conversions will use the same selection value
+becaues the ownership of the selection cannot change in the middle of the list,
+as would be when calling
+.PN XtGetSelectionValue
+repeatedly.
+.NH 4
+Setting the Selection Owner
+.XS
+\*(SN Setting the Selection Owner
+.XE
+.LP
+To set the selection owner when using atomic transfers,
+use
+.PN XtOwnSelection .
+.IN "XtOwnSelection" "" "@DEF@"
+.FD 0
+Boolean XtOwnSelection(\fIw\fP, \fIselection\fP, \fItime\fP, \
+\fIconvert_proc\fP, \fIlose_selection\fP, \fIdone_proc\fP)
+.br
+      Widget \fIw\fP;
+.br
+      Atom \fIselection\fP;
+.br
+      Time \fItime\fP;
+.br
+      XtConvertSelectionProc \fIconvert_proc\fP;
+.br
+      XtLoseSelectionProc \fIlose_selection\fP;
+.br
+      XtSelectionDoneProc \fIdone_proc\fP;
+.FN
+.ds Wi that wishes to become the owner
+.IP \fIw\fP 1i
+Specifies the widget \*(Wi.
+.IP \fIselection\fP 1i
+Specifies an atom that describes the type of the selection (for example,
+.PN XA_PRIMARY , 
+.PN XA_SECONDARY , 
+or
+.PN XA_CLIPBOARD ).
+.ds Ti ownership should commence
+.IP \fItime\fP 1i
+Specifies the timestamp that indicates when the selection \*(Ti.
+This should be the timestamp of the event that triggered ownership;
+the value
+.PN CurrentTime 
+is not acceptable.
+.IP \fIconvert_proc\fP 1i
+Specifies the procedure that is to be called whenever someone requests the 
+current value of the selection.
+.IP \fIlose_selection\fP 1i
+Specifies the procedure that is to be called whenever the widget has 
+lost selection ownership or NULL if the owner is not interested in being 
+called back.
+.IP \fIdone_proc\fP 1i
+Specifies the procedure that is called 
+after the requestor has received the selection or NULL if the owner is not
+interested in being called back.
+.LP
+The
+.PN XtOwnSelection
+function informs the \*(xI selection mechanism that a
+widget believes it owns a selection.
+It returns 
+.PN True 
+if the widget has successfully become the owner and 
+.PN False
+otherwise.
+The widget may fail to become the owner if some other widget 
+has asserted ownership at a time later than this widget.
+Note that widgets can lose selection ownership either 
+because someone else asserted later ownership of the selection 
+or because the widget voluntarily gave up ownership of the selection.
+Also note that the lose_selection procedure is not called 
+if the widget fails to obtain selection ownership in the first place.
+.sp
+.LP
+Usually, the \*(xI selection mechanism informs an application 
+when one of its widgets has lost ownership of the selection.
+However, in response to some user actions 
+(for example, when a user deletes the information selected),
+the application should explicitly inform the \*(xI that it's widget
+no longer is to be the selection owner by using
+.PN XtDisownSelection .
+.IN "XtDisownSelection" "" "@DEF@"
+.FD 0
+void XtDisownSelection(\fIw\fP, \fIselection\fP, \fItime\fP)
+.br
+      Widget \fIw\fP;
+.br
+      Atom \fIselection\fP;
+.br
+      Time \fItime\fP;
+.FN
+.ds Wi that wishes to relinquish ownership
+.IP \fIw\fP 1i
+Specifies the widget \*(Wi.
+.IP \fIselection\fP 1i
+Specifies the atom that specifies which selection it is giving up.
+.ds Ti ownership is relinquished
+.IP \fItime\fP 1i
+Specifies the timestamp that indicates when the selection \*(Ti.
+.LP
+The
+.PN XtDisownSelection
+function informs the \*(xI selection mechanism that
+the specified widget is to lose ownership of the selection.
+If the widget does not currently own the selection either 
+because it lost the selection 
+or because it never had the selection to begin with,
+.PN XtDisownSelection
+does nothing.
+.LP
+After a widget has called
+.PN XtDisownSelection ,
+its convert procedure is not called even if a request arrives later 
+with a timestamp during the period that this widget owned the selection.
+However, its done procedure will be called if a conversion that started 
+before the call to
+.PN XtDisownSelection
+finishes after the call to
+.PN XtDisownSelection .
+.NH 2
+Merging Exposure Events into a Region
+.XS
+\*(SN Merging Exposure Events into a Region
+.XE
+.LP
+The \*(xI provide the
+.PN XtAddExposureToRegion
+utility function that merges
+.PN Expose
+and
+.PN GraphicsExpose
+events into a region that clients can process at once
+rather than processing individual rectangles.
+(For further information about regions,
+see \fI\*(xL\fP.)
+.sp
+.LP
+To merge
+.PN Expose
+and
+.PN GraphicsExpose
+events into a region, use
+.PN XtAddExposureToRegion .
+.IN "XtAddExposureToRegion" "" "@DEF@"
+.FD 0
+void XtAddExposureToRegion(\fIevent\fP, \fIregion\fP)
+.br
+     XEvent *\fIevent\fP;
+.br
+     Region \fIregion\fP;
+.FN
+.IP \fIevent\fP 1i
+Specifies a pointer to the
+.PN Expose
+or
+.PN GraphicsExpose
+event.
+.IP \fIregion\fP 1i
+Specifies the region object (as defined in
+.Pn < X11/Xutil.h >).
+.LP
+The
+.PN XtAddExposureToRegion
+function computes the union of the rectangle defined by the exposure
+event and the specified region.
+Then, it stores the results back in region.
+If the event argument is not an
+.PN Expose
+or
+.PN GraphicsExpose
+event,
+.PN XtAddExposureToRegion
+returns without an error and without modifying region.
+.LP
+This function is used by the exposure compression mechanism 
+(see Section 7.9.3).
+.NH 2
+Translating Widget Coordinates
+.XS
+\fB\*(SN Translating Widget Coordinates\fP
+.XE
+.LP
+To translate an x-y coordinate pair from widget coordinates to root
+coordinates, use
+.PN XtTranslateCoords .
+.IN "XtTranslateCoords" "" "@DEF@"
+.FD 0
+void XtTranslateCoords(\fIw\fP, \fIx\fP, \fIy\fP, \fIrootx_return\fP, \
+\fIrooty_return\fP)
+.br
+      Widget \fIw\fP;
+.br
+      Position \fIx\fP, \fIy\fP;
+.br
+      Position *\fIrootx_return\fP, *\fIrooty_return\fP;
+.FN
+.IP \fIw\fP 1i
+Specifies the widget.
+.ds Nu widget-relative
+.IP \fIx\fP 1i
+.br
+.ns
+.IP \fIy\fP 1i
+Specify the \*(Nu x and y coordinates.
+.IP \fIrootx_return\fP 1i
+.br
+.ns
+.IP \fIrooty_return\fP 1i
+Returns the root-relative x and y coordinates.
+.LP
+While
+.PN XtTranslateCoords
+is similar to the Xlib
+.PN XTranslateCoordinates 
+function, it does not generate a server request because all the required
+information already is in the widget's data structures.
+.NH 2
+Translating a Window to a Widget
+.XS
+\fB\*(SN Translating a Window to a Widget\fP
+.XE
+.LP
+To translate a window and display pointer into a widget instance, use
+.PN XtWindowToWidget .
+.IN "XtWindowToWidget" "" "@DEF@"
+.FD 0
+Widget XtWindowToWidget(\fIdisplay\fP, \fIwindow\fP)
+.br
+      Display *\fIdisplay\fP;
+.br
+      Window \fIwindow\fP;
+.FN
+.ds Di \ on which the window is defined
+.IP \fIdisplay\fP 1i
+Specifies the display\*(Di.
+.IP \fIwindow\fP 1i
+Specify the window for which you want the widget.
+.NH 2
+Handling Errors
+.XS
+\fB\*(SN Handling Errors\fP
+.XE
+.LP
+The \*(xI let a client register procedures that are to be called
+whenever a fatal or nonfatal error occurs.
+These facilities are intended for both error reporting and logging
+and for error correction or recovery.
+.LP
+Two levels of interface are provided: 
+.IP \(bu 5
+A high-level interface that takes an error
+name and class and looks the error up in an error resource database
+.IP \(bu 5
+A low-level interface that takes a simple string
+.LP
+The high-level functions construct a string to pass to the lower-level
+interface.
+On UNIX-based systems, the error database usually is 
+.PN /usr/lib/X11/XtErrorDB .
+.NT
+The application context specific error handling in not
+implemented on many systems.
+Most implementations will have just one set of error handlers.
+If they are set for different application contexts,
+the one performed last will prevail.
+.NE
+.sp
+.LP
+To obtain the error database (for example, to merge with
+an application or widget specific database), use
+.PN XtAppGetErrorDatabase .
+.IN "XtAppGetErrorDatabase" "" "@DEF@"
+.FD 0
+XrmDatabase *XtAppGetErrorDatabase(\^\fIapp_context\fP\^)
+.br
+     XtAppContext \fIapp_context\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.LP
+The
+.PN XtAppGetErrorDatabase
+function returns the address of the error database.
+The \*(xI do a lazy binding of the error database and do not merge in the
+database file until the first call to
+.PN XtAppGetErrorDatbaseText .
+.LP
+For a complete listing of all errors and warnings 
+that can be generated by the \*(xI, see Appendix D.
+.LP
+The high-level error and warning handler procedure pointers are of the type
+.PN XtErrorMsgHandler :
+.IN "XtErrorMsgHandler" "" "@DEF@"
+.FD 0
+typedef void (*XtErrorMsgHandler)(String, String, String, String, \
+String *, Cardinal *);
+.br
+    String \fIname\fP;
+.br
+    String \fItype\fP;
+.br
+    String \fIclass\fP;
+.br
+    String \fIdefaultp\fP;
+.br
+    String *\fIparams\fP;
+.br
+    Cardinal *\fInum_params\fP;
+.FN
+.IP \fIname\fP 1i
+Specifies the name that is concatenated with the specified type to form 
+the resource name of the error message.
+.IP \fItype\fP 1i
+Specifies the type that is concatenated with the name to form the 
+resource name of the error message.
+.IP \fIclass\fP 1i
+Specifies the resource class of the error message.
+.IP \fIdefaultp\fP 1i
+Specifies the default message to use if no error database entry is found.
+.IP \fIparams\fP 1i
+Specifies a pointer to a list of values to be substituted in the message.
+.IP \fInum_params\fP 1i
+Specifies the number of values in the parameter list.
+.LP
+The specified name can be a general kind of error, 
+like invalidParameters or invalidWindow, 
+and the specified type gives extra information.
+Standard 
+.PN printf 
+notation is used to substitute the parameters into the message.
+.sp
+.LP
+An error message handler can obtain the error database text for an
+error or a warning by calling
+.PN XtAppGetErrorDatabaseText .
+.IN "XtAppGetErrorDatabaseText" "" "@DEF@"
+.FD 0
+void XtAppGetErrorDatabaseText(\fIapp_context\fP, \fIname\fP, \fItype\fP, \fIclass\fP, \fIdefault\fP, \fIbuffer_return\fP, \fInbytes\fP, \fIdatabase\fP)
+.br
+       XtAppContext \fIapp_context\fP;
+.br
+       char *\fIname\fP, *\fItype\fP, *\fIclass\fP;
+.br
+       char *\fIdefault\fP;
+.br
+       char *\fIbuffer_return\fP;
+.br
+       int \fInbytes\fP;
+.br
+       XrmDatabase \fIdatabase\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.IP \fIname\fP 1i
+.br
+.ns
+.IP \fItype\fP 1i
+Specifies the name and type that are concatenated to form the resource name 
+of the error message.
+.ds Cl \ of the error message
+.IP \fIclass\fP 1i
+Specifies the resource class\*(Cl.
+.ds Dm \ if an error database entry is not found
+.IP \fIdefault\fP 1i
+Specifies the default message to use\*(Dm.
+.IP \fIbuffer_return\fP 1i
+Specifies the buffer into which the error message is to be returned.
+.IP \fInbytes\fP 1i
+Specifies the size of the buffer in bytes.
+.IP \fIdatabase\fP 1i
+Specifies the name of the alternative database that is to be used
+or NULL if the application's database is to be used.
+.LP
+The
+.PN XtAppGetErrorDatabaseText
+returns the appropriate message from the error database
+or returns the specified default message if one is not found in the
+error database.
+.sp
+.LP
+To register a procedure to be called on fatal error conditions, use
+.PN XtAppSetErrorMsgHandler .
+.IN "XtAppSetErrorMsgHandler" "" "@DEF@"
+.FD 0
+void XtAppSetErrorMsgHandler(\fIapp_context\fP, \fImsg_handler\fP)
+.br
+      XtAppContext \fIapp_context\fP;
+.br
+      XtErrorMsgHandler \fImsg_handler\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.ds Mh fatal error procedure, which should not return
+.IP \fImsg_handler\fP 1i
+Specifies the new \*(Mh.
+.LP
+The default error handler provided by the \*(xI constructs a
+string from the error resource database and calls
+.PN XtError .
+Fatal error message handlers should not return.
+If one does,
+subsequent \*(tk behavior is undefined.
+.sp
+.LP
+To call the high-level error handler, use
+.PN XtAppErrorMsg .
+.IN "XtAppErrorMsg" "" "@DEF@"
+.FD 0
+void XtAppErrorMsg(\fIapp_context\fP, \fIname\fP, \fItype\fP, \fIclass\fP, \
+\fIdefault\fP, \ \fIparams\fP, \fInum_params\fP)
+.br
+    XtAppContext \fIapp_context\fP;
+.br
+    String \fIname\fP;
+.br
+    String \fItype\fP;
+.br
+    String \fIclass\fP;
+.br
+    String \fIdefault\fP;
+.br
+    String *\fIparams\fP;
+.br
+    Cardinal *\fInum_params\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.IP \fIname\fP 1i
+Specifies the general kind of error.
+.IP \fItype\fP 1i
+Specifies the detailed name of the error.
+.ds Cl
+.IP \fIclass\fP 1i
+Specifies the resource class\*(Cl.
+.IP \fIdefault\fP 1i
+Specifies the default message to use\*(Dm.
+.IP \fIparams\fP 1i
+Specifies a pointer to a list of values to be stored in the message.
+.IP \fInum_params\fP 1i
+Specifies the number of values in the parameter list.
+.LP
+The \*(xI internal errors all have class
+.PN XtToolkitError .
+.sp
+.LP
+To register a procedure to be called on nonfatal error conditions, use
+.PN XtAppSetWarningMsgHandler .
+.IN "XtAppSetWarningMsgHandler" "" "@DEF@"
+.FD 0
+void XtAppSetWarningMsgHandler(\fIapp_context\fP, \fImsg_handler\fP)
+.br
+      XtAppContext \fIapp_context\fP;
+.br
+      XtErrorMsgHandler \fImsg_handler\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.ds Mh nonfatal error procedure, which usually returns
+.IP \fImsg_handler\fP 1i
+Specifies the new \*(Mh.
+.LP
+The default warning handler provided by the \*(xI constructs a string
+from the error resource database and calls
+.PN XtWarning .
+.sp
+.LP
+To call the installed high-level warning handler, use
+.PN XtAppWarningMsg .
+.IN "XtAppWarningMsg" "" "@DEF@"
+.FD 0
+void XtAppWarningMsg(\fIapp_context\fP, \fIname\fP, \fItype\fP, \fIclass\fP, \fIdefault\fP, \fIparams\fP, \fInum_params\fP)
+.br
+    XtAppContext \fIapp_context\fP;
+.br
+    String \fIname\fP;
+.br
+    String \fItype\fP;
+.br
+    String \fIclass\fP;
+.br
+    String \fIdefault\fP;
+.br
+    String *\fIparams\fP;
+.br
+    Cardinal *\fInum_params\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.IP \fIname\fP 1i
+Specifies the general kind of error.
+.IP \fItype\fP 1i
+Specifies the detailed name of the error.
+.cd Cl
+.IP \fIclass\fP 1i
+Specifies the resource class\*(Cl.
+.IP \fIdefault\fP 1i
+Specifies the default message to use\*(Dm.
+.IP \fIparams\fP 1i
+Specifies a pointer to a list of values to be stored in the message.
+.IP \fInum_params\fP 1i
+Specifies the number of values in the parameter list.
+.LP
+The \*(xI internal warninings all have class
+.PN XtToolkitError .
+.sp
+.LP
+The low-level error and warning handler procedure pointers are of type
+.PN XtErrorHandler :
+.IN "XtErrorHandler" "" "@DEF@"
+.FD 0
+typedef void (*XtErrorHandler)(String);
+.br
+    String \fImessage\fP;
+.FN
+.IP \fImessage\fP 1i
+Specifies the error message.
+.LP
+The error handler should display the message string in some appropriate fashion.
+.sp
+.LP
+To register a procedure to be called on fatal error conditions, use
+.PN XtAppSetErrorHandler .
+.IN "XtAppSetErrorHandler" "" "@DEF@"
+.FD 0
+void XtAppSetErrorHandler(\fIapp_context\fP, \fIhandler\fP)
+.br
+      XtAppContext \fIapp_context\fP;
+.br
+      XtErrorHandler \fIhandler\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.ds Ha fatal error procedure, which should not return
+.IP \fIhandler\fP 1i
+Specifies the new \*(Ha.
+.LP
+The default error handler provided by the \*(xI is
+.PN _XtError .
+On UNIX-based systems,
+it prints the message to standard error and terminates the application.
+Fatal error message handlers should not return.
+If one does,
+subsequent \*(tk behavior is undefined.
+.sp
+.LP
+To call the installed fatal error procedure, use
+.PN XtAppError .
+.IN "XtAppError" "" "@DEF@"
+.FD 0
+void XtAppError(\fIapp_context\fP, \fImessage\fP)
+.br
+      XtAppContext \fIapp_context\fP;
+.br
+      String \fImessage\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.ds Me reported
+.IP \fImessage\fP 1i
+Specifies the message that is to be \*(Me.
+.LP
+Most programs should use
+.PN XtAppErrorMsg ,
+not
+.PN XtAppError ,
+to provide for customization and internationalization of error messages.
+.sp
+.LP
+To register a procedure to be called on nonfatal error conditions, use
+.PN XtAppSetWarningHandler .
+.IN "XtAppSetWarningHandler" "" "@DEF@"
+.FD 0
+void XtAppSetWarningHandler(\fIapp_context\fP, \fIhandler\fP)
+.br
+      XtAppContext \fIapp_context\fP;
+.br
+      XtErrorHandler \fIhandler\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.ds Ha nonfatal error procedure, which usually returns
+.IP \fIhandler\fP 1i
+Specifies the new \*(Ha.
+.LP
+The default warning handler provided by the \*(xI is
+.PN _XtWarning .
+On UNIX-based systems,
+it prints the message to standard error and returns to the caller.
+.sp
+.LP
+To call the installed nonfatal error procedure, use
+.PN XtAppWarning .
+.IN "XtAppWarning" "" "@DEF@"
+.FD 0
+void XtAppWarning(\fIapp_context\fP, \fImessage\fP)
+.br
+      XtAppContext \fIapp_context\fP;
+.br
+      String \fImessage\fP;
+.FN
+.IP \fIapp_context\fP 1i
+Specifies the application context.
+.IP \fImessage\fP 1i
+Specifies the nonfatal error message that is to be reported.
+.LP
+Most programs should use
+.PN XtAppWarningMsg ,
+not
+.PN XtAppWarning ,
+to provide for customization and internationalization of warning messages.
+.\".NH 2
+.\"Obtaining a Gray Pixmap
+.\".XS
+.\"\fB\*(SN Obtaining a Gray Pixmap\fP
+.\".XE
+.\".LP
+.\"To obtain a gray pixmap, use
+.\".PN XtGrayPixmap .
+.\".IN "XtGrayPixmap" "" "@DEF@"
+.\".FD 0
+.\".so ./Xtsrc/XtGPixmap.f
+.FN
+.\".so ./Xtsrc/screen.a
+.\".LP
+.\".so ./Xtdescrip/XtGPixmap.d
+.bp

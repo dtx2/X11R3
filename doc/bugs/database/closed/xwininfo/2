@@ -1,0 +1,59 @@
+Return-Path: bilbo.rick@seas.ucla.edu
+Received: by EXPO.LCS.MIT.EDU; Mon, 16 May 88 17:11:37 EDT
+Message-Id: <8805162111.AA13472@EXPO.LCS.MIT.EDU>
+Date:           Mon, 16 May 88 13:18:00 PDT
+From: Richard Petkiewicz <bilbo.rick@seas.ucla.edu>
+Received:       from BILBO (193.255.1.3) by FRODO
+                id smtp.13909; Mon, 16 May 88 13:08:31 PDT
+To: xbugs@expo.lcs.mit.edu
+Subject: xwininfo frees NULL
+
+### bug number:   500
+### area:         xwininfo
+### severity:     high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Prime EXL 316
+
+CLIENT OPERATING SYSTEM:
+	SVR3
+
+DISPLAY:
+	PC Xsight
+
+SYNOPSIS:
+	 "xwininfo -name garbage" core dumps
+
+DESCRIPTION:
+	 "xwininfo -name garbage" core dumps
+
+REPEAT-BY:
+	 xwininfo -name garbage
+
+FIX:
+	Don't free NULL pointers.
+
+*** clients/xwininfo/dsimple.c	Mon Apr 25 12:26:04 1988
+--- /usr/rick/dsimple.c	Mon May 16 13:45:58 1988
+***************
+*** 499,504
+  		if (w)
+  		  break;
+  	}
+! 	XFree(children);
+  	return(w);
+  }
+
+--- 499,505 -----
+  		if (w)
+  		  break;
+  	}
+! 	if (children != NULL)
+! 		XFree(children);
+  	return(w);
+  }
+

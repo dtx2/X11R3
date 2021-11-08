@@ -1,0 +1,39 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Sat, 12 Mar 88 01:13:35 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 178069; Sat 12-Mar-88 01:12:38 EST
+Date: Sat, 12 Mar 88 01:12 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: AlterSaveSetForClient in server/dix/dixutils.c
+To: xbugs@expo.lcs.mit.edu
+Cc: hornig@alderaan.scrc.symbolics.com, york@alderaan.scrc.symbolics.com
+Message-Id: <19880312061238.3.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   92
+### area:         server
+### severity:     
+### assigned to:  rws
+### status:       
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	AlterSaveSetForClient in server/dix/dixutils.c gets pointers and
+ints confused.
+
+DESCRIPTION:
+	Both places allocation is done it takes sizeof(int) when it
+means sizeof(pointer).
+
+REPEAT-BY:
+	Run the window manager.
+

@@ -1,0 +1,51 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Wed, 3 Aug 88 16:34:41 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA15552; Wed, 3 Aug 88 16:34:33 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Wed, 3 Aug 88 12:34:03 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA14666; Wed, 3 Aug 88 13:35:26 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Wed, 3 Aug 88 13:36:51 pdt
+Message-Id: <8808032036.AA02248@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: xset font path
+X-Mailer: mh6.5
+Date: Wed, 03 Aug 88 13:36:47 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   821
+### area:         xset
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	If no parameter is specfied after the 'fp' option of 'xset', your font
+	path gets set to a weird path.
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	xset fp
+SUGGESTED FIX:
+	<Preferred, but not necessary>
+*** xset.c.orig	Wed Jul  6 20:36:28 1988
+--- xset.c	Wed Jul  6 20:34:46 1988
+***************
+*** 133,138
+      else set_bell_vol(dpy, percent);	/* set to default */
+    }
+    else if (strcmp(arg, "fp") == 0) {	       /* set font path */
+      arg = nextarg(i, argv);
+      set_font_path(dpy, arg);
+      i++;
+
+--- 133,140 -----
+      else set_bell_vol(dpy, percent);	/* set to default */
+    }
+    else if (strcmp(arg, "fp") == 0) {	       /* set font path */
++     if (i >= argc)
++ 	usage(argv[0]);
+      arg = nextarg(i, argv);
+      set_font_path(dpy, arg);
+      i++;
+

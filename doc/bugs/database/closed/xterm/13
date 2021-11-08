@@ -1,0 +1,163 @@
+Return-Path: kddlab!kitt1.ws.sony.junet!michael@uunet.uu.net
+Received: from uunet.UU.NET by EXPO.LCS.MIT.EDU; Tue, 29 Mar 88 17:37:58 EST
+Received: from kddlab.UUCP by uunet.UU.NET (5.54/1.14) with UUCP 
+	id AA20301; Tue, 29 Mar 88 17:37:05 EST
+Received: by kddlab.kddlabs.junet (4.12/6.2Junet)
+	id AA05360; Wed, 30 Mar 88 00:24:28+0900
+Received: from sonygw.sony.junet (sonygw.ARPA) by sonyve.isrc.sony.junet (1.2/6.3Junet-1.0)
+	id AA08310; Tue, 29 Mar 88 23:32:34+0900
+Received: by sonygw.sony.junet (5.51/6.3Junet-1.0)
+	id AA01096; Tue, 29 Mar 88 23:31:38+0900
+Received: from wsgw.ws.sony.junet (tko2.ARPA) by sonyvd.drc.sony.junet (4.12/6.3Junet-1.0)
+	id AA28365; Tue, 29 Mar 88 23:02:29+0900
+Received: from kitt1.ws.sony.junet (kitt1.ARPA) by wsgw.ws.sony.junet (4.12/6.3Junet-1.0)
+	id AA07590; Tue, 29 Mar 88 23:04:14 jst
+Received: from localhost.ARPA by kitt1.ws.sony.junet (4.12/6.3Junet-1.0)
+	id AA17821; Tue, 29 Mar 88 23:04:10 jst
+Return-Path: <michael@kitt1.ws.sony.junet>
+Message-Id: <8803291404.AA17821@kitt1.ws.sony.junet>
+To: xbugs@expo.lcs.mit.edu
+From: kddlab!uunet.uu.net!ws.sony.junet!michael@uunet.uu.net (Michael Knight)
+Organization: Knight Foundation.
+Return-Receipt-To: kddlab!uunet.uu.net!ws.sony.junet!michael@uunet.uu.net
+Subject: xterm bugs.
+Date: Tue, 29 Mar 88 23:04:09 +0900
+Sender: kddlab!kitt1.ws.sony.junet!michael@uunet.uu.net
+
+### bug number:   279
+### area:         xterm
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     rejected: this has bugs, #229 seems like a better fix
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sony NEWS
+
+CLIENT OPERATING SYSTEM:
+	NEWS-OS 3.0 (4.3BSD)
+
+DISPLAY:
+	NWB-225
+
+SYNOPSIS:
+	 xterm bugs.
+
+DESCRIPTION:
+	 -C option dose not work with -L option.
+
+REPEAT-BY:
+	in /etc/ttys
+	ttyv0	"/usr/bin/X11/xterm -C -L -fn vtsingle -fb vtbold -display :0" xterm on secure window="/usr/bin/X11/Xnews"
+	
+	xterm didn't run and /etc/init loop forever.
+
+FIX:
+*** /tmp/,RCSt1017775	Tue Mar 29 22:56:07 1988
+--- /tmp/,RCSt2017775	Tue Mar 29 22:56:09 1988
+***************
+*** 1,8 ****
+  #ifndef lint
+! static char rcsid[] = "$Header: main.c,v 1.2 88/03/29 13:15:38 michael Exp $ Sony Corporation";
+  #endif
+  /*
+   * $Log:	main.c,v $
+   * Revision 1.2  88/03/29  13:15:38  michael
+   * -ls option did not work (fix from MIT).
+   * 
+--- 1,11 ----
+  #ifndef lint
+! static char rcsid[] = "$Header: main.c,v 1.3 88/03/29 13:42:19 michael Locked $ Sony Corporation";
+  #endif
+  /*
+   * $Log:	main.c,v $
++  * Revision 1.3  88/03/29  13:42:19  michael
++  * -C option did not work with -L.
++  * 
+   * Revision 1.2  88/03/29  13:15:38  michael
+   * -ls option did not work (fix from MIT).
+   * 
+***************
+*** 154,159 ****
+--- 157,163 ----
+  static int loginpty;
+  #ifdef TIOCCONS
+  static int Console;
++ static int logintty;
+  #endif	/* TIOCCONS */
+  #ifndef SYSV
+  static int tslot;
+***************
+*** 252,257 ****
+--- 256,263 ----
+  	int fd1 = -1;
+  	int fd2 = -1;
+  	int fd3 = -1;
++ 	int fd4 = -1;
++ 	int fd5 = -1;
+  
+  	/* close any extra open (stray) file descriptors */
+  	for (i = 3; i < NOFILE; i++)
+***************
+*** 324,329 ****
+--- 330,337 ----
+  		fd1 = open ("/dev/null", O_RDONLY, 0);
+  		fd2 = open ("/dev/null", O_RDONLY, 0);
+  		fd3 = open ("/dev/null", O_RDONLY, 0);
++ 		fd3 = open ("/dev/null", O_RDONLY, 0);
++ 		fd3 = open ("/dev/null", O_RDONLY, 0);
+  		break;
+  	    }
+  	}
+***************
+*** 360,365 ****
+--- 368,377 ----
+  	    (void)close(fd2);
+  	if (fd3 >= 0)
+  	    (void)close(fd3);
++ 	if (fd4 >= 0)
++ 	    (void)close(fd4);
++ 	if (fd5 >= 0)
++ 	    (void)close(fd5);
+  
+  
+  	/* Parse the rest of the command line */
+***************
+*** 432,437 ****
+--- 444,453 ----
+  		open(t_ttydev, O_RDWR, 0);
+  		dup2(0, 1);
+  		dup2(0, 2);
++ #ifdef TIOCCONS
++ 		dup2(0, 3);
++ 		logintty = 3;
++ #endif	/* TIOCCONS */
+  		continue;
+  		}
+  	     case 'S':
+***************
+*** 815,820 ****
+--- 831,844 ----
+  #ifndef SYSV
+  		if((tslot = ttyslot()) <= 0)
+  			SysError(ERROR_TSLOT);
++ #ifdef TIOCCONS
++ 		tty = logintty;
++ 		if (Console) {
++ 			int on = 1;
++ 			if (ioctl (tty, TIOCCONS, (char *)&on) == -1)
++ 				SysError(ERROR_TIOCCONS);
++ 		}
++ #endif	/* TIOCCONS */
+  #endif	/* SYSV */
+  	} else if (am_slave) {
+  		screen->respond = am_slave;
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ Hideo Irie (Micheal Knight)	JUNET: michael@ws.sony.junet
+				UUNET: michael%ws.sony.junet@uunet.uu.net
+ Work Station Division. SuperMicro Systems Group. Sony Corp.
+ 6-7-35 Kitasinagawa Sinagawa-ku Tokyo JAPAN	TEL: 03(448)2111 ex-2907
+

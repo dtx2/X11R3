@@ -1,0 +1,42 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Thu, 10 Mar 88 17:51:05 EST
+Date: Thu, 10 Mar 88 17:51 EST
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: uwm resize interface
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <880310175103.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   86
+### area:         uwm
+### severity:     
+### assigned to:  
+### status:       closed
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	all
+
+CLIENT OPERATING SYSTEM:
+	all
+
+DISPLAY:
+	all
+
+SYNOPSIS:
+	f.resize has an unnatural user interface
+
+DESCRIPTION:
+	When using f.resize, my recollection of X10 is that the
+	initial mouse position did not indicate the starting
+	position for the new window corner/side, but instead was
+	used as	a relative offset from the current corner/side
+	position.  Did this behaviour change in R1 or R2, and is
+	it desirable?  My natural tendency (which means it must
+	have been true in X10 :-) when trying to add a line or
+	column or two is to just click somewhere in the vicinity
+	and pull over just a little bit, but this usually ends
+	up making the window smaller, rather than larger.
+
+

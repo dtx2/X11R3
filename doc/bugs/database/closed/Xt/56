@@ -1,0 +1,143 @@
+Return-Path: wtg@uc.msc.umn.edu
+Received: by expo.lcs.mit.edu; Wed, 29 Jun 88 17:22:55 EDT
+Received: by uc.msc.umn.edu (5.54/1.14)
+	id AA04046; Wed, 29 Jun 88 16:21:07 CDT
+Date: Wed, 29 Jun 88 16:21:07 CDT
+From: wtg@uc.msc.umn.edu
+Subject: DestroyList and toplevelDisplay multiply defined
+Message-Id: <8806292121.AA04046@uc.msc.umn.edu>
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   663
+### area:         Xt
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2  Xt
+
+CLIENT MACHINE:
+	Cray-XMP and Cray2
+
+CLIENT OPERATING SYSTEM:
+	UNICOS 5.0
+
+DISPLAY:
+	sun3/50
+
+SYNOPSIS:
+	 Duplicate label warnings from link edit
+
+DESCRIPTION:
+	 The labels DestroyList and toplevelDisplay are declared
+in IntrinsicI.h.  Many functions include IntrinsicI.h directly or
+indirectly, each getting a declaration of these labels.  However,
+the link edit step finds each module has the label and prints out
+a cautionary message.  These are global variables and should be
+defined in only one location.  One module could set up toplevelDisplay,
+another could reference toplevelDisplay, and the two would be looking
+at different locations.
+
+REPEAT-BY:
+	Compile and link edit all modules in Xt
+
+FIX:
+************* IntrinsicI.h Event.h and Initialize.c **********************
+
+diff -c5 Xt/Initialize.c sunXt/Initialize.c
+*** Xt/Initialize.c     Fri May  6 14:31:18 1988
+--- sunXt/Initialize.c  Fri May  6 10:42:36 1988
+***************
+*** 31,45 ****
+  #include <pwd.h>
+  #include <stdio.h>
+  #include <X11/Xos.h>
+  #include <sys/param.h>                        /* just to get MAXPATHLEN */
+
+- #ifdef CRAY
+- #define MAXPATHLEN PATH_MAX
+- #define INIT			/********* the relevant part ***********/
+- #endif
+-
+   /* Xlib definitions  */
+   /* things like Window, Display, XEvent are defined herein */
+  #include "IntrinsicI.h"
+  #include "Event.h"
+  #include <X11/StringDefs.h>
+--- 31,40 ----
+***************
+diff -c5 Xt/Event.h sunXt/Event.h
+*** Xt/Event.h  Fri May  6 11:08:13 1988
+--- sunXt/Event.h       Fri May  6 10:42:38 1988
+***************
+*** 63,79 ****
+      Boolean  exclusive;
+      Boolean  spring_loaded;
+      Widget   keyboard_focus;
+  }GrabRec;
+
+- #ifdef INIT
+  GrabRec *grabList;
+  GrabRec *freeGrabs;
+- #else
+- extern GrabRec *grabList;
+- extern GrabRec *freeGrabs;
+- #endif
+
+  extern EventMask _XtBuildEventMask(); /* widget */
+      /* Widget widget; */
+
+  #endif
+--- 63,74 ----
+***************
+*** 121,149 ****
+      /* XtCallbackProc   callback; */
+      /* Opaque           closure; */
+  
+  typedef struct _CallbackRec *CallbackList;
+  
+  
+  /****************************************************************
+   *
+   * Next Event
+   *
+   ****************************************************************/
+  
+- #ifdef CRAY			/******* this isn't necessary ***********/
+- #ifdef INIT
+- CallbackList DestroyList;
+  Display *toplevelDisplay;
+- #else INIT
+- extern CallbackList DestroyList;
+- extern Display *toplevelDisplay;
+- #endif INIT
+- #else CRAY
+- CallbackList DestroyList;
+- Display *toplevelDisplay;
+- #endif CRAY
+  
+  extern Boolean _XtwaitForSomething(); /* ignoreTimers, ignoreInputs, block, howlong */
+      /* Boolean ignoreTimers; */
+      /* Boolean ignoreInputs; */
+      /* Boolean block; */
+--- 106,124 ----
+      /* XtCallbackProc   callback; */
+      /* Opaque           closure; */
+  
+  typedef struct _CallbackRec *CallbackList;
+  
++ CallbackList DestroyList;
+  
+  /****************************************************************
+   *
+   * Next Event
+   *
+   ****************************************************************/
+  
+  Display *toplevelDisplay;
+  
+  extern Boolean _XtwaitForSomething(); /* ignoreTimers, ignoreInputs, block, howlong */
+      /* Boolean ignoreTimers; */
+      /* Boolean ignoreInputs; */
+      /* Boolean block; */
+

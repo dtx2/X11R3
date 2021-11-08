@@ -1,0 +1,13 @@
+.TH TODM 1 "5 Feb 1988" "X Version 11"
+.SH NAME
+todm \- switch from X back to the Apollo DM
+.SH SYNOPSIS
+.B todm
+.SH DESCRIPTION
+.I Todm
+will switch from the X server back to the Apollo DM. While "switched
+away" from X, the X server is blocked.
+.SH "SEE ALSO"
+.PP
+.I tox (1),
+which switches from the DM to X.

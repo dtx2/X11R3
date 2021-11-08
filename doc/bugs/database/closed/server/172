@@ -1,0 +1,24 @@
+Return-Path: bowbeer@apollo.com
+Received: by expo.lcs.mit.edu; Wed, 10 Aug 88 22:03:59 EDT
+Received: from apollo.UUCP by apollo.com; Wed, 10 Aug 88 22:02:06 EDT    
+Received: by apollo.UUCP id AA15354; Wed, 10 Aug 88 22:02:28 EDT
+From: Joe Bowbeer <bowbeer@apollo.com>
+Message-Id: <8808110202.AA15354@apollo.UUCP>
+Date: Wed, 10 Aug 88 21:55:54 EDT
+Subject: memory leak in PassiveClientGone
+To: xbugs@expo.lcs.mit.edu (X bugs)
+
+### bug number:   849
+### area:         server
+### severity:     low
+### comments:     
+
+Hi,
+In X.V11R2 dix/events.c, PassiveClientGone() has a small memory leak.
+It should DeleteGrab(grab) rather than xfree(grab). Notice that
+DeleteGrab frees grab->modifiersDetail and grab->keyDetail before
+freeing grab.
+
+Joe
+-------
+

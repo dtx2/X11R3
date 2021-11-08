@@ -1,0 +1,43 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: from ALDERAAN.SCRC.Symbolics.COM ([128.81.41.109]) by EXPO.LCS.MIT.EDU; Mon, 28 Mar 88 12:07:36 EST
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 181589; Mon 28-Mar-88 12:05:46 EST
+Date: Mon, 28 Mar 88 12:05 EST
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: miOpqStipDrawable (in server/ddx/mi/mibitblt.c)
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880328170550.4.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   237
+### area:         server
+### severity:     
+### assigned to:  
+### status:       closed
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	NA
+
+SYNOPSIS:
+	miOpqStipDrawable calls the ChangeClip routine with a bad
+argument.
+
+DESCRIPTION:
+	In the call just before the end of the routine, it passes 0 as
+the pvalue argument rather than NULL.
+
+REPEAT-BY:
+	Trying to bring up a color server.
+
+FIX:
+	Use NULL.
+

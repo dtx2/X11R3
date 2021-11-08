@@ -1,0 +1,85 @@
+Return-Path: rost@granite.dec.com
+Received: by expo.lcs.mit.edu; Sun, 29 May 88 19:22:06 EDT
+Received: by granite.DEC.COM (5.54.3/4.7.34)
+	id AA21903; Sun, 29 May 88 16:20:50 PDT
+Date: Sun, 29 May 88 16:20:50 PDT
+From: rost@granite.dec.com (Randi Rost)
+Message-Id: <8805292320.AA21903@granite.DEC.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: documentation nits
+Cc: rost@granite.dec.com
+
+### bug number:   546
+### area:         doc
+### severity:     low
+### comments:     
+
+
+You may have found all of these already, but I was jotting them down as
+I encountered them.  You can check and see if they've been fixed yet.
+
+Please send just ONE bug report per mail message.  Reports should be sent to
+
+                            xbugs@expo.lcs.mit.edu
+
+
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	n/a
+
+CLIENT OPERATING SYSTEM:
+	n/a
+
+DISPLAY:
+	n/a
+
+SYNOPSIS:
+	X(1), Xlib, xclock documentation nits
+
+DESCRIPTION:
+    1)	In the man page for X(1), under the discussion of XENVIRONMENT,
+	shouldn't the name for .Xdefaults-hostname be specified as
+	~/.Xdefaults-hostname or $HOME/.Xdefaults-hostname to make
+	it clear that this file should be in one's home directory?
+
+    2)  In the man page for X(1), "chartrusse" should be spelled "chartreuse"
+
+    3)  The resources listed in the xclock man page do not seem to be
+	consistent with the source code.  I find that the resource specified
+	as "hand" in the xclock man page needs to be called "hands" in my
+	.Xdefaults file in order for it to work, and similarly "high" must
+	actually be specified as "highlight".  The resources "geometry",
+	"x", and "y" are also missing from the documenet yet seem to work.
+	Shouldn't the xclock man page define all of the resources that
+	can be specified that are not covered by X(1)?
+
+    4)  Xlib Sec 10.11.2.2 - Looking up from a Resource Database
+	Argument is called str_value_return in the arglist, but value_return
+	in the declaration and description.
+
+    5)  Xlib Sec 10.11.3 - Parsing command line options
+	2nd-to-last paragraph of p. 222.  Two occurrences of "(arc, argv)"
+	should be changed to "(argc, argv)".
+
+    6)  Xlib Sec 10.11 - Name and class are not defined for use in this
+	context.  Class is defined in the glossary, but as it applies
+	to window class (InputOutput or InputOnly).  In general, this
+	section is where all the terminology clashes between the X server
+	and the X toolkit are exposed (resource, class, etc. mean something
+	different in this section than they do anywhere else).
+
+    7)  In the man page for X(1), under the description for Geometry
+	specification, for the description of 48x48--5--10, change "off
+	the right edge and the screen" to "off the right edge of the screen".
+
+    8)  Xlib Sec 10.2 - refers to XGetDefaults in 2nd paragraph of p. 199,
+	should be XGetDefault, yes?
+
+REPEAT-BY:
+
+FIX:
+	
+

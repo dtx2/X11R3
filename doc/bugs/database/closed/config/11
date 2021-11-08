@@ -1,0 +1,53 @@
+Return-Path: jim@EXPO.LCS.MIT.EDU 
+Received: by EXPO.LCS.MIT.EDU; Fri, 4 Mar 88 16:13:02 EST
+Date: Fri, 4 Mar 88 16:13:02 EST
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8803042113.AA04964@EXPO.LCS.MIT.EDU>
+To: bugs
+Subject: Release files
+
+### bug number:   12
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+Return-Path: @MCC.COM:peterson%sw.MCC.COM@mcc.com
+Received: from sally.utexas.edu ([10.2.0.62]) by EXPO.LCS.MIT.EDU; Thu, 3 Mar 88 14:49:09 EST
+Posted-Date: Thu, 3 Mar 88 13:48:19 CST
+Received: by sally.utexas.edu (5.54/5.51)
+	id AA25890; Thu, 3 Mar 88 13:48:23 CST
+Received: from milano.SW.MCC.COM by MCC.COM with TCP; Thu 3 Mar 88 13:48:14-CST
+Received: from cleo by milano.SW.MCC.COM (5.52/STP1.56) 
+	id AA10795; Thu, 3 Mar 88 13:48:22 CST
+Date: Thu, 3 Mar 88 13:48:19 CST
+From: James Peterson <peterson%sw.MCC.COM@mcc.com>
+Message-Id: <8803031948.AA02184@cleo>
+Received: by cleo (3.2/STP) 
+	id AA02184; Thu, 3 Mar 88 13:48:19 CST
+To: xbugs%expo.lcs.mit.edu@sally.utexas.edu
+Subject: Release files
+
+
+In the X11R2 release tape, I found the following files that
+presumably are unnecessary:
+
+-rw-rw-r--     41 Feb 26 11:57 ./doc/Xlib/Xsrc/.emacs_341
+-rw-rw-r--     33 Feb 26 12:53 ./doc/Xlib/.emacs_341
+-rw-rw-r--     38 Feb 26 13:01 ./doc/Xlib/.emacs_77
+-rw-rw-r--     35 Feb 26 13:02 ./doc/Xlib/.emacs_469
+-rw-rw-r--     46 Sep  9 17:24 ./doc/Toolkit/.emacs_371
+-rw-rw-r--   5531 Feb 28 13:59 ./doc/Toolkit/releasenotes.~1~
+-rw-rw-r--  11677 Feb 10 13:09 ./contrib/andrew/be2/hz/Makefile.CKP
+-rw-rw-r--     44 Feb 12 11:39 ./server/ddx/dec/qdss/.emacs_86
+
+To clean our file system of misc temporary files that get
+created as a side-effect of other work, I use a script like the
+following:
+
+find . \( -name ".*~" -o -name "...*" -o -name "*.CKP" -o -name "*.BAK" \
+       -o -name "*~" -o -name "#*" -o -name core -o -name "*.orig"       \
+       -o -name "*.rej" -o -name ".emacs_*" -o -name ".B*" \)             \
+    -exec ls -l '{}'  \;
+
+jim

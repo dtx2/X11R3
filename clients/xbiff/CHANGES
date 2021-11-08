@@ -1,0 +1,6 @@
+The following changes have been made to this directory since R2:
+
+     o  Atoms.h has been replaced with StringDefs.h
+     o  added a check command
+     o  added volume resource
+     o	several other fixes by virtue of fixes to the Mailbox widget (c.f.)

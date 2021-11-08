@@ -1,0 +1,15 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Tue, 20 Sep 88 17:06:10 EDT
+Date: Tue, 20 Sep 88 17:06:10 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8809202106.AA04412@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: make install doesn't work on doc/Xlib/Xman
+
+### bug number:   984
+### area:         config
+### severity:     medium
+### comments:     this will get fixed for R3
+
+Apparently, the R3beta make install doesn't work in the doc/Xlib/Xman directory
+

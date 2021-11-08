@@ -1,0 +1,91 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 9 Aug 88 17:50:52 EDT
+Date: Tue, 9 Aug 88 17:51 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: allow server connection info to vary each cycle
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880809215111.4.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   840
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X Window System, Version 11, Release 2
+
+CLIENT MACHINE and OPERATING SYSTEM:
+	don't care
+
+DISPLAY:
+	any
+
+WINDOW MANAGER:
+	don't care
+
+AREA:
+	server
+
+SYNOPSIS:
+	Connection setup info may not be constant across cycles
+
+DESCRIPTION:
+	A ddx may want to change various information between
+	connection cycles.  As coded, the connection block
+	only gets initialized once, rather than per cycle.
+
+REPEAT BY:
+	Talk to a company about their particular ddx.
+
+FIX:
+
+*** /tmp/,RCSt1a05511	Tue Aug  9 17:48:56 1988
+--- server/dix/main.c	Tue Aug  9 17:39:52 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: main.c,v 1.138 88/07/29 12:15:52 keith Exp $ */
+  
+  #include "X.h"
+  #include "Xproto.h"
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: main.c,v 1.139 88/08/09 17:41:13 rws Exp $ */
+  
+  #include "X.h"
+  #include "Xproto.h"
+***************
+*** 213,222 ****
+  	    CreateRootWindow(i);
+  	}
+          DefineInitialRootWindow(&WindowTable[0]);
+! 	if(!looping)
+! 	{
+! 	    CreateConnectionBlock();
+! 	}
+  
+  	Dispatch();
+  
+--- 213,219 ----
+  	    CreateRootWindow(i);
+  	}
+          DefineInitialRootWindow(&WindowTable[0]);
+! 	CreateConnectionBlock();
+  
+  	Dispatch();
+  
+***************
+*** 239,244 ****
+--- 236,242 ----
+  
+  	ResetHosts(display);
+          xfree(clients);
++ 	xfree(ConnectionInfo);
+  
+  	looping = 1;
+      }
+

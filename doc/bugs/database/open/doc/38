@@ -1,0 +1,51 @@
+Return-Path: lori%hpcvxlc@hplabs.hp.com
+Received: by expo.lcs.mit.edu; Thu, 23 Jun 88 23:32:38 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA23863; Thu, 23 Jun 88 23:31:12 EDT
+Received: from hp-pcd.HP.COM (hp-pcd) by hplabs.HP.COM with SMTP ; Thu, 23 Jun 88 19:31:20 PST
+Received: by hp-pcd.HP.COM (5.51/4.7)
+	id AA08665; Thu, 23 Jun 88 20:31:02 PDT
+Received: from hpcvxlc by hpcvxlc.HP.COM; Thu, 23 Jun 88 20:32:49 pdt
+Message-Id: <8806240332.AA06764@hpcvxlc.HP.COM>
+To: xbugs@athena.mit.edu
+Subject: uwm menufont description missing from man page
+X-Mailer: mh6.5
+Date: Thu, 23 Jun 88 20:32:45 PDT
+From: Lori Cook <lori%hpcvxlc@hplabs.hp.com>
+
+### bug number:   633
+### area:         doc
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+SYNOPSIS:
+	description of menufont missing from man page.
+DESCRIPTION:
+	<More detailed description>
+REPEAT-BY:
+	<What you did to get the error>
+SUGGESTED FIX:
+*** clients/uwm/uwm.man.old	Thu Jun 23 16:34:37 1988
+--- clients/uwm/uwm.man	Thu Jun 23 16:37:17 1988
+***************
+*** 95,100
+  \fIuwm\fP assumes no limit to the number of colors it can take from 
+  the color map.  
+  \fBmaxcolors\fP counts colors as they are included in the file.
+  .IP "\fBnormali\fP/\fBnonormali\fP"
+  places icons created with \fBf.newiconify\fP within the root
+  window, even if it is placed partially off the screen.  With
+
+--- 95,104 -----
+  \fIuwm\fP assumes no limit to the number of colors it can take from 
+  the color map.  
+  \fBmaxcolors\fP counts colors as they are included in the file.
++ .IP "\fBmenufont\fP=\fIfontname\fP"
++ names the font that is displayed within menus.  
++ Font names for a given server can be obtained using fonts in
++ \fI/usr/lib/x11/fonts\fP.
+  .IP "\fBnormali\fP/\fBnonormali\fP"
+  places icons created with \fBf.newiconify\fP within the root
+  window, even if it is placed partially off the screen.  With
+

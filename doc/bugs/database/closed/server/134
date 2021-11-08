@@ -1,0 +1,116 @@
+Return-Path: karynk@spray.calcomp.com
+Received: by expo.lcs.mit.edu; Mon, 25 Apr 88 15:09:37 EDT
+Received: by EDDIE.MIT.EDU with sendmail-5.45/4.7 id <AA28370@EDDIE.MIT.EDU>; Mon, 25 Apr 88 15:06:29 EDT
+Received: by harvard.harvard.edu; Mon, 25 Apr 88 14:47:31 EDT
+Received: from spray.CalComp.COM (spray.ARPA) 
+	by elrond.CalComp.COM (1.2/smail2.5/01-15-88)
+	id AA02668; Mon, 25 Apr 88 10:10:39 edt
+Received: by spray.CalComp.COM (5.52/UUCP-Proj/rel1.0/14-Jan-87)
+	id AA02674; Mon, 25 Apr 88 10:15:13 EDT
+Date: Mon, 25 Apr 88 10:15:13 EDT
+From: karynk@spray.calcomp.com (Karyn M. Kachinski)
+Message-Id: <8804251415.AA02674@spray.CalComp.COM>
+To: xbugs@expo.lcs.mit.edu
+Subject: bug on odd width vertical double dashed lines
+Cc: karynk@spray.calcomp.com
+
+### bug number:   415
+### area:         server
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Sun 3/160
+
+CLIENT OPERATING SYSTEM:
+	SunOS 3.4
+
+DISPLAY:
+	CG4
+
+SYNOPSIS:
+        Horizontal odd width double dashed lines don't match up. 
+
+DESCRIPTION:
+ 	When drawing double dashed lines of odd widths, the part drawn in the 
+background color is one or more pixels to the left of the part drawn in the 
+foreground color.   The file ddx/mi/miwidedash.c seems to have a problem.
+
+REPEAT-BY:
+	Draw a double dashed vertical line with an odd width (the bigger the
+width the easier it is to see).  I used a foreground color of white and a
+background color of blue on a black window.  (The program included with bug
+report  XBUG #388  sent last week on negative line widths can be used, I just
+added the backgound color into the gc used to draw the lines.)  I also used the
+xmag (magnifying program) that was sent on the net to blow up the picture to
+see better what was happening.
+
+FIX:
+       In the file ddx/mi/miwidedash.c, there are two sections of code that
+look to be copies of each other...one for doing either OnOff or DoubleDash, and
+the second for doing just the double dash, BUT there are differences in the 
+two sections of code.  If you edit this file and search for the ISZERO macro,
+these two sections of code can be found easily.  Included here are the sections
+with the differences noted.
+
+
+/++++++++++++++++++++++++++++ Section 1 +++++++++++++++++++++++++++++++++/
+
+
+    j = 0;
+    for(i = 0; i <= nseg; i++)
+    {
+	if(dashes[i].newLine)
+	{
+	    /* calculate slope of the line */
+	    dx = (double) ((pPtsIn + 1)->x - pPtIn->x);
+	    dy = (double) ((pPtsIn + 1)->y - pPtIn->y);
+	    pPtIn++;
+	    /* use slope of line to figure out how to use error term */
+	    fXmajor = (fabs(dx) > fabs(dy));
+	    if(fXmajor)
+>>>a1>>>	m = !ISZERO(dx) ? (dy/dx) : EPSILON;
+	    else
+>>>a1>>>	m = !ISZERO(dy) ? (dx/dy) : EPSILON;
+	}
+	/* Add this point to our list, adjusting the error term as needed */
+>>>b1>>	ppt->x = (double) dashes[i].pt.x;
+>>>b1>>	ppt->y = (double) dashes[i].pt.y;
+
+/++++++++++++++++++++++++++++ Section 2 +++++++++++++++++++++++++++++++++/
+
+	for(i = 0; i <= nseg; i++)
+	{
+	    if(dashes[i].newLine) {
+		/* calculate slope of the line */
+		dx = (double) ((pPtIn + 1)->x - pPtIn->x);
+		dy = (double) ((pPtIn + 1)->y - pPtIn->y);
+		/* use slope of line to figure out how to use error term */
+		fXmajor = (fabs(dx) > fabs(dy));
+		if(fXmajor)
+>>>a2>>>	    m = ISZERO(dx) ? (dy/dx) : EPSILON;
+		else
+>>>a2>>>	    m = ISZERO(dy) ? (dx/dy) : EPSILON;
+		pPtIn++;
+	    }
+	    /* Add this point to our list */   
+>>>b2>>	    ppt->x = (double) dashes[i].pt.x +
+	    		(fXmajor ? 0.0 : dashes[i].e*m);
+>>>b2>>	    ppt->y = (double) dashes[i].pt.y +
+	    		(fXmajor ? dashes[i].e*m : 0.0); 
+	    ppt++;
+/++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++/
+
+In the lines marked >>>a1>>> and >>>a2>>> note that the >>>a2>>> part does not
+use ! beofre the ISZERO..I think this is an error.
+
+In the lines marked >>>b1>>, the comment before says to adjust the error term
+as needed, but doesn't use the error term.  In the lines marked >>>b2>> the
+error term is used.  I found this error term to account for the difference
+in the lines drawn.  (Also it assigns EPSILON to m due to the error in the
+ISZERO macro use.)  (In our copy I tried removing the error adjustment on
+the lines marked >>>b2>> and the dashes matched correctly.)
+

@@ -1,0 +1,56 @@
+Return-Path: Hornig@alderaan.scrc.symbolics.com
+Received: by expo.lcs.mit.edu; Tue, 6 Sep 88 16:26:47 EDT
+Received: from WINTER.SCRC.Symbolics.COM by ALDERAAN.SCRC.Symbolics.COM via CHAOS with CHAOS-MAIL id 218471; Tue 6-Sep-88 15:41:44 EDT
+Date: Tue, 6 Sep 88 15:41 EDT
+From: Charles Hornig <Hornig@alderaan.scrc.symbolics.com>
+Subject: CLX in Genera: better BUFFER-READ-DEFAULT
+To: xbugs@expo.lcs.mit.edu
+Cc: Hornig@alderaan.scrc.symbolics.com, York@alderaan.scrc.symbolics.com
+Message-Id: <19880906194133.3.HORNIG@WINTER.SCRC.Symbolics.COM>
+
+### bug number:   940
+### area:         CLX
+### severity:     low
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	Symbolics 3600
+
+CLIENT OPERATING SYSTEM:
+	Symbolics Genera 7.2
+
+DISPLAY:
+	N/A
+
+SYNOPSIS:
+	The version of BUFFER-READ-DEFAULT shared by Genera and
+Explorers is not as functional as it could be.
+
+DESCRIPTION:
+	It doesn't do timeouts properly if the data does not arrive in a
+single packet.
+
+FIX:
+
+#+genera
+(defun buffer-read-default (display vector start end timeout)
+  ;; returns non-NIL if EOF encountered
+  ;; Returns :TIMEOUT when timeout exceeded
+  (declare (type display display)
+	   (type buffer-bytes vector)
+	   (type array-index start end)
+	   (type (or null number) timeout))
+  (declare-buffun)
+  (let ((stream (display-input-stream display)))
+    (scl:condition-case ()
+	 (net:with-stream-timeout (stream :input (and timeout (* timeout 60)))
+	   (scl:send stream :string-in nil vector start end)
+	   nil)
+       (sys:end-of-file
+	 t)
+       (neti:protocol-timeout
+	 :timeout))))
+

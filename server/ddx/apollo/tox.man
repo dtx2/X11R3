@@ -1,0 +1,13 @@
+.TH TOX 1 "5 Feb 1988" "X Version 11"
+.SH NAME
+tox \- switch from Apollo DM environment back to X
+.SH SYNOPSIS
+.B tox
+.SH DESCRIPTION
+.I Tox
+will switch from the Apollo DM environment back to the already running X 
+server.
+.SH "SEE ALSO"
+.PP
+.I todm (1),
+which switches from X to the DM.

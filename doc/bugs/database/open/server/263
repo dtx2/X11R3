@@ -1,0 +1,46 @@
+Return-Path: henry@garp.mit.edu
+Received: by expo.lcs.mit.edu; Tue, 4 Oct 88 19:50:41 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA18351; Tue, 4 Oct 88 19:50:55 EDT
+Received: by GARP.MIT.EDU with sendmail-5.54/4.7 
+	id <AA27873@GARP.MIT.EDU>; Tue, 4 Oct 88 19:50:34 EDT
+Message-Id: <8810042350.AA27873@GARP.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: [Chris VanHaren (Athena User Consultant): 6.0C RT uwm]
+Date: Tue, 04 Oct 88 19:50:32 EDT
+From: Henry Mensch <henry@garp.mit.edu>
+
+### bug number:   1049
+### area:         server
+### severity:     low
+### comments:     probably ibm ddx-specific
+                  yes - I expect this is a necessary side-effect of trying
+                  to simulate a 3-button mouse with only 2.  -Ralph
+
+
+------- Forwarded Message
+
+Replied: Tue, 04 Oct 88 19:49:38 EDT
+Replied: "Chris VanHaren (Athena User Consultant) <vanharen@ATHENA.MIT.EDU> "
+Received: by E40-PO.MIT.EDU (5.45/4.7) id AA09161; Mon, 3 Oct 88 17:05:28 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA18706; Mon, 3 Oct 88 17:05:15 EDT
+Received: by MONEY.MIT.EDU (5.45/4.7) id AA24138; Mon, 3 Oct 88 17:04:26 EDT
+Message-Id: <8810032104.AA24138@MONEY.MIT.EDU>
+To: bugs@ATHENA.MIT.EDU
+From: Chris VanHaren (Athena User Consultant) <vanharen@ATHENA.MIT.EDU>
+Subject: 6.0C RT uwm
+Date: Mon, 03 Oct 88 17:04:18 EDT
+Sender: vanharen@ATHENA.MIT.EDU
+
+UWM on the RT responds incorrectly to requests for canceling a window
+manager operation.  For example, META-RIGHT-MOUSE to move a window, then
+attempt to cancel the operation by clicking another mouse button.  On
+the VAX, this works -- the window manager operation does not take place.
+On the RT, however, the window manager operation takes place -- for
+example, attempting to move the window, then clicking another button
+causes the window manager operation to take place immediately (dumping
+the window at the current mouse location).
+
+
+------- End of Forwarded Message
+
+

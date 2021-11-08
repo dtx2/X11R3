@@ -1,0 +1,54 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: from KILLINGTON.LCS.MIT.EDU by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 10:03:30 EST
+Return-Path: <@SPICE.CS.CMU.EDU:James.Healy@spice.cs.cmu.edu>
+Received: from SPICE.CS.CMU.EDU (SPICE.CS.CMU.EDU) by ZERMATT.LCS.MIT.EDU via INTERNET with SMTP id 131986; 12 Mar 88 17:37:35 EST
+Received: from SPICE.CS.CMU.EDU by SPICE.CS.CMU.EDU; 12 Mar 88 17:05:32 EST
+To: bug-clx@zermatt.lcs.mit.edu
+Subject: CLX and CMU Common Lisp.
+Date: Sat, 12 Mar 88 17:05:22 EST
+Message-Id: <19000.574207522@SPICE.CS.CMU.EDU>
+From: James.Healy@SPICE.CS.CMU.EDU
+Resent-To: xbugs@expo.lcs.mit.edu
+Resent-From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Resent-Date: Mon, 14 Mar 88 10:03 EST
+Resent-Message-Id: <880314100347.2.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   103
+### area:         CLX
+### severity:     
+### assigned to:  rws
+### status:       closed
+
+
+I've managed to get CLX running under CMU Common Lisp using the Mach
+operating system.
+
+Just as Sandra did, I also had problems compiling CLX because of unquoted
+uses of the "#." read-macro and occurrences of "#()".  (Vectors aren't
+required to be self-evaluating according to Steele.)
+
+Specifically,
+
+CLX.LISP:  The "#()" in the event-extensions slot of the display defstruct.
+
+MACROS.LISP:  The define-accessors for member, member8, and member16
+weren't getting expanded correctly.  My fix was to quote each occurrence
+of ",(apply #'vector mumble)".  There are 9 of those, I think.  I'm not
+really sure whether this is the right thing to do, but it seems to work.
+
+(You've probably already fixed this next one, LaMott.)
+
+IMAGE.LISP:  The "#()" forms used to initialize the data slot of the
+image-x defstruct and the pixarray slot of the image-y defstruct.  The
+"#.(coerce" form in the byte-reverse function.
+
+One more problem is that the "ignore" function called in allocate-event in
+the file INPUT.LISP is not standard Common Lisp.  I just changed this to an
+ignore declaration instead.
+
+Jim Healy
+CMU Common Lisp Project
+
+
+
+

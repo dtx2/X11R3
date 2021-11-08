@@ -1,0 +1,14 @@
+#define IHaveSubdirs
+#define PassCDebugFlags 'CDEBUGFLAGS=$(CDEBUGFLAGS)' 'BOOTSTRAPCFLAGS=$(BOOTSTRAPCFLAGS)'
+
+#if defined(MacIIArchitecture)
+   CPP_DIR = cpp
+#endif
+#if defined(HPArchitecture)
+SOELIM_DIR = soelim
+#endif
+SUBDIRS = makedepend checkfn $(CPP_DIR) $(SOELIM_DIR)
+
+MakeSubdirs($(SUBDIRS) imake)
+DependSubdirs($(SUBDIRS))
+CleanSubdirs(imake)

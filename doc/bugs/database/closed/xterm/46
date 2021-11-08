@@ -1,0 +1,43 @@
+Return-Path: @XX.LCS.MIT.EDU:lmjm%doc.imperial.ac.uk@nss.cs.ucl.ac.uk
+Received: by expo.lcs.mit.edu; Sun, 17 Jul 88 17:16:40 EDT
+Received: from NSS.Cs.Ucl.AC.UK by XX.LCS.MIT.EDU with TCP/SMTP; Sun 17 Jul 88 17:15:57-EDT
+Received: from doc.imperial.ac.uk by NSS.Cs.Ucl.AC.UK   via Janet with NIFTP
+           id aa04212; 17 Jul 88 21:37 BST
+To: xbugs <@NSS.Cs.Ucl.AC.UK:xbugs@expo.lcs.mit.edu>
+Subject: Greenhills Clipper cpp barf on deep macros
+Date: Sun, 17 Jul 88 22:02:53 BST
+From: lmjm%doc.imperial.ac.uk@nss.cs.ucl.ac.uk
+Sender: lmjm%doc.imperial.ac.uk@nss.cs.ucl.ac.uk
+Message-Id:  <8807172202.aa23126@ivax.doc.ic.ac.uk>
+
+### bug number:   725
+### area:         xterm
+### severity:     low
+### comments:     
+
+Under the Greenhills C compiler for a Clipper I get the compiler
+barfing at uses of VERY deep macro expansions.  These occur in
+xterm/Texparse.h and xterm/VTparse.h.  I'm not really sure how best to
+get around it.  Currently I've versions of these two files with these
+sort of changes:
+
+diff Tekparse.h* 
+52c52
+< #define       CASE_BEAM_VEC   20 /*(CASE_CHAR_SIZE + 1)*/
+---
+> #define       CASE_BEAM_VEC   (CASE_CHAR_SIZE + 1)
+
+I've been told that ansi doesn't state how deep you can but VTparse.h
+does go 65 deep - which does seem a little extreme.  Couldn't they be
+generated or something?  I'll write a suitable generator if I know it
+will make it to the distribution tape (I'm a firm believe in standardising).
+
+	Lee.
+--
+UKUUCP SUPPORT  Lee McLoughlin
+	"What you once thought was only a nightmare is now a reality!"
+
+Janet: lmjm@uk.ac.ic.doc, lmcl@uk.ac.ukc
+DARPA: lmjm@doc.ic.ac.uk (or lmjm%uk.ac.ic.doc@nss.cs.ucl.ac.uk)
+Uucp:  lmjm@icdoc.UUCP, ukc!icdoc!lmjm
+

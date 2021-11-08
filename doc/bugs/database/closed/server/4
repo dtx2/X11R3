@@ -1,0 +1,46 @@
+Return-Path: franz!sparky!jdi@ucbarpa.berkeley.edu 
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 7 Mar 88 15:17:22 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA01471; Mon, 7 Mar 88 15:16:43 EST
+Received: by ucbarpa.Berkeley.EDU (5.58/1.26)
+	id AA25160; Mon, 7 Mar 88 12:14:58 PST
+Received: from sparky by franz (5.5/3.14)
+	id AA01814; Mon, 7 Mar 88 11:31:16 PST
+Received: by sparky (3.2/3.14)
+	id AA04027; Mon, 7 Mar 88 11:24:55 PST
+Return-Path: <sparky!jdi>
+Message-Id: <8803071924.AA04027@sparky>
+To: Ralph R. Swick <frozen!franz!ucbarpa!ATHENA.MIT.EDU!swick@athena.mit.edu>
+Cc: xbugs@athena.mit.edu
+Subject: Re: Serious bug in MapWindow 
+In-Reply-To: Your message of Mon, 07 Mar 88 10:06:12 EST.
+             <8803071506.AA23503@LYRE.MIT.EDU> 
+Date: Mon, 07 Mar 88 11:24:54 PST
+From: John Irwin <franz!sparky!jdi@ucbarpa.berkeley.edu>
+
+### bug number:   48
+### area:         
+### severity:     
+### assigned to:  
+### status:       
+
+Truly?  I might point out that since the if statement will always return true
+the else code at the end of the function will never get executed.  If this
+isn't a bug it surely is bad programming style.
+
+	-- John
+
+ps: When I get the core dump adb tells me I was inside MapWindow.
+
+--------
+Your message:
+
+       SYNOPSIS:
+    	 Look at line 2437 of window.c (in MapWindow)
+
+       DESCRIPTION:
+    	 You don't *really* want a single = sign, do you?  :-)
+
+    Yep, we sure do.  The cause of your core dumps must be elsewhere.
+    We have had no other uwm bug reports relating specifically to menus
+    dumping core.
+--------

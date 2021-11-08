@@ -1,0 +1,83 @@
+DEFINES = -DDRAGONPIX=16 -DNPLANES=`cat ../NPLANESFILE` 
+DRIVERINCLUDES = -I/sys/vaxuba
+
+TASM = tasm
+TFILES = tltemplate.ta
+
+SRCS = tlloadtemp.c \
+	tlptobmask.c tlptob2color.c \
+	tlpolytext.c tlimagetext.c \
+	tlplanestip.c tlplanecopy.c \
+	tloffscreen.c tlinit.c \
+	tlbitblt.c tlspa.c tltranslate.c tlline.c tlqd.c \
+	tlsetspan.c tlglobals.c tlconpolys.c \
+	tlrotile.c tldrawshapes.c tloddsize.c tldma.c \
+	tldstate.c tldchange.c
+OBJS = tlloadtemp.o \
+	tlptobmask.o tlptob2color.o \
+	tlpolytext.o tlimagetext.o \
+	tlplanestip.o tlplanecopy.o \
+	tloffscreen.o tlinit.o \
+	tlbitblt.o tlspa.o tltranslate.o tlline.o tlqd.o \
+	tlsetspan.o tlglobals.o tlconpolys.o \
+	tlrotile.o tldrawshapes.o tloddsize.o tldma.o \
+	tldstate.o tldchange.o
+
+CDEBUGFLAGS = ServerCDebugFlags
+INCLUDES = -I. -I.. -I../../../../include -I$(INCLUDESRC) $(DRIVERINCLUDES)
+
+NormalLibraryObjectRule()
+NormalLibraryTarget(tl,$(OBJS))
+
+#ifndef ultrix
+# The 4.3 optimizer does bad things with byte operations in
+# i/o space unless you give it the (undocumented) -i switch.
+# Note that this does NOT pickup CDEBUGFLAGS
+tldma.o:
+	$(RM) $@ tldma.s
+	$(CC) -S $(INCLUDES) $(STD_DEFINES) $(DEFINES) $*.c
+	/lib/c2 -i tldma.s | $(AS) -o $@
+	$(RM) tldma.s
+#endif
+
+#
+# These next three each use a symbolic link to create two slightly
+# different .o files
+tlplanecopy.c: tlplanestip.c
+	$(RM) tlplanecopy.c
+	$(LN) tlplanestip.c tlplanecopy.c
+
+tlplanecopy.o: tlplanecopy.c
+	${CC} ${CFLAGS} -DTWOCOLOR -c $*.c
+
+
+tlptob2color.c: tlptobmask.c
+	$(RM) tlptob2color.c
+	$(LN) tlptobmask.c tlptob2color.c
+
+tlptob2color.o: tlptob2color.c
+	${CC} ${CFLAGS} -DBICHROME -c $*.c
+
+
+tlimagetext.c: tlpolytext.c
+	$(RM) tlimagetext.c
+	$(LN) tlpolytext.c tlimagetext.c
+
+tlimagetext.o: tlimagetext.c
+	${CC} ${CFLAGS} -DIMAGE -c $*.c
+
+# tasm (template code assemsbler) not provided
+#tlloadtemp.c: $(TFILES)
+#	$(TASM) -i ${TFILES} -o tlloadtemp.c
+
+#tltemplabels.h: $(TFILES)
+#	$(TASM) -i ${TFILES} -x -l tltemplabels.h
+
+DependTarget()
+
+NormalLintTarget($(SRCS))
+
+clean::
+	$(RM) tlplanecopy.c
+	$(RM) tlptob2color.c
+	$(RM) tlimagetext.c

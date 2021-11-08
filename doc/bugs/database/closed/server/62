@@ -1,0 +1,62 @@
+Return-Path: deboor@buddy.berkeley.edu 
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Sat, 5 Mar 88 20:22:18 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA19923; Sat, 5 Mar 88 20:21:45 EST
+Received: from snail.sun.com by Sun.COM (4.0/SMI-4.0)
+	id AA14048; Sat, 5 Mar 88 17:20:46 PST
+Received: from brie.sun.com by snail.sun.com (4.0/SMI-3.2)
+	id AA09452; Sat, 5 Mar 88 17:21:49 PST
+Received: from Sun.COM (sun-arpa) by brie.sun.com (3.2/SMI-3.2)
+	id AA19726; Sat, 5 Mar 88 17:21:50 PST
+Received: from buddy.Berkeley.EDU by Sun.COM (4.0/SMI-4.0)
+	id AA14033; Sat, 5 Mar 88 17:20:27 PST
+Received: by buddy.Berkeley.EDU (5.57/1.26)
+	id AA02214; Sat, 5 Mar 88 17:20:28 PST
+Message-Id: <8803060120.AA02214@buddy.Berkeley.EDU>
+To: John Irwin <franz!sparky!jdi@ucbarpa.berkeley.edu>
+Cc: x11bugs%brie@sun.com
+Life: Goes On
+Phone: (415) 549-2264
+Precedence: special-delivery 
+In-Reply-To: Your message of Sat, 05 Mar 88 16:58:15 PST 
+	<8803060058.AA01659@sparky> 
+Subject: Re: off by one on draw-rectangle 
+Date: Sat, 05 Mar 88 17:20:23 PST
+From: Adam R de Boor <deboor@buddy.berkeley.edu>
+
+### bug number:   37
+### area:         
+### severity:     
+### assigned to:  
+### status:       closed
+
+Try examining the "unselected" cursor in an xterm running Xsun in color -- the
+top right and bottom left corner pixels don't exist. For the "selected"
+text cursor, the left edge is missing, if I remember right. Pointed this out
+to Sun last May or June, but haven't had time to look myself...
+
+a
+
+-----------
+Your message:
+
+I'm using CLX to give this example, so I'm not sure the bug is actually in
+the X server, but looking at the CLX code I couldn't see how it could be in
+there.
+
+On a monochrome Sun,
+Create a window with a white background, and a gcontext with white background
+and black foreground.
+
+(xlib:draw-rectangle window gcontext 10 10 100 30 t)
+
+Then
+
+(xlib:draw-rectangle window gcontext 10 10 100 30)
+
+
+The *non-filled* rectangle is one pixel larger on the right and bottom than
+the filled rectangle.
+
+Interestingly this doesn't seem to happen for white on black windows.
+
+	-- John

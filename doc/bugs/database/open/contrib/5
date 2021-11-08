@@ -1,0 +1,22 @@
+Return-Path: swick@athena.mit.edu
+Received: from ATHENA (ATHENA.MIT.EDU) by EXPO.LCS.MIT.EDU; Mon, 14 Mar 88 10:29:54 EST
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA26154; Mon, 14 Mar 88 10:29:09 EST
+Received: by LYRE.MIT.EDU (5.45/4.7) id AA05214; Mon, 14 Mar 88 10:29:34 EST
+Message-Id: <8803141529.AA05214@LYRE.MIT.EDU>
+To: xbugs@athena.mit.edu
+Subject: xshell -geometry
+Date: Mon, 14 Mar 88 10:29:30 EST
+From: Ralph R. Swick <swick@athena.mit.edu>
+
+### bug number:   107
+### area:         contrib
+### severity:     
+### assigned to:  
+### status:       
+
+VERSION:
+	X11 release 2
+
+SYNOPSIS:
+	 xshell does not support -geometry
+

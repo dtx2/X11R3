@@ -1,0 +1,707 @@
+Return-Path: jim
+Received: by expo.lcs.mit.edu; Fri, 27 May 88 16:00:32 EDT
+From: jim@expo.lcs.mit.edu (Jim Fulton)
+Message-Id: <8805272000.AA22336@EXPO.LCS.MIT.EDU>
+To: xbugs
+Subject: patches to contrib/texx
+Organization: X Consortium, MIT Laboratory for Computer Science
+Date: Fri, 27 May 88 16:00:29 EDT
+
+### bug number:   543
+### area:         contrib
+### severity:     low
+### comments:     
+
+
+
+------- Forwarded Message
+
+Return-Path: xpert-request@athena.mit.edu
+Received: by expo.lcs.mit.edu; Sat, 21 May 88 05:07:24 EDT
+Received: by ATHENA.MIT.EDU (5.45/4.7) id AA05960; Sat, 21 May 88 04:06:12 EST
+Received: by BLOOM-BEACON.MIT.EDU with sendmail-5.59/4.7 
+	id <AA23754@BLOOM-BEACON.MIT.EDU>; Sat, 21 May 88 04:57:01 EDT
+Received: from USENET by bloom-beacon with netnews
+	for xpert@athena.mit.edu (xpert@athena.mit.edu)
+	(contact usenet@bloom-beacon if you have questions)
+Date: 20 May 88 22:54:00 GMT
+From: grunwald@m.cs.uiuc.edu
+Subject: Best TeXx fix yet
+Message-Id: <26900033@uiucdcsm>
+Sender: xpert-request@athena.mit.edu
+To: xpert@athena.mit.edu
+
+
+Well, the definitive (i.e. it works) TeXx-for-a-vaxstation hack is here.
+
+I changed the 'shrinkGlyph' routine to store bytes in an explicit byte
+order (M.S.B.F) and bit order (M.S.B.F). This continues to work with
+TeXsun (it's the 68000 byte order), and will also work with Vaxen when
+the proper patches are applied to TeXx.
+
+The following is a shar of patches to the X11R2 distribution of TeXx.
+
+I've started to try to figure out the toolkits & scrollbars, but the new
+version of TeXx isn't ready. Hopefully, this will help more people get it
+to work.
+
+dirk grunwald
+grunwald@m.cs.uiuc.edu
+
+
+#! /bin/sh
+# This is a shell archive, meaning:
+# 1. Remove everything above the #! /bin/sh line.
+# 2. Save the resulting text in a file.
+# 3. Execute the file with /bin/sh (not csh) to create the files:
+#	dvi_draw.c.diff
+#	dvistuff.c.diff
+#	dvistuff.h.diff
+#	texx.c.diff
+# This archive created: Fri May 20 17:43:39 1988
+export PATH; PATH=/bin:$PATH
+if test -f 'dvi_draw.c.diff'
+then
+	echo shar: will not over-write existing file "'dvi_draw.c.diff'"
+else
+cat << \SHAR_EOF > 'dvi_draw.c.diff'
+*** dvi_draw.c	Tue Feb 23 14:35:37 1988
+- --- /usr/tmp/dvi_draw.c	Fri May 20 17:41:09 1988
+***************
+*** 26,32 ****
+   * it's worth it.
+   */
+  
+! static char *rcsid="$Header: dvi_draw.c,v 1.3 88/02/19 17:00:34 grunwald Exp $" ;
+  
+  #include	<math.h>
+  #include	<stdio.h>
+- --- 26,32 ----
+   * it's worth it.
+   */
+  
+! static char *rcsid="$Header: dvi_draw.c,v 1.1 88/02/11 16:52:29 jim Exp $" ;
+  
+  #include	<math.h>
+  #include	<stdio.h>
+SHAR_EOF
+fi # end of overwriting check
+if test -f 'dvistuff.c.diff'
+then
+	echo shar: will not over-write existing file "'dvistuff.c.diff'"
+else
+cat << \SHAR_EOF > 'dvistuff.c.diff'
+*** dvistuff.c	Fri May 20 17:39:52 1988
+- --- /usr/tmp/dvistuff.c	Fri May 20 17:40:57 1988
+***************
+*** 16,22 ****
+  
+  #include "dvistuff.h"	/* includes types & fonts */
+  
+! static char *rcsid="$Header: dvistuff.c,v 1.16 88/05/20 08:57:17 grunwald Locked $" ;
+  
+  #include "conv.h"
+  #include "dvi.h"
+- --- 16,22 ----
+  
+  #include "dvistuff.h"	/* includes types & fonts */
+  
+! static char *rcsid="$Header: dvistuff.c,v 1.1 88/02/11 16:52:29 jim Exp $" ;
+  
+  #include "conv.h"
+  #include "dvi.h"
+***************
+*** 28,35 ****
+  
+  int	dviHH = -1;		/* current horizontal position, in DEVs */
+  int	dviVV = -1;		/* current vertical position, in DEVs */
+- - long	*dviCount[DVI_COUNT];	/* values of count */
+- - 
+  int	dviHHMargin = -1;	/* horizontal margin (in DEVs) */
+  int	dviVVMargin = -1;	/* vertical margin (in DEVs) */
+  int	dviTallestPage = -1;
+- --- 28,33 ----
+***************
+*** 40,46 ****
+  int	dviMaxDrift = -1;
+  int	dviUserMag = -1;	/* user-specified magnification */
+  int	dviBlackness = -1;
+- - int	dviFontRotation = -1;
+  char	*dviFileName;
+  static char *dviTmpFileName = 0;
+  static char dviTmpFileNameBuffer[256];
+- --- 38,43 ----
+***************
+*** 80,90 ****
+  
+  struct fontinfo *dviCurrentFont = 0;
+  
+! /*
+!  *	imagen1-special uses the NextFamilyNumber. *sigh*
+!  */
+! 
+! int NextFamilyNumber = 0;
+  static int MaxFontFamily = MAX_FONTFAMILY;
+  
+  static struct search *FontFinder = 0;
+- --- 77,83 ----
+  
+  struct fontinfo *dviCurrentFont = 0;
+  
+! static int NextFamilyNumber = 0;
+  static int MaxFontFamily = MAX_FONTFAMILY;
+  
+  static struct search *FontFinder = 0;
+***************
+*** 112,118 ****
+  
+  #define	ABS(X)	( (X) < 0 ? -(X) : (X) )
+  
+- - 
+  /*
+   * Store the relevant information from the DVI postamble, and set up
+   * various internal things.
+- --- 105,110 ----
+***************
+*** 122,128 ****
+      register struct PostAmbleInfo *p;
+  {
+      int i;
+- -     int page;
+      int pageSize;
+      int stackSize;
+      long prevPagePointer;
+- --- 114,119 ----
+***************
+*** 153,160 ****
+      dvi_stack = (struct localstack *) malloc((unsigned) stackSize);  
+  
+  /*
+!  *	Set of the table of pointers to pages and room for the
+!  *	count variables.
+   */
+      
+      pageSize = dviTotalPages * sizeof(long);
+- --- 144,150 ----
+      dvi_stack = (struct localstack *) malloc((unsigned) stackSize);  
+  
+  /*
+!  *	Set of the table of pointers to pages
+   */
+      
+      pageSize = dviTotalPages * sizeof(long);
+***************
+*** 168,186 ****
+  		dviTotalPages);
+  	exit(1);
+      }
+- - 
+- -     for (i = 0; i < DVI_COUNT; i++) {
+- - 	if (dviCount[i] != 0) {
+- - 	    free(dviCount[i]);
+- - 	}
+- - 	dviCount[i] = (long*) malloc(pageSize);
+- - 	if (dviCount[i] == NULL) {
+- - 	    fprintf(stderr,"xdvi: Can not allocate count directory (%d pages)",
+- - 		    dviTotalPages);
+- - 	    exit(1);
+- - 	}
+- -     }
+- - 	    
+      
+  /*
+   * Follow back pointers through pages in the DVI file,
+- --- 158,163 ----
+***************
+*** 190,202 ****
+      prevPagePointer = p->pai_PrevPagePointer;
+      wuzAt = (long) ftell(dviFile);
+      
+!     for (page = dviTotalPages - 1; page >= 0 ; page--) {
+  
+! /*
+!  *	Skip to previous page, but skip over BOP marker.
+!  */
+! 	pageOffset[page] = prevPagePointer;
+! 	if( fseek(dviFile, prevPagePointer+1, 0) < 0) {
+  	    perror("fseek");
+  	    fprintf(stderr,"[postamble] improper seek looking up pages\n");
+  	    fprintf(stderr,"prevPagePointer = %lx\n",
+- --- 167,184 ----
+      prevPagePointer = p->pai_PrevPagePointer;
+      wuzAt = (long) ftell(dviFile);
+      
+!     if( fseek(dviFile, prevPagePointer, 0) < 0) {
+! 	perror("fseek");
+! 	fprintf(stderr,"[postamble] improper seek looking up pages\n");
+! 	fprintf(stderr,"prevPagePointer = %lx\n",
+! 		prevPagePointer);
+!     }
+  
+!     for (i = dviTotalPages - 1; i > 0 ; i--) {
+! 	
+! 	pageOffset[i] = prevPagePointer;
+! 	
+! 	if (fseek(dviFile, (long) prevPagePointer, 0) < 0) {
+  	    perror("fseek");
+  	    fprintf(stderr,"[postamble] improper seek looking up pages\n");
+  	    fprintf(stderr,"prevPagePointer = %lx\n",
+***************
+*** 203,220 ****
+  		    prevPagePointer);
+  	    exit(1);
+  	}
+- - 
+  /*
+!  *	Read the other counters at the beginning of the page
+   */
+! 
+! 	for (i = 0; i < DVI_COUNT; i++) {
+! 	    long value;
+! 	    fGetLong(dviFile, value);
+! 	    dviCount[i][page] = value;
+! 	    }
+  	fGetLong(dviFile, prevPagePointer);
+      }
+      fseek(dviFile, wuzAt, 0);
+  }
+  
+- --- 185,203 ----
+  		    prevPagePointer);
+  	    exit(1);
+  	}
+  /*
+!  *	Skip past the other counters at the beginning of the page
+   */
+! 	if (fseek(dviFile, (long) (1 + 10 * 4), 1) < 0) {
+! 	    perror("fseek");
+! 	    fprintf(stderr,"[postamble] attemping to align to prevPointer\n");
+! 	    exit(1);
+! 	}
+! 	
+  	fGetLong(dviFile, prevPagePointer);
+      }
++     
++     pageOffset[0] = prevPagePointer;
+      fseek(dviFile, wuzAt, 0);
+  }
+  
+***************
+*** 358,367 ****
+  
+      dviFini();	/* clean up the old files */
+  
+!     if (dviFileName == 0) {
+! 	dviFile = stdin;
+! 	dviFileName = "<stdin>";
+!     }else if ((dviFile = fopen(dviFileName, "r")) == NULL) {
+  	int n = strlen(dviFileName);
+  	char *dvi_name;
+  	
+- --- 341,347 ----
+  
+      dviFini();	/* clean up the old files */
+  
+!     if ((dviFile = fopen(dviFileName, "r")) == NULL) {
+  	int n = strlen(dviFileName);
+  	char *dvi_name;
+  	
+***************
+*** 405,420 ****
+  	dviFile = tmpFile;
+  	rewind(dviFile);
+      }
+- - /*
+- -  *	Unlink the temporary file. This keeps tmp files from cluddering
+- -  *	up /tmp and it does it in a very application-independent way.
+- -  *	You can't reopen the tmp file, but we don't really allow that
+- -  *	anyway (the tmp file is hidden from the user).
+- -  */
+- -     if (dviTmpFileName != 0 &&
+- - 	strncmp(dviTmpFileName,"/tmp/",5) == 0) {
+- - 	    unlink(dviTmpFileName);
+- - 	}
+  
+      if (dviUserMag == -1) {
+  	dviUserMag = 1000;
+- --- 385,390 ----
+***************
+*** 432,441 ****
+  	dviBlackness = DEFAULT_BLACKNESS;
+      }
+  
+- -     if (dviFontRotation == -1) {
+- - 	dviFontRotation = ROT_NORM;
+- -     }
+- - 
+      ReadPostAmble();
+      ReadPreAmble();
+  
+- --- 402,407 ----
+***************
+*** 877,883 ****
+   *	the other 16 bits long.
+   */
+  
+- - typedef unsigned char B8;
+  typedef unsigned short B16;
+  typedef unsigned long B32;
+  
+- --- 843,848 ----
+***************
+*** 910,917 ****
+      int rasterSize;
+  
+      int x,y;
+!     B8 *cp;
+!     B8 *ptr;
+  
+      B32 shrinkMask;
+  
+- --- 875,882 ----
+      int rasterSize;
+  
+      int x,y;
+!     char *cp;
+!     B16 *ptr;
+  
+      B32 shrinkMask;
+  
+***************
+*** 922,928 ****
+      }
+  
+      if (gly -> g_raster == 0) {
+! 	gly-> g_raster = RASTER(gly, dviCurrentFont -> f, dviFontRotation);
+      }
+  
+  /*
+- --- 887,893 ----
+      }
+  
+      if (gly -> g_raster == 0) {
+! 	gly-> g_raster = RASTER(gly, dviCurrentFont -> f, ROT_NORM);
+      }
+  
+  /*
+***************
+*** 968,993 ****
+      shrunkBytesWide = ((shrunkWidth + 15) >> 4) * 2;
+  
+      rasterSize = (shrunkHeight + 1) * shrunkBytesWide;
+!     shrunkRaster = (B16 *) malloc(rasterSize);
+!     bzero(shrunkRaster, rasterSize);
+!     ptr = (B8 *) shrunkRaster;
+      
+!     if (shrunkRaster == NULL) {
+  	fprintf(stderr, "Out of memory!\n");
+  	exit(1);
+      }
+  
+      for (y = 0; y < glyphHigh; y+= shrinkH) {
+! 	cp = (B8 *) ptr;
+! 	shrinkMask = 0x80;
+  	for (x = 0; x < glyphWide; x += shrinkW) {
+  	    int i;
+  	    int samples;
+! 	    B8 *baseP;
+  	    int upper;
+  	    register int thisShrinkW;
+  
+! 	    baseP = (B8 *) gly -> g_raster + (y * bytesWide);
+  
+  /*
+   *	Set the upper limit on the height iteration so we dont count
+- --- 933,957 ----
+      shrunkBytesWide = ((shrunkWidth + 15) >> 4) * 2;
+  
+      rasterSize = (shrunkHeight + 1) * shrunkBytesWide;
+!     ptr = shrunkRaster = (B16 *) malloc(rasterSize);
+!     bzero(ptr, rasterSize);
+      
+!     if (ptr == NULL) {
+  	fprintf(stderr, "Out of memory!\n");
+  	exit(1);
+      }
+  
+      for (y = 0; y < glyphHigh; y+= shrinkH) {
+! 	cp = (char *) ptr;
+! 	shrinkMask = 0x8000;
+  	for (x = 0; x < glyphWide; x += shrinkW) {
+  	    int i;
+  	    int samples;
+! 	    char *baseP;
+  	    int upper;
+  	    register int thisShrinkW;
+  
+! 	    baseP = gly -> g_raster + (y * bytesWide);
+  
+  /*
+   *	Set the upper limit on the height iteration so we dont count
+***************
+*** 1010,1017 ****
+  
+  	    for (i = y; i < upper; i++) {
+  		register int acc;
+! 		register B8 *p;
+! 		register B8 *ep;
+  /*
+   *	Determine how many bytes our shrink window crosses (we might
+   *	overlap on byte-edges)
+- --- 974,981 ----
+  
+  	    for (i = y; i < upper; i++) {
+  		register int acc;
+! 		register char *p;
+! 		register char *ep;
+  /*
+   *	Determine how many bytes our shrink window crosses (we might
+   *	overlap on byte-edges)
+***************
+*** 1055,1065 ****
+  	    }
+  	    shrinkMask >>= 1;
+  	    if (shrinkMask == 0) {
+! 		shrinkMask = 0x80;
+  		ptr ++;
+  	    }
+  	}
+! 	ptr = (B8 *) (cp + shrunkBytesWide);
+      }
+  
+  /*
+- --- 1019,1029 ----
+  	    }
+  	    shrinkMask >>= 1;
+  	    if (shrinkMask == 0) {
+! 		shrinkMask = 0x8000;
+  		ptr ++;
+  	    }
+  	}
+! 	ptr = (B16 *) (cp + shrunkBytesWide);
+      }
+  
+  /*
+SHAR_EOF
+fi # end of overwriting check
+if test -f 'dvistuff.h.diff'
+then
+	echo shar: will not over-write existing file "'dvistuff.h.diff'"
+else
+cat << \SHAR_EOF > 'dvistuff.h.diff'
+*** dvistuff.h	Sat Mar 26 13:35:09 1988
+- --- /usr/tmp/dvistuff.h	Fri May 20 17:40:57 1988
+***************
+*** 11,17 ****
+   *	It is presented in the hope that it will prove useful.
+   */
+  
+! static char *dvistuff_header_rcsid="$Header: dvistuff.h,v 1.9 88/02/19 17:00:42 grunwald Exp $" ;
+  
+  /*
+   *	Include the following from the CTex distribution
+- --- 11,17 ----
+   *	It is presented in the hope that it will prove useful.
+   */
+  
+! static char *dvistuff_header_rcsid="$Header: dvistuff.h,v 1.1 88/02/26 02:07:50 rws Exp $" ;
+  
+  /*
+   *	Include the following from the CTex distribution
+***************
+*** 59,67 ****
+  
+  extern int	dviHH;		/* current horizontal position, in DEVs */
+  extern int	dviVV;		/* current vertical position, in DEVs */
+- - #define DVI_COUNT	10	/* count0 .. count9 */
+- - extern long	*dviCount[DVI_COUNT];	/* values of count */
+- - 
+  extern int	dviHHMargin;
+  extern int	dviVVMargin;
+  extern int	dviDPI;
+- --- 59,64 ----
+***************
+*** 72,79 ****
+  extern int	dviMaxDrift;
+  extern char 	*dviPrintEngine;
+  extern int      dviBlackness;
+- - extern int	dviFontRotation;
+- - extern int	dviUserMag;
+  
+  extern DviFontInfo *dviCurrentFont;
+  extern char	*dviFileName;
+- --- 69,74 ----
+***************
+*** 85,90 ****
+- --- 80,86 ----
+  extern void dviPreparePage( /* int */ );
+  extern struct glyph *dviShrinkGlyph();
+  
++ void applicationLoadGlyph( /* charCode, glyph */ );
+  void applicationPutChar( /* hh, vv, charCode */ );
+  DviFont *applicationNewFont( /* font structure */);
+  void applicationResetFont(/* font info, key */);
+SHAR_EOF
+fi # end of overwriting check
+if test -f 'texx.c.diff'
+then
+	echo shar: will not over-write existing file "'texx.c.diff'"
+else
+cat << \SHAR_EOF > 'texx.c.diff'
+*** texx.c	Fri May 20 09:16:07 1988
+- --- /usr/tmp/texx.c	Fri May 20 17:40:57 1988
+***************
+*** 18,24 ****
+  #include <ctype.h>
+  
+  #include "dvistuff.h"
+! static char *rcsid="$Header: texx.c,v 1.17 88/02/19 17:00:23 grunwald Exp $" ;
+  /*
+   *	These constants may need to be changed on your implementation
+   */
+- --- 18,24 ----
+  #include <ctype.h>
+  
+  #include "dvistuff.h"
+! static char *rcsid="$Header: texx.c,v 1.2 88/02/11 16:55:22 jim Exp $" ;
+  /*
+   *	These constants may need to be changed on your implementation
+   */
+***************
+*** 358,364 ****
+  
+  /*
+   *	Compute the page size given the number of leaves. We may have
+!  *	to scale back if everything cant fit.
+   */
+      
+      if (leaf_w[SHRINK_NORMAL] * Leaves <= maxWidth) {
+- --- 358,364 ----
+  
+  /*
+   *	Compute the page size given the number of leaves. We may have
+!  *	to scale back if everything can't fit.
+   */
+      
+      if (leaf_w[SHRINK_NORMAL] * Leaves <= maxWidth) {
+***************
+*** 376,383 ****
+      highpix = XCreateGC(DISP, RootWindow(DISP, defaultScreen), 0, NULL);
+      forepix = XCreateGC(DISP, RootWindow(DISP, defaultScreen), 0, NULL);
+      
+!     XCopyGC(DISP, DefaultGC(DISP, defaultScreen),
+! 	    (1L<<(GCLastBit+1))-1, highpix);
+      XCopyGC(DISP, highpix, (1L<<(GCLastBit+1))-1, forepix);
+      
+      if (reverse) {
+- --- 376,382 ----
+      highpix = XCreateGC(DISP, RootWindow(DISP, defaultScreen), 0, NULL);
+      forepix = XCreateGC(DISP, RootWindow(DISP, defaultScreen), 0, NULL);
+      
+!     XCopyGC(DISP, DefaultGC(DISP, 0), (1L<<(GCLastBit+1))-1, highpix);
+      XCopyGC(DISP, highpix, (1L<<(GCLastBit+1))-1, forepix);
+      
+      if (reverse) {
+***************
+*** 942,950 ****
+  			     g->g_width, g->g_height,
+  			     16, 0);
+  
+- - 	image -> bitmap_unit = 8;
+- - 	image -> bitmap_bit_order = MSBFirst;
+- - 
+  	shrunkenImages[currentShrink][key][charCode] = image;
+      }
+  
+- --- 941,946 ----
+***************
+*** 1039,1052 ****
+  	XDrawLine(DISP, pasteUpPixmap[currentShrink][currentLeaf],
+  		   specialGC, xconv(fx), yconv(fy), xconv(tx), yconv(ty));
+      } else {
+- - 	int offset = currentLeaf * leaf_w[currentShrink];
+  	XDrawLine(DISP, win,
+! 		   specialGC,
+! 		  xconv(fx) + offset, yconv(fy),
+! 		  xconv(tx) + offset, yconv(ty));
+      }
+  }
+  
+  /*
+   * Draw a dot at (x,y)
+   */
+- --- 1035,1046 ----
+  	XDrawLine(DISP, pasteUpPixmap[currentShrink][currentLeaf],
+  		   specialGC, xconv(fx), yconv(fy), xconv(tx), yconv(ty));
+      } else {
+  	XDrawLine(DISP, win,
+! 		   specialGC, xconv(fx), yconv(fy), xconv(tx), yconv(ty));
+      }
+  }
+  
++ 
+  /*
+   * Draw a dot at (x,y)
+   */
+***************
+*** 1065,1071 ****
+  
+  #ifdef UNDEF
+  /*
+!  *	This is the code as it appears in TeXsun. I dont have the time to
+   *	make this do the shading in X-11. If someone does this, please post
+   *	diffs to the net.
+   *
+- --- 1059,1065 ----
+  
+  #ifdef UNDEF
+  /*
+!  *	This is the code as it appears in TeXsun. I don't have the time to
+   *	make this do the shading in X-11. If someone does this, please post
+   *	diffs to the net.
+   *
+***************
+*** 1102,1112 ****
+  		    PIX_SRC, shade_pr, 0, 0);
+  	    }
+  	    else {
+- - 		int offset = currentLeaf*leaf_w[currentShrink]
+  		pw_replrop(ptube,
+! 		    xconv(last_min_x) + pen_size + offset,
+  		    yconv(last_min_y) + pen_size,
+! 		    xconv(last_max_x) - xconv(last_min_x) - pen_size + offset,
+  		    yconv(last_max_y) - yconv(last_min_y) - pen_size,
+  		    PIX_SRC, shade_pr, 0, 0);
+  	    }
+- --- 1096,1106 ----
+  		    PIX_SRC, shade_pr, 0, 0);
+  	    }
+  	    else {
+  		pw_replrop(ptube,
+! 		    xconv(last_min_x) + currentLeaf*leaf_w[currentShrink]
+! 			   + pen_size,
+  		    yconv(last_min_y) + pen_size,
+! 		    xconv(last_max_x) - xconv(last_min_x) - pen_size,
+  		    yconv(last_max_y) - yconv(last_min_y) - pen_size,
+  		    PIX_SRC, shade_pr, 0, 0);
+  	    }
+***************
+*** 1190,1198 ****
+  	    continue;
+  	    
+  	case Expose:
+- -             if ( event.xexpose.count > 0 ) break; /* no more flicker!
+- -                                                    * [eichin:19880328.1332EST]
+- -                                                    */
+  	    string = "\f";
+  	    nbytes = 1;
+  	    break;
+- --- 1184,1189 ----
+SHAR_EOF
+fi # end of overwriting check
+#	End of shell archive
+exit 0
+
+------- End of Forwarded Message
+
+

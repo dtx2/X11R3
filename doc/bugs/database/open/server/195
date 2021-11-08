@@ -1,0 +1,57 @@
+Return-Path: Richard.Draves@m.gp.cs.cmu.edu
+Received: by EXPO.LCS.MIT.EDU; Wed, 20 Jul 88 13:30:00 EDT
+Message-Id: <8807201730.AA02159@EXPO.LCS.MIT.EDU>
+Date: Wed, 20 Jul 88 13:30:18 EDT
+From: Richard.Draves@m.gp.cs.cmu.edu
+To: xbugs@expo.lcs.mit.edu
+
+### bug number:   716
+### area:         server
+### severity:     very high
+### comments:     
+
+VERSION:
+	X11 release 2
+
+CLIENT MACHINE:
+	IBM PC/RT
+
+CLIENT OPERATING SYSTEM:
+	Mach
+
+DISPLAY:
+	AED
+
+SYNOPSIS:
+	xcalc -analog crashes the server
+
+DESCRIPTION:
+	I think this is one manifestation of some sort of memory-scribbling
+	bug in the AED ddx code.  Other bizarre things I've seen on AEDs
+	that might be related: several pages of output in an iconfied xterm
+	puts the xterm window in a funny state in which it is partly frozen.
+	Sometimes (running xconq or some Andrew programs are pretty reliable
+	triggers) fonts get screwed up across the display; it looks like
+	characters in the server's font info are getting scribbled on.  Using
+	"xsetroot -bitmap" with full-screen bitmaps displays corrupted bitmaps,
+	with some rows shifted.
+
+	In the "xcalc -analog" case, which is the easiest way to reproduce
+	the problem, the server crashes in the first XCopyArea call that xcalc
+	makes.  The back trace looks like
+		main
+		Dispatch
+		ProcCopyArea
+		aedCopyArea
+		aedCopyAreaFromPix
+		miCopyArea
+		miHandleExposures
+		miRegionCreate
+		Xalloc (seg-faults)
+
+	A version of Xibm from IBM (I copied it from the Andrew people, so I
+	don't know exactly what version it is) exhibits the same bug.
+
+REPEAT-BY:
+	start X; run "xcalc -analog"
+

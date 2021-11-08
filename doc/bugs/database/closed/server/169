@@ -1,0 +1,165 @@
+Return-Path: @KILLINGTON.LCS.MIT.EDU:RWS@zermatt.lcs.mit.edu
+Received: by expo.lcs.mit.edu; Sun, 14 Aug 88 11:42:26 EDT
+Date: Sun, 14 Aug 88 11:43 EDT
+From: Robert Scheifler <RWS@zermatt.lcs.mit.edu>
+Subject: provide uniform -wm server option for forcing backing store
+To: xbugs@expo.lcs.mit.edu
+Message-Id: <19880814154302.0.RWS@KILLINGTON.LCS.MIT.EDU>
+
+### bug number:   869
+### area:         server
+### severity:     enhancement
+### comments:     
+
+AREA:
+	server
+
+SYNOPSIS:
+	The (hack) setting of defaultBackingStore should be done
+	globally, not in per-screen initialization.  There should
+	be a uniform command line option for setting WhenMapped.
+	Always breaks too many applications, so don't encourage it.
+
+DESCRIPTION:
+	ditto
+
+FIX:
+
+*** /tmp/,RCSt1a00526	Sun Aug 14 11:35:40 1988
+--- server/os/4.2bsd/utils.c	Sun Aug 14 09:45:30 1988
+***************
+*** 21,27 ****
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: utils.c,v 1.50 88/07/25 11:53:15 toddb Exp $ */
+  #include <stdio.h>
+  #include <sys/time.h>
+  #include "misc.h"
+--- 21,27 ----
+  SOFTWARE.
+  
+  ******************************************************************/
+! /* $Header: utils.c,v 1.52 88/08/14 09:47:00 rws Exp $ */
+  #include <stdio.h>
+  #include <sys/time.h>
+  #include "misc.h"
+***************
+*** 40,45 ****
+--- 40,46 ----
+  extern long defaultScreenSaverTime;	/* for parsing command line */
+  extern long defaultScreenSaverInterval;
+  extern int defaultScreenSaverBlanking;
++ extern int defaultBackingStore;
+  #ifndef NOLOGOHACK
+  extern int logoScreenSaver;
+  #endif
+***************
+*** 135,141 ****
+      return(tp.tv_sec * 1000) + (tp.tv_usec / 1000);
+  }
+  
+! static void UseMsg()
+  {
+      ErrorF("use: X [:<display>] [option] [<tty>]\n");
+      ErrorF("-a #                   mouse acceleration (pixels)\n");
+--- 136,142 ----
+      return(tp.tv_sec * 1000) + (tp.tv_usec / 1000);
+  }
+  
+! void UseMsg()
+  {
+      ErrorF("use: X [:<display>] [option] [<tty>]\n");
+      ErrorF("-a #                   mouse acceleration (pixels)\n");
+***************
+*** 301,306 ****
+--- 302,309 ----
+  	    defaultScreenSaverBlanking = PreferBlanking;
+  	else if ( strcmp( argv[i], "-v") == 0)
+  	    defaultScreenSaverBlanking = DontPreferBlanking;
++ 	else if ( strcmp( argv[i], "-wm") == 0)
++ 	    defaultBackingStore = WhenMapped;
+  	else if ( strcmp( argv[i], "-x") == 0)
+  	{
+  	    if(++i >= argc)
+
+
+*** /tmp/,RCSt1a00540	Sun Aug 14 11:36:11 1988
+--- server/ddx/dec/qdss_io.c	Sun Aug 14 09:47:02 1988
+***************
+*** 191,206 ****
+  	slowPolygons();
+      }
+  
+-     if ( commandLineMatch( argc, argv, "-always")) /* default backing store */
+-     {
+- 	defaultBackingStore = Always;
+-     }
+- 
+-     if ( commandLineMatch( argc, argv, "-whenmapped"))
+-     {
+- 	defaultBackingStore = WhenMapped;
+-     }
+- 
+      /* setup max y size of offscreen pixmaps */
+      if ( commandLinePairMatch( argc, argv, "-dp", &pdragonpix))
+      {
+--- 191,196 ----
+
+
+*** /tmp/,RCSt1a00554	Sun Aug 14 11:36:42 1988
+--- server/Xserver.man	Sun Aug 14 10:04:54 1988
+***************
+*** 106,111 ****
+--- 106,115 ----
+  .TP 8
+  .B \-fn \fIfont\fP
+  sets the default font
++ .TP 8
++ .B \-wm
++ forces the default backing-store of all windows to be WhenMapped;
++ a cheap trick way of getting backing-store to apply to all windows.
+  .PP
+  Specific implementations may have other command line options.
+  .SH "RUNNING FROM INIT"
+***************
+*** 122,137 ****
+  display can repeat this process using \fIttyqe\fP for \fIttyv1\fP, and 
+  so on.
+  .PP
+! With this done, you can set up \fI\/etc\/ttys\fP to run \fIX\fP and \fIxterm\fP
+! by adding the following entry (the \\'s is to make the lines fit on this 
+  manual page, the real entries have to occupy just one line):
+  .sp
+  .nf
+! 	ttyv0 "/etc/xterm -L -geometry -1+1 -display :0" xterm on \\
+! 		secure window="/etc/X :0 -c -l"
+  .fi
+  .sp
+! on the client machine.  
+  .PP
+  Important note:  some versions of \fIinit\fP have relatively small
+  program name buffer sizes, so you may find that you can't list many 
+--- 126,146 ----
+  display can repeat this process using \fIttyqe\fP for \fIttyv1\fP, and 
+  so on.
+  .PP
+! With this done, you can set up \fI\/etc\/ttys\fP to run \fIX\fP and 
+! \fIxterm\fP.  Although the release will install both the X server and 
+! \fIxterm\fP in /usr/bin/X11 by default, many sites choose to make a copy of
+! both of these programs on the root partition (usually in /etc) so that they
+! may still be used even if the partition containing /usr/bin/X11 isn't mounted.
+! For example (the \\'s is to make the lines fit on this 
+  manual page, the real entries have to occupy just one line):
+  .sp
+  .nf
+! 	ttyv0 "/etc/xterm -L -geometry 80x24+1+1 -display :0" xterm on \\
+! 		secure window="/etc/Xqvss :0"
+  .fi
+  .sp
+! on the client machine.  Note that the name of the server should correspond to
+! the type of display being used.
+  .PP
+  Important note:  some versions of \fIinit\fP have relatively small
+  program name buffer sizes, so you may find that you can't list many 
+
