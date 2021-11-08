@@ -1,6 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  support for Ultrix 3.0 sm driver.  One server will run
-	on either a qvss or an sm display without recompilation.
-     o  LockLED troubles fixed.
-     o  support screen blanking.

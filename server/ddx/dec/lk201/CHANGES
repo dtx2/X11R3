@@ -1,5 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  Compose Character key now has two keysyms
-	Multi_key and Meta.  This makes the toolkit much
-	happier.

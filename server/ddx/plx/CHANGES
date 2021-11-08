@@ -1,4 +1,0 @@
-This directory is new to R3.  It provides the DDX for a Parallax
-graphics board.  This server supports backing store and supports
-a new extension - the Parallax Video Extension.  See TOPDIR/extensions
-for other new stuff!
