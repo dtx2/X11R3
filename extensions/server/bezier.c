@@ -20,8 +20,6 @@
 */
 
 #include "X.h"
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "Xprotostr.h"
 #include "windowstr.h"

@@ -25,8 +25,6 @@ SOFTWARE.
 /* $XConsortium: window.c,v 1.221 88/11/11 09:52:30 rws Exp $ */
 
 #include "X.h"
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "misc.h"
 #include "scrnintstr.h"
@@ -44,7 +42,7 @@ SOFTWARE.
 /******
  * Window stuff for server 
  *
- *    CreateRootWindow, CreateWindow, ChangeWindowAttributes,
+ *    CreateWindow, ChangeWindowAttributes,
  *    GetWindowAttributes, DeleteWindow, DestroySubWindows,
  *    HandleSaveSet, ReparentWindow, MapWindow, MapSubWindows,
  *    UnmapWindow, UnmapSubWindows, ConfigureWindow, CirculateWindow,
@@ -54,21 +52,9 @@ SOFTWARE.
 static unsigned char _back_lsb[4] = {0x88, 0x22, 0x44, 0x11};
 static unsigned char _back_msb[4] = {0x11, 0x44, 0x22, 0x88};
 
-typedef struct _ScreenSaverStuff {
-    WindowPtr pWindow;
-    XID       wid;
-    XID       cid;
-    BYTE      blanked;
-} ScreenSaverStuffRec;
-
 #define SCREEN_IS_BLANKED   0
 #define SCREEN_IS_TILED     1
 #define SCREEN_ISNT_SAVED   2
-
-extern int ScreenSaverBlanking, ScreenSaverAllowExposures;
-int screenIsSaved = SCREEN_SAVER_OFF;
-
-static ScreenSaverStuffRec savedScreenInfo[MAXSCREENS];
 
 extern WindowRec WindowTable[];
 extern void (* ReplySwapVector[256]) ();
@@ -586,82 +572,6 @@ static void MakeRootTile(WindowPtr pWin) {
     (*pGC->PutImage)(pWin->backgroundTile, pGC, 1, 0, 0, 4, 4, 0, XYBitmap, back);
     FreeScratchGC(pGC);
 }
-// Makes a window at initialization time for specified screen
-int CreateRootWindow(int screen) {
-    WindowPtr	pWin;
-    BoxRec	box;
-    ScreenPtr	pScreen;
-    savedScreenInfo[screen].pWindow = NULL;
-    savedScreenInfo[screen].wid = FakeClientID(0);
-    savedScreenInfo[screen].cid = FakeClientID(0);
-    screenIsSaved = SCREEN_SAVER_OFF;
-    pWin = &WindowTable[screen];
-    pScreen = &screenInfo.screen[screen];
-    InitProcedures(pWin);
-    pWin->drawable.pScreen = pScreen;
-    pWin->drawable.type = DRAWABLE_WINDOW;
-    pWin->drawable.depth = pScreen->rootDepth;
-    pWin->drawable.serialNumber = NEXT_SERIAL_NUMBER;
-    pWin->parent = NullWindow;
-    SetWindowToDefaults(pWin, pScreen);
-    pWin->colormap = pScreen->defColormap;    
-    pWin->nextSib = NullWindow;
-    MakeRootCursor(pWin);
-    pWin->client = serverClient;        /* since belongs to server */
-    pWin->wid = FakeClientID(0);
-    pWin->clientWinSize.x = pWin->clientWinSize.y = 0;
-    pWin->clientWinSize.height = pScreen->height;
-    pWin->clientWinSize.width = pScreen->width;
-    pWin->absCorner.x = pWin->absCorner.y = 0;
-    pWin->oldAbsCorner.x = pWin->oldAbsCorner.y = 0;
-    box.x1 = 0;
-    box.y1 = 0;
-    box.x2 = pScreen->width;
-    box.y2 = pScreen->height;
-    pWin->clipList = (* pScreen->RegionCreate)(&box, 1); 
-    pWin->winSize = (* pScreen->RegionCreate)(&box, 1);
-    pWin->borderSize = (* pScreen->RegionCreate)(&box, 1);
-    pWin->borderClip = (* pScreen->RegionCreate)(&box, 1); 
-    pWin->class = InputOutput;
-    pWin->visual = pScreen->rootVisual;
-    pWin->backgroundTile = (PixmapPtr)USE_BACKGROUND_PIXEL;
-    pWin->backgroundPixel = pScreen->whitePixel;
-    pWin->borderTile = (PixmapPtr)USE_BORDER_PIXEL;
-    pWin->borderPixel = pScreen->blackPixel;
-    pWin->borderWidth = 0;
-    AddResource(pWin->wid, RT_WINDOW, (pointer)pWin, DeleteWindow, RC_CORE);
-    // re-validate GC for use with root Window
-    (*pScreen->CreateWindow)(pWin);
-    (*pScreen->PositionWindow)(pWin, 0, 0);
-    MakeRootTile(pWin);
-    // We SHOULD check for an error value here XXX
-    (*pScreen->ChangeWindowAttributes)(pWin, CWBackPixmap | CWBorderPixel);
-    (void)EventSelectForWindow(pWin, serverClient, (Mask)0); /* can't fail */
-    MapWindow(pWin, DONT_HANDLE_EXPOSURES, BITS_DISCARDED, DONT_SEND_NOTIFICATION, serverClient);
-    (*pWin->PaintWindowBackground)(pWin, pWin->clipList, PW_BACKGROUND);
-    pWin->backingStore = defaultBackingStore;
-    // We SHOULD check for an error value here XXX
-    (*pScreen->ChangeWindowAttributes)(pWin, CWBackingStore);
-    if (disableBackingStore)
-	pScreen->backingStoreSupport = NotUseful;
-#ifdef DO_SAVE_UNDERS
-    if ((pScreen->backingStoreSupport != NotUseful) &&
-	(pScreen->saveUnderSupport == NotUseful))
-    {
-	/*
-	 * If the screen has backing-store but no save-unders, let the
-	 * clients know we can support save-unders using backing-store.
-	 */
-	pScreen->saveUnderSupport = SAVE_UNDER_BIT;
-    }
-#endif /* DO_SAVE_UNDERS */
-		
-    if (disableSaveUnders)
-	pScreen->saveUnderSupport = NotUseful;
-
-    return(Success);
-}
-
 /* Set the region to the intersection of the rectangle and the
  * window's winSize.  The window is typically the parent of the
  * window from which the region came.
@@ -695,51 +605,22 @@ ClippedRegionFromBox(pWin, Rgn, x, y, w, h)
     (* pScreen->Intersect)(Rgn, Rgn, pWin->winSize);
 }
 
-WindowPtr
-RealChildHead(pWin)
-    register WindowPtr pWin;
-{
-    if (!pWin->parent &&
-	(screenIsSaved == SCREEN_SAVER_ON) &&
-	(savedScreenInfo[pWin->drawable.pScreen->myNum].blanked ==
-	 SCREEN_IS_TILED))
-	return (pWin->firstChild);
-    else
+WindowPtr RealChildHead(register WindowPtr pWin) {
 	return ((WindowPtr)NULL);
 }
 
-/*****
- * CreateWindow
- *    Makes a window in response to client request 
- *****/
-
-WindowPtr
-CreateWindow(wid, pParent, x, y, w, h, bw, class, vmask, vlist, 
-	     depth, client, visual, error)
-    Window wid;
-    WindowPtr pParent;    /* already looked up in table to do error checking*/
-    short x,y;
-    unsigned short w, h, bw;
-    unsigned short class;
-    Mask vmask;
-    XID *vlist;
-    int depth;
-    ClientPtr client;
-    VisualID visual;
-    int *error;
-{
+// CreateWindow - Makes a window in response to client request 
+WindowPtr CreateWindow(Window wid, WindowPtr pParent, short x, short y, unsigned short w, unsigned short h,
+    unsigned short bw, unsigned short class, Mask vmask, XID *vlist, int depth, ClientPtr client, VisualID visual,
+    int *error) {
     WindowPtr pWin, pHead;
     ScreenPtr pScreen;
     xEvent event;
     int idepth, ivisual;
     Bool fOK;
     DepthPtr pDepth;
-
-    if (class == CopyFromParent)
-	class = pParent->class;
-
-    if ((class != InputOutput) && (class != InputOnly))
-    {
+    if (class == CopyFromParent) { class = pParent->class; }
+    if ((class != InputOutput) && (class != InputOnly)) {
 	*error = BadValue;
 	client->errorValue = class;
 	return (WindowPtr)NULL;
@@ -3330,149 +3211,7 @@ SendVisibilityNotify(pWin)
     DeliverEvents(pWin, &event, 1, NullWindow);
 }
 
-
 #define RANDOM_WIDTH 32
-
-#ifndef NOLOGOHACK
-extern int logoScreenSaver;
-#endif
-
-void
-SaveScreens(on, mode)
-    int on;
-    int mode;
-{
-    int i, j;
-    int what;
-    unsigned char *srcbits, *mskbits;
-
-    if (on == SCREEN_SAVER_FORCER)
-    {
-        if (mode == ScreenSaverReset)
-            what = SCREEN_SAVER_OFF;
-        else               
-           what = SCREEN_SAVER_ON;
-	if (what == screenIsSaved)
-            return ;
-    }
-    else
-        what = on;
-    for (i = 0; i < screenInfo.numScreens; i++)
-    {
-        if (on == SCREEN_SAVER_FORCER)
-        {
-           (* screenInfo.screen[i].SaveScreen) (&screenInfo.screen[i], on);
-        }
-        if (what == SCREEN_SAVER_OFF)
-        {
-	    if (savedScreenInfo[i].blanked == SCREEN_IS_BLANKED)
-	    {
-	       (* screenInfo.screen[i].SaveScreen) (&screenInfo.screen[i], on);
-	    }
-            else if (savedScreenInfo[i].blanked == SCREEN_IS_TILED)
-	    {
-    	        FreeResource(savedScreenInfo[i].wid, RC_NONE);
-                savedScreenInfo[i].pWindow = (WindowPtr)NULL;
-    	        FreeResource(savedScreenInfo[i].cid, RC_NONE);
-	    }
-	    continue;
-        }
-        else if (what == SCREEN_SAVER_ON) 
-        {
-            if (screenIsSaved == SCREEN_SAVER_ON)  /* rotate pattern */
-            {
-		if (savedScreenInfo[i].blanked == SCREEN_IS_TILED)
-	        {
-		    WindowPtr pWin = savedScreenInfo[i].pWindow;
-#ifndef NOLOGOHACK
-		    if (logoScreenSaver)
-			(*pWin->ClearToBackground)(pWin, 0, 0, 0, 0, FALSE);
-#endif
-	            MoveWindow(pWin,
-			       -(random() % RANDOM_WIDTH),
-			       -(random() % RANDOM_WIDTH), 
-		               pWin->nextSib);
-#ifndef NOLOGOHACK
-		    if (logoScreenSaver)
-			DrawLogo(pWin);
-#endif
-		}
-		continue;
-	    }
-            if (ScreenSaverBlanking != DontPreferBlanking) 
-	    {
-	       if ((* screenInfo.screen[i].SaveScreen)
-		   (&screenInfo.screen[i], what))
-	       {
-	           savedScreenInfo[i].blanked = SCREEN_IS_BLANKED;
-                   continue;
-	       }
-	    }
-            if (ScreenSaverAllowExposures != DontAllowExposures)
-            {
-                int result;
-                XID attributes[1];
-	        Mask mask = CWBackPixmap;
-                WindowPtr pWin;		
-		CursorMetricRec cm;
-                
-                if (WindowTable[i].backgroundTile == 
-		    (PixmapPtr)USE_BACKGROUND_PIXEL)
-		{
-                    attributes[0] = WindowTable[i].backgroundPixel;
-		    mask = CWBackPixel;
-		}
-                else
-                    attributes[0] = None;
-
-                pWin = savedScreenInfo[i].pWindow = 
-    			/* We SHOULD check for an error value here XXX */
-		     CreateWindow(savedScreenInfo[i].wid,
-		     &WindowTable[i], 
-		     -RANDOM_WIDTH, -RANDOM_WIDTH,
-		     (unsigned short)screenInfo.screen[i].width + RANDOM_WIDTH, 
-		     (unsigned short)screenInfo.screen[i].height + RANDOM_WIDTH,
-		     0, InputOutput, mask, attributes, 0, (ClientPtr)NULL,
-		     WindowTable[i].visual, &result);
-                if (mask & CWBackPixmap)
-		{
-		    
-		    pWin->backgroundTile = pWin->parent->backgroundTile;
-		    pWin->backgroundTile->refcnt++;
-		    (* screenInfo.screen[i].ChangeWindowAttributes)
-				(pWin, CWBackPixmap);
-		}
-	        AddResource(pWin->wid, RT_WINDOW, 
-			(pointer)savedScreenInfo[i].pWindow,
-			DeleteWindow, RC_CORE);
-		cm.width=32;
-		cm.height=16;
-		cm.xhot=8;
-		cm.yhot=8;
-                srcbits = (unsigned char *)xalloc( PixmapBytePad(32, 1)*16); 
-		mskbits = (unsigned char *)xalloc( PixmapBytePad(32, 1)*16); 
-                for (j=0; j<PixmapBytePad(32, 1)*16; j++)
-    	            srcbits[j] = mskbits[j] = 0x0;
-		pWin->cursor = AllocCursor( srcbits, mskbits, &cm,
-					    0xFFFF, 0xFFFF, 0xFFFF, 0, 0, 0);
-		AddResource(savedScreenInfo[i].cid, RT_CURSOR,
-			(pointer)pWin->cursor,
-			FreeCursor, RC_CORE);	
- 		pWin->cursor->refcnt++; 
-	        pWin->overrideRedirect = TRUE;
-                MapWindow(pWin, TRUE, FALSE, FALSE, (ClientPtr)NULL);
-#ifndef NOLOGOHACK
-		if (logoScreenSaver)
-		    DrawLogo(pWin);
-#endif
-	        savedScreenInfo[i].blanked = SCREEN_IS_TILED;
-	    }
-            else
-	        savedScreenInfo[i].blanked = SCREEN_ISNT_SAVED;
-	}
-    }
-    screenIsSaved = what; 
-}
 
 #ifndef NOLOGOHACK
 DrawLogo(pWin)

@@ -33,9 +33,6 @@ University of California.
  * include files
  ***************************************************************/
 
-#define	NEED_EVENTS
-#define	NEED_REPLIES
-
 #include <stdio.h>
 #include "Xos.h"
 #include "X.h"

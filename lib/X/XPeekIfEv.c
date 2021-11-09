@@ -2,8 +2,6 @@
 
 /* $XConsortium: XPeekIfEv.c,v 11.11 88/09/06 16:09:33 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
-
-#define NEED_EVENTS
 #include "Xlibint.h"
 
 extern _XQEvent *_qfree;

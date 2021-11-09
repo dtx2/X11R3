@@ -24,7 +24,6 @@ SOFTWARE.
 /* $XConsortium: extension.c,v 1.43 88/09/06 15:41:03 jim Exp $ */
 
 #include "X.h"
-#define NEED_REPLIES
 #include "Xproto.h"
 #include "misc.h"
 #include "dixstruct.h"
@@ -102,37 +101,6 @@ ExtensionEntry *AddExtension(name, NumEvents, NumErrors, MainProc,
     }
     return(extensions[i]);
 }
-
-CloseDownExtensions()
-{
-    register int i;
-
-    for (i = NumExtensions - 1; i >= 0; i--)
-    {
-	(* extensions[i]->CloseDown)(extensions[i]);
-	NumExtensions = i;
-	xfree(extensions[i]->name);
-	xfree(extensions[i]);
-    }
-    xfree(extensions);
-    extensions = (ExtensionEntry **)NULL;
-    lastEvent = EXTENSION_EVENT_BASE;
-    lastError = FirstExtensionError;
-    for (i=0; i<MAXSCREENS; i++)
-    {
-	register ScreenProcEntry *spentry = &AuxillaryScreenProcs[i];
-
-	while (spentry->num)
-	{
-	    spentry->num--;
-	    xfree(spentry->procList[spentry->num].name);
-	}
-	xfree(spentry->procList);
-	spentry->procList = (ProcEntryPtr)NULL;
-    }
-}
-
-
 
 int
 ProcQueryExtension(client)

@@ -113,15 +113,12 @@ XRequest.103:X_GetKeyboardControl
 XRequest.104:X_Bell
 XRequest.105:X_ChangePointerControl
 XRequest.106:X_GetPointerControl
-XRequest.107:X_SetScreenSaver
-XRequest.108:X_GetScreenSaver
 XRequest.109:X_ChangeHosts
 XRequest.110:X_ListHosts
 XRequest.111:X_SetAccessControl
 XRequest.112:X_SetCloseDownMode
 XRequest.113:X_KillClient
 XRequest.114:X_RotateProperties
-XRequest.115:X_ForceScreenSaver
 XRequest.116:X_SetPointerMapping
 XRequest.117:X_GetPointerMapping
 XRequest.118:X_SetModifierMapping

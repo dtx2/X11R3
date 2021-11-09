@@ -23,7 +23,6 @@ pertaining to distribution of the software without written prior permission.
 #include <sys/time.h>
 #include <sys/types.h>
 
-#define NEED_EVENTS
 #include    "X.h"
 #include    "Xproto.h"
 #include    "cursorstr.h"

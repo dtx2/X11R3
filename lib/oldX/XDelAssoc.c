@@ -46,7 +46,6 @@ XDeleteAssoc(dpy, table, x_id)
 				Xfree((char *)Entry);
 				return;
 			}
-			/* Oops, identical XId's on different displays! */
 			continue;
 		}
 		if (Entry->x_id > x_id) {

@@ -3,7 +3,6 @@
 /* $XConsortium: XGetColor.c,v 11.14 88/09/06 16:07:43 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XAllocNamedColor(dpy, cmap, colorname, hard_def, exact_def)

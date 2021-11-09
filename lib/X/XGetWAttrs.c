@@ -3,7 +3,6 @@
 /* $XConsortium: XGetWAttrs.c,v 11.21 88/09/06 16:11:44 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XGetWindowAttributes(dpy, w, att)

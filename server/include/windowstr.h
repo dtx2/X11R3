@@ -135,7 +135,6 @@ typedef struct _Window {
 extern int DeleteWindow();
 extern int ChangeWindowAttributes();
 extern int WalkTree();
-extern CreateRootWindow();
 extern WindowPtr CreateWindow();
 extern int DeleteWindow();
 extern int DestroySubwindows();

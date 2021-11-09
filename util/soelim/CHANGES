@@ -1,3 +1,0 @@
-This directory is new to R3.  It contains a emulation of the BSD soelim
-program for machines that don't have it.  It might need to be built and
-installed before the doc/ directory.

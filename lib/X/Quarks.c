@@ -28,48 +28,29 @@ SOFTWARE.
 
 #include "Xlibint.h"
 #include "Xresource.h"
-
 extern void bcopy();
-
-
 typedef long Signature;
-
 static XrmQuark nextQuark = 1;	/* next available quark number */
 static XrmString *quarkToStringTable = NULL;
 static int maxQuarks = 0;	/* max names in current quarkToStringTable */
 #define QUARKQUANTUM 600;	/* how much to extend quarkToStringTable by */
-
-
-/* Permanent memory allocation */
-
+// Permanent memory allocation
 #define NEVERFREETABLESIZE 8180
 static char *neverFreeTable = NULL;
 static int  neverFreeTableSize = 0;
 
-char *Xpermalloc(length)
-    unsigned int length;
-{
+char *Xpermalloc(unsigned int length) {
     char *ret;
-
-#ifdef WORD64
-    /* round to nearest 8-byte boundary */
-    length = (length + 7) & (~7);
-#else
-    /* round to nearest 4-byte boundary */
-    length = (length + 3) & (~3);
-#endif /* WORD64 */
+    length = (length + 3) & (~3); // round to nearest 4-byte boundary
     if (neverFreeTableSize < length) {
-	neverFreeTableSize =
-	    (length > NEVERFREETABLESIZE ? length : NEVERFREETABLESIZE);
-	neverFreeTable = Xmalloc(neverFreeTableSize);
+        neverFreeTableSize = (length > NEVERFREETABLESIZE ? length : NEVERFREETABLESIZE);
+        neverFreeTable = Xmalloc(neverFreeTableSize);
     }
     ret = neverFreeTable;
     neverFreeTable += length;
     neverFreeTableSize -= length;
     return(ret);
 }
-
-
 typedef struct _NodeRec *Node;
 typedef struct _NodeRec {
     Node 	next;
@@ -77,17 +58,11 @@ typedef struct _NodeRec {
     XrmQuark	quark;
     XrmString	name;
 } NodeRec;
-
 #define HASHTABLESIZE 1024
 #define HASHTABLEMASK 1023
 static Node nodeTable[HASHTABLESIZE];
-
-
-
-/* predefined quarks */
-
-/* Representation types */
-
+// predefined quarks
+// Representation types
 XrmQuark  XrmQBoolean;
 XrmQuark  XrmQColor;
 XrmQuark  XrmQCursor;
@@ -103,9 +78,7 @@ XrmQuark  XrmQPixmap;
 XrmQuark  XrmQPointer;
 XrmQuark  XrmQString;
 XrmQuark  XrmQWindow;
-
-/* "Enumeration" constants */
-
+// "Enumeration" constants
 XrmQuark  XrmQEfalse;
 XrmQuark  XrmQEno;
 XrmQuark  XrmQEoff;
@@ -113,72 +86,48 @@ XrmQuark  XrmQEon;
 XrmQuark  XrmQEtrue;
 XrmQuark  XrmQEyes;
 
-
-static XrmAllocMoreQuarkToStringTable()
-{
-    unsigned	size;
-
+static XrmAllocMoreQuarkToStringTable() {
+    unsigned int size;
     maxQuarks += QUARKQUANTUM;
     size = (unsigned) maxQuarks * sizeof(XrmString);
-    if (quarkToStringTable == (XrmString *)NULL)
-	quarkToStringTable = (XrmString *) Xmalloc(size);
-    else
-	quarkToStringTable =
-		(XrmString *) Xrealloc((char *) quarkToStringTable, size);
+    if (quarkToStringTable == (XrmString *)NULL) { quarkToStringTable = (XrmString *) Xmalloc(size); }
+    else { quarkToStringTable = (XrmString *) Xrealloc((char *) quarkToStringTable, size); }
 }
-
-XrmQuark XrmStringToQuark(name)
-    register XrmString name;
-{
-    register Signature 	sig = 0;
-    register Signature	scale = 27;
-    register XrmString	tname;
-    register Node	np;
-    register XrmString	npn;
-    	     Node	*hashp;
-	     unsigned	strLength;
-
-    if (name == NULL)
-	return (NULLQUARK);
-
-    /* Compute string signature (sparse 32-bit hash value) */
-    for (tname = name; *tname != '\0'; tname++) {
-	sig = sig*scale + (unsigned int) *tname;
-    }
+XrmQuark XrmStringToQuark(XrmString name) {
+    Signature 	sig = 0;
+    Signature	scale = 27;
+    XrmString	tname;
+    Node	np;
+    XrmString	npn;
+    Node	*hashp;
+	unsigned int strLength;
+    if (name == NULL) { return (NULLQUARK); }
+    // Compute string signature (sparse 32-bit hash value)
+    for (tname = name; *tname != '\0'; tname++) { sig = sig*scale + (unsigned int) *tname; }
     strLength = tname - name + 1;
-
-    /* Look for string in hash table */
+    // Look for string in hash table
     hashp = &nodeTable[sig & HASHTABLEMASK];
     for (np = *hashp; np != NULL; np = np->next) {
-	if (np->sig == sig) {
-	    for (npn=np->name, tname = name;
-	     ((scale = *tname) != 0) && (scale == *npn); ++tname, ++npn) {};
-	    if (scale == *npn) {
-	        return np->quark;
-	    }
-	}
+        if (np->sig == sig) {
+            for (npn=np->name, tname = name; ((scale = *tname) != 0) && (scale == *npn); ++tname, ++npn) {};
+            if (scale == *npn) { return np->quark; }
+        }
     }
-
-    /* Not found, add string to hash table */
+    // Not found, add string to hash table
     np = (Node) Xpermalloc(sizeof(NodeRec));
     np->next = *hashp;
     *hashp = np;
     np->sig = sig;
     bcopy(name, (np->name = Xpermalloc(strLength)), (int) strLength);
     np->quark = nextQuark;
-
     if (nextQuark >= maxQuarks)
 	XrmAllocMoreQuarkToStringTable();
-
     quarkToStringTable[nextQuark] = np->name;
     ++nextQuark;
     return np->quark;
 }
-
-extern XrmQuark XrmUniqueQuark()
-{
+extern XrmQuark XrmUniqueQuark() {
     XrmQuark quark;
-
     quark = nextQuark;
     if (nextQuark >= maxQuarks)
 	XrmAllocMoreQuarkToStringTable();
@@ -186,12 +135,7 @@ extern XrmQuark XrmUniqueQuark()
     ++nextQuark;
     return (quark);
 }
-
-
-XrmString XrmQuarkToString(quark)
-    XrmQuark quark;
-{
-    if (quark <= 0 || quark >= nextQuark)
-    	return NULLSTRING;
+XrmString XrmQuarkToString(XrmQuark quark) {
+    if (quark <= 0 || quark >= nextQuark) { return NULLSTRING; }
     return quarkToStringTable[quark];
 }

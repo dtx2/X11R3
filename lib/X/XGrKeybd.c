@@ -3,7 +3,6 @@
 /* $XConsortium: XGrKeybd.c,v 11.15 88/09/06 16:08:34 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 int XGrabKeyboard (dpy, window, ownerEvents, pointerMode, keyboardMode, time)
     register Display *dpy;

@@ -38,7 +38,6 @@ caddr_t XLookUpAssoc(dpy, table, x_id)
 				/* We have the right entry! */
 				return(Entry->data);
 			}
-			/* Oops, identical XId's on different displays! */
 			continue;
 		}
 		if (Entry->x_id > x_id) {

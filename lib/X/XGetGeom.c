@@ -3,7 +3,6 @@
 /* $XConsortium: XGetGeom.c,v 11.15 88/09/06 16:07:49 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XGetGeometry (dpy, d, root, x, y, width, height, borderWidth, depth)

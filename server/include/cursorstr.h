@@ -54,6 +54,5 @@ typedef struct _CursorMetric {
 extern int		FreeCursor();
 extern CursorPtr	AllocCursor();		/* also realizes it */
 				/* created from default cursor font */
-extern CursorPtr	CreateRootCursor();
 
 #endif /* CURSORSTRUCT_H */

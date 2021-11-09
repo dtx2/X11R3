@@ -45,7 +45,6 @@ extern Bool cfbRealizeFont();
 extern Bool cfbUnrealizeFont();
 extern Bool cfbRealizeCursor();
 extern Bool cfbUnrealizeCursor();
-extern Bool cfbScreenSaver();
 extern Bool cfbCreateGC();
 
 extern PixmapPtr cfbCreatePixmap();

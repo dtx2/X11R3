@@ -28,26 +28,8 @@ SOFTWARE.
  *  Xmd.h: MACHINE DEPENDENT DECLARATIONS.
  */
 
-/*
- * Special per-machine configuration flags.
- */
-#ifdef CRAY
-#define WORD64				/* 64-bit architecture */
-#define UNSIGNEDBITFIELDS		/* bit fields do not honor sign */
-#endif
 
-
-/*
- * Stuff to handle large architecture machines; the constants were generated
- * on a 32-bit machine and must coorespond to the protocol.
- */
-#ifdef WORD64
-#define MUSTCOPY
-#endif /* WORD64 */
-
-
-/*
- * Definition of macro used to set constants for size of network structures;
+/* Definition of macro used to set constants for size of network structures;
  * machines with preprocessors that can't handle all of the sz_ symbols
  * can define this macro to be sizeof(x) if and only if their compiler doesn't
  * pad out structures (esp. the xTextElt structure which contains only two 
@@ -55,37 +37,13 @@ SOFTWARE.
  *
  * The sz_ prefix is used instead of something more descriptive so that the
  * symbols are no more than 32 characters long (which causes problems for some
- * compilers and preprocessors).
- */
-#if defined(__STDC__) && !defined(UNIXCPP)
+ * compilers and preprocessors).*/
 #define SIZEOF(x) sz_##x
-#else
-#define SIZEOF(x) sz_/**/x
-#endif /* if ANSI C compiler else not */
-
-
-
-/*
- * ibm pcc doesn't understand pragmas.
- */
-#if defined(ibm032) && defined(__HIGHC__)
-pragma on(pointers_compatible);
-pragma off(char_default_unsigned);
-#endif
-
-
-/*
- * Bitfield suffixes for the protocol structure elements, if you
+/* Bitfield suffixes for the protocol structure elements, if you
  * need them.  Note that bitfields are not guarranteed to be signed
- * (or even unsigned) according to ANSI C.
- */
-#ifdef WORD64
-#define B32 :32
-#define B16 :16
-#else
+ * (or even unsigned) according to ANSI C.*/
 #define B32
 #define B16
-#endif
 
 typedef long           INT32;
 typedef short          INT16;
@@ -101,25 +59,13 @@ typedef unsigned char		BYTE;
 
 typedef unsigned char            BOOL;
 
-
-/*
- * definitions for sign-extending bitfields on 64-bit architectures
- */
-#if defined(WORD64) && defined(UNSIGNEDBITFIELDS)
-#define cvtINT8toInt(val)   (((val) & 0x00000080) ? ((val) | 0xffffffffffffff00) : (val))
-#define cvtINT16toInt(val)  (((val) & 0x00008000) ? ((val) | 0xffffffffffff0000) : (val))
-#define cvtINT32toInt(val)  (((val) & 0x80000000) ? ((val) | 0xffffffff00000000) : (val))
-#define cvtINT8toLong(val)  cvtINT8ToInt(val)
-#define cvtINT16toLong(val) cvtINT16ToInt(val)
-#define cvtINT32toLong(val) cvtINT32ToInt(val)
-#else
+// definitions for sign-extending bitfields on 64-bit architectures
 #define cvtINT8toInt(val) (val)
 #define cvtINT16toInt(val) (val)
 #define cvtINT32toInt(val) (val)
 #define cvtINT8toLong(val) (val)
 #define cvtINT16toLong(val) (val)
 #define cvtINT32toLong(val) (val)
-#endif /* WORD64 and UNSIGNEDBITFIELDS */
 
 
 

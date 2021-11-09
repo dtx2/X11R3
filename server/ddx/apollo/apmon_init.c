@@ -89,91 +89,6 @@ apMonoQueryBestSize(class, pwidth, pheight)
 }
 
 /*
- * apMonoScreenClose -- DDX (screen)
- *      Perform monochrome screen-specific closedown.  Free all resources,
- *      and clear the screen (server reset is more obvious if the screen is black).
- */
-static Bool
-apMonoScreenClose(index, pScreen)
-    int index;
-    ScreenPtr pScreen;
-{
-    status_$t status;
-
-    mfbScreenClose(pScreen);
-
-#ifdef COPY_SCREEN
-    Xfree (apDisplayData[index].dump_file_pn);
-#endif
-
-    gpr_$clear ((gpr_$pixel_value_t) 0, status);
-    gpr_$enable_direct_access (status);
-
-    return TRUE;
-}
-
-#ifdef COPY_SCREEN
-/*
- * apMonoCopyScreen -- Driver internal code
- *      Dump the given screen number's bits to a file.
- */
-static void apMonoCopyScreen (numScr)
-    int numScr;
-{
-    apDisplayDataPtr    pDisp;
-    gpr_$bitmap_desc_t  disk_bitmap;
-    gpr_$offset_t       size;
-    short               groups;
-    gpr_$plane_t        plane;
-    gpr_$version_t      version;
-    Bool                created;
-    gpr_$window_t       src_w;
-    gpr_$position_t     dst_o;
-    status_$t           status;
-    gpr_$bmf_group_header_array_t   g_headers;
-
-    pDisp = &apDisplayData[numScr];
-
-    size.x_size = pDisp->display_char.x_visible_size;
-    size.y_size = pDisp->display_char.y_visible_size;
-
-#undef major
-#undef minor
-    version.major = gpr_$bmf_major_version;
-    version.minor = gpr_$bmf_minor_version;
-
-    groups = 1;
-    g_headers[0].n_sects = 1;
-    g_headers[0].pixel_size = 1;
-    g_headers[0].allocated_size = 0;
-    g_headers[0].bytes_per_line = 0;
-    g_headers[0].bytes_per_sect = 0;
-    g_headers[0].storage_offset = 0;
-
-    gpr_$open_bitmap_file (
-                gpr_$update, 
-                *(pDisp->dump_file_pn), (short)pDisp->dump_file_pnl,
-                version, size, groups, g_headers,
-                gpr_$attribute_block (pDisp->display_bitmap, status),
-                disk_bitmap, created, status);
-
-    gpr_$set_bitmap (disk_bitmap, status);
-                               
-    src_w.window_base.x_coord = 0;
-    src_w.window_base.y_coord = 0;
-    src_w.window_size = size;
-
-    dst_o.x_coord = 0;
-    dst_o.y_coord = 0;                                 
-    plane = 0;        
-
-    gpr_$bit_blt (pDisp->display_bitmap, src_w, plane, dst_o, plane, status);
-    gpr_$set_bitmap (pDisp->display_bitmap, status);
-    gpr_$enable_direct_access (status);
-}
-#endif
-
-/*
  * doGPRInit -- Driver internal code
  *      Given a pointer to the display data record, do all the screen
  *      hardware initialization work.
@@ -276,47 +191,30 @@ static void apMonoReborrow (numScr)
  *      the entry in the apDisplayData array and the Screen record.
  */
 Bool
-apMonoScreenInit(index, pScreen, argc, argv)
-    int index;
-    ScreenPtr pScreen;
-    int argc;           /* these two may NOT be changed */
-    char **argv;
-{
-    register PixmapPtr  pPixmap;
-    Bool                retval;
-    ColormapPtr         pColormap;
-
-    apDisplayDataPtr    pDisp;
-
-    int                 dpix, dpiy;
-    status_$t           status;
-    short               i;
-
+apMonoScreenInit(int index, ScreenPtr pScreen) {
+    PixmapPtr pPixmap;
+    Bool retval;
+    ColormapPtr pColormap;
+    apDisplayDataPtr pDisp;
+    int dpix, dpiy;
+    status_$t status;
+    short i;
     pDisp = &apDisplayData[index];
-
-    if (!(pDisp->bitmap_ptr))
-        doGPRInit(pDisp);
-
-    /* It sure is moronic to have to convert metric to English units so that mfbScreenInit can undo it! */
-                                                                                         
+    if (!(pDisp->bitmap_ptr)) { doGPRInit(pDisp); }
+    // It sure is moronic to have to convert metric to English units so that mfbScreenInit can undo it!
     dpix = (pDisp->display_char.x_pixels_per_cm * 254) / 100;
     dpiy = (pDisp->display_char.y_pixels_per_cm * 254) / 100;
     retval = mfbScreenInit(index, pScreen, pDisp->bitmap_ptr,
                            pDisp->display_char.x_visible_size,
                            pDisp->display_char.y_visible_size,
                            dpix, dpiy);
-
-    /* Apollo screens may have large amounts of extra bitmap to the right of the visible
-       area, therefore the PixmapBytePad macro in mfbScreenInit gave the wrong value to
-       the devKind field of the Pixmap it made for the screen.  So we fix it here. */
-
+    // Apollo screens may have large amounts of extra bitmap to the right of the visible area, therefore the
+    // PixmapBytePad macro in mfbScreenInit gave the wrong value to the devKind field of the Pixmap it made for the
+    // screen. So we fix it here.
     pPixmap = (PixmapPtr)(pScreen->devPrivate);
     pPixmap->devKind = (pDisp->words_per_line) << 1;
-
-    pScreen->CloseScreen = apMonoScreenClose;
     pScreen->QueryBestSize = apMonoQueryBestSize;
     pScreen->SaveScreen = apSaveScreen;
-
     pScreen->RealizeCursor = apRealizeCursor;
     pScreen->UnrealizeCursor = apUnrealizeCursor;
     pScreen->DisplayCursor = apDisplayCursor;
@@ -325,51 +223,32 @@ apMonoScreenInit(index, pScreen, argc, argv)
     pScreen->PointerNonInterestBox = apPointerNonInterestBox;
     pScreen->ConstrainCursor = apConstrainCursor;
     pScreen->RecolorCursor = miRecolorCursor;
-
-/* save the original Mfb assigned routines, and put ours in */
+    // save the original Mfb assigned routines, and put ours in
     pDisp->CreateGC = pScreen->CreateGC;
     pDisp->CreateWindow = pScreen->CreateWindow;
     pDisp->ChangeWindowAttributes = pScreen->ChangeWindowAttributes;
     pDisp->GetImage = pScreen->GetImage;
     pDisp->GetSpans = pScreen->GetSpans;
-
     pScreen->CreateGC = apCreateGC;
     pScreen->CreateWindow = apCreateWindow;
     pScreen->ChangeWindowAttributes = apChangeWindowAttributes;
     pScreen->GetImage = apGetImage;
     pScreen->GetSpans = apGetSpans;
-
-/* initialize monochrome cursor processing vectors */
+    // initialize monochrome cursor processing vectors
     pDisp->apRealizeCurs = apMonoRealizeCurs;
     pDisp->apUnrealizeCurs = apMonoUnrealizeCurs;
     pDisp->apDisplayCurs = apMonoDisplayCurs;
     pDisp->apCursorUp = apMonoCursorUp;
     pDisp->apCursorDown = apMonoCursorDown;
-
     pDisp->apTerminate = apMonoTerminate;
-
-#ifdef SWITCHER
-    pDisp->apReborrower = apMonoReborrow;
-#endif
-#ifdef COPY_SCREEN
-    pDisp->apCopyScreen = apMonoCopyScreen;
-    pDisp->dump_file_pn = (char *) Xalloc (sizeof(DEFAULT_SCREENDUMP_PN));
-    strcpy(pDisp->dump_file_pn, DEFAULT_SCREENDUMP_PN);
-    pDisp->dump_file_pnl = sizeof(DEFAULT_SCREENDUMP_PN) - 1;   /* don't count the trailing null */
-#endif
-
-/* initialize monochrome colormap */
+    // initialize monochrome colormap
     pScreen->ResolveColor = apMonoResolveColor;
     pScreen->CreateColormap = apMonoCreateColormap;
     pScreen->DestroyColormap = apMonoDestroyColormap;
-    CreateColormap(pScreen->defColormap, pScreen,
-                   LookupID(pScreen->rootVisual, RT_VISUALID, RC_CORE),
-                   &pColormap, AllocNone, 0);
+    CreateColormap(pScreen->defColormap, pScreen, LookupID(pScreen->rootVisual, RT_VISUALID, RC_CORE), &pColormap, AllocNone, 0);
     mfbInstallColormap(pColormap);
-
-/* initialize Apollo SW cursor */
+    // initialize Apollo SW cursor
     pDisp->noCrsrChk = 0;
     apInitCursor();
-
     return(retval);
 }

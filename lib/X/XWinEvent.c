@@ -3,7 +3,6 @@
 /* $XConsortium: XWinEvent.c,v 11.15 88/09/06 16:11:24 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
-#define NEED_EVENTS
 #include "Xlibint.h"
 
 extern _XQEvent *_qfree;

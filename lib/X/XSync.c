@@ -3,8 +3,6 @@
 /* $XConsortium: XSync.c,v 11.14 88/10/15 12:42:34 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include "Xlibint.h"
 
 extern _XQEvent *_qfree;

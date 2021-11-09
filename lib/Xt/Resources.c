@@ -93,84 +93,6 @@ void XtCopyDefaultDepth(widget, offset, value)
     value->addr = (caddr_t)(&DefaultDepthOfScreen(XtScreen(widget)));
 } /* XtCopyDefaultDepth */
 
-/* If the alignment characteristics of your machine are right, these may be
-   faster */
-
-#ifdef UNALIGNED
-
-static void CopyFromArg(src, dst, size)
-    XtArgVal src;
-    char* dst;
-    register unsigned int size;
-{
-    if	    (size == sizeof(long))	*(long *)dst = (long)src;
-    else if (size == sizeof(short))	*(short *)dst = (short)src;
-    else if (size == sizeof(char))	*(char *)dst = (char)src;
-    else if (size == sizeof(char*))	*(char **)dst = (char*)src;
-    else if (size == sizeof(caddr_t))	*(caddr_t *)dst = (caddr_t)src;
-    else if (size == sizeof(XtArgVal))	*(XtArgVal *)dst = src;
-    else if (size > sizeof(XtArgVal))
-	bcopy((char *)  src, (char *) dst, (int) size);
-    else
-	bcopy((char *) &src, (char *) dst, (int) size);
-} /* CopyFromArg */
-
-static void CopyToArg(src, dst, size)
-    char* src;
-    XtArgVal *dst;
-    register unsigned int size;
-{
-    if (*dst == NULL) {
-	/* old GetValues semantics (storing directly into arglists) are bad,
-	 * but preserve for compatibility as long as arglist contains NULL.
-	 */
-        if	(size == sizeof(long))	   *dst = (XtArgVal)*(long*)src;
-	else if (size == sizeof(short))    *dst = (XtArgVal)*(short*)src;
-	else if (size == sizeof(char))	   *dst = (XtArgVal)*(char*)src;
-	else if (size == sizeof(char*))    *dst = (XtArgVal)*(char**)src;
-	else if (size == sizeof(caddr_t))  *dst = (XtArgVal)*(caddr_t*)src;
-	else if (size == sizeof(XtArgVal)) *dst = *(XtArgVal*)src;
-	else bcopy((char*)src, (char*)dst, (int)size);
-    }
-    else {
-	/* proper GetValues semantics: argval is pointer to destination */
-	if	(size == sizeof(long))	   *((long*)*dst) = *(long*)src;
-	else if (size == sizeof(short))    *((short*)*dst) = *(short*)src;
-	else if (size == sizeof(char))	   *((char*)*dst) = *(char*)src;
-	else if (size == sizeof(char*))    *((char**)*dst) = *(char**)src;
-	else if (size == sizeof(caddr_t))  *((caddr_t*)*dst) = *(caddr_t*)src;
-	else if (size == sizeof(XtArgVal)) *((XtArgVal*)*dst)= *(XtArgVal*)src;
-	else bcopy((char*)src, (char*)*dst, (int)size);
-    }
-} /* CopyToArg */
-
-#else
-static void CopyFromArg(src, dst, size)
-    XtArgVal src;
-    char* dst;
-    register unsigned int size;
-{
-    if (size > sizeof(XtArgVal))
-	bcopy((char *)  src, (char *) dst, (int) size);
-    else {
-	union {
-	    long	longval;
-	    short	shortval;
-	    char	charval;
-	    char*	charptr;
-	    caddr_t	ptr;
-	} u;
-	char *p = (char*)&u;
-	if	(size == sizeof(long))	    u.longval = (long)src;
-	else if (size == sizeof(short))	    u.shortval = (short)src;
-	else if (size == sizeof(char))	    u.charval = (char)src;
-	else if (size == sizeof(char*))	    u.charptr = (char*)src;
-	else if (size == sizeof(caddr_t))   u.ptr = (caddr_t)src;
-	else				    p = (char*)&src;
-
-	bcopy(p, (char *) dst, (int) size);
-    }
-} /* CopyFromArg */
 
 static void CopyToArg(src, dst, size)
     char* src;
@@ -482,10 +404,6 @@ static void GetResources(widget, base, names, classes,
 	    for (j = 0, res = table; j < num_resources; j++, res++) {
 		rx = *res;
 		if (argName == rx->xrm_name) {
-		    CopyFromArg(
-			arg->value,
-			(char*) base - rx->xrm_offset - 1,
-			rx->xrm_size);
 		    found[j] = TRUE;
 		    break;
 		}
@@ -874,10 +792,7 @@ static void SetValues(base, res, num_resources, args, num_args)
 	argName = StringToName(arg->name);
 	for (xrmres = res, i = 0; i < num_resources; i++, xrmres++) {
 	    if (argName == (*xrmres)->xrm_name) {
-		CopyFromArg(arg->value,
-		    (char*) base - (*xrmres)->xrm_offset - 1,
-		    (*xrmres)->xrm_size);
-		break;
+		    break;
 	    }
 	}
     }

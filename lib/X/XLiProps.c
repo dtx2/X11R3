@@ -3,7 +3,6 @@
 /* $XConsortium: XLiProps.c,v 11.18 88/09/06 16:08:58 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Atom *XListProperties(dpy, window, n_props)

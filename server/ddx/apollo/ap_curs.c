@@ -44,21 +44,6 @@ typedef struct {
 static int      wPrivClass;     /* Resource class for private window structure (WinPrivRec)
                                  * needed to protect the cursor from background/border paintings
                                  */
-
-/*
- * When we call SetInputCheck with pointers to the two values in
- * alwaysCheckForInput (we never change them so they always differ),
- * ProcessInputEvents will be called, at every conceivable time.
- *
- * When the cursor is down, we must do this so that we will get a
- * chance at the end of ProcessInputEvents to put the cursor back
- * up again.  When the cursor goes up, we call SetInputCheck with
- * pointers to the GPR eventcount, and its last known value.  This
- * lets DIX not call ProcessInputEvents until there is actually
- * some unprocessed input, as long as the cursor stays up.
- */
-static int      alwaysCheckForInput[2] = {0, 1};
-
 /*
  * Boolean which tells us whether the cursor is now in some frame buffer.
  */
@@ -217,14 +202,6 @@ apSetCursorPosition (pScr, x, y, generateEvent)
     }
     return TRUE;
 }
-
-/*
- * apRemoveCursor -- Driver internal code
- *      Take down the cursor, and leave it down until someone calls
- *      apRestoreCursor.  Also call SetInputCheck to make DIX call
- *      ProcessInputEvents sometime soon, since that is the routine
- *      which is supposed to call apRestoreCursor.
- */
 void
 apRemoveCursor ()
 {
@@ -241,7 +218,6 @@ apRemoveCursor ()
         {
             pDisp = &apDisplayData[pPrivP->numCurScreen];
             (pDisp->apCursorDown)(pPrivP->numCurScreen, pCur);
-            SetInputCheck(&alwaysCheckForInput[0], &alwaysCheckForInput[1]);
         }
         cursorIsUp = FALSE;
     }
@@ -275,12 +251,6 @@ apMoveCursor()
     }
 }
 
-/*
- * apRestoreCursor -- Driver internal code
- *      If the cursor is up, do nothing.  If the cursor is down,
- *      first put it up.  Then, since SetInputCheck is in the wrong
- *      state, re-call SetInputCheck to look at the eventcount values.
- */
 void
 apRestoreCursor ()
 {
@@ -297,7 +267,6 @@ apRestoreCursor ()
         {
             pDisp = &apDisplayData[pPrivP->numCurScreen];
             (pDisp->apCursorUp)(pPrivP->numCurScreen, pCur);
-            SetInputCheck(apECV, apLastECV);
         }
         cursorIsUp = TRUE;
     }

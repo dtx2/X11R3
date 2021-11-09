@@ -25,7 +25,6 @@ SOFTWARE.
 /* $XConsortium: colormap.c,v 1.75 88/09/06 15:40:10 jim Exp $ */
 
 #include "X.h"
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "misc.h"
 #include "dix.h"

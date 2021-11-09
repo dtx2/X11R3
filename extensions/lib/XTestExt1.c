@@ -32,9 +32,6 @@ University of California.
  * include files
  *****************************************************************************/
 
-#define NEED_REPLIES
-#define NEED_EVENTS
-
 #include "Xproto.h"
 #include "Xlibint.h"
 #include "xtestext1.h"

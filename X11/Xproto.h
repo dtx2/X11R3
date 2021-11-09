@@ -109,7 +109,6 @@ SOFTWARE.
 #define sz_xSetMappingReply 32
 #define sz_xGetKeyboardControlReply 52
 #define sz_xGetPointerControlReply 32
-#define sz_xGetScreenSaverReply 32
 #define sz_xListHostsReply 32
 #define sz_xSetModifierMappingReply 32
 #define sz_xError 32
@@ -180,7 +179,6 @@ SOFTWARE.
 #define sz_xChangeKeyboardControlReq 8
 #define sz_xBellReq 4
 #define sz_xChangePointerControlReq 12
-#define sz_xSetScreenSaverReq 12
 #define sz_xChangeHostsReq 8
 #define sz_xListHostsReq 4
 #define sz_xChangeModeReq 4
@@ -202,7 +200,6 @@ SOFTWARE.
 #define sz_xImageText8Req 16
 #define sz_xImageText16Req 16
 #define sz_xSetPointerMappingReq 4
-#define sz_xForceScreenSaverReq 4
 #define sz_xSetCloseDownModeReq 4
 #define sz_xClearAreaReq 16
 #define sz_xSetAccessControlReq 4
@@ -381,8 +378,6 @@ typedef CARD8 KEYCODE;
  * XRep:
  *    meant to be 32 byte quantity 
  *****************/
-
-#ifdef NEED_REPLIES
 
 /* GenericReply is the common format of all replies.  The "data" items
    are specific to each individual reply type. */
@@ -599,13 +594,9 @@ typedef struct {
     CARD16 sequenceNumber B16;
     CARD32 length B32;  /* definitely > 0, even if "nCharInfos" is 0 */
     xCharInfo minBounds; 
-#ifndef WORD64
     CARD32 walign1 B32;
-#endif
     xCharInfo maxBounds; 
-#ifndef WORD64
     CARD32 walign2 B32;
-#endif
     CARD16 minCharOrByte2 B16, maxCharOrByte2 B16;
     CARD16 defaultChar B16;
     CARD16 nFontProps B16;  /* followed by this many xFontProp structures */
@@ -648,13 +639,9 @@ typedef struct {
     CARD16 sequenceNumber B16;
     CARD32 length B32;  /* definitely > 0, even if "nameLength" is 0 */
     xCharInfo minBounds; 
-#ifndef WORD64
     CARD32 walign1 B32;
-#endif
-    xCharInfo maxBounds; 
-#ifndef WORD64
+    xCharInfo maxBounds;
     CARD32 walign2 B32;
-#endif
     CARD16 minCharOrByte2 B16, maxCharOrByte2 B16;
     CARD16 defaultChar B16;
     CARD16 nFontProps B16;  /* followed by this many xFontProp structures */
@@ -907,21 +894,6 @@ typedef struct {
 
 typedef struct {
     BYTE type;  /* X_Reply */
-    BYTE pad1;
-    CARD16 sequenceNumber B16;
-    CARD32 length B32;  /* 0 */
-    CARD16 timeout B16, interval B16;
-    BOOL preferBlanking;
-    BOOL allowExposures;
-    CARD16 pad2 B16;
-    CARD32 pad3 B32;
-    CARD32 pad4 B32;
-    CARD32 pad5 B32;
-    CARD32 pad6 B32;
-    } xGetScreenSaverReply;
-
-typedef struct {
-    BYTE type;  /* X_Reply */
     BOOL enabled;
     CARD16 sequenceNumber B16;
     CARD32 length B32;
@@ -934,9 +906,6 @@ typedef struct {
     CARD32 pad7 B32;
     } xListHostsReply;
 
-#endif /* NEED_REPLIES */
-
-
 
 
 /*****************************************************************
@@ -958,15 +927,6 @@ typedef struct {
     CARD32 pad6 B32;
     CARD32 pad7 B32;
 } xError;
-
-/*****************************************************************
- * xEvent
- *    All events are 32 bytes
- *****************************************************************/
-
-#ifdef NEED_EVENTS                /* this hack is necessary because
-				     the symbol table in the library
-				     is too big to link */
 
 typedef struct {
     union {
@@ -1193,17 +1153,12 @@ typedef struct {
     BYTE map[31];
     } xKeymapEvent;
 
-#endif /* NEED_EVENTS */
-
 #define XEventSize (sizeof(xEvent))
 
 /* XReply is the union of all the replies above whose "fixed part"
 fits in 32 bytes.  It does NOT include GetWindowAttributesReply,
 QueryFontReply, QueryKeymapReply, or GetKeyboardControlReply 
 ListFontsWithInfoReply */
-
-#ifdef NEED_REPLIES
-
 typedef union {
     xGenericReply generic;
     xGetGeometryReply geom;
@@ -1239,15 +1194,10 @@ typedef union {
     xGetKeyboardMappingReply getKeyboardMapping;
     xGetPointerMappingReply getPointerMapping;
     xGetPointerControlReply pointerControl;
-    xGetScreenSaverReply screenSaver;
     xListHostsReply hosts;
     xError error;
-#ifdef NEED_EVENTS
     xEvent event;
-#endif /* NEED_EVENTS */
 } xReply;
-
-#endif /* NEED_REPLIES */
 
 
 
@@ -1385,23 +1335,14 @@ typedef struct {
     Time time B32;
     } xConvertSelectionReq;
 
-#ifdef NEED_EVENTS
-
 typedef struct {
     CARD8 reqType;
     BOOL propagate;
     CARD16 length B16;
     Window destination B32;
     CARD32 eventMask B32;
-#ifdef WORD64
-    /* the structure should have been quad-aligned */
-    BYTE eventdata[SIZEOF(xEvent)];
-#else
     xEvent event;
-#endif /* WORD64 */
 } xSendEventReq;
-
-#endif /* NEED_EVENTS */
 
 typedef struct {
     CARD8 reqType;
@@ -1913,15 +1854,6 @@ typedef struct {
 
 typedef struct {
     CARD8 reqType;
-    BYTE pad;
-    CARD16 length B16;
-    INT16 timeout B16, interval B16;
-    BYTE preferBlank, allowExpose;  
-    CARD16 pad2 B16;
-} xSetScreenSaverReq;    
-
-typedef struct {
-    CARD8 reqType;
     BYTE mode;
     CARD16 length B16;
     CARD8 hostFamily;
@@ -1943,7 +1875,6 @@ typedef struct {
 
 typedef xChangeModeReq xSetAccessControlReq;
 typedef xChangeModeReq xSetCloseDownModeReq;
-typedef xChangeModeReq xForceScreenSaverReq;
 
 typedef struct { /* followed by LIST of ATOM */
     CARD8 reqType;
@@ -2068,16 +1999,13 @@ typedef struct { /* followed by LIST of ATOM */
 #define X_GetKeyboardControl           103             
 #define X_Bell                         104
 #define X_ChangePointerControl         105
-#define X_GetPointerControl            106
-#define X_SetScreenSaver               107          
-#define X_GetScreenSaver               108          
+#define X_GetPointerControl            106       
 #define X_ChangeHosts                  109       
 #define X_ListHosts                    110     
 #define X_SetAccessControl             111               
 #define X_SetCloseDownMode             112
 #define X_KillClient                   113 
 #define X_RotateProperties	       114
-#define X_ForceScreenSaver	       115
 #define X_SetPointerMapping            116
 #define X_GetPointerMapping            117
 #define X_SetModifierMapping	       118

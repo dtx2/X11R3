@@ -3,7 +3,6 @@
 /* $XConsortium: XQuTree.c,v 11.17 88/09/06 16:04:02 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XQueryTree (dpy, w, root, parent, children, nchildren)

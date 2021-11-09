@@ -52,25 +52,10 @@ PtrCtrl defaultPointerControl = {
 
 ClientPtr *clients;
 ClientPtr  serverClient;
-int  currentMaxClients;   /* current size of clients array */
 
 WindowRec WindowTable[MAXSCREENS];
 
 unsigned long globalSerialNumber = 0;
-
-/* these next four are initialized in main.c */
-long ScreenSaverTime;
-long ScreenSaverInterval;
-int  ScreenSaverBlanking;
-int  ScreenSaverAllowExposures;
-
-long defaultScreenSaverTime = DEFAULT_SCREEN_SAVER_TIME;
-long defaultScreenSaverInterval = DEFAULT_SCREEN_SAVER_INTERVAL;
-int  defaultScreenSaverBlanking = DEFAULT_SCREEN_SAVER_BLANKING;
-int  defaultScreenSaverAllowExposures = DEFAULT_SCREEN_SAVER_EXPOSURES;
-#ifndef NOLOGOHACK
-int  logoScreenSaver = DEFAULT_LOGO_SCREEN_SAVER;
-#endif
 
 char *defaultFontPath = COMPILEDDEFAULTFONTPATH;
 char *defaultTextFont = COMPILEDDEFAULTFONT;
@@ -86,5 +71,3 @@ TimeStamp currentTime;
 char *display;
 
 int TimeOutValue = DEFAULT_TIMEOUT;
-int	argcGlobal;
-char	**argvGlobal;

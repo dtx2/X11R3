@@ -396,7 +396,6 @@ are reserved in the protocol for errors and replies. */
 /* Used in ChangeCloseDownMode */
 
 #define DestroyAll              0
-#define RetainPermanent         1
 #define RetainTemporary         2
 
 /* Window stacking method (in configureWindow) */
@@ -612,18 +611,11 @@ are reserved in the protocol for errors and replies. */
 #define DontPreferBlanking	0
 #define PreferBlanking		1
 #define DefaultBlanking		2
-
-#define DisableScreenSaver	0
 #define DisableScreenInterval	0
 
 #define DontAllowExposures	0
 #define AllowExposures		1
 #define DefaultExposures	2
-
-/* for ForceScreenSaver */
-
-#define ScreenSaverReset 0
-#define ScreenSaverActive 1
 
 /*****************************************************************
  * HOSTS AND CONNECTIONS

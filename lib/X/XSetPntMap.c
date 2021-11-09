@@ -3,7 +3,6 @@
 /* $XConsortium: XSetPntMap.c,v 11.9 88/09/06 16:10:23 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 
 #include "Xlibint.h"
 /* returns either  DeviceMappingSuccess or DeviceMappingBusy  */

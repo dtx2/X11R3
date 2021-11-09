@@ -301,14 +301,12 @@ static void _MergeOptionTables(src1, num_src1, src2, num_src2, dst, num_dst)
 }
 
 
-void _XtDisplayInitialize(dpy, app, name, classname, urlist, num_urs, argc, argv)
+void _XtDisplayInitialize(dpy, app, name, classname, urlist, num_urs)
 	Display *dpy;
 	XtAppContext app;
 	String name, classname;
 	XrmOptionDescRec *urlist;
 	Cardinal num_urs;
-	Cardinal *argc;
-	char *argv[];
 {
 	char names[1000], classes[1000], lowerName[1000];
 	int namelen, classlen;
@@ -323,13 +321,6 @@ void _XtDisplayInitialize(dpy, app, name, classname, urlist, num_urs, argc, argv
 	_MergeOptionTables( opTable, XtNumber(opTable), urlist, num_urs,
 			    &options, &num_options );
 
-	/*
-	   This routine parses the command line arguments and removes them from
-	   argv.
-	 */
-	XrmParseCommand(
-	    (XrmDatabase *)&(dpy->db), options, num_options,
-	    name, (int *)argc, argv);
 
 	namelen = strlen(name);
 	classlen = strlen(classname);
@@ -376,17 +367,14 @@ void _XtDisplayInitialize(dpy, app, name, classname, urlist, num_urs, argc, argv
  * the toolkit and for window managers.
  */
 
-Widget XtInitialize(name, classname, urlist, num_urs, argc, argv)
+Widget XtInitialize(name, classname, urlist, num_urs)
 	char *name;		/* unused in R3 */
 	char *classname;
 	XrmOptionDescRec *urlist;
 	Cardinal num_urs;
-	Cardinal *argc;
-	char *argv[];
 {
 	Display *dpy;
 	Screen *scrn;
-	char **saved_argv;
 	int saved_argc = *argc;
 	Widget root;
 	int i;
@@ -395,28 +383,15 @@ Widget XtInitialize(name, classname, urlist, num_urs, argc, argv)
 
 	XtToolkitInitialize();
 
-	/* save away argv and argc so I can set the properties latter */
-
-	saved_argv = (char **) XtCalloc(
-		(unsigned) ((*argc) + 1) , (unsigned)sizeof(*saved_argv));
-
-	for (i = 0 ; i < *argc ; i++) saved_argv[i] = argv[i];
-	saved_argv[i] = NULL;
-
-	dpy = XtOpenDisplay((XtAppContext) NULL, (String) NULL, NULL,
-		classname, urlist, num_urs, argc, argv);
+	dpy = XtOpenDisplay((XtAppContext) NULL, (String) NULL, NULL, classname, urlist, num_urs);
 	if (dpy == NULL) {
              XtErrorMsg("invalidDisplay","xtInitialize","XtToolkitError",
                    "Can't Open display", (String *) NULL, (Cardinal *)NULL);
 	}
 	scrn = DefaultScreenOfDisplay(dpy);
 
-        XtSetArg(args[num_args], XtNscreen, scrn);	num_args++;
-	XtSetArg(args[num_args], XtNargc, saved_argc);	num_args++;
-	XtSetArg(args[num_args], XtNargv, saved_argv);	num_args++;
-
-        root = XtAppCreateShell(NULL, classname, 
-		applicationShellWidgetClass, dpy, args, num_args);
+    root = XtAppCreateShell(NULL, classname,
+    applicationShellWidgetClass, dpy, args, num_args);
 
 	return root;
 }

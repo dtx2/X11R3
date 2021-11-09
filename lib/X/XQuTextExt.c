@@ -3,7 +3,6 @@
 /* $XConsortium: XQuTextExt.c,v 11.12 88/09/06 16:10:03 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986, 1987	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 XQueryTextExtents (dpy, fid, string, nchars, dir, font_ascent, font_descent,

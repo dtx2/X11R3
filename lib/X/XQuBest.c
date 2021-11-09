@@ -3,7 +3,6 @@
 /* $XConsortium: XQuBest.c,v 1.7 88/09/06 16:09:51 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XQueryBestSize(dpy, class, drawable, width, height, ret_width, ret_height)

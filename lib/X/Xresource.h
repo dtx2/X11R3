@@ -262,15 +262,5 @@ typedef struct {
     caddr_t	    value;	    /* Value to provide if XrmoptionNoArg   */
 } XrmOptionDescRec, *XrmOptionDescList;
 
-extern void XrmParseCommand();
-    /* XrmDatabase	    *pdb;	    */
-    /* XrmOptionDescList    options;	    */
-    /* int		    num_options;    */
-    /* char		    *prefix;	    */
-    /* int		    *argc;	    */
-    /* char		    **argv;	    */
-
-
-
 #endif /* _Xresource_h */
 /* DON'T ADD STUFF AFTER THIS #endif */

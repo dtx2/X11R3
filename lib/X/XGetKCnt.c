@@ -3,7 +3,6 @@
 /* $XConsortium: XGetKCnt.c,v 11.12 88/09/06 16:08:02 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 struct kmap {char keys[32];};

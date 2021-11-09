@@ -24,8 +24,6 @@ SOFTWARE.
 /* $XConsortium: property.c,v 1.63 88/09/06 15:41:17 jim Exp $ */
 
 #include "X.h"
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "windowstr.h"
 #include "propertyst.h"

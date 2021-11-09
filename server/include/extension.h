@@ -41,7 +41,7 @@ SOFTWARE.
  *  XDispatchToExtension. This routine looks in the extension table for the
  *  the (MainProc) to call.  It gets one parameter, char *request (the
  *  string returned from ReadRequestFromClient).  MainProc() should return 
- *  a status flag to the disptacher.  In main(), the init procedure
+ *  a status flag to the disptacher.  In mai n(), the init procedure
  *  for each loaded extension is called.  
  *  
  *  Extension procedures to call when a GC is created and destroy are

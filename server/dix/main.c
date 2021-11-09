@@ -1,7 +1,7 @@
 /***********************************************************
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
 and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
-Copyright Edward Halferty 2021
+Copyright 2021 Edward Halferty
 
                         All Rights Reserved
 
@@ -19,415 +19,90 @@ DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
 ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
 WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
-SOFTWARE.
-
-******************************************************************/
-/* $XConsortium: main.c,v 1.143 88/09/19 12:13:43 jim Exp $ */
-
-#include "X.h"
-#include "Xproto.h"
-#include "input.h"
-#include "scrnintstr.h"
-#include "misc.h"
-#include "os.h"
-#include "windowstr.h"
-#include "resource.h"
-#include "dixstruct.h"
-#include "gcstruct.h"
-#include "extension.h"
-#include "colormap.h"
-#include "cursorstr.h"
-#include "opaque.h"
-#include "servermd.h"
-
-extern long defaultScreenSaverTime;
-extern long defaultScreenSaverInterval;
-extern int defaultScreenSaverBlanking;
-extern int defaultScreenSaverAllowExposures;
-extern char *display;
-char *ConnectionInfo;
-xConnSetupPrefix connSetupPrefix;
-extern WindowRec WindowTable[];
-extern FontPtr defaultFont;
-extern void SetInputCheck();
-extern void InitProcVectors();
-extern void InitEvents();
-extern void InitExtensions();
-extern void DefineInitialRootWindow();
-extern void QueryMinMaxKeyCodes();
-PaddingInfo PixmapWidthPaddingInfo[33];
-int connBlockScreenStart;
-static int restart = 0;
-
-void
-NotImplemented()
-{
-    FatalError("Not implemented");
-}
-
-/*
- * This array encodes the answer to the question "what is the log base 2
- * of the number of pixels that fit in a scanline pad unit?"
- * Note that ~0 is an invalid entry (mostly for the benefit of the reader).
- */
-static int answer[6][3] = {
-	/* pad   pad   pad */
-	/*  8     16    32 */
-
-	{   3,     4,    5 },	/* 1 bit per pixel */
-	{   1,     2,    3 },	/* 4 bits per pixel */
-	{   0,     1,    2 },	/* 8 bits per pixel */
-	{   ~0,    0,    1 },	/* 16 bits per pixel */
-	{   ~0,    ~0,   0 },	/* 24 bits per pixel */
-	{   ~0,    ~0,   0 }	/* 32 bits per pixel */
-};
-
-/*
- * This array gives the answer to the question "what is the first index for
- * the answer array above given the number of bits per pixel?"
- * Note that ~0 is an invalid entry (mostly for the benefit of the reader).
- */
-static int indexForBitsPerPixel[ 33 ] = {
-	~0, 0, ~0, ~0,	/* 1 bit per pixel */
-	1, ~0, ~0, ~0,	/* 4 bits per pixel */
-	2, ~0, ~0, ~0,	/* 8 bits per pixel */
-	~0,~0, ~0, ~0,
-	3, ~0, ~0, ~0,	/* 16 bits per pixel */
-	~0,~0, ~0, ~0,
-	4, ~0, ~0, ~0,	/* 24 bits per pixel */
-	~0,~0, ~0, ~0,
-	5		/* 32 bits per pixel */
-};
-
-/*
- * This array gives the answer to the question "what is the second index for
- * the answer array above given the number of bits per scanline pad unit?"
- * Note that ~0 is an invalid entry (mostly for the benefit of the reader).
- */
-static int indexForScanlinePad[ 33 ] = {
-	~0, ~0, ~0, ~0,
-	~0, ~0, ~0, ~0,
-	0,  ~0, ~0, ~0,	/* 8 bits per scanline pad unit */
-	~0, ~0, ~0, ~0,
-	1,  ~0, ~0, ~0,	/* 16 bits per scanline pad unit */
-	~0, ~0, ~0, ~0,
-	~0, ~0, ~0, ~0,
-	~0, ~0, ~0, ~0,
-	2		/* 32 bits per scanline pad unit */
-};
-
-void main(int argc, char	*argv[]) {
-    int		i, j, k, looping;
-    long	alwaysCheckForInput[2];
-
-    /* Notice if we're restart.  Probably this is because we jumped through
-     * uninitialized pointer */
-    if (restart)
-	FatalError("server restarted. Jumped through uninitialized pointer?\n");
-    else
-	restart = 1;
-    /* These are needed by some routines which are called from interrupt
-     * handlers, thus have no direct calling path back to main and thus
-     * can't be passed argc, argv as parameters */
-    argcGlobal = argc;
-    argvGlobal = argv;
-    display = "0";
-    ProcessCommandLine(argc, argv);
-
-    alwaysCheckForInput[0] = 0;
-    alwaysCheckForInput[1] = 1;
-    looping = 0;
-    while(1)
-    {
-        ScreenSaverTime = defaultScreenSaverTime;
-	ScreenSaverInterval = defaultScreenSaverInterval;
-	ScreenSaverBlanking = defaultScreenSaverBlanking;
-	ScreenSaverAllowExposures = defaultScreenSaverAllowExposures;
-	// Perform any operating system dependent initializations you'd like
-	OsInit();
-	if(!looping) {
-	    CreateWellKnownSocket();
-	    InitProcVectors();
-	    serverClient = (ClientPtr)xalloc(sizeof(ClientRec));
-		serverClient->sequence = 0;
-		serverClient->closeDownMode = RetainPermanent;
-		serverClient->clientGone = FALSE;
-		serverClient->lastDrawable = (DrawablePtr)NULL;
-	    serverClient->lastDrawableID = INVALID;
-        serverClient->lastGC = (GCPtr)NULL;
-	    serverClient->lastGCID = INVALID;
-	    serverClient->numSaved = 0;
-	    serverClient->saveSet = (pointer *)NULL;
-	    serverClient->index = 0;
-	}
-        currentMaxClients = 10;
-        clients = (ClientPtr *)xalloc(currentMaxClients * sizeof(ClientPtr));
-        for (i=1; i<currentMaxClients; i++) 
-            clients[i] = NullClient;
-        clients[0] = serverClient;
-
-	InitClientResources(serverClient);      /* for root resources */
-
-	SetInputCheck(&alwaysCheckForInput[0], &alwaysCheckForInput[1]);
-	screenInfo.arraySize = 0;
-	screenInfo.numScreens = 0;
-	screenInfo.screen = (ScreenPtr)NULL;
-	/*
-	 * Just in case the ddx doesnt supply a format for depth 1 (like qvss).
-	 */
-	j = indexForBitsPerPixel[ 1 ];
-	k = indexForScanlinePad[ BITMAP_SCANLINE_PAD ];
-	PixmapWidthPaddingInfo[1].padRoundUp = BITMAP_SCANLINE_PAD-1;
-	PixmapWidthPaddingInfo[1].padPixelsLog2 = answer[j][k];
- 	j = indexForBitsPerPixel[8]; /* bits per byte */
- 	PixmapWidthPaddingInfo[1].padBytesLog2 = answer[j][k];
-
-	InitAtoms();
-	InitOutput(&screenInfo, argc, argv);
-	if (screenInfo.numScreens < 1)
-	    FatalError("no screens found\n");
-	InitEvents();
-	InitExtensions(); 
-	InitInput(argc, argv);
-	InitAndStartDevices(argc, argv);
-
-	SetDefaultFontPath(defaultFontPath);	/* default path has no nulls */
-	if ( ! SetDefaultFont(defaultTextFont))
-	    ErrorF( "main: Could not open default font '%s'\n",
-	        defaultTextFont);
-	if ( ! (rootCursor = CreateRootCursor(defaultCursorFont, 0)))
-	    ErrorF( "main: Could not open default cursor font '%s'\n",
-		defaultCursorFont);
-
-	for (i=0; i<screenInfo.numScreens; i++) 
-	{
-	    CreateRootWindow(i);
-	}
-        DefineInitialRootWindow(&WindowTable[0]);
-	CreateConnectionBlock();
-
-	Dispatch();
-
-	/* Now free up whatever must be freed */
-	CloseDownExtensions();
-	FreeAllResources();
-	CloseDownDevices(argc, argv);
-	for (i = screenInfo.numScreens - 1; i >= 0; i--)
-	{
-	    FreeGCperDepth(i);
-	    FreeDefaultStipple(i);
-	    (* screenInfo.screen[i].CloseScreen)(i, &screenInfo.screen[i]);
-	    screenInfo.numScreens = i;
-	}
-	xfree(screenInfo.screen);
-	screenInfo.screen = (ScreenPtr)NULL;
-
-        CloseFont(defaultFont);
-        defaultFont = (FontPtr)NULL;
-
-	ResetHosts(display);
-        xfree(clients);
-	xfree(ConnectionInfo);
-
-	ResetWellKnownSockets ();
-	looping = 1;
+SOFTWARE.*/
+/*****************
+ * WaitForSomething: - Make the server suspend until there is
+ *	1. data from clients or
+ *	2. input events available or
+ *	3. ddx notices something of interest (graphics queue ready, etc.) or
+ *	4. clients that have buffered replies/events are ready
+ * If the time between INPUT events is greater than Scree nSaverTime, the display is turned off (or
+ * saved, depending on the hardware).  So, WaitForSomething() has to handle this also (that's why the select() has a timeout.
+ * For more info on ClientsWithInput, see ReadRequestFromClient(). pClientsReady is a mask, the bits set are
+ * indices into the o.s. depedent table of available clients. (In this case, there is no table -- the index is the socket
+ * file descriptor.)*/
+void WaitForSomething(ClientPtr *pClientsReady, int *nready, ClientPtr *pNewClients, int *nnew) {
+    int i, selecterr;
+    struct timeval waittime, *wt;
+    long timeout, curclient;
+    long clientsReadable[mskcnt];
+    long clientsWritable[mskcnt];
+    if (! (ANYSET(ClientsWithInput))) {
+        // We need a while loop here to handle crashed connections and the screen saver timeout
+        while (1) {
+            wt = NULL;
+            if (AnyClientsWriteBlocked) { i = select (MAXSOCKS, LastSelectMask, clientsWritable, (int *) NULL, wt); }
+            else { i = select (MAXSOCKS, LastSelectMask, (int *) NULL, (int *) NULL, wt); }
+            selecterr = errno;
+            if (i <= 0) { /* An error or timeout occurred */
+                if (i < 0) {
+                    if (selecterr == EBADF && !ANYSET (AllClients)) { return; } // Some client disconnected
+                    else if (selecterr != EINTR) { ErrorF("WaitForSomething(): select: errno=%d\n", selecterr); }
+                }
+            } else {
+                if (AnyClientsWriteBlocked && ANYSET (clientsWritable)) {
+                    NewOutputPending = TRUE;
+                    ORBITS(OutputPending, clientsWritable, OutputPending);
+                    UNSETBITS(ClientsWriteBlocked, clientsWritable);
+                    if (! ANYSET(ClientsWriteBlocked)) { AnyClientsWriteBlocked = FALSE; }
+                }
+                MASKANDSETBITS(clientsReadable, LastSelectMask, AllClients);
+                if (LastSelectMask[0]) { EstablishNewConnections(pNewClients, nnew); }
+                if (*nnew || (LastSelectMask[0] & EnabledDevices) || (ANYSET (clientsReadable))) { break; }
+            }
+        }
+    } else { COPYBITS(ClientsWithInput, clientsReadable); }
+    if (ANYSET(clientsReadable)) {
+        for (i=0; i<mskcnt; i++) {
+            while (clientsReadable[i]) {
+                curclient = ffs (clientsReadable[i]) - 1;
+                pClientsReady[(*nready)++] = ConnectionTranslation[curclient + (32 * i)];
+                clientsReadable[i] &= ~(1 << curclient);
+            }
+        }
     }
 }
-
-static int padlength[4] = {0, 3, 2, 1};
-
-CreateConnectionBlock()
-{
-    xConnSetup setup;
-    xWindowRoot root;
-    xDepth	depth;
-    xVisualType visual;
-    xPixmapFormat format;
-    unsigned long vid;
-    int i, j, k,
-        lenofblock,
-        sizesofar = 0;
-    char *pBuf;
-
-    
-    /* Leave off the ridBase and ridMask, these must be sent with 
-       connection */
-
-    setup.release = VENDOR_RELEASE;
-    /*
-     * per-server image and bitmap parameters are defined in Xmd.h
-     */
-    setup.imageByteOrder = screenInfo.imageByteOrder;
-    setup.bitmapScanlineUnit  = screenInfo.bitmapScanlineUnit;
-    setup.bitmapScanlinePad = screenInfo.bitmapScanlinePad;
-    setup.bitmapBitOrder = screenInfo.bitmapBitOrder;
-    setup.motionBufferSize = NumMotionEvents();
-    setup.numRoots = screenInfo.numScreens;
-    setup.nbytesVendor = strlen(VENDOR_STRING); 
-    setup.numFormats = screenInfo.numPixmapFormats;
-    setup.maxRequestSize = MAX_REQUEST_SIZE;
-    QueryMinMaxKeyCodes(&setup.minKeyCode, &setup.maxKeyCode);
-    
-    lenofblock = sizeof(xConnSetup) + 
-            ((setup.nbytesVendor + 3) & ~3) +
-	    (setup.numFormats * sizeof(xPixmapFormat)) +
-            (setup.numRoots * sizeof(xWindowRoot));
-    ConnectionInfo = (char *) xalloc(lenofblock);
-
-    bcopy((char *)&setup, ConnectionInfo, sizeof(xConnSetup));
-    sizesofar = sizeof(xConnSetup);
-    pBuf = ConnectionInfo + sizeof(xConnSetup);
-
-    bcopy(VENDOR_STRING, pBuf, setup.nbytesVendor);
-    sizesofar += setup.nbytesVendor;
-    pBuf += setup.nbytesVendor;
-    i = padlength[setup.nbytesVendor & 3];
-    sizesofar += i;
-    while (--i >= 0)
-        *pBuf++ = 0;
-    
-    for (i=0; i<screenInfo.numPixmapFormats; i++)
-    {
-	format.depth = screenInfo.formats[i].depth;
-	format.bitsPerPixel = screenInfo.formats[i].bitsPerPixel;
-	format.scanLinePad = screenInfo.formats[i].scanlinePad;
-	bcopy((char *)&format, pBuf, sizeof(xPixmapFormat));
-	pBuf += sizeof(xPixmapFormat);
-	sizesofar += sizeof(xPixmapFormat);
+int main(int argc, char *argv[]) {
+    CreateUnixSocket();
+    while(1) {
+        while (1) {
+            WaitForSomething(clientReady, &nready, newClients, &nnew);
+            while (nnew--) { // Establish any new connections
+                client = newClients[nnew];
+                client->requestLogIndex = 0;
+                WriteToClient(client, sizeof(xConnSetupPrefix), (char *) &connSetupPrefix);
+                WriteToClient(client, connSetupPrefix.length << 2, ConnectionInfo);
+                nClients++;
+            }
+            while ((nready--) > 0) { // Handle events in round robin fashion, doing input between each round
+                client = clientReady[nready];
+                if (!client) { continue; } // KillClient can cause this to happen
+                isItTimeToYield = FALSE;
+                requestingClient = client;
+                while (!isItTimeToYield) {
+                    ProcessInputEvents();
+                    // now, finally, deal with client requests
+                    request = (xReq *)ReadRequestFromClient(client, &result, (char *) request);
+                    if (result < 0) { break; }
+                    else if (result == 0) { continue; }
+                    client->sequence++;
+                    client->requestBuffer = (pointer) request;
+                    if (client->requestLogIndex == MAX_REQUEST_LOG) { client->requestLogIndex = 0; }
+                    client->requestLog[client->requestLogIndex] = request->reqType;
+                    client->requestLogIndex++;
+                }
+            }
+        }
+        Dispatch();
     }
-
-    connBlockScreenStart = sizesofar;
-    for (i=0; i<screenInfo.numScreens; i++) 
-    {
-	ScreenPtr	pScreen;
-	DepthPtr	pDepth;
-	VisualPtr	pVisual;
-
-	pScreen = &(screenInfo.screen[i]);
-        root.windowId = WindowTable[i].wid;
-        root.defaultColormap = pScreen->defColormap;
-        root.whitePixel = pScreen->whitePixel;
-	root.blackPixel = pScreen->blackPixel;
-        root.currentInputMask = 0;    /* filled in when sent */
-        root.pixWidth = pScreen->width;
-        root.pixHeight = pScreen->height;
-        root.mmWidth = pScreen->mmWidth;
-	root.mmHeight = pScreen->mmHeight;
-        root.minInstalledMaps = pScreen->minInstalledCmaps;
-        root.maxInstalledMaps = pScreen->maxInstalledCmaps; 
-        root.rootVisualID = pScreen->rootVisual;		
-        root.backingStore = pScreen->backingStoreSupport;
-        root.saveUnders = pScreen->saveUnderSupport != NotUseful;
-        root.rootDepth = pScreen->rootDepth;
-	root.nDepths = pScreen->numDepths;
-        bcopy((char *)&root, pBuf, sizeof(xWindowRoot));
-	sizesofar += sizeof(xWindowRoot);
-        pBuf += sizeof(xWindowRoot);
-
-	pDepth = pScreen->allowedDepths;
-	for(j = 0; j < pScreen->numDepths; j++, pDepth++)
-	{
-	    lenofblock += sizeof(xDepth) + 
-		    (pDepth->numVids * sizeof(xVisualType));
-            ConnectionInfo = (char *)xrealloc(ConnectionInfo, lenofblock);
-            pBuf = ConnectionInfo + sizesofar;            
-	    depth.depth = pDepth->depth;
-	    depth.nVisuals = pDepth->numVids;
-	    bcopy((char *)&depth, pBuf, sizeof(xDepth));
-	    pBuf += sizeof(xDepth);
-	    sizesofar += sizeof(xDepth);
-	    for(k = 0; k < pDepth->numVids; k++)
-	    {
-		vid = pDepth->vids[k];
-		pVisual = (VisualPtr) LookupID(vid, RT_VISUALID, RC_CORE);
-		visual.visualID = pVisual->vid;
-		visual.class = pVisual->class;
-		visual.bitsPerRGB = pVisual->bitsPerRGBValue;
-		visual.colormapEntries = pVisual->ColormapEntries;
-		visual.redMask = pVisual->redMask;
-		visual.greenMask = pVisual->greenMask;
-		visual.blueMask = pVisual->blueMask;
-		bcopy((char *)&visual, pBuf, sizeof(xVisualType));
-		pBuf += sizeof(xVisualType);
-	        sizesofar += sizeof(xVisualType);
-	    }
-	}
-    }
-    connSetupPrefix.success = xTrue;
-    connSetupPrefix.length = lenofblock/4;
-    connSetupPrefix.majorVersion = X_PROTOCOL;
-    connSetupPrefix.minorVersion = X_PROTOCOL_REVISION;
 }
-
-/*
-	grow the array of screenRecs if necessary.
-	call the device-supplied initialization procedure 
-with its screen number, a pointer to its ScreenRec, argc, and argv.
-	return the number of successfully installed screens.
-
-*/
-
-AddScreen(pfnInit, argc, argv)
-    Bool	(* pfnInit)();
-    int argc;
-    char **argv;
-{
-
-    int i = screenInfo.numScreens;
-    int scanlinepad, format, depth, bitsPerPixel, j, k;
-
-    if (screenInfo.numScreens == screenInfo.arraySize)
-    {
-	screenInfo.arraySize += 5;
-	screenInfo.screen = (ScreenPtr)xrealloc(
-	    screenInfo.screen, 
-	    screenInfo.arraySize * sizeof(ScreenRec));
-    }
-
-
-    /*
-     * This loop gets run once for every Screen that gets added,
-     * but thats ok.  If the ddx layer initializes the formats
-     * one at a time calling AddScreen() after each, then each
-     * iteration will make it a little more accurate.  Worst case
-     * we do this loop N * numPixmapFormats where N is # of screens.
-     * Anyway, this must be called after InitOutput and before the
-     * screen init routine is called.
-     */
-    for (format=0; format<screenInfo.numPixmapFormats; format++)
-    {
- 	depth = screenInfo.formats[format].depth;
- 	bitsPerPixel = screenInfo.formats[format].bitsPerPixel;
-  	scanlinepad = screenInfo.formats[format].scanlinePad;
- 	j = indexForBitsPerPixel[ bitsPerPixel ];
-  	k = indexForScanlinePad[ scanlinepad ];
- 	PixmapWidthPaddingInfo[ depth ].padPixelsLog2 = answer[j][k];
- 	PixmapWidthPaddingInfo[ depth ].padRoundUp =
- 	    (scanlinepad/bitsPerPixel) - 1;
- 	j = indexForBitsPerPixel[ 8 ]; /* bits per byte */
- 	PixmapWidthPaddingInfo[ depth ].padBytesLog2 = answer[j][k];
-    }
-  
-    /* This is where screen specific stuff gets initialized.  Load the
-       screen structure, call the hardware, whatever.
-       This is also where the default colormap should be allocated and
-       also pixel values for blackPixel, whitePixel, and the cursor
-       Note that InitScreen is NOT allowed to modify argc, argv, or
-       any of the strings pointed to by argv.  They may be passed to
-       multiple screens. 
-    */ 
-    screenInfo.screen[i].rgf = ~0;  /* there are no scratch GCs yet*/
-    screenInfo.screen[i].myNum = i;
-    if ((*pfnInit)(i, &screenInfo.screen[i], argc, argv))
-    {
-	screenInfo.numScreens++;
-        CreateGCperDepthArray(i);
-	CreateDefaultStipple(i);
-    }
-    else
-	ErrorF("screen %d failed initialization\n", i);
-
-    return screenInfo.numScreens;
-}
-
-

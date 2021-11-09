@@ -39,12 +39,6 @@ SOFTWARE.
 
 extern XID clientErrorValue;
 
-#ifdef DEBUG
-extern void NotImplemented();
-#endif
-
-/* written by drewry august 1986 */
-
 void
 ValidateGC(pDraw, pGC)
     DrawablePtr	pDraw;
@@ -430,13 +424,6 @@ CreateGC(pDrawable, mask, pval, pStatus)
     if (!pGC)
 	return (GC *)NULL;
 
-#ifdef DEBUG
-    for(j = &pGC->FillSpans;
-        j < &pGC->PushPixels;
-        j++ )
-        *j = NotImplemented;
-#endif /* DEBUG */
-
     pGC->pScreen = pDrawable->pScreen;
     pGC->depth = pDrawable->depth;
     pGC->alu = GXcopy; /* dst <- src */
@@ -739,13 +726,6 @@ CreateScratchGC(pScreen, depth)
     if (!pGC)
 	return (GC *)NULL;
 
-#ifdef DEBUG
-    for(j = &pGC->FillSpans;
-        j < &pGC->PushPixels;
-        j++ )
-        *j = NotImplemented;
-#endif /* DEBUG */
-
     pGC->pScreen = pScreen;
     pGC->depth = depth;
     pGC->alu = GXcopy; /* dst <- src */
@@ -785,45 +765,19 @@ CreateScratchGC(pScreen, depth)
 }
 
 
-FreeGCperDepth(screenNum)
-    int screenNum;
-{
-    register int i;
-    register ScreenPtr pScreen;
-    GCPtr *ppGC;
-
-    pScreen = &screenInfo.screen[screenNum];
-    ppGC = (GCPtr *) pScreen->GCperDepth;
-
-    /* do depth 1 seperately because it's not included in list */
-    (void)FreeGC(ppGC[0], (GContext)0);
-
-    for (i = 0; i < pScreen-> numDepths; i++)
-    {
-	(void)FreeGC(ppGC[i+1], (GContext)0);
-    }
-}
-
-
-CreateGCperDepthArray(screenNum)
-    int screenNum;
-{
-    register int i;
-    register ScreenPtr pScreen;
+void CreateGCperDepthArray(int screenNum) {
+    int i;
+    ScreenPtr pScreen;
     DepthPtr pDepth;
-
     pScreen = &screenInfo.screen[screenNum];
     pScreen->rgf = 0;
-    /* do depth 1 seperately because it's not included in list */
+    // do depth 1 seperately because it's not included in list
     pScreen->GCperDepth[0] = CreateScratchGC(pScreen, 1);
     (pScreen->GCperDepth[0])->graphicsExposures = FALSE;
-
     pDepth = pScreen->allowedDepths;
-    for (i=0; i<pScreen->numDepths; i++, pDepth++)
-    {
-	pScreen->GCperDepth[i+1] = CreateScratchGC(pScreen,
-						   pDepth->depth);
-	(pScreen->GCperDepth[i+1])->graphicsExposures = FALSE;
+    for (i=0; i<pScreen->numDepths; i++, pDepth++) {
+	    pScreen->GCperDepth[i+1] = CreateScratchGC(pScreen, pDepth->depth);
+	    (pScreen->GCperDepth[i+1])->graphicsExposures = FALSE;
     }
 }
 
@@ -857,14 +811,6 @@ CreateDefaultStipple(screenNum)
 				pgcScratch, 1, &rect);
     FreeScratchGC(pgcScratch);
 }
-
-FreeDefaultStipple(screenNum)
-    int screenNum;
-{
-    ScreenPtr pScreen = &screenInfo.screen[screenNum];
-    (*pScreen->DestroyPixmap)(pScreen->PixmapPerDepth[0]);
-}
-
 
 SetDashes(pGC, offset, ndash, pdash)
 register GCPtr pGC;

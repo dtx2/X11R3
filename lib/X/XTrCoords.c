@@ -3,7 +3,6 @@
 /* $XConsortium: XTrCoords.c,v 11.12 88/09/06 16:11:08 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 int XTranslateCoordinates(dpy, src_win, dest_win, src_x, src_y, 

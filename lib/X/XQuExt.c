@@ -3,7 +3,6 @@
 /* $XConsortium: XQuExt.c,v 11.14 88/09/06 16:09:56 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Bool XQueryExtension(dpy, name, major_opcode, first_event, first_error)

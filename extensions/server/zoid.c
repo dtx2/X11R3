@@ -56,7 +56,7 @@ extern void ValidateGC();
 /****************
  * ZoidExtensionInit
  *
- * Called from InitExtensions in main() or from QueryExtension() if the
+ * Called from InitExtensions in mai n() or from QueryExtension() if the
  * extension is dynamically loaded.
  *
  * ZOID has no events or errors (other than the core errors)

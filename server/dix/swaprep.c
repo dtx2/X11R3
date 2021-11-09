@@ -25,8 +25,6 @@ SOFTWARE.
 /* $XConsortium: swaprep.c,v 1.30 88/09/06 15:41:22 jim Exp $ */
 
 #include "X.h"
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "misc.h"
 #include "dixstruct.h"
@@ -754,21 +752,6 @@ SGetPointerControlReply(pClient, size, pRep)
     swaps(&pRep->threshold, n);
     (void)WriteToClient(pClient, size, (char *) pRep);
 }
-
-void
-SGetScreenSaverReply(pClient, size, pRep)
-    ClientPtr			pClient;
-    int				size;
-    xGetScreenSaverReply	*pRep;
-{
-    int n;
-
-    swaps(&pRep->sequenceNumber, n);
-    swaps(&pRep->timeout, n);
-    swaps(&pRep->interval, n);
-    (void)WriteToClient(pClient, size, (char *) pRep);
-}
-
 void
 SLHostsExtend(pClient, size, buf)
     ClientPtr		pClient;

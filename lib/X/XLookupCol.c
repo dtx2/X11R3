@@ -3,7 +3,6 @@
 /* $XConsortium: XLookupCol.c,v 11.8 88/09/06 16:09:08 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XLookupColor (dpy, cmap, spec, def, scr)

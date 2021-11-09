@@ -544,7 +544,6 @@ QuickCheck(newReg, reg1, reg2)
 #ifdef notdef
 /*   TopRects(rects, reg1, reg2)
  * N.B. We now assume that reg1 and reg2 intersect.  Therefore we are
- * NOT checking in the two while loops for stepping off the end of the
  * region.  
  */ 
 

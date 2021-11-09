@@ -36,7 +36,6 @@ gpr_$position_t apEventPosition;
 /*
  * Pointer to the value field of the GPR eventcount,
  * and pointer to a cell which contains its last known value.
- * These are used by the SetInputCheck trick in the cursor code.
  */
 long    *apECV;         /* points to value in GPR_ec */
 long    *apLastECV;     /* points to lastGPR_ecValue */

@@ -47,7 +47,6 @@ extern Bool mfbRealizeFont();
 extern Bool mfbUnrealizeFont();
 extern Bool mfbRealizeCursor();
 extern Bool mfbUnrealizeCursor();
-extern Bool mfbScreenSaver();
 extern Bool mfbCreateGC();
 
 extern PixmapPtr mfbCreatePixmap();

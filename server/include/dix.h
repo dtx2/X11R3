@@ -62,7 +62,6 @@ typedef struct _Client *ClientPtr;
 extern ClientPtr requestingClient;
 extern ClientPtr *clients;
 extern ClientPtr serverClient;
-extern int currentMaxClients;
 
 extern int ProcAllowEvents();
 extern int ProcBell();

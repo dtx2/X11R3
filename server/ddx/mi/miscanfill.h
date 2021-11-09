@@ -15,11 +15,9 @@
  *     Since these pieces of code are the same for any filled shape,
  *     it is more convenient to gather the library in one
  *     place, but since these pieces of code are also in
- *     the inner loops of output primitives, procedure call
  *     overhead is out of the question.
  *     See the author for a derivation if needed.
  */
-
 
 /*
  *  In scan converting polygons, we want to choose those pixels

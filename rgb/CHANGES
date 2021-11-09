@@ -1,7 +1,0 @@
-The following changes have been made to this directory since R2:
-
-     o  duplicate entries which differed only in case were removed.
-     o  gray0-gray100 were added.
-     o  a few random colors were added.
-     o  better error checking was added.
-

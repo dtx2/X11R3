@@ -99,10 +99,8 @@ typedef struct _ScanLineListBlock {
  */
 #define NUMPTSTOBUFFER 200
 
-
 /*
  *
- *     a few macros for the inner loops of the fill code where
  *     performance considerations don't allow a procedure call.
  *
  *     Evaluate the given edge at the given scanline.

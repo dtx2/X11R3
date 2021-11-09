@@ -24,7 +24,6 @@ SOFTWARE.
 
 /* $XConsortium: snffonts.c,v 1.6 88/09/06 15:27:15 jim Exp $ */
 
-#define NEED_REPLIES
 #include "X.h"
 #include "Xmd.h"
 #include "Xproto.h"

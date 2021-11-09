@@ -2,7 +2,6 @@
 
 /* $XConsortium: XAllPlanes.c,v 11.15 88/09/06 16:11:45 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XAllocColorPlanes(dpy, cmap, contig, pixels, ncolors, nreds, ngreens, 

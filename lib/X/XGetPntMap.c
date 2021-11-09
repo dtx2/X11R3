@@ -3,7 +3,6 @@
 /* $XConsortium: XGetPntMap.c,v 1.9 88/09/06 16:10:20 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 #ifdef MIN		/* some systems define this in <sys/param.h> */

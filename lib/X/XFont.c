@@ -2,7 +2,6 @@
 
 /* $XConsortium: XFont.c,v 11.26 88/09/06 16:05:50 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 XFontStruct *_XQueryFont();

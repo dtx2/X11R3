@@ -1,7 +1,6 @@
 #include "copyright.h"
 /* $XConsortium: XConnDis.c,v 11.36 88/09/16 11:09:34 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985, 1986	*/
-#define NEED_EVENTS
 /*
  * THIS IS AN OS DEPENDENT FILE! It should work on 4.2BSD derived
  * systems.  VMS and System V should plan to have their own version.

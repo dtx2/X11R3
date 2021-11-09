@@ -27,7 +27,6 @@ implied warranty.
 
 ******************************************************************/
 
-#define NEED_EVENTS
 #include "X.h"
 #include "Xmd.h"
 #include "Xproto.h"

@@ -3,7 +3,6 @@
 /* $XConsortium: XQuPntr.c,v 11.14 88/09/06 16:09:58 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Bool XQueryPointer(dpy, w, root, child, root_x, root_y, win_x, win_y, mask)

@@ -4,7 +4,6 @@
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 /* This can really be considered an os dependent routine */
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 /*
  * can be freed using XFree.

@@ -111,7 +111,6 @@ int len;		/* length of line */
 }
 
 /* vertical solid line
-   this uses do loops because pcc (Ultrix 1.2, bsd 4.2) generates
    better code.  sigh.  we know that len will never be 0 or 1, so
    it's OK to use it.
 */

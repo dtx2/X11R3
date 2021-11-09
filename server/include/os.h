@@ -33,16 +33,6 @@ SOFTWARE.
 #define SCREEN_SAVER_FORCER 2
 #define MAX_REQUEST_SIZE 16384
 typedef pointer	FID;
-typedef struct _FontPathRec *FontPathPtr;
-typedef struct _NewClientRec *NewClientPtr;
-/* os-dependent definition of local allocation and deallocation
- * If you need something other than malloc/free for ALLOCATE/DEALLOCATE
- * LOCAL then you add that to the beginning of this set.  Note that
- * some machines do not return a valid pointer for malloc(0), in
- * which case we provide an alternate under the control of the
- * define MALLOC_0_RETURNS_NULL.  This is necessary because some
- * server code expects malloc(0) to return a valid pointer to storage. */
-
 #ifndef ALLOCATE_LOCAL
 char *malloc();
 #define ALLOCATE_LOCAL(size) malloc((unsigned)((size) > 0 ? (size) : 1))
@@ -64,20 +54,16 @@ char		*strcat();
 char		*strncat();
 char		*strcpy();
 char		*strncpy();
-Bool		CloseDownConnection();
 FontPathPtr	GetFontPath();
 FontPathPtr	ExpandFontNamePattern();
 FID		    FiOpenForRead();
-void		CreateWellKnownSocket();
-void		SetDefaultFontPath();
+void		CreateUnixSocket();
 void		FreeFontRecord();
 void		SetFontPath();
 void		ErrorF();
 void		Error();
 void		FatalError();
-void		ProcessCommandLine();
 void		Xfree();
-void		FlushAllOutput();
 void		FlushIfCriticalOutputPending();
 unsigned long	*Xalloc();
 unsigned long	*Xrealloc();

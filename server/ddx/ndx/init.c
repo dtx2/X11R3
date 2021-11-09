@@ -33,8 +33,7 @@ SOFTWARE.
 #include "scrnintstr.h"
 #include "servermd.h"
 
-extern Bool ndxScreenInit();		/* ndx specific code, which
-					   calls mfbScreenInit */
+extern Bool ndxScreenInit(); // ndx specific code, which calls mfbScreenInit
 extern int ndxMouseProc();
 extern int ndxKeybdProc();
 
@@ -46,42 +45,16 @@ static PixmapFormatRec formats[] = {
 	{8, 8, BITMAP_SCANLINE_PAD}	/* cfb pixmaps only */
 };
 
-InitOutput(screenInfo, argc, argv)
-    ScreenInfo *screenInfo;
-    int argc;
-    char **argv;
-{
+void InitOutput(ScreenInfo *screenInfo) {
     int i;
-
     screenInfo->imageByteOrder = IMAGE_BYTE_ORDER;
     screenInfo->bitmapScanlineUnit = BITMAP_SCANLINE_UNIT;
     screenInfo->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
     screenInfo->bitmapBitOrder = BITMAP_BIT_ORDER;
-
     screenInfo->numPixmapFormats = NUMFORMATS;
-    for (i=0; i< NUMFORMATS; i++)
-    {
-	screenInfo->formats[i].depth = formats[i].depth;
-	screenInfo->formats[i].bitsPerPixel = formats[i].bitsPerPixel;
-	screenInfo->formats[i].scanlinePad = formats[i].scanlinePad;
+    for (i=0; i< NUMFORMATS; i++) {
+        screenInfo->formats[i].depth = formats[i].depth;
+        screenInfo->formats[i].bitsPerPixel = formats[i].bitsPerPixel;
+        screenInfo->formats[i].scanlinePad = formats[i].scanlinePad;
     }
-
-    AddScreen(ndxScreenInit, argc, argv);	/* one screen */
-    AddScreen(ndxScreenInit, argc, argv);	/* the other screen */
-}
-
-/* ARGSUSED */
-void
-InitInput(argc, argv)
-    int argc;
-    char *argv[];
-{
-    DevicePtr p, k;
-    
-    p = AddInputDevice(ndxMouseProc, TRUE);
-
-    k = AddInputDevice(ndxKeybdProc, TRUE);
-
-    RegisterPointerDevice(p, MOTION_BUFFER_SIZE);
-    RegisterKeyboardDevice(k);
 }

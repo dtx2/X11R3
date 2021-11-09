@@ -25,7 +25,6 @@ SOFTWARE.
 /* $XConsortium: swapreq.c,v 1.28 88/09/06 15:41:29 jim Exp $ */
 
 #include "X.h"
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "Xprotostr.h"
 #include "misc.h"
@@ -165,20 +164,6 @@ SProcCreateWindow(client)
     swapl(&stuff->mask, n);
     SwapRestL(stuff);
     return((* ProcVector[X_CreateWindow])(client));
-}
-
-int
-SProcChangeWindowAttributes(client)
-    register ClientPtr client;
-{
-    register char n;
-
-    REQUEST(xChangeWindowAttributesReq);
-    swaps(&stuff->length, n);
-    swapl(&stuff->window, n);
-    swapl(&stuff->valueMask, n);
-    SwapRestL(stuff);
-    return((* ProcVector[X_ChangeWindowAttributes])(client));
 }
 
 int
@@ -1032,19 +1017,6 @@ SProcChangePointerControl   (client)
     swaps(&stuff->accelDenum, n);
     swaps(&stuff->threshold, n);
     return((* ProcVector[X_ChangePointerControl])(client));
-}
-
-
-int
-SProcSetScreenSaver            (client)
-    register ClientPtr client;
-{
-    register char n;
-    REQUEST(xSetScreenSaverReq);
-    swaps(&stuff->length, n);
-    swaps(&stuff->timeout, n);
-    swaps(&stuff->interval, n);
-    return((* ProcVector[X_SetScreenSaver])(client));
 }
 
 int

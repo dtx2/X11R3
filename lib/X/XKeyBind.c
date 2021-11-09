@@ -5,7 +5,6 @@
 
 /* Beware, here be monsters (still under construction... - JG */
 
-#define NEED_EVENTS
 #include "Xlib.h"
 #include "Xlibint.h"
 #include "Xutil.h"

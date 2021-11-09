@@ -68,7 +68,6 @@ Display *XOpenDisplay (display)
 	 */
 	if (display == NULL || *display == '\0') {
 		if ((display_name = getenv("DISPLAY")) == NULL) {
-			/* Oops! No DISPLAY environment variable - error. */
 			return(NULL);
 		}
 	}

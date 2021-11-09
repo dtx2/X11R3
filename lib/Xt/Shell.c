@@ -895,12 +895,6 @@ static void _popup_set_prop(w)
 	    XSetClassHint(dpy, win, &classhint);
 	    SetHostName(dpy, win, hostname);
 	}
-
-	if(XtIsSubclass((Widget)w, applicationShellWidgetClass) &&
-		appshell->application.argc != -1) {
-	    XSetCommand(dpy, win, appshell->application.argv,
-		    appshell->application.argc);
-	}
 }
 
 /* ARGSUSED */

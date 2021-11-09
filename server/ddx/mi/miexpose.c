@@ -25,7 +25,6 @@ SOFTWARE.
 /* $XConsortium: miexpose.c,v 1.36 88/10/15 12:18:11 rws Exp $ */
 
 #include "X.h"
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "Xprotostr.h"
 

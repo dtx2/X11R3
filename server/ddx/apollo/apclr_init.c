@@ -62,105 +62,6 @@ extern void     apClrDisplayCursor();
  */
 extern void     apInitCursor();
 
-
-/*
- * apClrScreenClose -- DDX (screen)
- *      Perform color screen-specific closedown.  Free all resources,
- *      and clear the screen (server reset is more obvious if the screen is black).
- */
-static Bool
-apClrScreenClose(index, pScreen)
-    int index;
-    ScreenPtr pScreen;
-{
-    apDisplayDataPtr    pDisp;
-    DepthPtr            pDep;
-    status_$t           status;
-    int                 i;
-
-    pDisp = &apDisplayData[index];
-
-#ifdef COPY_SCREEN
-    Xfree (pDisp->dump_file_pn);
-#endif
-
-    Xfree (pDisp->visuals);
-    pDep = pDisp->depths;
-    for (i=0 ; i < (pScreen->numDepths) ; i++)
-        Xfree (pDep[i].vids);
-    Xfree (pDisp->depths);
-
-    gpr_$set_bitmap (pDisp->display_bitmap, status);
-    gpr_$set_clipping_active (false, status);
-    gpr_$set_plane_mask (0xFFFFFFFF, status);
-    gpr_$clear ((gpr_$pixel_value_t) 0, status);
-    gpr_$enable_direct_access (status);
-
-    return TRUE;
-}
-
-#ifdef COPY_SCREEN
-/*
- * apClrCopyScreen -- Driver internal code
- *      Dump the given screen number's bits to a file.
- */
-static void apClrCopyScreen (numScr)
-    int numScr;
-{
-    apDisplayDataPtr    pDisp;
-    gpr_$bitmap_desc_t  disk_bitmap;
-    gpr_$bitmap_desc_t  saved_bitmap;
-    gpr_$offset_t       size;
-    short               groups;
-    gpr_$version_t      version;
-    Bool                created;
-    gpr_$window_t       src_w;
-    gpr_$position_t     dst_o;
-    status_$t           status;
-    gpr_$bmf_group_header_array_t   g_headers;
-
-    pDisp = &apDisplayData[numScr];
-
-    size.x_size = pDisp->display_char.x_visible_size;
-    size.y_size = pDisp->display_char.y_visible_size;
-
-#undef major
-#undef minor
-    version.major = gpr_$bmf_major_version;
-    version.minor = gpr_$bmf_minor_version;
-
-    groups = 1;
-    g_headers[0].n_sects = pDisp->depth;
-    g_headers[0].pixel_size = 1;
-    g_headers[0].allocated_size = 0;
-    g_headers[0].bytes_per_line = 0;
-    g_headers[0].bytes_per_sect = 0;
-    g_headers[0].storage_offset = 0;
-
-    gpr_$open_bitmap_file (
-                gpr_$update, 
-                *(pDisp->dump_file_pn), (short)pDisp->dump_file_pnl,
-                version, size, groups, g_headers,
-                gpr_$attribute_block (pDisp->display_bitmap, status),
-                disk_bitmap, created, status);
-
-    gpr_$inq_bitmap (saved_bitmap, status);
-    gpr_$set_bitmap (disk_bitmap, status);
-                               
-    src_w.window_base.x_coord = 0;
-    src_w.window_base.y_coord = 0;
-    src_w.window_size = size;
-
-    dst_o.x_coord = 0;
-    dst_o.y_coord = 0;                                 
-
-    gpr_$pixel_blt (pDisp->display_bitmap, src_w, dst_o, status);
-
-    gpr_$set_bitmap (saved_bitmap, status);
-    gpr_$enable_direct_access (status);
-}
-#endif
-
 /*
  * doGPRInit -- Driver internal code
  *      Given a pointer to the display data record, do all the screen
@@ -346,30 +247,20 @@ static void apClrReborrow (numScr)
  *      the entry in the apDisplayData array and the Screen record.
  */
 Bool
-apClrScreenInit(index, pScreen, argc, argv)
-    int index;
-    ScreenPtr pScreen;
-    int argc;           /* these two may NOT be changed */
-    char **argv;
-{
+apClrScreenInit(int index, ScreenPtr pScreen) {
     register PixmapPtr  pPixmap;
     Bool                retval;
     ColormapPtr         pColormap;
     VisualPtr           pVis;
     long               *pVids;
-
     apDisplayDataPtr    pDisp;
-
     int                 dpix, dpiy;
     status_$t           status;
     gpr_$rop_prim_set_t rop_set;
     short               i;
-
     pDisp = &apDisplayData[index];
-
     if (!(pDisp->bitmap_ptr))
         doGPRInit(pDisp);
-
     pDisp->lastGC = NULL;
                                
     /* HACK - setting prim set to ALL three members, fill, blt and line */
@@ -385,7 +276,6 @@ apClrScreenInit(index, pScreen, argc, argv)
                            pDisp->display_char.y_visible_size,
                            dpix, dpiy);
 
-    pScreen->CloseScreen = apClrScreenClose;
     pScreen->QueryBestSize = apcQueryBestSize;
     pScreen->SaveScreen = apSaveScreen;
 

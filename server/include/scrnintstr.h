@@ -157,10 +157,6 @@ typedef struct _Screen {
     void (* RegionEmpty)();        	/* pRegion: RegionPtr */
     BoxPtr (*RegionExtents)(); 		/* pRegion: RegionPtr */
     void (* SendGraphicsExpose)();	/* client, rgn, draw, major, minor */
-
-    /* os layer procedures */
-    void (* BlockHandler)();		/* data: pointer */
-    void (* WakeupHandler)();		/* data: pointer */
     pointer blockData;
     pointer wakeupData;
 } ScreenRec;

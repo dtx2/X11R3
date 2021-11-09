@@ -9,8 +9,6 @@
  *	XEvToWire.c - Internal support routines for the C subroutine
  *	interface library (Xlib) to the X Window System Protocol V11.0.
  */
-#define NEED_EVENTS
-#define NEED_REPLIES
 
 #include "Xlibint.h"
 

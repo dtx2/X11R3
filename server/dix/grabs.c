@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "X.h"
 #include "misc.h"
-#define NEED_EVENTS
 #include "Xproto.h"
 #include "windowstr.h"
 #include "inputstr.h"

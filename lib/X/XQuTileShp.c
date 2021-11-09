@@ -3,7 +3,6 @@
 /* $XConsortium: XQuTileShp.c,v 11.10 88/09/06 16:10:04 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XQueryBestTile(dpy, drawable, width, height, ret_width, ret_height)

@@ -3,7 +3,6 @@
 /* Copyright 	Massachusetts Institute of Technology  1986 */
 /* $XConsortium: XPutBEvent.c,v 11.9 88/09/06 16:09:49 jim Exp $ */
 /* XPutBackEvent puts an event back at the head of the queue. */
-#define NEED_EVENTS
 #include "Xlibint.h"
 
 extern _XQEvent *_qfree;

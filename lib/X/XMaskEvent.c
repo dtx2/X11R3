@@ -2,8 +2,6 @@
 
 /* $XConsortium: XMaskEvent.c,v 11.18 88/09/06 16:11:31 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
-
-#define NEED_EVENTS
 #include "Xlibint.h"
 
 extern _XQEvent *_qfree;

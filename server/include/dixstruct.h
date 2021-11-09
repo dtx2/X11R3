@@ -68,7 +68,6 @@ typedef struct _Client {
 } ClientRec;
 
 extern TimeStamp currentTime;
-extern void CloseDownClient();
 
 extern TimeStamp ClientTimeToServerTime();
 

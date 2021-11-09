@@ -3,7 +3,6 @@
 /* $XConsortium: XGetPCnt.c,v 11.10 88/09/06 16:08:10 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 XGetPointerControl(dpy, accel_numer, accel_denom, threshold)

@@ -215,13 +215,6 @@ as well.  In the case of the C shell, you should say:
 V10, you might want to check any ~/.Xdefaults or ~/.uwmrc files left over from
 V10 to be sure you are not trying to use non-existent fonts.
 
-    In order to establish a connection from a remote client, the name of the
-host running the client program must exist as an entry in the server's file
-'/etc/X0.hosts'; this is the list of "trusted" hosts.  This pathname is
-constructed in 'server/os/4.2bsd/access.c', routine ResetHosts.  The 'xhost'
-client program will also add a host to the list of trusted hosts, until the
-server resets itself.
-
     If you have the unofficial UDS support code (the uds type manager), a client
 can use it to establish a connection to the local server via use of the display
 named "unix:0".

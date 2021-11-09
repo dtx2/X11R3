@@ -1,6 +1,7 @@
 /***********************************************************
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
 and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+Copyright 2021 Edward Halferty
 
                         All Rights Reserved
 
@@ -30,7 +31,6 @@ SOFTWARE.
 #include <errno.h>
 
 #include "X.h"
-#define  NEED_EVENTS
 #include "Xproto.h"
 #include "scrnintstr.h"
 #include "cursorstr.h"
@@ -42,9 +42,7 @@ SOFTWARE.
 #include "resource.h"
 #include "colormap.h"
 #include "colormapst.h"
-
 #include "mi.h"
-
 #include "servermd.h"		/* For PixmapBytePad */
 
 #define	MFB_SCREEN	0
@@ -61,157 +59,85 @@ int  ndxGetMotionEvents();
 void ndxChangePointerControl(), ndxChangeKeyboardControl(), ndxBell();
 
 extern int errno;
-
-static int		qLimit;
-static int		lastEventTime;
-static DevicePtr	ndxKeyboard;
-static DevicePtr	ndxPointer;
+static int qLimit;
+static int lastEventTime;
+static DevicePtr ndxKeyboard;
+static DevicePtr ndxPointer;
 
 int	bitsPerPixel[] = { 1, 8 };	/* depends on {MFB,CFB}_SCREEN */
-int     bitsPerPad[] = { 32, 32 };
-int     log2ofBitsPerPad[] = { 5, 5 };
-int     depth[] = { 1, 8 };
+int bitsPerPad[] = { 32, 32 };
+int log2ofBitsPerPad[] = { 5, 5 };
+int depth[] = { 1, 8 };
 
-static Bool
-TrueDDA()
-{
+static Bool TrueDDA() {
     return(TRUE);
 }
-
-/* ARGSUSED */
-static Bool
-ndxSaveScreen(pScreen, on)
-    ScreenPtr pScreen;
-    int on;
-{
-    if (on == SCREEN_SAVER_FORCER)
-    {
-        lastEventTime = GetTimeInMillis();	
-	return TRUE;	/* pretend it's saved */
-    }
-    else
-        return FALSE;	/* ok, so it's not saved */
+static Bool ndxSaveScreen(ScreenPtr pScreen, int on) {
+    if (on == SCREEN_SAVER_FORCER) {
+        lastEventTime = GetTimeInMillis();
+	    return TRUE; // pretend it's saved
+    } else { return FALSE; } // ok, so it's not saved
 }
-
-static void
-ndCfbQueryBestSize(class, pwidth, pheight)
-int class;
-short *pwidth;
-short *pheight;
-{
+static void ndCfbQueryBestSize(int class, short *pwidth, short *pheight) {
     unsigned width, test;
-
-    switch(class)
-    {
+    switch(class) { // LOL what the hell is the point of this switch?
       case CursorShape:
       case TileShape:
       case StippleShape:
-	  width = *pwidth;
-	  if (width != 0) {
-	      /* Return the closest power of two not less than width */
-	      test = 0x80000000;
-	      /* Find the highest 1 bit in the width given */
-	      while(!(test & width))
-	         test >>= 1;
-	      /* If their number is greater than that, bump up to the next
-	       *  power of two */
-	      if((test - 1) & width)
-	         test <<= 1;
-	      *pwidth = test;
-	  }
-	  /* We don't care what height they use */
-	  break;
+          width = *pwidth;
+          if (width != 0) {
+              // Return the closest power of two not less than width
+              test = 0x80000000;
+              // Find the highest 1 bit in the width given
+              while(!(test & width)) { test >>= 1; }
+              //If their number is greater than that, bump up to the next power of two
+              if((test - 1) & width) { test <<= 1; }
+              *pwidth = test;
+          }
+          // We don't care what height they use
+          break;
     }
 }
-
-void
-ndMfbResolveColor(pRed, pGreen, pBlue, pVisual)
-    CARD16	*pRed, *pGreen, *pBlue;
-    VisualPtr	pVisual;
-{
+void ndMfbResolveColor(CARD16 *pRed, CARD16 *pGreen, CARD16 *pBlue, VisualPtr pVisual) {
     *pRed = *pGreen = *pBlue =
 	(((39L * *pRed + 50L * *pGreen +
 	11L * *pBlue) >> 8) >= (((1<<8)-1)*50)) ? ~0 : 0;
 }
-
-/*
- * ndx cursor top-left corner cannot go to negative coordinates
- */
-/* ARGSUSED */static void
-ndxCursorLimits( pScr, pCurs, pHotBox, pPhysBox)
-    ScreenPtr	pScr;
-    CursorPtr	pCurs;
-    BoxPtr	pHotBox;
-    BoxPtr	pPhysBox;	/* return value */
-{
+// ndx cursor top-left corner cannot go to negative coordinates. return value in pPhysBox
+static void ndxCursorLimits(ScreenPtr pScr, CursorPtr pCurs, BoxPtr pHotBox, BoxPtr pPhysBox) {
     pPhysBox->x1 = max( pHotBox->x1, pCurs->xhot);
     pPhysBox->y1 = max( pHotBox->y1, pCurs->yhot);
     pPhysBox->x2 = min( pHotBox->x2, 1024);
     pPhysBox->y2 = min( pHotBox->y2, 864);
 }
-
-void
-ndMfbCreateColormap(pmap)
-    ColormapPtr	pmap;
-{
+void ndMfbCreateColormap(ColormapPtr pmap) {
     int	red, green, blue, pix;
-
-    /* this is a monochrome colormap, it only has two entries, just fill
-     * them in by hand.  If it were a more complex static map, it would be
-     * worth writing a for loop or three to initialize it */
+    // this is a monochrome colormap, it only has two entries, just fill them in by hand.
+    // If it were a more complex static map, it would be worth writing a for loop or three to initialize it
     pix = 0;
     red = green = blue = 0;
     AllocColor(pmap, &red, &green, &blue, &pix, 0);
     pix = 0;
     red = green = blue = ~0;
     AllocColor(pmap, &red, &green, &blue, &pix, 0);
-
 }
-
-/* ARGSUSED */
-void
-ndxDestroyColormap(pmap)
-    ColormapPtr	pmap;
-{
-}
-
-/* ARGSUSED */
-static Bool
-ndxScreenClose(index, pScreen)
-    int index;
-    ScreenPtr pScreen;
-{
+void ndxDestroyColormap(ColormapPtr	pmap) {}
+static Bool ndxScreenClose(int index, ScreenPtr pScreen) {
     if (index == MFB_SCREEN)
 	mfbScreenClose(pScreen);
-    /* sloppy:  no close for cfb */
-
+    // TODO: sloppy:  no close for cfb
     return (TRUE);
 }
-
-/* PADBITS - pad a number of bits to so many bits of padding and return    *
- * the number of padding units required for this many padded bits of data. */
+// pad a number of bits to N bits and return the number of padding units required
 #define PADBITS(nbits,bitsInPad,log2pad) \
   (((nbits) + (bitsInPad) - 1)>>(log2pad))
-
-Bool
-ndxScreenInit(index, pScreen, argc, argv)
-    int index;
-    ScreenPtr pScreen;
-    int argc;		/* these two may NOT be changed */
-    char **argv;
-{
-    int		retval;
+Bool ndxScreenInit(int index, ScreenPtr pScreen) {
+    int retval, i;
+    char *blackValue, *whiteValue, *bitmap;
     ColormapPtr	pColormap;
-    int		i;
-    char	*blackValue, *whiteValue;
-    char	*bitmap;
-    
     bitmap = (char *)xalloc( PixmapBytePad(1024, depth[index]) * 864 );
-    if (index == MFB_SCREEN)
-	retval = mfbScreenInit(index, pScreen, bitmap, 1024, 864, 80, 80);
-    else	/* index assumed to be CFB_SCREEN */
-	retval = cfbScreenInit(index, pScreen, bitmap, 1024, 864, 80, 80);
-    
+    if (index == MFB_SCREEN) { retval = mfbScreenInit(index, pScreen, bitmap, 1024, 864, 80, 80); }
+    else { retval = cfbScreenInit(index, pScreen, bitmap, 1024, 864, 80, 80); }	/* index assumed to be CFB_SCREEN */
     pScreen->CloseScreen =		ndxScreenClose;
     if (index == MFB_SCREEN)
 	pScreen->QueryBestSize =	mfbQueryBestSize;
@@ -249,95 +175,63 @@ ndxScreenInit(index, pScreen, argc, argv)
       pScreen->StoreColors =		NoopDDA;
       pScreen->ResolveColor =		cfbResolveStaticColor;
     }
-    /* Region Routines... */
-    /* Block/Wakeup Routines and Data... */
-
-    CreateColormap(pScreen->defColormap, pScreen,
-                   LookupID(pScreen->rootVisual, RT_VISUALID, RC_CORE),
-                   &pColormap, AllocNone, 0);
+    // Region Routines...
+    // Block/Wakeup Routines and Data...
+    CreateColormap(pScreen->defColormap, pScreen, LookupID(pScreen->rootVisual, RT_VISUALID, RC_CORE), &pColormap, AllocNone, 0);
     if (index == MFB_SCREEN) {
     	pScreen->blackPixel = 0;
     	pScreen->whitePixel = 1;
     	mfbInstallColormap(pColormap);
-    } else {	/* CFB_SCREEN */
-	pScreen->blackPixel = 0;
-	pScreen->whitePixel = ~0;
-	cfbInstallColormap(pColormap);
+    } else { // CFB_SCREEN
+        pScreen->blackPixel = 0;
+        pScreen->whitePixel = ~0;
+        cfbInstallColormap(pColormap);
     }
-
     return(retval);
 }
-
-/* ARGSUSED */
-int
-ndxMouseProc(pDev, onoff, argc, argv)
-    DevicePtr pDev;
-    int onoff, argc;
-    char *argv[];
-{
+int ndxMouseProc(DevicePtr pDev, int onoff) {
     BYTE map[4];
-
-    switch (onoff)
-    {
-	case DEVICE_INIT: 
-	    break;
-	case DEVICE_ON: 
-	    pDev->on = TRUE;
-	    break;
-	case DEVICE_OFF: 
-	    pDev->on = FALSE;
-/*	RemoveEnabledDevice(fdndx);   */
-	    break;
-	case DEVICE_CLOSE: 
-	    break;
+    switch (onoff) {
+        case DEVICE_INIT:
+            break;
+        case DEVICE_ON:
+            pDev->on = TRUE;
+            break;
+        case DEVICE_OFF:
+            pDev->on = FALSE;
+            break;
+        case DEVICE_CLOSE:
+            break;
     }
     return Success;
-
 }
-
-/* ARGSUSED */
-int
-ndxKeybdProc(pDev, onoff, argc, argv)
-    DevicePtr pDev;
-    int onoff, argc;
-    char *argv[];
-{
+int ndxKeybdProc(DevicePtr pDev, int onoff) {
     KeySymsRec keySyms;
     CARD8 modMap[MAP_LENGTH];
     int	i;
-
-    switch (onoff)
-    {
-	case DEVICE_INIT: 
-	    ndxKeyboard = pDev;
-	    keySyms.minKeyCode = 0;
-	    keySyms.maxKeyCode = 0;
-	    keySyms.mapWidth = 0;
-	    for (i=0; i<MAP_LENGTH; i++)
-		modMap[i] = NoSymbol;
-	    InitKeyboardDeviceStruct(
-		    ndxKeyboard, &keySyms, modMap, ndxBell,
-		    ndxChangeKeyboardControl);
-	    break;
-	case DEVICE_ON: 
-	    pDev->on = TRUE;
-	    break;
-	case DEVICE_OFF: 
-	    pDev->on = FALSE;
-	    break;
-	case DEVICE_CLOSE: 
-	    break;
+    switch (onoff) {
+        case DEVICE_INIT:
+            ndxKeyboard = pDev;
+            keySyms.minKeyCode = 0;
+            keySyms.maxKeyCode = 0;
+            keySyms.mapWidth = 0;
+            for (i=0; i<MAP_LENGTH; i++)
+            modMap[i] = NoSymbol;
+            InitKeyboardDeviceStruct(
+                ndxKeyboard, &keySyms, modMap, ndxBell,
+                ndxChangeKeyboardControl);
+            break;
+        case DEVICE_ON:
+            pDev->on = TRUE;
+            break;
+        case DEVICE_OFF:
+            pDev->on = FALSE;
+            break;
+        case DEVICE_CLOSE:
+            break;
     }
     return Success;
 }
-
-
-/*****************
- * ProcessInputEvents:
- *    processes all the pending input events
- *****************/
-
-extern int screenIsSaved;
 
 void
 ProcessInputEvents()
@@ -346,166 +240,62 @@ ProcessInputEvents()
     int     nowInCentiSecs, nowInMilliSecs, adjustCentiSecs;
     struct timeval  tp;
     int     needTime = 1;
-
-    if (screenIsSaved == SCREEN_SAVER_ON)
-	SaveScreens(SCREEN_SAVER_OFF, ScreenSaverReset);
 }
-
-TimeSinceLastInputEvent()
-{
+TimeSinceLastInputEvent() {
     if (lastEventTime == 0)
 	lastEventTime = GetTimeInMillis();
     return GetTimeInMillis() - lastEventTime;
 }
-
-/*
- * DDX - specific abort routine.  Called by AbortServer().
- */
-void
-AbortDDX()
-{
-}
-
-
-/* Called by GiveUp(). */
-void
-ddxGiveUp()
-{
-}
-
-int
-ddxProcessArgument (argc, argv, i)
-    int	argc;
-    char *argv[];
-    int	i;
-{
-    return 0;
-}
-
-void
-ddxUseMsg()
-{
-}
-
-/* ARGSUSED */
-static void
-ndxBell(loud, pDevice)
-    int loud;
-    DevicePtr pDevice;
-{
-	/* sorry, "null-devices" don't ding either. */
-}
-
-/* ARGSUSED */
-static void
-ndxChangeKeyboardControl(pDevice, ctrl)
-    DevicePtr pDevice;
-    KeybdCtrl *ctrl;
-{
-	/* nope */
-}
-
-/* ARGSUSED */
-static void
-ndxChangePointerControl(pDevice, ctrl)
-    DevicePtr pDevice;
-    PtrCtrl   *ctrl;
-{
-	/* nope */
-}
-
-/* ARGSUSED */
-static int
-ndxGetMotionEvents(buff, start, stop)
-    CARD32 start, stop;
-    xTimecoord *buff;
-{
-    return 0;
-}
-
-/* don't try changing modifier keys. */
-Bool
-LegalModifier(key)
-    unsigned char	key;
-{
-	return( FALSE );
-}
-
+// DDX - specific abort routine.  Called by AbortServer().
+void AbortDDX() {}
+// Called by GiveUp().
+void ddxGiveUp() {}
+void ddxUseMsg() {}
+static void ndxBell(int loud, DevicePtr pDevice) {} // sorry, "null-devices" don't ding either.
+static void ndxChangeKeyboardControl(DevicePtr pDevice, KeybdCtrl *ctrl) {}
+static void ndxChangePointerControl(DevicePtr pDevice, PtrCtrl *ctrl) {}
+static int ndxGetMotionEvents(xTimecoord *buff, CARD32 start, CARD32 stop) { return 0; }
+Bool LegalModifier(unsigned char key) { return( FALSE ); }
 static ColormapPtr InstalledMaps[MAXSCREENS];
-
-int
-cfbListInstalledColormaps(pScreen, pmaps)
-    ScreenPtr	pScreen;
-    Colormap	*pmaps;
-{
-    /* By the time we are processing requests, we can guarantee that there
-     * is always a colormap installed */
+int cfbListInstalledColormaps(ScreenPtr pScreen, Colormap *pmaps) {
+    // By the time we are processing requests, we can guarantee that there is always a colormap installed
     *pmaps = InstalledMaps[pScreen->myNum]->mid;
     return (1);
 }
-
-
-void
-cfbInstallColormap(pmap)
-    ColormapPtr	pmap;
-{
+void cfbInstallColormap(ColormapPtr pmap) {
     int index = pmap->pScreen->myNum;
     ColormapPtr oldpmap = InstalledMaps[index];
-
-    if(pmap != oldpmap)
-    {
-	/* Uninstall pInstalledMap. No hardware changes required, just
-	 * notify all interested parties. */
-	if(oldpmap != (ColormapPtr)None)
-	    WalkTree(pmap->pScreen, TellLostMap, (char *)&oldpmap->mid);
-	/* Install pmap */
-	InstalledMaps[index] = pmap;
-	WalkTree(pmap->pScreen, TellGainedMap, (char *)&pmap->mid);
-
+    if(pmap != oldpmap) {
+        // Uninstall pInstalledMap. No hardware changes required, just notify all interested parties.
+        if(oldpmap != (ColormapPtr)None) { WalkTree(pmap->pScreen, TellLostMap, (char *)&oldpmap->mid); }
+        // Install pmap
+        InstalledMaps[index] = pmap;
+        WalkTree(pmap->pScreen, TellGainedMap, (char *)&pmap->mid);
     }
 }
-
-void
-cfbUninstallColormap(pmap)
-    ColormapPtr	pmap;
-{
+void cfbUninstallColormap(ColormapPtr pmap) {
     int index = pmap->pScreen->myNum;
     ColormapPtr curpmap = InstalledMaps[index];
-
-    if(pmap == curpmap)
-    {
-        /* Uninstall pmap */
-	WalkTree(pmap->pScreen, TellLostMap, (char *)&pmap->mid);
-	curpmap = (ColormapPtr) LookupID(pmap->pScreen->defColormap,
-					 RT_COLORMAP, RC_CORE);
-	/* Install default map */
-	InstalledMaps[index] = curpmap;
-	WalkTree(pmap->pScreen, TellGainedMap, (char *)&curpmap->mid);
+    if(pmap == curpmap) {
+        // Uninstall pmap
+        WalkTree(pmap->pScreen, TellLostMap, (char *)&pmap->mid);
+        curpmap = (ColormapPtr) LookupID(pmap->pScreen->defColormap, RT_COLORMAP, RC_CORE);
+        // Install default map
+        InstalledMaps[index] = curpmap;
+        WalkTree(pmap->pScreen, TellGainedMap, (char *)&curpmap->mid);
     }
-	
 }
-
-void
-cfbResolveStaticColor(pred, pgreen, pblue, pVisual)
-    unsigned short	*pred, *pgreen, *pblue;
-    VisualPtr		pVisual;
-{
+void cfbResolveStaticColor(unsigned short *pred, unsigned short *pgreen, unsigned short *pblue, VisualPtr pVisual) {
     *pred &= 0xe000;
     *pgreen &= 0xe000;
     *pblue &= 0xc000;
 }
-
-void
-cfbInitialize332Colormap(pmap)
-    ColormapPtr	pmap;
-{
+void cfbInitialize332Colormap(ColormapPtr pmap) {
     int	i;
-
-    for(i = 0; i < pmap->pVisual->ColormapEntries; i++)
-    {
-	/* XXX - assume 256 for now */
-	pmap->red[i].co.local.red = (i & 0x7) << 13;
-	pmap->red[i].co.local.green = (i & 0x38) << 10;
-	pmap->red[i].co.local.blue = (i & 0xc0) << 8;
+    for (i = 0; i < pmap->pVisual->ColormapEntries; i++) {
+        // assume 256 for now
+        pmap->red[i].co.local.red = (i & 0x7) << 13;
+        pmap->red[i].co.local.green = (i & 0x38) << 10;
+        pmap->red[i].co.local.blue = (i & 0xc0) << 8;
     }
 }

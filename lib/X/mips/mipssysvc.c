@@ -12,13 +12,6 @@
  * without express or implied warranty.
  */
 
-/* $XConsortium: mipssysvc.c,v 1.3 88/09/06 16:06:41 jim Exp $ */
-
-#ifndef lint
-static char *sccsid = "@(#)mips_vfork.c	1.11	3/02/88";
-#endif lint
-
-#include <errno.h>
 #include <limits.h>
 #include <signal.h>
 #include <sys/types.h>

@@ -2,7 +2,6 @@
 
 /* $XConsortium: XChkWinEv.c,v 11.15 88/09/06 16:04:41 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985, 1987	*/
-#define NEED_EVENTS
 #include "Xlibint.h"
 
 extern _XQEvent *_qfree;

@@ -620,9 +620,6 @@ The following changes have been made to this directory since R2:
      o  huge input buffers are periodically shrunk.
      o  font names and color names are now case insensative; lowercasing for
 	ISO Latin 1 names is done properly.
-     o  new routines ddxProcessArguments and ddxUseMsg are called to give the
-	individual ddx libraries a chance to parse command line arguments and
-	print usage messages.
 
 ===========================================================
 ./server/os/bsdemul/CHANGES
@@ -909,7 +906,6 @@ request must be sent to the client before any reply or error is sent.
 The following changes have been made to this directory since R2:
 
      o  CloseDownWellKnownSockets() added
-     o  ddxProcessArgument() and ddxUseMsg() added
      o  AbortDDX() and ddxGiveUp() added
      o  FlushAllOutput(), FlushIfCriticalOutputPending(), and
         SetCriticalOutputPending() added

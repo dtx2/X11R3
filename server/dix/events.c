@@ -28,8 +28,6 @@ SOFTWARE.
 #include "X.h"
 #include "misc.h"
 #include "resource.h"
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include "Xproto.h"
 #include "windowstr.h"
 #include "inputstr.h"
@@ -1046,68 +1044,25 @@ XYToWindow(x, y)
     }
     return spriteTrace[spriteTraceGood-1];
 }
-
-static WindowPtr 
-CheckMotion(x, y, ignoreCache)
-    int x, y;
-    Bool ignoreCache;
-{
+static WindowPtr CheckMotion(int x, int y, Bool ignoreCache) {
     WindowPtr prevSpriteWin = sprite.win;
-
-    if ((x != sprite.hot.x) || (y != sprite.hot.y))
-    {
-	sprite.win = XYToWindow(x, y);
-	sprite.hot.x = x;
-	sprite.hot.y = y;
-/* XXX Do PointerNonInterestBox here */
-/*
-	if (!(sprite.win->deliverableEvents & Motion_Filter(keyButtonState)))
-        {
-	    
-	}
-*/
+    if ((x != sprite.hot.x) || (y != sprite.hot.y)) {
+        sprite.win = XYToWindow(x, y);
+        sprite.hot.x = x;
+        sprite.hot.y = y;
+    } else if ((ignoreCache) || (!sprite.win)) {
+        sprite.win = XYToWindow(x, y);
     }
-    else
-    {
-	if ((ignoreCache) || (!sprite.win))
-	    sprite.win = XYToWindow(x, y);
-    }
-    if (sprite.win != prevSpriteWin)
-    {
-	if (prevSpriteWin != NullWindow)
-	    DoEnterLeaveEvents(prevSpriteWin, sprite.win, NotifyNormal);
-	PostNewCursor();
+    if (sprite.win != prevSpriteWin) {
+        if (prevSpriteWin != NullWindow) { DoEnterLeaveEvents(prevSpriteWin, sprite.win, NotifyNormal); }
+        PostNewCursor();
         return NullWindow;
     }
     return sprite.win;
 }
-
-WindowsRestructured()
-{
+void WindowsRestructured() {
     (void) CheckMotion(sprite.hot.x, sprite.hot.y, TRUE);
 }
-
-void
-DefineInitialRootWindow(win)
-    WindowPtr win;
-{
-    register CursorPtr c = win->cursor;
-
-    sprite.hot.x = currentScreen->width / 2;
-    sprite.hot.y = currentScreen->height / 2;
-    sprite.win = win;
-    sprite.current = c;
-    spriteTraceGood = 1;
-    ROOT = win;
-    (*currentScreen->CursorLimits) (
-	currentScreen, win->cursor, &sprite.hotLimits, &sprite.physLimits);
-    (*currentScreen->ConstrainCursor) (
-	currentScreen, &sprite.physLimits);
-    (*currentScreen->SetCursorPosition) (
-	currentScreen, sprite.hot.x, sprite.hot.y, FALSE);
-    (*currentScreen->DisplayCursor) (currentScreen, c);
-}
-
 /*
  * This does not take any shortcuts, and even ignores its argument, since
  * it does not happen very often, and one has to walk up the tree since
@@ -2386,167 +2341,14 @@ SetKeyboardStateMasks(keybd)
     for (i = 8; i < MAP_LENGTH; i++)
 	keyModifiersList[i] = (CARD16) keybd->u.keybd.modifierMap[i];
 }
-
-DevicePtr
-AddInputDevice(deviceProc, autoStart)
-    DeviceProc deviceProc;
-    Bool autoStart;
-{
-    DeviceIntPtr d;
-    if (inputInfo.numDevices == inputInfo.arraySize)
-    {
-	inputInfo.arraySize += 5;
-	inputInfo.devices = (DeviceIntPtr *)xrealloc(
-				inputInfo.devices,
-				inputInfo.arraySize * sizeof(DeviceIntPtr));
-    }
-    d = (DeviceIntPtr) xalloc(sizeof(DeviceIntRec));
-    inputInfo.devices[inputInfo.numDevices++] = d;
-    d->public.on = FALSE;
-    d->public.processInputProc = NoopDDA;
-    d->deviceProc = deviceProc;
-    d->startup = autoStart;
-    d->sync.frozen = FALSE;
-    d->sync.other = NullGrab;
-    d->sync.state = NOT_GRABBED;
-    d->grab = NullGrab;
-    bzero((char *)d->down, sizeof(d->down));
-    return &d->public;
-}
-
-DevicesDescriptor
-GetInputDevices()
-{
+DevicesDescriptor GetInputDevices() {
     DevicesDescriptor devs;
     devs.count = inputInfo.numDevices;
     devs.devices = (DevicePtr *)inputInfo.devices;
     return devs;
 }
-
-void
-InitEvents()
-{
-    curKeySyms.map = (KeySym *)NULL;
-    curKeySyms.minKeyCode = 0;
-    curKeySyms.maxKeyCode = 0;
-    curKeySyms.mapWidth = 0;
-
-    currentScreen = &screenInfo.screen[0];
-    inputInfo.numDevices = 0;
-    if (spriteTraceSize == 0)
-    {
-	spriteTraceSize = 20;
-	spriteTrace = (WindowPtr *)xalloc(20*sizeof(WindowPtr));
-    }
-    spriteTraceGood = 0;
-    if (focusTraceSize == 0)
-    {
-	focusTraceSize = 20;
-	focusTrace = (WindowPtr *)xalloc(20*sizeof(WindowPtr));
-    }
-    focusTraceGood = 0;
-    lastEventMask = OwnerGrabButtonMask;
-    sprite.win = NullWindow;
-    sprite.current = NullCursor;
-    sprite.hotLimits.x1 = 0;
-    sprite.hotLimits.y1 = 0;
-    sprite.hotLimits.x2 = currentScreen->width;
-    sprite.hotLimits.y2 = currentScreen->height;
-    motionHintWindow = NullWindow;
-    syncEvents.replayDev = (DeviceIntPtr)NULL;
-    syncEvents.pending.forw = &syncEvents.pending;
-    syncEvents.pending.back = &syncEvents.pending;
-    syncEvents.free.forw = &syncEvents.free;
-    syncEvents.free.back = &syncEvents.free;
-    syncEvents.num = 0;
-    syncEvents.playingEvents = FALSE;
-    currentTime.months = 0;
-    currentTime.milliseconds = GetTimeInMillis();
-}
-
-int
-InitAndStartDevices(argc, argv)
-    int argc;
-    char *argv[];
-{
-    int     i;
-    DeviceIntPtr d;
-
-    for (i=0; i<8; i++)
-        modifierKeyCount[i] = 0;
-
-    keyButtonState = 0;
-    buttonsDown = 0;
-    buttonMotionMask = 0;
-        
-    for (i = 0; i < inputInfo.numDevices; i++)
-    {
-	d = inputInfo.devices[i];
-	if ((*d->deviceProc) (d, DEVICE_INIT, argc, argv) == Success)
-	    d->inited = TRUE;
-	else
-	    d->inited = FALSE;
-    }
- /* do not turn any devices on until all have been inited */
-    for (i = 0; i < inputInfo.numDevices; i++)
-    {
-	d = inputInfo.devices[i];
-	if ((d->startup) && (d->inited))
-	    (*d->deviceProc) (d, DEVICE_ON, argc, argv);
-    }
-    if (inputInfo.pointer && inputInfo.pointer->inited &&
-	    inputInfo.keyboard && inputInfo.keyboard->inited)
-	return Success;
-    return BadImplementation;
-}
-
-void
-CloseDownDevices(argc, argv)
-    int argc;
-    char *argv[];
-{
-    int     		i;
-    DeviceIntPtr	d;
-
-    xfree(curKeySyms.map);
-    curKeySyms.map = (KeySym *)NULL;
-
-    for (i = inputInfo.numDevices - 1; i >= 0; i--)
-    {
-	d = inputInfo.devices[i];
-	if (d->inited)
-	    (*d->deviceProc) (d, DEVICE_CLOSE, argc, argv);
-	inputInfo.numDevices = i;
-	xfree(d);
-    }
-   
-    /* The array inputInfo.devices doesn't need to be freed here since it
-	will be reused when AddInputDevice is called when the server 
-	resets again.*/
-}
-
-int
-NumMotionEvents()
-{
+int NumMotionEvents() {
     return inputInfo.numMotionEvents;
-}
-
-void
-RegisterPointerDevice(device, numMotionEvents)
-    DevicePtr device;
-    int numMotionEvents;
-{
-    inputInfo.pointer = (DeviceIntPtr)device;
-    inputInfo.numMotionEvents = numMotionEvents;
-    device->processInputProc = ProcessPointerEvent;
-}
-
-void
-RegisterKeyboardDevice(device)
-    DevicePtr device;
-{
-    inputInfo.keyboard = (DeviceIntPtr)device;
-    device->processInputProc = ProcessKeyboardEvent;
 }
 
 void
@@ -2788,30 +2590,6 @@ LookupPointerDevice()
     return &inputInfo.pointer->public;
 }
 
-
-static int
-SendMappingNotify(request, firstKeyCode, count)
-    CARD8 request, count;
-    KeyCode firstKeyCode;
-{
-    int i;
-    xEvent event;
-
-    event.u.u.type = MappingNotify;
-    event.u.mappingNotify.request = request;
-    if (request == MappingKeyboard)
-    {
-        event.u.mappingNotify.firstKeyCode = firstKeyCode;
-        event.u.mappingNotify.count = count;
-    }
-    /* 0 is the server client */
-    for (i=1; i<currentMaxClients; i++)
-        if (clients[i] && ! clients[i]->clientGone)
-	{
-	    event.u.u.sequenceNumber = clients[i]->sequence;
-            WriteEventsToClient(clients[i], 1, &event);
-	}
-}
 
 /*
  * n-sqared algorithm. n < 255 and don't want to copy the whole thing and

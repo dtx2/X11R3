@@ -589,7 +589,6 @@ apK2HandleKey (xEp)
 
                 pPrivP = (apPrivPointrPtr) apPointer->devicePrivate;
                 pDisp = &apDisplayData[pPrivP->numCurScreen];
-                KillServerResources();
                 (*pDisp->apTerminate)(pDisp);
                 exit();
             }

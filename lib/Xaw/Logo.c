@@ -126,10 +126,6 @@ static void Redisplay (gw, event, region)
     XEvent *event;		/* unused */
     Region region;		/* unused */
 {
-    LogoWidget w = (LogoWidget) gw;
-
-    XDrawLogo(XtDisplay(w), XtWindow(w), w->logo.foreGC, w->logo.backGC,
-	      0, 0, (unsigned int)w->core.width, (unsigned int)w->core.height);
 }
 
 /* ARGSUSED */

@@ -3,7 +3,6 @@
 /* $XConsortium: XQuColor.c,v 11.16 88/09/06 16:09:52 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 XQueryColor(dpy, cmap, def)

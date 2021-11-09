@@ -103,124 +103,44 @@ ComputeAbbrevLen(string, name, len)
 }
 
 
-Display *XtOpenDisplay(app, displayName, applName, className,
-		urlist, num_urs, argc, argv)
-	XtAppContext app;
-	String displayName, applName, className;
-	XrmOptionDescRec *urlist;
-	Cardinal num_urs;
-	Cardinal *argc;
-	char *argv[];
-{
+Display *XtOpenDisplay(XtAppContext app, String displayName, String applName, String className, XrmOptionDescRec *urlist, Cardinalnum_urs) {
 	char  displayCopy[256];
 	int i;
 	char *ptr, *rindex(), *index(), *strncpy();
 	Display *d;
-#ifdef OLDCOLONDISPLAY
-	int squish = -1;
-	Boolean found_display = FALSE;
-#endif
 	int min_display_len = 0;
 	int min_name_len = 0;
-
-	if (applName == NULL) {
-	    ptr = rindex(argv[0], '/');
-	    if (ptr) applName = ++ptr;
-	    else applName = argv[0];
-	}
-
-	/*
-	   Find the display name and open it
-	   While we are at it we look for name because that is needed 
-	   soon after to do the argument parsing.
-	 */
-
+	// Find the display name and open it. While we are at it we look for name because that is needed
+    // soon after to do the argument parsing.
 	displayCopy[0] = 0;
-
 	for (i = 0; i < num_urs; i++) {
 	    ComputeAbbrevLen(urlist[i].option, "-display", &min_display_len);
 	    ComputeAbbrevLen(urlist[i].option, "-name",    &min_name_len);
 	}
-
-	for(i = 1; i < *argc; i++) {
-	    int len = strlen(argv[i]);
-#ifdef OLDCOLONDISPLAY
-	    if (!found_display && index(argv[i], ':') != NULL) {
-		(void) strncpy(displayCopy, argv[i], sizeof(displayCopy));
-		squish = i;
-		continue;
-	    }
-#endif
-	    if(len > min_display_len && !strncmp("-display", argv[i], len)) {
-		i++;
-		if (i == *argc) break;
-		(void) strncpy(displayCopy, argv[i], sizeof(displayCopy));
-#ifdef OLDCOLONDISPLAY
-		found_display = TRUE;
-#endif
-		continue;
-	    }
-	    if(len > min_name_len && !strncmp("-name", argv[i], len)) {
-		i++;
-		if (i == *argc) break;
-		applName = argv[i];
-		continue;
-	    }
-	}
-
-#ifdef OLDCOLONDISPLAY
-	if(!found_display && squish != -1) {
-	    (*argc)--;
-	    for(i = squish; i < *argc; i++) {
-		argv[i] = argv[i+1];
-	    }
-	}
-#endif
-
 	if (displayName == NULL) displayName = displayCopy;
-	
 	d = XOpenDisplay(displayName);
-
 	if (d != NULL) {
-	    XtDisplayInitialize(app, d, applName, className,
-		    urlist, num_urs, argc, argv);
+	    XtDisplayInitialize(app, d, applName, className, urlist, num_urs);
 	}
 	return d;
 }
-
-void XtDisplayInitialize(app, dpy, name, classname, 
-		urlist, num_urs, argc, argv)
-	XtAppContext app;
-	Display *dpy;
-	String name, classname;
-	XrmOptionDescRec *urlist;
-	Cardinal num_urs;
-	Cardinal *argc;
-	char *argv[];
-{
+void XtDisplayInitialize(XtAppContext app, Display *dpy, String name, String classname, XrmOptionDescRec *urlist, Cardinal num_urs) {
 	XtPerDisplay pd, NewPerDisplay();
-
 	if (app == NULL) app = _XtDefaultAppContext();
 	XtAddToAppContext(dpy, app);
-
 	pd = NewPerDisplay(dpy);
 	pd->region = XCreateRegion();
-        pd->defaultCaseConverter = _XtConvertCase;
-        pd->defaultKeycodeTranslator = XtTranslateKey;
-        pd->keysyms = NULL;
-        pd ->modsToKeysyms = NULL;
+    pd->defaultCaseConverter = _XtConvertCase;
+    pd->defaultKeycodeTranslator = XtTranslateKey;
+    pd->keysyms = NULL;
+    pd ->modsToKeysyms = NULL;
 	pd->appContext = app;
 	pd->name = XrmStringToName(name);
 	pd->class = XrmStringToClass(classname);
-
-	_XtDisplayInitialize(dpy, app, name, classname, urlist, 
-		num_urs, argc, argv);
+	_XtDisplayInitialize(dpy, app, name, classname, urlist, num_urs);
 }
-
-XtAppContext XtCreateApplicationContext()
-{
+XtAppContext XtCreateApplicationContext() {
 	XtAppContext app = XtNew(XtAppStruct);
-
 	app->process = _XtGetProcessContext();
 	app->next = app->process->appContextList;
 	app->process->appContextList = app;
@@ -230,9 +150,7 @@ XtAppContext XtCreateApplicationContext()
 	app->workQueue = NULL;
 	app->outstandingQueue = NULL;
 	app->errorDB = NULL;
-	_XtSetDefaultErrorHandlers(&app->errorMsgHandler, 
-		&app->warningMsgHandler, &app->errorHandler, 
-		&app->warningHandler);
+	_XtSetDefaultErrorHandlers(&app->errorMsgHandler, &app->warningMsgHandler, &app->errorHandler, &app->warningHandler);
 	app->action_table = NULL;
 	_XtSetDefaultSelectionTimeout(&app->selectionTimeout);
 	_XtSetDefaultConverterTable(&app->converterTable);
@@ -243,39 +161,26 @@ XtAppContext XtCreateApplicationContext()
 	FD_ZERO(&app->fds.emask);
 	return app;
 }
-
 static XtAppContext *appDestroyList = NULL;
 int _XtAppDestroyCount = 0;
-
-static void DestroyAppContext(app)
-	XtAppContext app;
-{
+static void DestroyAppContext(XtAppContext app) {
 	while (app->count-- > 0) XCloseDisplay(app->list[app->count]);
 	if (app->list != NULL) XtFree((char *)app->list);
 	_XtFreeConverterTable(app->converterTable);
 	XtFree((char *)app);
 }
-
-void XtDestroyApplicationContext(app)
-	XtAppContext app;
-{
+void XtDestroyApplicationContext(XtAppContext app) {
 	if (app->being_destroyed) return;
-
 	if (_XtSafeToDestroy) DestroyAppContext(app);
 	else {
 	    app->being_destroyed = TRUE;
 	    _XtAppDestroyCount++;
-	    appDestroyList =
-		    (XtAppContext *) XtRealloc((char *) appDestroyList,
-		    (unsigned) (_XtAppDestroyCount * sizeof(XtAppContext)));
+	    appDestroyList = (XtAppContext *) XtRealloc((char *) appDestroyList, (unsigned) (_XtAppDestroyCount * sizeof(XtAppContext)));
 	    appDestroyList[_XtAppDestroyCount-1] = app;
 	}
 }
-
-void _XtDestroyAppContexts()
-{
+void _XtDestroyAppContexts() {
 	int i;
-
 	for (i = 0; i < _XtAppDestroyCount; i++) {
 	    DestroyAppContext(appDestroyList[i]);
 	}

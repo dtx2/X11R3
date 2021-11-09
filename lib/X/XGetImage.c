@@ -3,9 +3,7 @@
 /* $XConsortium: XGetImage.c,v 11.21 88/09/06 16:08:03 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
-#include <errno.h>
 
 #define ROUNDUP(nbytes, pad) (((((nbytes) - 1) + (pad)) / (pad)) * (pad))
 

@@ -3,7 +3,6 @@
 /* $XConsortium: XGrPointer.c,v 11.16 88/09/06 16:08:35 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1986	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 int XGrabPointer(dpy, grab_window, owner_events, event_mask, pointer_mode,

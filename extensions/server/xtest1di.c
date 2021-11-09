@@ -33,9 +33,6 @@ University of California.
  * include files
  ****************************************************************************/
 
-#define	 NEED_EVENTS
-#define	 NEED_REPLIES
-
 #include <stdio.h>
 #include "X.h"
 #include "Xproto.h"
@@ -142,7 +139,7 @@ static void	XTestCurrentClientGone();
  *
  *	XTestExtension1Init
  *
- *	Called from InitExtensions in main() or from QueryExtension() if the
+ *	Called from InitExtensions in mai n() or from QueryExtension() if the
  *	extension is dynamically loaded.
  *
  *	XTestExtension1Init has no events or errors

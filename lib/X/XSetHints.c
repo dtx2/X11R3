@@ -148,35 +148,7 @@ XSetIconSizes (dpy, w, list, count)
 			 count * NumPropIconSizeElements);
 	Xfree ((char *)prop);
 }
-
-XSetCommand (dpy, w, argv, argc)
-	Display *dpy;
-	Window w;
-	char **argv;
-	int argc;
-{
-	register int i;
-	register int nbytes;
-	register char *buf, *bp;
-	for (i = 0, nbytes = 0; i < argc; i++) {
-		nbytes += safestrlen(argv[i]) + 1;
-	}
-	if (nbytes == 0) return;
-	bp = buf = Xmalloc(nbytes);
-	/* copy arguments into single buffer */
-	for (i = 0; i < argc; i++) {
-		if (argv[i]) { 
-		   (void) strcpy(bp, argv[i]);
-		   bp += strlen(argv[i]) + 1;
-		   }
-		else
-		   *bp++ = '\0';
-	}
-	XChangeProperty (dpy, w, XA_WM_COMMAND, XA_STRING, 8, PropModeReplace,
-		(unsigned char *)buf, nbytes);
-	Xfree(buf);		
-}
-/* 
+/*
  * XSetStandardProperties sets the following properties:
  *	WM_NAME		  type: STRING		format: 8
  *	WM_ICON_NAME	  type: STRING		format: 8
@@ -185,14 +157,12 @@ XSetCommand (dpy, w, argv, argc)
  *	WM_NORMAL_HINTS	  type: WM_SIZE_HINTS 	format: 32
  */
 	
-XSetStandardProperties (dpy, w, name, icon_string, icon_pixmap, argv, argc, hints)
+XSetStandardProperties (dpy, w, name, icon_string, icon_pixmap, hints)
     	Display *dpy;
     	Window w;		/* window to decorate */
     	char *name;		/* name of application */
     	char *icon_string;	/* name string for icon */
 	Pixmap icon_pixmap;	/* pixmap to use as icon, or None */
-    	char *argv[];		/* command to be used to restart application */
-    	int argc;		/* count of arguments */
     	XSizeHints *hints;	/* size hints for window in its normal state */
 {
 	XWMHints phints;
@@ -209,7 +179,6 @@ XSetStandardProperties (dpy, w, name, icon_string, icon_pixmap, argv, argc, hint
 		phints.icon_pixmap = icon_pixmap;
 		phints.flags |= IconPixmapHint;
 		}
-	if (argv != NULL) XSetCommand(dpy, w, argv, argc);
 	
 	if (hints != NULL) XSetNormalHints(dpy, w, hints);
 

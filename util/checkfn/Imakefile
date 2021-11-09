@@ -1,7 +1,0 @@
-           SRCS = checkfn.c
-           OBJS = checkfn.o 
-
-all:: checkfn
-
-SingleProgramTarget(checkfn,$(OBJS),,)
-DependTarget()

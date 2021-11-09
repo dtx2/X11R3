@@ -3,7 +3,6 @@
 /* $XConsortium: XParseCol.c,v 11.16 88/09/06 16:09:27 jim Exp $ */
 /* Copyright    Massachusetts Institute of Technology    1985	*/
 
-#define NEED_REPLIES
 #include "Xlibint.h"
 
 Status XParseColor (dpy, cmap, spec, def)
